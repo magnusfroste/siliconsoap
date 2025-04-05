@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
-import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '../constants';
+import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 
 export const useModels = (savedApiKey: string) => {

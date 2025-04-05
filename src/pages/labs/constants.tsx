@@ -1,6 +1,6 @@
-
 import { Atom, MessageSquare, HelpCircle, FileText, BookOpen, Users, Zap, User, UserRound, Settings, MessageCircle, Lightbulb } from 'lucide-react';
 import { Profile, ScenarioType } from './types';
+import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
 
 export const profiles: Profile[] = [
   {
@@ -39,26 +39,7 @@ export const responseLengthOptions = [
   { value: 'long', label: 'Long (detailed analysis)', icon: <MessageCircle className="h-5 w-5" /> }
 ];
 
-export const AGENT_A_PREFERRED_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'meta-llama/llama-3.1-70b-instruct:free',
-  'meta-llama/llama-3.1-8b-instruct:free'
-];
-
-export const AGENT_B_PREFERRED_MODELS = [
-  'deepseek-ai/deepseek-chat-v3-0324:free',
-  'deepseek-ai/deepseek-v3:free',
-  'deepseek-ai/deepseek-r1-distill-qwen-32b:free',
-  'qwen/qwen2.5-72b-instruct:free'
-
-];
-
-export const AGENT_C_PREFERRED_MODELS = [
-  'google/gemma-3-27b:free',
-  'google/gemma-3-8b:free',
-  'google/gemma-2-27b:free'
-
-];
+export { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS };
 
 export const scenarioTypes: ScenarioType[] = [
   {

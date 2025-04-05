@@ -39,10 +39,6 @@ export interface ApiError {
 
 export type ResponseLength = "short" | "medium" | "long";
 
-// Default model IDs
-export const DEFAULT_MODEL_IDS = {
-  agentA: "meta-llama/llama-3.3-70b-instruct:free", // Looking for Llama 3.3 70B Instruct (free)
-  agentB: "deepseek-ai/deepseek-chat-v3-0324:free", // DeepSeek V3 (free)
-  agentC: "google/gemma-3-27b:free" // Google Gemma 3 27B (free)
-};
-
+// Importing default model IDs from dedicated models file
+import { DEFAULT_MODEL_IDS } from './models';
+export { DEFAULT_MODEL_IDS };
