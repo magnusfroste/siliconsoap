@@ -61,165 +61,48 @@ export const fetchOpenRouterModels = async (apiKey: string): Promise<OpenRouterM
  * Finds the best matching default model from available models
  */
 export const findDefaultModel = (models: OpenRouterModel[], preferredIds: string[]): string | undefined => {
-  console.log("Finding default model from", { 
-    modelsCount: models.length, 
-    preferredIds
-  });
-
-  // Special handling for Agent B (DeepSeek V3)
-  if (preferredIds[0] === 'deepseek-ai/deepseek-v3:free') {
-    // First priority: exact match for deepseek-v3:free
-    const exactMatch = models.find(m => m.id === 'deepseek-ai/deepseek-v3:free');
-    if (exactMatch) {
-      console.log(`Found exact match for preferred DeepSeek V3 model:`, exactMatch.id);
-      return exactMatch.id;
-    }
-    
-    // Second priority: any deepseek-v3 variant
-    const deepseekV3Variants = models.filter(m => 
-      m.id.includes('deepseek-v3') || 
-      m.id.includes('deepseek/v3'));
-    
-    console.log(`Looking for DeepSeek V3 variants, found:`, deepseekV3Variants.map(m => m.id));
-    
-    if (deepseekV3Variants.length > 0) {
-      // Sort variants to prioritize free versions first
-      const sortedVariants = deepseekV3Variants.sort((a, b) => {
-        // Prioritize IDs with :free suffix
-        if (a.id.includes(':free') && !b.id.includes(':free')) return -1;
-        if (!a.id.includes(':free') && b.id.includes(':free')) return 1;
-        return 0;
-      });
-      console.log(`Selected DeepSeek V3 variant:`, sortedVariants[0].id);
-      return sortedVariants[0].id;
-    }
-    
-    // Third priority: any DeepSeek model
-    const anyDeepseek = models.find(m => m.id.toLowerCase().includes('deepseek-ai/'));
-    if (anyDeepseek) {
-      console.log(`Found any DeepSeek model:`, anyDeepseek.id);
-      return anyDeepseek.id;
-    }
+  if (!models.length || !preferredIds.length) {
+    return undefined;
   }
   
-  // Special handling for Agent B's original priority (DeepSeek R1)
-  if (preferredIds.includes('deepseek-ai/deepseek-r1-distill-qwen-32b:free')) {
-    // First priority: exact match for deepseek-r1-distill-qwen-32b:free
-    const exactMatch = models.find(m => m.id === 'deepseek-ai/deepseek-r1-distill-qwen-32b:free');
-    if (exactMatch) {
-      console.log(`Found exact match for preferred DeepSeek model:`, exactMatch.id);
-      return exactMatch.id;
-    }
-    
-    // Second priority: any deepseek-r1 variant
-    const deepseekVariants = models.filter(m => 
-      m.id.includes('deepseek-r1') || 
-      m.id.includes('deepseek/r1'));
-    
-    console.log(`Looking for DeepSeek R1 variants, found:`, deepseekVariants.map(m => m.id));
-    
-    if (deepseekVariants.length > 0) {
-      // Sort variants to prioritize free versions first
-      const sortedVariants = deepseekVariants.sort((a, b) => {
-        // Prioritize IDs with :free suffix
-        if (a.id.includes(':free') && !b.id.includes(':free')) return -1;
-        if (!a.id.includes(':free') && b.id.includes(':free')) return 1;
-        return 0;
-      });
-      console.log(`Selected DeepSeek R1 variant:`, sortedVariants[0].id);
-      return sortedVariants[0].id;
-    }
-  }
-
-  // Special handling for Agent C (Gemma 3 27B)
-  if (preferredIds[0] === 'google/gemma-3-27b:free') {
-    // First priority: exact match for gemma-3-27b:free
-    const exactMatch = models.find(m => m.id === 'google/gemma-3-27b:free');
-    if (exactMatch) {
-      console.log(`Found exact match for preferred Gemma 3 27B free:`, exactMatch.id);
-      return exactMatch.id;
-    }
-    
-    // Second priority: any gemma-3-27b variant
-    const gemma27bVariants = models.filter(m => 
-      m.id.includes('gemma-3-27b') || 
-      m.id.includes('gemma-3-27b-it:free') ||
-      m.id.includes('gemma-3-27b-it'));
-    
-    console.log(`Looking for Gemma 3 27B variants, found:`, gemma27bVariants.map(m => m.id));
-    
-    if (gemma27bVariants.length > 0) {
-      // Sort variants to prioritize free versions first
-      const sortedVariants = gemma27bVariants.sort((a, b) => {
-        // Prioritize IDs with :free suffix
-        if (a.id.includes(':free') && !b.id.includes(':free')) return -1;
-        if (!a.id.includes(':free') && b.id.includes(':free')) return 1;
-        return 0;
-      });
-      console.log(`Selected Gemma 3 27B variant:`, sortedVariants[0].id);
-      return sortedVariants[0].id;
-    }
-    
-    // Third priority: any Gemma 3 model
-    const anyGemma3 = models.find(m => m.id.toLowerCase().includes('google/gemma-3'));
-    if (anyGemma3) {
-      console.log(`Found any Gemma 3 model:`, anyGemma3.id);
-      return anyGemma3.id;
-    }
-  }
-
-  // Regular handling for other agents
-  
-  // Try exact match for any of the preferred IDs
+  // Try exact match first
   for (const preferredId of preferredIds) {
     const exactMatch = models.find(m => m.id === preferredId);
     if (exactMatch) {
-      console.log(`Found exact match for ${preferredId}:`, exactMatch.id);
       return exactMatch.id;
     }
   }
   
-  // Try partial matches by provider and model name
+  // If no exact match, try matching by provider and partial model name
   for (const preferredId of preferredIds) {
-    const [provider, modelName] = preferredId.split('/');
-    if (!provider || !modelName) continue;
+    const [provider, modelNameWithVersion] = preferredId.split('/');
+    if (!provider || !modelNameWithVersion) continue;
     
-    // Find models from the same provider
-    const providerMatches = models.filter(m => 
-      m.provider.toLowerCase() === provider.toLowerCase());
+    const modelName = modelNameWithVersion.split(':')[0]; // Remove :free suffix if present
+    const providerModels = models.filter(m => m.provider.toLowerCase() === provider.toLowerCase());
     
-    console.log(`Provider matches for ${provider}:`, providerMatches.map(m => m.id));
-    
-    // Get the base model name without version tag
-    const modelNameBase = modelName.split(':')[0];
-    
-    // Look for partial matches in model names
-    for (const model of providerMatches) {
-      if (
-        model.name.toLowerCase().includes(modelNameBase.toLowerCase()) ||
-        modelNameBase.toLowerCase().includes(model.name.toLowerCase()) ||
-        model.id.toLowerCase().includes(modelNameBase.toLowerCase())
-      ) {
-        console.log(`Found provider and name match for ${preferredId}:`, model.id);
+    // Look for models containing the model name (case-insensitive)
+    for (const model of providerModels) {
+      const modelIdLower = model.id.toLowerCase();
+      const modelNameLower = modelName.toLowerCase();
+      
+      if (modelIdLower.includes(modelNameLower) || 
+          model.name.toLowerCase().includes(modelNameLower)) {
         return model.id;
       }
     }
   }
   
-  // Fallback to free models if available
-  const freeModels = models.filter(m => m.isFree);
-  if (freeModels.length > 0) {
-    console.log("Falling back to free model:", freeModels[0].id);
-    return freeModels[0].id;
+  // If still no match, try getting any model from preferred providers
+  const providers = new Set(preferredIds.map(id => id.split('/')[0]));
+  for (const provider of providers) {
+    const providerModel = models.find(m => m.provider.toLowerCase() === provider.toLowerCase());
+    if (providerModel) {
+      return providerModel.id;
+    }
   }
   
-  // Last resort: return first available model
-  if (models.length > 0) {
-    console.log("Falling back to first available model:", models[0].id);
-    return models[0].id;
-  }
-  
-  console.log("No models available to select from");
-  return undefined;
+  // Final fallback - any free model or first available model
+  const freeModel = models.find(m => m.isFree);
+  return freeModel ? freeModel.id : models[0].id;
 };
-
