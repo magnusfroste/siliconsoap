@@ -1,14 +1,13 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
 
 User-agent: *
 Allow: /
+
+# Important pages
+Allow: /about
+Allow: /projects
+Allow: /expertise
+Allow: /contact
+
+# Add your sitemap URL once you have one
+Sitemap: https://magnusfroste.com/sitemap.xml
+

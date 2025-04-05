@@ -1,0 +1,76 @@
+
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+
+export type ScenarioType = {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  promptTemplate: (text: string) => string;
+  followupTemplate: (text: string, prevResponse: string, otherResponse: string) => string;
+  finalTemplate: (text: string, prevResponse: string, otherResponse: string) => string;
+  placeholder: string;
+};
+
+interface ScenarioSelectorProps {
+  scenarioTypes: ScenarioType[];
+  activeScenario: string;
+  setActiveScenario: (value: string) => void;
+  promptInputs: {[key: string]: string};
+  handleInputChange: (scenarioId: string, value: string) => void;
+}
+
+export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
+  scenarioTypes,
+  activeScenario,
+  setActiveScenario,
+  promptInputs,
+  handleInputChange
+}) => {
+  return (
+    <div>
+      <h3 className="text-xs font-medium mb-1">Conversation Scenario</h3>
+      <Tabs 
+        value={activeScenario} 
+        onValueChange={setActiveScenario}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-4 mb-4">
+          {scenarioTypes.map(scenario => (
+            <TabsTrigger 
+              key={scenario.id} 
+              value={scenario.id}
+              className="flex items-center gap-2"
+            >
+              {scenario.icon}
+              <span className="hidden md:inline">{scenario.name}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        
+        {scenarioTypes.map(scenario => (
+          <TabsContent key={scenario.id} value={scenario.id} className="mt-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 bg-purple-100 rounded-full">
+                {scenario.icon}
+              </div>
+              <div>
+                <h4 className="font-medium">{scenario.name}</h4>
+                <p className="text-sm text-gray-500">{scenario.description}</p>
+              </div>
+            </div>
+            <Textarea 
+              placeholder={scenario.placeholder}
+              value={promptInputs[scenario.id] || ''}
+              onChange={(e) => handleInputChange(scenario.id, e.target.value)}
+              className="w-full h-[200px]"
+              rows={8}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  );
+};
