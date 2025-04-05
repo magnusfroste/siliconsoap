@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -158,12 +159,38 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
             <BarChart2 className="h-5 w-5 text-gray-600" />
             Conversation Analysis
           </div>
-          {analyzerModel && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Bot className="h-4 w-4" />
-              <span>Analysis by: {analyzerModel.split('/').pop()?.replace(/:.*$/, '')}</span>
-            </div>
-          )}
+          
+          {/* Moved model selector to the header for better space utilization */}
+          <div className="flex items-center gap-3">
+            {analyzerModel && !isAnalyzing && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Bot className="h-4 w-4" />
+                <span>Analyzed by: {analyzerModel.split('/').pop()?.replace(/:.*$/, '')}</span>
+              </div>
+            )}
+            
+            {!isAnalyzing && analysisResults && (
+              <div className="flex items-center gap-2">
+                <ModelSelector
+                  agentModel={analyzerModel || ''}
+                  setAgentModel={setAnalyzerModel}
+                  modelsByProvider={modelsByProvider}
+                  loadingModels={false}
+                  isDisabled={isAnalyzing}
+                />
+                <Button 
+                  onClick={() => handleAnalyzeConversation()} 
+                  size="sm"
+                  className="h-8"
+                  disabled={isAnalyzing || !analyzerModel}
+                  variant="outline"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  Re-analyze
+                </Button>
+              </div>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <div className="px-6">
@@ -203,72 +230,48 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
-              <div className="w-full md:w-2/3">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium">Analysis Results</h3>
+            {/* Full width for analysis results */}
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-medium">Analysis Results</h3>
+                <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleCopySummary} className="h-8">
                     <Copy className="h-3.5 w-3.5 mr-1" />
-                    Copy Analysis
+                    Copy
+                  </Button>
+                  <Button 
+                    onClick={handlePrintConversation} 
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                  >
+                    <Printer className="h-3.5 w-3.5 mr-1" />
+                    Print
                   </Button>
                 </div>
-                <div 
-                  className="text-gray-700 bg-gray-50 p-5 rounded-md border border-gray-200"
-                  dangerouslySetInnerHTML={{ __html: parseMarkdown(analysisResults) }}
-                />
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <div className="flex items-center text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
-                    <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Key Insights</span>
-                  </div>
-                  <div className="flex items-center text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-                    <ListChecks className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Discussion Points</span>
-                  </div>
-                  <div className="flex items-center text-sm bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
-                    <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Areas of Disagreement</span>
-                  </div>
-                  <div className="flex items-center text-sm bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
-                    <Speech className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Further Exploration</span>
-                  </div>
+              </div>
+              <div 
+                className="text-gray-700 bg-gray-50 p-5 rounded-md border border-gray-200"
+                dangerouslySetInnerHTML={{ __html: parseMarkdown(analysisResults) }}
+              />
+              <div className="flex flex-wrap gap-3 mt-4">
+                <div className="flex items-center text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Key Insights</span>
+                </div>
+                <div className="flex items-center text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                  <ListChecks className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Discussion Points</span>
+                </div>
+                <div className="flex items-center text-sm bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
+                  <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Areas of Disagreement</span>
+                </div>
+                <div className="flex items-center text-sm bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
+                  <Speech className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Further Exploration</span>
                 </div>
               </div>
-              
-              <div className="w-full md:w-1/3 space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Analyzer Model</h3>
-                  <ModelSelector
-                    agentModel={analyzerModel || ''}
-                    setAgentModel={setAnalyzerModel}
-                    modelsByProvider={modelsByProvider}
-                    loadingModels={false}
-                    isDisabled={isAnalyzing}
-                  />
-                </div>
-                
-                <Button 
-                  onClick={() => handleAnalyzeConversation()} 
-                  className="w-full"
-                  disabled={isAnalyzing || !analyzerModel}
-                  variant="outline"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Re-analyze with Selected Model
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex justify-center mt-6">
-              <Button 
-                onClick={handlePrintConversation} 
-                variant="outline"
-                className="bg-white hover:bg-gray-50"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Print Conversation & Analysis
-              </Button>
             </div>
           </div>
         )}
@@ -285,3 +288,4 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     </Card>
   );
 };
+
