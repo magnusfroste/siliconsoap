@@ -51,7 +51,7 @@ const Header = () => {
               className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium transition-all hover:bg-purple-200"
             >
               <Atom size={18} />
-              Meetup
+              Labs
             </Link>
           </nav>
           
@@ -78,7 +78,7 @@ const Header = () => {
               onClick={toggleMenu}
             >
               <Atom size={18} />
-              Meetup
+              Labs
             </Link>
           </nav>
         )}
