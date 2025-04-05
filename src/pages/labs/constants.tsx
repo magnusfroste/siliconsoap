@@ -42,27 +42,22 @@ export const responseLengthOptions = [
 export const AGENT_A_PREFERRED_MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
   'meta-llama/llama-3.1-70b-instruct:free',
-  'meta-llama/llama-3-70b-instruct:free',
   'meta-llama/llama-3.1-8b-instruct:free'
 ];
 
 export const AGENT_B_PREFERRED_MODELS = [
+  'deepseek/deepseek-chat-v3-0324:free',
   'deepseek-ai/deepseek-v3:free',
   'deepseek-ai/deepseek-r1-distill-qwen-32b:free',
-  'qwen/qwen2.5-72b-instruct:free',
-  'qwen/qwen2-72b-instruct:free',
-  'qwen/qwen1.5-72b-instruct:free',
-  'anthropic/claude-3-opus-20240229:free'
+  'qwen/qwen2.5-72b-instruct:free'
+
 ];
 
 export const AGENT_C_PREFERRED_MODELS = [
   'google/gemma-3-27b:free',
-  'google/gemma-3-27b-it:free',
-  'google/gemma-3-27b',
   'google/gemma-3-8b:free',
-  'google/gemma-3-8b-it:free',
-  'google/gemma-2-27b:free',
-  'anthropic/claude-3-opus-20240229:free'
+  'google/gemma-2-27b:free'
+
 ];
 
 export const scenarioTypes: ScenarioType[] = [
