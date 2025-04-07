@@ -55,12 +55,9 @@ const AboutMe = () => {
                         <img 
                           src={aboutMeData.image} 
                           alt={aboutMeData?.name || "Profile"} 
-                          className="object-cover w-full h-full rounded-t-2xl"
+                          className="object-cover w-full h-full rounded-2xl"
                         />
                       </AspectRatio>
-                      <div className="p-4 text-center">
-                        <p className="text-sm text-gray-500 italic">{aboutMeData?.name || "Innovation & AI Expert"}</p>
-                      </div>
                     </CardContent>
                   </Card>
                 </div>
