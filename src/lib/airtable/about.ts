@@ -33,6 +33,7 @@ export const useAboutMe = () => {
             skill3Title: fields.skill3Title || fields.Skill3Title || 'AI Innovation',
             skill3Description: fields.skill3Description || fields.Skill3Description || 'Generative AI specialist with a wide range of experience developing AI Agents, RAG solutions, local AI deployments, generative AI libraries/packages, and more.',
             skill3Icon: fields.skill3Icon || fields.Skill3Icon || 'Brain',
+            image: fields.image || fields.Image || '',
           };
         } else {
           return {
@@ -49,6 +50,7 @@ export const useAboutMe = () => {
             skill3Title: 'AI Innovation',
             skill3Description: 'Generative AI specialist with a wide range of experience developing AI Agents, RAG solutions, local AI deployments, generative AI libraries/packages, and more.',
             skill3Icon: 'Brain',
+            image: '',
           };
         }
       } catch (error) {

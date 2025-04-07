@@ -38,6 +38,7 @@ export interface AboutSection {
   skill3Title: string;
   skill3Description: string;
   skill3Icon: string;
+  image?: string; // Add the image field
 }
 
 export interface FeaturedItem {

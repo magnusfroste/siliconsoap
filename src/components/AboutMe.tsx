@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { Monitor, Rocket, Brain, Lightbulb, Building, LineChart, Layers, Users } from 'lucide-react';
+import { Monitor, Rocket, Brain, Lightbulb, Building, LineChart, Layers, Users, Image } from 'lucide-react';
 import { useAboutMe } from '@/lib/airtable';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Map of icon names to components
 const iconMap: Record<string, React.ReactNode> = {
@@ -43,6 +45,25 @@ const AboutMe = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
+              {aboutMeData?.image ? (
+                <div className="mb-8">
+                  <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50">
+                    <CardContent className="p-0">
+                      <AspectRatio ratio={16/9} className="bg-muted">
+                        <img 
+                          src={aboutMeData.image} 
+                          alt={aboutMeData?.name || "Profile"} 
+                          className="object-cover w-full h-full rounded-t-2xl"
+                        />
+                      </AspectRatio>
+                      <div className="p-4 text-center">
+                        <p className="text-sm text-gray-500 italic">{aboutMeData?.name || "Innovation & AI Expert"}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : null}
+              
               <p className="text-lg text-gray-700 leading-relaxed">
                 {aboutMeData?.introText || 'With over 20 years of experience in innovation strategy and product development, I help businesses integrate cutting-edge AI solutions to drive growth and efficiency.'}
               </p>
