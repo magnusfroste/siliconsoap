@@ -49,7 +49,7 @@ const AboutMe = () => {
             <div className="space-y-6">
               {aboutMeData?.image ? (
                 <div className="mb-8">
-                  <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50">
+                  <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 w-4/5 mx-auto">
                     <CardContent className="p-0">
                       <AspectRatio ratio={16/9} className="bg-muted">
                         <img 
