@@ -149,7 +149,7 @@ const LabsContent: React.FC = () => {
             <h2 className="text-lg font-semibold mb-2">About OpenRouter Integration</h2>
             <p className="mb-2">
               This demo uses <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">OpenRouter</a> to access multiple AI models through a single API. 
-              Sign up for an OpenRouter account and enter your API key to use models from providers like OpenAI, Anthropic, and Mistral.
+              If you would like to play with non-free models, sign up for an OpenRouter account and enter your API key to use models from providers like OpenAI, Anthropic, and Mistral.
             </p>
           </div>
         </div>
