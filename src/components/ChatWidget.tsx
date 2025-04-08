@@ -21,6 +21,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const MAX_RETRIES = 3;
   const speechSynthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const mutationObserverRef = useRef<MutationObserver | null>(null);
 
   // Load voices when component mounts
@@ -51,13 +52,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     }, 1000);
     
     return () => {
+      stopSpeaking(); // Ensure any speech is stopped when component unmounts
       if (speechSynthRef.current) {
         speechSynthRef.current.removeEventListener('voiceschanged', loadVoices);
-        try {
-          speechSynthRef.current.cancel(); // Make sure to cancel any ongoing speech
-        } catch (error) {
-          console.error("Error cancelling speech in cleanup:", error);
-        }
       }
       clearTimeout(timer);
       
@@ -79,6 +76,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       const cleanText = text.replace(/<[^>]*>?/gm, '');
       
       const utterance = new SpeechSynthesisUtterance(cleanText);
+      utteranceRef.current = utterance; // Store reference
       
       utterance.lang = 'en-US';
       
@@ -99,41 +97,62 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       
       utterance.onend = () => {
         setIsSpeaking(false);
+        utteranceRef.current = null;
       };
       
       utterance.onerror = (error) => {
-        console.error("Speech synthesis error in ChatWidget:", error);
-        setIsSpeaking(false);
-        
-        // Only show error for non-cancellation errors
-        if (error.error !== 'canceled') {
+        // Only log and show toast for non-cancellation errors
+        if (error.error !== 'canceled' && error.error !== 'interrupted') {
+          console.error("Speech synthesis error in ChatWidget:", error);
+          
           toast({
             title: "Text-to-Speech Error",
             description: "There was an error playing the audio.",
             variant: "default",
           });
         }
+        
+        setIsSpeaking(false);
+        utteranceRef.current = null;
       };
       
       // Add a slight delay to ensure previous speech is properly canceled
       setTimeout(() => {
-        synth.speak(utterance);
-      }, 100);
+        try {
+          // Check if the component is still mounted
+          if (speechSynthRef.current && document.body.contains(document.querySelector('.n8n-chat'))) {
+            speechSynthRef.current.speak(utterance);
+          }
+        } catch (error) {
+          console.error("Error starting speech in ChatWidget:", error);
+          setIsSpeaking(false);
+          utteranceRef.current = null;
+        }
+      }, 150);
     } catch (error) {
       console.error("Error setting up speech in ChatWidget:", error);
       setIsSpeaking(false);
+      utteranceRef.current = null;
     }
   };
   
   const stopSpeaking = () => {
     const synth = speechSynthRef.current;
-    if (synth) {
-      try {
-        synth.cancel();
-      } catch (error) {
-        console.error("Error cancelling speech:", error);
-      }
+    if (!synth) return;
+    
+    try {
+      synth.cancel();
+      
+      // Reset state after a small delay
+      setTimeout(() => {
+        setIsSpeaking(false);
+        utteranceRef.current = null;
+      }, 50);
+    } catch (error) {
+      console.error("Error cancelling speech:", error);
+      // Still reset state
       setIsSpeaking(false);
+      utteranceRef.current = null;
     }
   };
 
@@ -452,13 +471,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   // Clean up speech synthesis when component unmounts
   useEffect(() => {
     return () => {
-      if (speechSynthRef.current) {
-        try {
-          speechSynthRef.current.cancel();
-        } catch (error) {
-          console.error("Error cancelling speech during unmount:", error);
-        }
-      }
+      stopSpeaking(); // Use the improved stop speaking function
       
       // Clean up mutation observer
       if (mutationObserverRef.current) {

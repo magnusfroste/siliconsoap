@@ -51,6 +51,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const speechSynthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   // Setup speech synthesis
   useEffect(() => {
@@ -78,13 +79,11 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
         }, 1000);
         
         return () => {
+          stopSpeaking(); // Ensure speech is stopped on unmount
           if (speechSynthRef.current) {
             speechSynthRef.current.removeEventListener('voiceschanged', loadVoices);
-            speechSynthRef.current.cancel(); // Make sure to cancel any ongoing speech
           }
           clearTimeout(timer);
-          setIsSpeaking(false);
-          setCurrentPlayingIndex(null);
         };
       }
     }
@@ -121,6 +120,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       const cleanText = text.replace(/<[^>]*>?/gm, '');
       
       const utterance = new SpeechSynthesisUtterance(cleanText);
+      utteranceRef.current = utterance; // Store reference to current utterance
       
       // Explicitly set language to English
       utterance.lang = 'en-US';
@@ -176,29 +176,42 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       utterance.onend = () => {
         setIsSpeaking(false);
         setCurrentPlayingIndex(null);
+        utteranceRef.current = null;
       };
       
       utterance.onerror = (event) => {
-        console.error("Speech synthesis error:", event);
-        setIsSpeaking(false);
-        setCurrentPlayingIndex(null);
-        
-        // Only show error toast for true errors, not cancellation
-        if (event.error !== 'canceled') {
+        // Only log and show toast for non-cancellation errors
+        if (event.error !== 'canceled' && event.error !== 'interrupted') {
+          console.error("Speech synthesis error:", event);
+          
           toast({
             title: "Text-to-Speech Error",
             description: "There was an error playing the audio. Please try again.",
             variant: "destructive",
           });
         }
+        
+        setIsSpeaking(false);
+        setCurrentPlayingIndex(null);
+        utteranceRef.current = null;
       };
       
       // Start speaking after a small delay to ensure previous speech is properly canceled
       setTimeout(() => {
-        synth.speak(utterance);
-      }, 100);
+        // Check if the component is still mounted before speaking
+        if (speechSynthRef.current && document.body.contains(document.querySelector('.n8n-chat'))) {
+          try {
+            speechSynthRef.current.speak(utterance);
+          } catch (error) {
+            console.error("Error starting speech:", error);
+            setIsSpeaking(false);
+            setCurrentPlayingIndex(null);
+            utteranceRef.current = null;
+          }
+        }
+      }, 150);
     } catch (error) {
-      console.error("Error during speech synthesis:", error);
+      console.error("Error during speech synthesis setup:", error);
       toast({
         title: "Text-to-Speech Error",
         description: "Could not play speech. Your browser may have restricted this feature.",
@@ -206,20 +219,31 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       });
       setIsSpeaking(false);
       setCurrentPlayingIndex(null);
+      utteranceRef.current = null;
     }
   };
   
-  // Stop speaking
+  // Stop speaking with improved error handling
   const stopSpeaking = () => {
     const synth = speechSynthRef.current;
-    if (synth) {
-      try {
-        synth.cancel();
-      } catch (error) {
-        console.error("Error cancelling speech:", error);
-      }
+    if (!synth) return;
+    
+    try {
+      // Cancel any ongoing speech
+      synth.cancel();
+      
+      // Reset state after a small delay to ensure cancellation is complete
+      setTimeout(() => {
+        setIsSpeaking(false);
+        setCurrentPlayingIndex(null);
+        utteranceRef.current = null;
+      }, 50);
+    } catch (error) {
+      console.error("Error cancelling speech:", error);
+      // Still reset state even if there's an error
       setIsSpeaking(false);
       setCurrentPlayingIndex(null);
+      utteranceRef.current = null;
     }
   };
 
@@ -327,6 +351,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                             className="h-8 w-8 p-0 ml-auto"
                             onClick={(e) => {
                               e.preventDefault();
+                              e.stopPropagation();
                               if (isCurrentlyPlaying) {
                                 stopSpeaking();
                               } else {

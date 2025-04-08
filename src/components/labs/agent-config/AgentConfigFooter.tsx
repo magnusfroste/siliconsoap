@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowRight } from 'lucide-react';
@@ -15,11 +16,25 @@ export const AgentConfigFooter: React.FC<AgentConfigFooterProps> = ({
   isLoading,
   isDisabled
 }) => {
+  // Helper function to stop any ongoing speech synthesis before navigation
+  const stopSpeech = () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (error) {
+      console.error("Error stopping speech in footer:", error);
+    }
+  };
+
   return (
     <div className="flex w-full justify-between items-center border-t border-gray-200 pt-4 mt-2">
       <div className="flex-none">
         <Button 
-          onClick={() => goToStep(1)}
+          onClick={() => {
+            stopSpeech();
+            goToStep(1);
+          }}
           variant="outline"
         >
           Back
@@ -27,7 +42,10 @@ export const AgentConfigFooter: React.FC<AgentConfigFooterProps> = ({
       </div>
       <div className="flex-none ml-auto">
         <Button 
-          onClick={handleStartConversation} 
+          onClick={() => {
+            stopSpeech();
+            handleStartConversation();
+          }} 
           disabled={isDisabled || isLoading}
           className="bg-purple-600 hover:bg-purple-700"
         >
