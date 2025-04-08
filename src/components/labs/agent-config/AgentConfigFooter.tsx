@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowRight } from 'lucide-react';
@@ -17,14 +16,16 @@ export const AgentConfigFooter: React.FC<AgentConfigFooterProps> = ({
   isDisabled
 }) => {
   return (
-    <div className="flex justify-between border-t border-gray-200 pt-4 mt-2">
-      <Button 
-        onClick={() => goToStep(1)}
-        variant="outline"
-      >
-        Back
-      </Button>
-      <div className="space-x-3">
+    <div className="flex w-full justify-between items-center border-t border-gray-200 pt-4 mt-2">
+      <div className="flex-none">
+        <Button 
+          onClick={() => goToStep(1)}
+          variant="outline"
+        >
+          Back
+        </Button>
+      </div>
+      <div className="flex-none ml-auto">
         <Button 
           onClick={handleStartConversation} 
           disabled={isDisabled || isLoading}
