@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Loader2, Settings, Zap, User, UserRound, ExternalLink, BarChart2 } from 'lucide-react';
+import { MessageSquare, Loader2, Settings, Zap, User, UserRound, ExternalLink, BarChart2, Volume2, VolumeX } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
 
 type ConversationEntry = {
   agent: string;
@@ -45,6 +47,78 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   formatMessage
 }) => {
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
+  
+  // Setup speech synthesis
+  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+  
+  // Helper function to speak text
+  const speakMessage = (text: string, index: number) => {
+    if (!synth) {
+      toast({
+        title: "Text-to-Speech Error",
+        description: "Speech synthesis is not supported in your browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Cancel any currently speaking message
+    synth.cancel();
+    
+    // Clean the text from HTML tags
+    const cleanText = text.replace(/<[^>]*>?/gm, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Set voice (optional: could be customized per agent)
+    const voices = synth.getVoices();
+    if (voices.length > 0) {
+      // Try to find a female voice for agent A, male for agent B, and another voice for agent C
+      const agentType = conversation[index]?.agent;
+      if (agentType === 'Agent A') {
+        const femaleVoice = voices.find(voice => voice.name.includes('Female') || voice.name.includes('female'));
+        if (femaleVoice) utterance.voice = femaleVoice;
+      } else if (agentType === 'Agent B') {
+        const maleVoice = voices.find(voice => voice.name.includes('Male') || voice.name.includes('male'));
+        if (maleVoice) utterance.voice = maleVoice;
+      }
+    }
+    
+    // Event handlers for start and end of speech
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setCurrentPlayingIndex(index);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setCurrentPlayingIndex(null);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setCurrentPlayingIndex(null);
+      toast({
+        title: "Text-to-Speech Error",
+        description: "There was an error playing the audio.",
+        variant: "destructive",
+      });
+    };
+    
+    // Start speaking
+    synth.speak(utterance);
+  };
+  
+  // Stop speaking
+  const stopSpeaking = () => {
+    if (synth) {
+      synth.cancel();
+      setIsSpeaking(false);
+      setCurrentPlayingIndex(null);
+    }
+  };
 
   // Helper function to get profile avatar icon
   const getProfileIcon = (profileId: string) => {
@@ -116,6 +190,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
             const currentProfile = profiles.find(p => p.id === entry.persona);
             const modelName = availableModels.find(m => m.id === entry.model)?.name || entry.model.split('/').pop() || entry.model;
             const colorClasses = getAgentColorClasses(entry.agent);
+            const isCurrentlyPlaying = currentPlayingIndex === index;
             
             return (
               <div key={index} className={`flex gap-4 ${
@@ -125,7 +200,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                     ? 'justify-center' 
                     : 'justify-end'
               }`}>
-                <div className={`rounded-lg p-4 max-w-[80%] ${colorClasses.bgColorClass} border`}>
+                <div className={`rounded-lg p-4 max-w-[80%] ${colorClasses.bgColorClass} border relative`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Avatar className={`h-8 w-8 ${colorClasses.avatarBgClass} ${colorClasses.avatarTextClass}`}>
                       <AvatarFallback>
@@ -140,6 +215,29 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                         <span>{currentProfile?.name}</span>
                       </div>
                     </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 ml-auto"
+                            onClick={() => {
+                              if (isCurrentlyPlaying) {
+                                stopSpeaking();
+                              } else {
+                                speakMessage(entry.message, index);
+                              }
+                            }}
+                          >
+                            {isCurrentlyPlaying ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{isCurrentlyPlaying ? "Stop speech" : "Read message"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <div 
                     className="text-gray-700"
@@ -175,14 +273,26 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
         </Button>
         
         {conversation.length > 0 && (
-          <Button 
-            onClick={() => goToStep(4)} 
-            className="bg-purple-600 hover:bg-purple-700"
-            disabled={isLoading}
-          >
-            <BarChart2 className="mr-2 h-4 w-4" />
-            Analyze Conversation
-          </Button>
+          <div className="flex gap-2">
+            {isSpeaking && (
+              <Button 
+                onClick={stopSpeaking} 
+                variant="outline"
+                disabled={isLoading}
+              >
+                <VolumeX className="mr-2 h-4 w-4" />
+                Stop Reading
+              </Button>
+            )}
+            <Button 
+              onClick={() => goToStep(4)} 
+              className="bg-purple-600 hover:bg-purple-700"
+              disabled={isLoading}
+            >
+              <BarChart2 className="mr-2 h-4 w-4" />
+              Analyze Conversation
+            </Button>
+          </div>
         )}
       </CardFooter>
 

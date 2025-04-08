@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
@@ -7,15 +6,54 @@ import { toast } from '@/hooks/use-toast';
 interface ChatWidgetProps {
   webhookUrl: string;
   greeting?: string;
+  enableSpeech?: boolean;
 }
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ 
   webhookUrl, 
-  greeting = "Lets chat and find out..."
+  greeting = "Lets chat and find out...",
+  enableSpeech = false
 }) => {
   const [initialized, setInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const MAX_RETRIES = 3;
+
+  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+
+  const speakMessage = (text: string) => {
+    if (!synth || !enableSpeech) return;
+    
+    synth.cancel();
+    
+    const cleanText = text.replace(/<[^>]*>?/gm, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    const voices = synth.getVoices();
+    if (voices.length > 0) {
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Google') || 
+        voice.name.includes('Female')
+      );
+      if (preferredVoice) utterance.voice = preferredVoice;
+    }
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+    
+    synth.speak(utterance);
+  };
 
   useEffect(() => {
     if (webhookUrl && !initialized && retryCount < MAX_RETRIES) {
@@ -23,7 +61,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         console.log('Initializing chat with webhook URL:', webhookUrl);
         console.log('Using greeting message:', greeting);
         
-        // Apply Appli-inspired custom CSS variables
         const chatStyles = document.createElement('style');
         chatStyles.textContent = `
           :root {
@@ -83,7 +120,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             --chat--toggle--size: 60px;
           }
           
-          /* Add attention-grabbing animation to the chat toggle button */
           .n8n-chat-toggle {
             animation: pulse-chat 2s infinite;
             box-shadow: 0 0 0 rgba(155, 135, 245, 0.6);
@@ -104,12 +140,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             }
           }
 
-          /* Hide the powered by n8n footer */
           .n8n-chat-footer {
             display: none !important;
           }
           
-          /* Force the input box to be visible */
           .n8n-chat-compose {
             display: flex !important;
             visibility: visible !important;
@@ -122,8 +156,31 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             opacity: 1 !important;
             min-height: 50px !important;
           }
+
+          .speech-button {
+            position: absolute;
+            bottom: 12px;
+            right: 55px;
+            background: none;
+            border: none;
+            color: #9b87f5;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
           
-          /* Add a hint message that appears near hero section */
+          .speech-button:hover {
+            background-color: rgba(155, 135, 245, 0.1);
+          }
+          
+          .speech-button svg {
+            width: 20px;
+            height: 20px;
+          }
+          
           .chat-hint {
             position: fixed;
             bottom: 120px;
@@ -160,7 +217,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         `;
         document.head.appendChild(chatStyles);
         
-        // Create chat with properly configured i18n options
         createChat({
           webhookUrl: webhookUrl,
           initialMessages: [greeting],
@@ -168,7 +224,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             en: {
               title: "Hi, I'm 'Magnet', Magnus digital twin!", 
               subtitle: "I can help with a lot as an agentic AI bot...",
-              footer: '', // Set empty footer to remove "Powered by n8n"
+              footer: '',
               getStarted: 'New Conversation',
               inputPlaceholder: 'Type your question..',
               closeButtonTooltip: 'Close chat', 
@@ -181,7 +237,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           }
         });
         
-        // Force the chat input to be visible after a short delay to allow the component to mount
         setTimeout(() => {
           const chatInput = document.querySelector('.n8n-chat-input');
           const chatCompose = document.querySelector('.n8n-chat-compose');
@@ -193,16 +248,45 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           if (chatCompose) {
             chatCompose.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important;');
           }
+
+          if (enableSpeech) {
+            const addSpeechButtons = () => {
+              document.querySelectorAll('.n8n-chat-message--bot').forEach((message) => {
+                if (!message.querySelector('.speech-button')) {
+                  const text = message.textContent || '';
+                  const button = document.createElement('button');
+                  button.className = 'speech-button';
+                  button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+                  button.title = 'Read message aloud';
+                  button.onclick = () => speakMessage(text);
+                  message.style.position = 'relative';
+                  message.appendChild(button);
+                }
+              });
+            };
+
+            setTimeout(addSpeechButtons, 2000);
+
+            const chatContainer = document.querySelector('.n8n-chat-messages');
+            if (chatContainer) {
+              const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                  if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    addSpeechButtons();
+                  }
+                }
+              });
+              observer.observe(chatContainer, { childList: true, subtree: true });
+            }
+          }
         }, 1500);
         
-        // Add a temporary hint message that appears for a few seconds
         setTimeout(() => {
           const chatHint = document.createElement('div');
           chatHint.className = 'chat-hint';
           chatHint.textContent = 'Chat with Magnus!';
           document.body.appendChild(chatHint);
           
-          // Remove the hint after animation completes
           setTimeout(() => {
             chatHint.remove();
           }, 5000);
@@ -211,17 +295,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         setInitialized(true);
         console.log('Chat initialization completed');
       } catch (error) {
-        // Handle any errors that occur during initialization
         console.error('Error initializing chat:', error);
         
-        // Retry initialization after a delay
         const nextRetryCount = retryCount + 1;
         setRetryCount(nextRetryCount);
         
         if (nextRetryCount < MAX_RETRIES) {
           console.log(`Retry attempt ${nextRetryCount} of ${MAX_RETRIES} in 2 seconds...`);
           setTimeout(() => {
-            setInitialized(false); // Reset to trigger another initialization attempt
+            setInitialized(false);
           }, 2000);
         } else {
           toast({
@@ -232,7 +314,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         }
       }
     }
-  }, [webhookUrl, initialized, retryCount, greeting]);
+  }, [webhookUrl, initialized, retryCount, greeting, enableSpeech]);
 
   return null;
 };

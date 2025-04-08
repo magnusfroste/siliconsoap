@@ -53,6 +53,7 @@ const App = () => {
           <ChatWidget 
             webhookUrl={CHAT_WEBHOOK_URL} 
             greeting={CHAT_GREETING}
+            enableSpeech={true}
           />
           <Routes>
             <Route path="/" element={<Index />} />
