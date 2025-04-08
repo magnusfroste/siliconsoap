@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
 import { toast } from '@/hooks/use-toast';
@@ -20,43 +20,61 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const MAX_RETRIES = 3;
-
-  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+  const speechSynthRef = useRef<SpeechSynthesis | null>(null);
+  const mutationObserverRef = useRef<MutationObserver | null>(null);
 
   // Load voices when component mounts
   useEffect(() => {
-    if (!synth || !enableSpeech) return;
+    if (typeof window === 'undefined' || !enableSpeech) return;
+    
+    speechSynthRef.current = window.speechSynthesis;
+    
+    if (!speechSynthRef.current) return;
     
     const loadVoices = () => {
       setVoicesLoaded(true);
     };
     
     // Check if voices are already available
-    if (synth.getVoices().length > 0) {
+    if (speechSynthRef.current.getVoices().length > 0) {
       setVoicesLoaded(true);
     }
     
     // Add event listener for when voices are loaded
-    synth.addEventListener('voiceschanged', loadVoices);
+    speechSynthRef.current.addEventListener('voiceschanged', loadVoices);
     
     // Fallback for browsers that don't fire voiceschanged
     const timer = setTimeout(() => {
-      if (synth.getVoices().length > 0) {
+      if (speechSynthRef.current && speechSynthRef.current.getVoices().length > 0) {
         setVoicesLoaded(true);
       }
     }, 1000);
     
     return () => {
-      synth.removeEventListener('voiceschanged', loadVoices);
+      if (speechSynthRef.current) {
+        speechSynthRef.current.removeEventListener('voiceschanged', loadVoices);
+        try {
+          speechSynthRef.current.cancel(); // Make sure to cancel any ongoing speech
+        } catch (error) {
+          console.error("Error cancelling speech in cleanup:", error);
+        }
+      }
       clearTimeout(timer);
+      
+      // Clean up mutation observer
+      if (mutationObserverRef.current) {
+        mutationObserverRef.current.disconnect();
+      }
     };
-  }, [synth, enableSpeech]);
+  }, [enableSpeech]);
 
   const speakMessage = (text: string) => {
+    const synth = speechSynthRef.current;
     if (!synth || !enableSpeech || !voicesLoaded) return;
     
     try {
-      synth.cancel();
+      // Cancel any ongoing speech first
+      stopSpeaking();
       
       const cleanText = text.replace(/<[^>]*>?/gm, '');
       
@@ -86,11 +104,35 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       utterance.onerror = (error) => {
         console.error("Speech synthesis error in ChatWidget:", error);
         setIsSpeaking(false);
+        
+        // Only show error for non-cancellation errors
+        if (error.error !== 'canceled') {
+          toast({
+            title: "Text-to-Speech Error",
+            description: "There was an error playing the audio.",
+            variant: "default",
+          });
+        }
       };
       
-      synth.speak(utterance);
+      // Add a slight delay to ensure previous speech is properly canceled
+      setTimeout(() => {
+        synth.speak(utterance);
+      }, 100);
     } catch (error) {
       console.error("Error setting up speech in ChatWidget:", error);
+      setIsSpeaking(false);
+    }
+  };
+  
+  const stopSpeaking = () => {
+    const synth = speechSynthRef.current;
+    if (synth) {
+      try {
+        synth.cancel();
+      } catch (error) {
+        console.error("Error cancelling speech:", error);
+      }
       setIsSpeaking(false);
     }
   };
@@ -295,6 +337,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
           if (enableSpeech) {
             const addSpeechButtons = () => {
+              // Stop any ongoing speech before adding new buttons
+              stopSpeaking();
+              
               document.querySelectorAll('.n8n-chat-message--bot').forEach((message) => {
                 if (!message.querySelector('.speech-button')) {
                   const text = message.textContent || '';
@@ -302,11 +347,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                   button.className = 'speech-button';
                   button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
                   button.title = 'Read message aloud';
-                  // Add user interaction requirement for speech
+                  
+                  // Add user interaction requirement for speech with proper cleanup
                   button.onclick = (e) => {
-                    e.preventDefault();  
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Stop any currently playing audio first
+                    stopSpeaking();
+                    
                     if (voicesLoaded) {
-                      speakMessage(text);
+                      // Add slight delay before playing new audio
+                      setTimeout(() => {
+                        speakMessage(text);
+                      }, 100);
                     } else {
                       toast({
                         title: "Text-to-Speech",
@@ -315,6 +369,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                       });
                     }
                   };
+                  
                   if (message instanceof HTMLElement) {
                     message.style.position = 'relative';
                     message.appendChild(button);
@@ -328,7 +383,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
             const chatContainer = document.querySelector('.n8n-chat-messages');
             if (chatContainer) {
-              const observer = new MutationObserver((mutations) => {
+              // Clean up any previous observer
+              if (mutationObserverRef.current) {
+                mutationObserverRef.current.disconnect();
+              }
+              
+              // Create new observer
+              mutationObserverRef.current = new MutationObserver((mutations) => {
                 for (const mutation of mutations) {
                   if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                     // Delay to ensure the new elements are fully rendered
@@ -336,8 +397,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                   }
                 }
               });
-              observer.observe(chatContainer, { childList: true, subtree: true });
+              
+              // Start observing
+              mutationObserverRef.current.observe(chatContainer, { childList: true, subtree: true });
             }
+            
+            // Add event listener to chat window close button to stop speech
+            setTimeout(() => {
+              const closeButton = document.querySelector('.n8n-chat-header-close-button');
+              if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                  stopSpeaking();
+                });
+              }
+            }, 2000);
           }
         }, 1500);
         
@@ -375,6 +448,24 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       }
     }
   }, [webhookUrl, initialized, retryCount, greeting, enableSpeech, voicesLoaded]);
+
+  // Clean up speech synthesis when component unmounts
+  useEffect(() => {
+    return () => {
+      if (speechSynthRef.current) {
+        try {
+          speechSynthRef.current.cancel();
+        } catch (error) {
+          console.error("Error cancelling speech during unmount:", error);
+        }
+      }
+      
+      // Clean up mutation observer
+      if (mutationObserverRef.current) {
+        mutationObserverRef.current.disconnect();
+      }
+    };
+  }, []);
 
   return null;
 };

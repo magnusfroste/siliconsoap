@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -50,43 +50,50 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const speechSynthRef = useRef<SpeechSynthesis | null>(null);
   
   // Setup speech synthesis
-  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
-  
-  // Load voices when component mounts
   useEffect(() => {
-    if (!synth) return;
-    
-    // Firefox and some browsers need this event
-    const loadVoices = () => {
-      setVoicesLoaded(true);
-    };
-    
-    if (synth.getVoices().length > 0) {
-      setVoicesLoaded(true);
-    }
-    
-    synth.addEventListener('voiceschanged', loadVoices);
-    
-    // Try to initialize voices after a short delay as well (for some browsers)
-    const timer = setTimeout(() => {
-      if (synth.getVoices().length > 0) {
+    if (typeof window !== 'undefined') {
+      speechSynthRef.current = window.speechSynthesis;
+      
+      // Check if voices are already available
+      if (speechSynthRef.current && speechSynthRef.current.getVoices().length > 0) {
         setVoicesLoaded(true);
       }
-    }, 1000);
-    
-    return () => {
-      synth.removeEventListener('voiceschanged', loadVoices);
-      clearTimeout(timer);
-      if (isSpeaking) {
-        synth.cancel();
+      
+      // Firefox and some browsers need this event
+      const loadVoices = () => {
+        setVoicesLoaded(true);
+      };
+      
+      if (speechSynthRef.current) {
+        speechSynthRef.current.addEventListener('voiceschanged', loadVoices);
+      
+        // Try to initialize voices after a short delay as well (for some browsers)
+        const timer = setTimeout(() => {
+          if (speechSynthRef.current && speechSynthRef.current.getVoices().length > 0) {
+            setVoicesLoaded(true);
+          }
+        }, 1000);
+        
+        return () => {
+          if (speechSynthRef.current) {
+            speechSynthRef.current.removeEventListener('voiceschanged', loadVoices);
+            speechSynthRef.current.cancel(); // Make sure to cancel any ongoing speech
+          }
+          clearTimeout(timer);
+          setIsSpeaking(false);
+          setCurrentPlayingIndex(null);
+        };
       }
-    };
-  }, [synth]);
+    }
+  }, []);
   
   // Helper function to speak text
   const speakMessage = (text: string, index: number) => {
+    const synth = speechSynthRef.current;
+    
     if (!synth) {
       toast({
         title: "Text-to-Speech Error",
@@ -107,8 +114,8 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
     }
     
     try {
-      // Cancel any currently speaking message
-      synth.cancel();
+      // If currently speaking something, cancel it first
+      stopSpeaking();
       
       // Clean the text from HTML tags
       const cleanText = text.replace(/<[^>]*>?/gm, '');
@@ -118,7 +125,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       // Explicitly set language to English
       utterance.lang = 'en-US';
       
-      // Set voice (optional: could be customized per agent)
+      // Set voice based on agent type
       const voices = synth.getVoices();
       console.log("Available voices:", voices.slice(0, 5).map(v => `${v.name} (${v.lang})`));
       
@@ -175,15 +182,21 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
         console.error("Speech synthesis error:", event);
         setIsSpeaking(false);
         setCurrentPlayingIndex(null);
-        toast({
-          title: "Text-to-Speech Error",
-          description: "There was an error playing the audio. Please try again.",
-          variant: "destructive",
-        });
+        
+        // Only show error toast for true errors, not cancellation
+        if (event.error !== 'canceled') {
+          toast({
+            title: "Text-to-Speech Error",
+            description: "There was an error playing the audio. Please try again.",
+            variant: "destructive",
+          });
+        }
       };
       
-      // Start speaking
-      synth.speak(utterance);
+      // Start speaking after a small delay to ensure previous speech is properly canceled
+      setTimeout(() => {
+        synth.speak(utterance);
+      }, 100);
     } catch (error) {
       console.error("Error during speech synthesis:", error);
       toast({
@@ -198,8 +211,13 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   
   // Stop speaking
   const stopSpeaking = () => {
+    const synth = speechSynthRef.current;
     if (synth) {
-      synth.cancel();
+      try {
+        synth.cancel();
+      } catch (error) {
+        console.error("Error cancelling speech:", error);
+      }
       setIsSpeaking(false);
       setCurrentPlayingIndex(null);
     }
@@ -312,6 +330,7 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                               if (isCurrentlyPlaying) {
                                 stopSpeaking();
                               } else {
+                                stopSpeaking(); // Stop any playing audio first
                                 speakMessage(entry.message, index);
                               }
                             }}
@@ -351,7 +370,10 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       </CardContent>
       <CardFooter className="pt-0 flex justify-between">
         <Button
-          onClick={() => goToStep(2)}
+          onClick={() => {
+            stopSpeaking(); // Make sure to stop any speaking before navigation
+            goToStep(2);
+          }}
           variant="outline"
           disabled={isLoading}
         >
@@ -371,7 +393,10 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
               </Button>
             )}
             <Button 
-              onClick={() => goToStep(4)} 
+              onClick={() => {
+                stopSpeaking(); // Make sure to stop any speaking before navigation
+                goToStep(4);
+              }} 
               className="bg-purple-600 hover:bg-purple-700"
               disabled={isLoading}
             >
@@ -383,7 +408,10 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       </CardFooter>
 
       {/* Prompt Dialog */}
-      <Dialog open={promptDialogOpen} onOpenChange={setPromptDialogOpen}>
+      <Dialog open={promptDialogOpen} onOpenChange={(open) => {
+        if (!open) stopSpeaking(); // Stop speaking when dialog closes
+        setPromptDialogOpen(open);
+      }}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>{currentScenario.name} Prompt</DialogTitle>
