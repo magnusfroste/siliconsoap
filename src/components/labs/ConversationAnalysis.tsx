@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -160,15 +159,7 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
             Conversation Analysis
           </div>
           
-          {/* Moved model selector to the header for better space utilization */}
-          <div className="flex items-center gap-3">
-            {analyzerModel && !isAnalyzing && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Bot className="h-4 w-4" />
-                <span>Analyzed by: {analyzerModel.split('/').pop()?.replace(/:.*$/, '')}</span>
-              </div>
-            )}
-            
+          <div className="flex items-center gap-2">
             {!isAnalyzing && analysisResults && (
               <div className="flex items-center gap-2">
                 <ModelSelector
@@ -230,7 +221,6 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Full width for analysis results */}
             <div>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-medium">Analysis Results</h3>
@@ -288,4 +278,3 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     </Card>
   );
 };
-
