@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
@@ -31,7 +30,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     
-    // Set language to English explicitly to avoid using system language
     utterance.lang = 'en-US';
     
     const voices = synth.getVoices();
@@ -295,7 +293,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         setTimeout(() => {
           const chatHint = document.createElement('div');
           chatHint.className = 'chat-hint';
-          chatHint.textContent = 'Chat with Magnus!';
+          chatHint.textContent = 'Chat with Magnet!';
           document.body.appendChild(chatHint);
           
           setTimeout(() => {
