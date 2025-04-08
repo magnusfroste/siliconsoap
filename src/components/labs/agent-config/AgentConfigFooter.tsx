@@ -24,18 +24,20 @@ export const AgentConfigFooter: React.FC<AgentConfigFooterProps> = ({
       >
         Back
       </Button>
-      <Button 
-        onClick={handleStartConversation} 
-        disabled={isDisabled || isLoading}
-        className="bg-purple-600 hover:bg-purple-700"
-      >
-        {isLoading ? "Loading..." : "Start Conversation"}
-        {isLoading ? (
-          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-        ) : (
-          <ArrowRight className="ml-2 h-4 w-4" />
-        )}
-      </Button>
+      <div className="space-x-3">
+        <Button 
+          onClick={handleStartConversation} 
+          disabled={isDisabled || isLoading}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          {isLoading ? "Loading..." : "Start Conversation"}
+          {isLoading ? (
+            <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowRight className="ml-2 h-4 w-4" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
