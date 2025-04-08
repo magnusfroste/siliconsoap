@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -49,9 +49,41 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   const [promptDialogOpen, setPromptDialogOpen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   
   // Setup speech synthesis
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+  
+  // Load voices when component mounts
+  useEffect(() => {
+    if (!synth) return;
+    
+    // Firefox and some browsers need this event
+    const loadVoices = () => {
+      setVoicesLoaded(true);
+    };
+    
+    if (synth.getVoices().length > 0) {
+      setVoicesLoaded(true);
+    }
+    
+    synth.addEventListener('voiceschanged', loadVoices);
+    
+    // Try to initialize voices after a short delay as well (for some browsers)
+    const timer = setTimeout(() => {
+      if (synth.getVoices().length > 0) {
+        setVoicesLoaded(true);
+      }
+    }, 1000);
+    
+    return () => {
+      synth.removeEventListener('voiceschanged', loadVoices);
+      clearTimeout(timer);
+      if (isSpeaking) {
+        synth.cancel();
+      }
+    };
+  }, [synth]);
   
   // Helper function to speak text
   const speakMessage = (text: string, index: number) => {
@@ -64,80 +96,93 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       return;
     }
     
-    // Cancel any currently speaking message
-    synth.cancel();
-    
-    // Clean the text from HTML tags
-    const cleanText = text.replace(/<[^>]*>?/gm, '');
-    
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    
-    // Explicitly set language to English
-    utterance.lang = 'en-US';
-    
-    // Set voice (optional: could be customized per agent)
-    const voices = synth.getVoices();
-    console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
-    
-    if (voices.length > 0) {
-      // Try to find appropriate English voices for different agents
-      const agentType = conversation[index]?.agent;
-      
-      // Filter for English voices first
-      const englishVoices = voices.filter(voice => 
-        voice.lang.includes('en-') || voice.lang === 'en'
-      );
-      
-      // Use English voices if available, otherwise use any available voice
-      const availableVoices = englishVoices.length > 0 ? englishVoices : voices;
-      
-      if (agentType === 'Agent A') {
-        const femaleVoice = availableVoices.find(voice => 
-          voice.name.includes('Female') || 
-          voice.name.includes('female') || 
-          voice.name.includes('Samantha')
-        );
-        if (femaleVoice) utterance.voice = femaleVoice;
-      } else if (agentType === 'Agent B') {
-        const maleVoice = availableVoices.find(voice => 
-          voice.name.includes('Male') || 
-          voice.name.includes('male') || 
-          voice.name.includes('David')
-        );
-        if (maleVoice) utterance.voice = maleVoice;
-      } else {
-        // Default to any English voice for Agent C
-        const defaultVoice = availableVoices[0];
-        if (defaultVoice) utterance.voice = defaultVoice;
-      }
-      
-      console.log(`Selected voice for ${agentType}:`, utterance.voice?.name);
-    }
-    
-    // Event handlers for start and end of speech
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setCurrentPlayingIndex(index);
-    };
-    
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setCurrentPlayingIndex(null);
-    };
-    
-    utterance.onerror = (event) => {
-      console.error("Speech synthesis error:", event);
-      setIsSpeaking(false);
-      setCurrentPlayingIndex(null);
+    // Check if voices are loaded
+    if (!voicesLoaded || synth.getVoices().length === 0) {
       toast({
         title: "Text-to-Speech Error",
-        description: "There was an error playing the audio. Please try again.",
+        description: "Voice data is still loading. Please try again in a moment.",
         variant: "destructive",
       });
-    };
+      return;
+    }
     
-    // Start speaking
     try {
+      // Cancel any currently speaking message
+      synth.cancel();
+      
+      // Clean the text from HTML tags
+      const cleanText = text.replace(/<[^>]*>?/gm, '');
+      
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      // Explicitly set language to English
+      utterance.lang = 'en-US';
+      
+      // Set voice (optional: could be customized per agent)
+      const voices = synth.getVoices();
+      console.log("Available voices:", voices.slice(0, 5).map(v => `${v.name} (${v.lang})`));
+      
+      if (voices.length > 0) {
+        // Filter for English voices first
+        const englishVoices = voices.filter(voice => 
+          voice.lang.includes('en-') || voice.lang === 'en'
+        );
+        
+        // Use English voices if available, otherwise use any available voice
+        const availableVoices = englishVoices.length > 0 ? englishVoices : voices;
+        
+        const agentType = conversation[index]?.agent;
+        
+        if (agentType === 'Agent A') {
+          const femaleVoice = availableVoices.find(voice => 
+            voice.name.includes('Female') || 
+            voice.name.includes('female') || 
+            voice.name.includes('Samantha')
+          );
+          if (femaleVoice) utterance.voice = femaleVoice;
+        } else if (agentType === 'Agent B') {
+          const maleVoice = availableVoices.find(voice => 
+            voice.name.includes('Male') || 
+            voice.name.includes('male') || 
+            voice.name.includes('David')
+          );
+          if (maleVoice) utterance.voice = maleVoice;
+        } else {
+          // Default to any English voice for Agent C
+          const defaultVoice = availableVoices[0];
+          if (defaultVoice) utterance.voice = defaultVoice;
+        }
+        
+        if (utterance.voice) {
+          console.log(`Selected voice for ${agentType}:`, utterance.voice.name);
+        } else {
+          console.log(`No specific voice found for ${agentType}, using default`);
+        }
+      }
+      
+      // Event handlers for start and end of speech
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setCurrentPlayingIndex(index);
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setCurrentPlayingIndex(null);
+      };
+      
+      utterance.onerror = (event) => {
+        console.error("Speech synthesis error:", event);
+        setIsSpeaking(false);
+        setCurrentPlayingIndex(null);
+        toast({
+          title: "Text-to-Speech Error",
+          description: "There was an error playing the audio. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
+      // Start speaking
       synth.speak(utterance);
     } catch (error) {
       console.error("Error during speech synthesis:", error);
@@ -262,7 +307,8 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0 ml-auto"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
                               if (isCurrentlyPlaying) {
                                 stopSpeaking();
                               } else {

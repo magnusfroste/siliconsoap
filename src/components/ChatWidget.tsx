@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
@@ -17,45 +18,81 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [initialized, setInitialized] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const MAX_RETRIES = 3;
 
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
-  const speakMessage = (text: string) => {
+  // Load voices when component mounts
+  useEffect(() => {
     if (!synth || !enableSpeech) return;
     
-    synth.cancel();
+    const loadVoices = () => {
+      setVoicesLoaded(true);
+    };
     
-    const cleanText = text.replace(/<[^>]*>?/gm, '');
-    
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    
-    utterance.lang = 'en-US';
-    
-    const voices = synth.getVoices();
-    if (voices.length > 0) {
-      const preferredVoice = voices.find(voice => 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Google') || 
-        voice.name.includes('Female') ||
-        (voice.lang === 'en-US' && voice.name.includes('Female'))
-      );
-      if (preferredVoice) utterance.voice = preferredVoice;
+    // Check if voices are already available
+    if (synth.getVoices().length > 0) {
+      setVoicesLoaded(true);
     }
     
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-    };
+    // Add event listener for when voices are loaded
+    synth.addEventListener('voiceschanged', loadVoices);
     
-    utterance.onend = () => {
+    // Fallback for browsers that don't fire voiceschanged
+    const timer = setTimeout(() => {
+      if (synth.getVoices().length > 0) {
+        setVoicesLoaded(true);
+      }
+    }, 1000);
+    
+    return () => {
+      synth.removeEventListener('voiceschanged', loadVoices);
+      clearTimeout(timer);
+    };
+  }, [synth, enableSpeech]);
+
+  const speakMessage = (text: string) => {
+    if (!synth || !enableSpeech || !voicesLoaded) return;
+    
+    try {
+      synth.cancel();
+      
+      const cleanText = text.replace(/<[^>]*>?/gm, '');
+      
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      utterance.lang = 'en-US';
+      
+      const voices = synth.getVoices();
+      if (voices.length > 0) {
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Samantha') || 
+          voice.name.includes('Google') || 
+          voice.name.includes('Female') ||
+          (voice.lang === 'en-US' && voice.name.includes('Female'))
+        );
+        if (preferredVoice) utterance.voice = preferredVoice;
+      }
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+      
+      utterance.onerror = (error) => {
+        console.error("Speech synthesis error in ChatWidget:", error);
+        setIsSpeaking(false);
+      };
+      
+      synth.speak(utterance);
+    } catch (error) {
+      console.error("Error setting up speech in ChatWidget:", error);
       setIsSpeaking(false);
-    };
-    
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-    };
-    
-    synth.speak(utterance);
+    }
   };
 
   useEffect(() => {
@@ -265,7 +302,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                   button.className = 'speech-button';
                   button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
                   button.title = 'Read message aloud';
-                  button.onclick = () => speakMessage(text);
+                  // Add user interaction requirement for speech
+                  button.onclick = (e) => {
+                    e.preventDefault();  
+                    if (voicesLoaded) {
+                      speakMessage(text);
+                    } else {
+                      toast({
+                        title: "Text-to-Speech",
+                        description: "Voice data is still loading. Please try again in a moment.",
+                        variant: "default",
+                      });
+                    }
+                  };
                   if (message instanceof HTMLElement) {
                     message.style.position = 'relative';
                     message.appendChild(button);
@@ -274,6 +323,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               });
             };
 
+            // Delay adding speech buttons to ensure DOM is ready
             setTimeout(addSpeechButtons, 2000);
 
             const chatContainer = document.querySelector('.n8n-chat-messages');
@@ -281,7 +331,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               const observer = new MutationObserver((mutations) => {
                 for (const mutation of mutations) {
                   if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                    addSpeechButtons();
+                    // Delay to ensure the new elements are fully rendered
+                    setTimeout(addSpeechButtons, 200);
                   }
                 }
               });
@@ -323,7 +374,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         }
       }
     }
-  }, [webhookUrl, initialized, retryCount, greeting, enableSpeech]);
+  }, [webhookUrl, initialized, retryCount, greeting, enableSpeech, voicesLoaded]);
 
   return null;
 };
