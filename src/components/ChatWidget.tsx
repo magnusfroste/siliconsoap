@@ -14,9 +14,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   greeting = "Lets chat and find out..."
 }) => {
   const [initialized, setInitialized] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   useEffect(() => {
-    if (webhookUrl && !initialized) {
+    if (webhookUrl && !initialized && retryCount < MAX_RETRIES) {
       try {
         console.log('Initializing chat with webhook URL:', webhookUrl);
         console.log('Using greeting message:', greeting);
@@ -58,6 +60,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             --chat--subtitle--line-height: 1.5;
 
             --chat--textarea--height: 50px;
+            --chat--textarea--display: block !important;
+            --chat--textarea--visibility: visible !important;
+            --chat--textarea--opacity: 1 !important;
 
             --chat--message--font-size: 0.9rem;
             --chat--message--padding: var(--chat--spacing);
@@ -102,6 +107,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           /* Hide the powered by n8n footer */
           .n8n-chat-footer {
             display: none !important;
+          }
+          
+          /* Force the input box to be visible */
+          .n8n-chat-compose {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          
+          .n8n-chat-input {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 50px !important;
           }
           
           /* Add a hint message that appears near hero section */
@@ -157,10 +176,24 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           },
           theme: {
             chatWindow: {
-              welcomeMessage: greeting, 
+              welcomeMessage: greeting,
             }
           }
         });
+        
+        // Force the chat input to be visible after a short delay to allow the component to mount
+        setTimeout(() => {
+          const chatInput = document.querySelector('.n8n-chat-input');
+          const chatCompose = document.querySelector('.n8n-chat-compose');
+          
+          if (chatInput) {
+            chatInput.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
+          }
+          
+          if (chatCompose) {
+            chatCompose.setAttribute('style', 'display: flex !important; visibility: visible !important; opacity: 1 !important;');
+          }
+        }, 1500);
         
         // Add a temporary hint message that appears for a few seconds
         setTimeout(() => {
@@ -180,14 +213,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       } catch (error) {
         // Handle any errors that occur during initialization
         console.error('Error initializing chat:', error);
-        toast({
-          title: "Chat Widget Error",
-          description: "Could not connect to chat service. Please try again later.",
-          variant: "destructive",
-        });
+        
+        // Retry initialization after a delay
+        const nextRetryCount = retryCount + 1;
+        setRetryCount(nextRetryCount);
+        
+        if (nextRetryCount < MAX_RETRIES) {
+          console.log(`Retry attempt ${nextRetryCount} of ${MAX_RETRIES} in 2 seconds...`);
+          setTimeout(() => {
+            setInitialized(false); // Reset to trigger another initialization attempt
+          }, 2000);
+        } else {
+          toast({
+            title: "Chat Widget Error",
+            description: "Could not connect to chat service. Please try again later.",
+            variant: "destructive",
+          });
+        }
       }
     }
-  }, [webhookUrl, initialized, greeting]);
+  }, [webhookUrl, initialized, retryCount, greeting]);
 
   return null;
 };
