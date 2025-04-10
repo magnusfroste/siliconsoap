@@ -1,7 +1,11 @@
 
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { callOpenRouter, isModelFree, checkApiAvailability } from '@/utils/openRouter';
+import { 
+  callOpenRouter, 
+  isModelFree, 
+  checkApiAvailability 
+} from '@/utils/openRouter';
 import { ConversationMessage, ResponseLength, ScenarioType } from '../../../types';
 import {
   createAgentAInitialPrompt,
