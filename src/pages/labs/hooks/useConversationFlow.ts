@@ -5,6 +5,7 @@ import {
   useConversationNavigation
 } from './conversation';
 import { ConversationMessage, ResponseLength, ScenarioType } from '../types';
+import { checkApiAvailability } from '@/utils/openRouter';
 
 export const useConversationFlow = (
   savedApiKey: string,
@@ -71,7 +72,16 @@ export const useConversationFlow = (
     console.log("- agentBModel:", agentBModel);
     console.log("- agentCModel:", agentCModel);
     
-    setCurrentStep(3); // Move to step 3 when starting conversation
+    // First explicitly check API availability before changing steps
+    // This is a pre-emptive check to avoid changing the UI state if the API is unavailable
+    const apiAvailable = await checkApiAvailability(savedApiKey, userApiKey);
+    if (!apiAvailable.available) {
+      console.error("API availability check failed before changing step:", apiAvailable.message);
+      return; // Don't proceed further - the error toast will be shown by checkApiAvailability
+    }
+    
+    // Only move to the next step if API is available
+    setCurrentStep(3);
     await startConversation();
   };
 
@@ -80,6 +90,13 @@ export const useConversationFlow = (
     console.log("Analyzing conversation...");
     console.log("- savedApiKey exists:", !!savedApiKey);
     console.log("- userApiKey exists:", !!userApiKey);
+    
+    // Check API availability before analyzing
+    const apiAvailable = await checkApiAvailability(savedApiKey, userApiKey);
+    if (!apiAvailable.available) {
+      console.error("API availability check failed before analysis:", apiAvailable.message);
+      return; // Don't proceed further
+    }
     
     const currentPrompt = getCurrentPrompt();
     await analyzeConversation(model, currentPrompt);

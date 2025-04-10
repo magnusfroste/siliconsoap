@@ -2,6 +2,7 @@
 import { ConversationMessage, ResponseLength } from '../types';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { ScenarioType } from '../types';
+import React from 'react';
 
 export interface LabsState {
   apiKey: string;

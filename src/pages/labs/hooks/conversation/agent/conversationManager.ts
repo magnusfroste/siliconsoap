@@ -32,11 +32,14 @@ export const checkBeforeStarting = async (
     return false;
   }
 
+  console.log("Checking API availability before starting conversation");
   const result = await checkApiAvailability(savedApiKey, userApiKey);
   
   if (!result.available) {
     // If result mentions rate limits and we have no user key, redirect to API key page
-    const isRateLimit = result.message.includes("free model credits") || result.message.includes("rate limit");
+    const isRateLimit = result.message.includes("free model credits") || 
+                        result.message.includes("rate limit") || 
+                        result.message.includes("reached its rate limit");
     
     toast({
       title: "API Availability Check Failed",
@@ -60,6 +63,7 @@ export const checkBeforeStarting = async (
     return false;
   }
   
+  console.log("API availability check passed");
   return true;
 };
 
