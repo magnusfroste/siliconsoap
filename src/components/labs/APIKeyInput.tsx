@@ -83,6 +83,17 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           </div>
         ) : null}
         
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
+          <p className="text-sm text-amber-800 flex items-center font-medium">
+            <Info className="h-4 w-4 mr-2" />
+            Note about Free Model Limits
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            OpenRouter has daily limits on free model usage. If you encounter rate limit errors, 
+            you can either wait until tomorrow or add credits to your OpenRouter account.
+          </p>
+        </div>
+        
         <div className="flex gap-2 mt-4">
           <Input
             type="password"

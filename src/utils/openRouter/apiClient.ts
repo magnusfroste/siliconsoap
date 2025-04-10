@@ -78,6 +78,19 @@ export const callOpenRouter = async (
 
     if (!response.ok) {
       const errorData = await response.json() as ApiError;
+      
+      // Handle rate limit errors specifically
+      if (response.status === 429) {
+        console.error("Rate limit exceeded:", errorData);
+        // Show a more specific message for rate limits
+        toast({
+          title: "API Rate Limit Exceeded",
+          description: "You've reached the daily limit for free models. To continue using AI models, please add credits to your OpenRouter account or try again tomorrow.",
+          variant: "destructive",
+        });
+        return "Error: Rate limit exceeded for OpenRouter API. You've reached the daily quota for free models. Please try again tomorrow or add credits to your OpenRouter account.";
+      }
+      
       throw new Error(errorData.message || "Failed to get response from OpenRouter");
     }
 
@@ -85,11 +98,22 @@ export const callOpenRouter = async (
     return data.choices[0].message.content;
   } catch (error) {
     console.error("Error calling OpenRouter API:", error);
+    
+    // More descriptive error messages
+    let errorMessage = "Failed to connect to OpenRouter API";
+    if (error instanceof Error) {
+      if (error.message.includes("rate limit")) {
+        errorMessage = "You've reached the daily limit for free models. Please try again tomorrow or add credits to your OpenRouter account.";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     toast({
       title: "API Error",
-      description: error instanceof Error ? error.message : "Failed to connect to OpenRouter API",
+      description: errorMessage,
       variant: "destructive",
     });
-    return "Error: Failed to get a response from the AI model.";
+    return `Error: ${errorMessage}`;
   }
 };
