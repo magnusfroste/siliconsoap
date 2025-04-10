@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Loader2, Check, Save, ArrowRight, Info } from 'lucide-react';
+import { MessageSquare, Loader2, Check, Save, ArrowRight, Info, AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface APIKeyInputProps {
@@ -28,6 +28,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
   goToStep
 }) => {
   const hasEnvApiKey = import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.length > 0;
+  const hasUserKey = apiKey && apiKey !== import.meta.env.VITE_OPENROUTER_API_KEY;
   
   // Helper function to determine if the save button should be disabled
   const isSaveButtonDisabled = () => {
@@ -83,6 +84,19 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           </div>
         ) : null}
         
+        {!hasUserKey && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+            <p className="text-sm text-red-800 flex items-center font-medium">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Personal API Key Required for Paid Models
+            </p>
+            <p className="text-xs text-red-700 mt-1">
+              You must enter your own OpenRouter API key to use paid models like Claude, GPT-4, etc.
+              Free models will work with the default key.
+            </p>
+          </div>
+        )}
+        
         <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
           <p className="text-sm text-amber-800 flex items-center font-medium">
             <Info className="h-4 w-4 mr-2" />
@@ -126,7 +140,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           {savedApiKey || hasEnvApiKey ? (
             <p className="text-xs text-green-600 mt-1">
               <Check className="h-3 w-3 inline mr-1" />
-              {hasEnvApiKey ? 
+              {hasEnvApiKey && !hasUserKey ? 
                 "Default API key is available for free models. Your own key is required for paid models." : 
                 "API key is saved and active. You can now proceed to the next step."}
             </p>

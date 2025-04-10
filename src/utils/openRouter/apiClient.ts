@@ -30,8 +30,13 @@ export const callOpenRouter = async (
   // Use user API key for non-free models if available
   const effectiveApiKey = !modelIsFree && userApiKey ? userApiKey : apiKey;
   
+  console.log("Model is free:", modelIsFree);
+  console.log("Using API key:", effectiveApiKey ? "API key available" : "No API key");
+  console.log("User API key provided:", userApiKey ? "Yes" : "No");
+  
   if (!effectiveApiKey) {
     if (!modelIsFree) {
+      console.error("Paid model selected but no API key available");
       toast({
         title: "API Key Required",
         description: "This model requires your own OpenRouter API key. Please provide it in the settings.",

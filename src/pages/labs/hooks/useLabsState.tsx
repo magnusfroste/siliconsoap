@@ -39,7 +39,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setAvailableModels,
     loadingModels,
     setLoadingModels
-  } = useModels(savedApiKey);
+  } = useModels(savedApiKey || userApiKey); // Use either key to fetch models
 
   const {
     agentAPersona,
@@ -108,7 +108,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     responseLength,
     getCurrentScenarioFn,
     getCurrentPromptFn,
-    userApiKey
+    userApiKey  // Ensure userApiKey is passed to useConversationFlow
   );
 
   return [
