@@ -96,20 +96,16 @@ export const callOpenRouter = async (
       if (response.status === 429) {
         console.error("Rate limit exceeded:", errorData);
         
-        // Show a more attention-grabbing toast for rate limits with action button
+        // Show a more attention-grabbing toast for rate limits
         toast({
           title: "⚠️ API Rate Limit Reached",
           description: "Free model credits have been used up for today. Add your own API key to continue.",
           variant: "destructive",
-          action: (
-            <Button 
-              onClick={() => window.location.href = "/labs"} 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-destructive"
-            >
-              Add API Key
-            </Button>
-          ),
+          // Use actionable toast without JSX
+          action: {
+            label: "Add API Key",
+            onClick: () => window.location.href = "/labs"
+          },
           duration: 10000, // Show for longer (10 seconds)
         });
         return "🚫 Rate limit reached: Daily free credits have been used up. Please add your own OpenRouter API key to continue using AI features. Click the 'Add API Key' button above or refresh the page to navigate to the API key setup.";
@@ -139,20 +135,15 @@ export const callOpenRouter = async (
       if (error.message.includes("rate limit")) {
         errorMessage = "Free model credits have been used up for today. Add your own API key to continue.";
         
-        // Show a special toast for rate limit errors
+        // Show a special toast for rate limit errors using action object instead of JSX
         toast({
           title: "⚠️ Free Credits Exhausted",
           description: "Daily free model usage is depleted. Add your own OpenRouter API key to continue.",
           variant: "destructive",
-          action: (
-            <Button 
-              onClick={() => window.location.href = "/labs"} 
-              variant="outline" 
-              className="border-white text-white hover:bg-white hover:text-destructive"
-            >
-              Add API Key
-            </Button>
-          ),
+          action: {
+            label: "Add API Key",
+            onClick: () => window.location.href = "/labs"
+          },
           duration: 10000, // Show for longer
         });
       } else {
