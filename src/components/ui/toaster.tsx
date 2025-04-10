@@ -37,7 +37,7 @@ export function Toaster() {
                 </Button>
               </ToastAction>
             ) : (
-              action
+              action as React.ReactNode
             )}
             <ToastClose />
           </Toast>

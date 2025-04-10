@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -142,6 +143,33 @@ export const useApiKey = () => {
     return true;
   };
 
+  // New function to delete the API key
+  const deleteApiKey = () => {
+    // Clear localStorage
+    localStorage.removeItem('userOpenRouterApiKey');
+    localStorage.removeItem('openRouterApiKey');
+    
+    // Reset state
+    setUserApiKey('');
+    setKeyIsValidated(false);
+    
+    // Preserve environment API key if available
+    const envApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    if (envApiKey) {
+      setApiKey(envApiKey);
+      setSavedApiKey(envApiKey);
+    } else {
+      setApiKey('');
+      setSavedApiKey('');
+    }
+    
+    toast({
+      title: "API Key Deleted",
+      description: "Your API key has been successfully removed. You can now test the application without a personal API key.",
+      variant: "default",
+    });
+  };
+
   const getActiveApiKey = (modelIsFree = true) => {
     console.log("getActiveApiKey called for", modelIsFree ? "free model" : "paid model");
     console.log("User API key exists:", !!userApiKey);
@@ -191,6 +219,7 @@ export const useApiKey = () => {
     isUsingEnvKey,
     keyIsValidated,
     saveApiKey,
+    deleteApiKey,
     getActiveApiKey
   };
 };

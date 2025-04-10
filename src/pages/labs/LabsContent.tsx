@@ -57,6 +57,7 @@ const LabsContent: React.FC = () => {
                 isSaved={state.isSaved}
                 isUsingEnvKey={state.isUsingEnvKey}
                 saveApiKey={actions.saveApiKey}
+                deleteApiKey={actions.deleteApiKey}
                 goToStep={actions.goToStep}
               />
             )}

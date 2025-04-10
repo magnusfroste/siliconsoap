@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Loader2, Check, Save, ArrowRight, Info, AlertTriangle } from 'lucide-react';
+import { MessageSquare, Loader2, Check, Save, ArrowRight, Info, AlertTriangle, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 interface APIKeyInputProps {
   apiKey: string;
@@ -13,6 +15,7 @@ interface APIKeyInputProps {
   isSaved: boolean;
   isUsingEnvKey?: boolean;
   saveApiKey: () => void;
+  deleteApiKey?: () => void;
   goToStep: (step: number) => void;
 }
 
@@ -24,6 +27,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
   isSaved,
   isUsingEnvKey,
   saveApiKey,
+  deleteApiKey,
   goToStep
 }) => {
   const hasEnvApiKey = import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.length > 0;
@@ -134,6 +138,35 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
             )}
             <span className="ml-2">{isSaving ? "Saving..." : isSaved ? "Saved" : "Save Key"}</span>
           </Button>
+          
+          {deleteApiKey && hasUserKey && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">Delete Key</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete API Key?</DialogTitle>
+                  <DialogDescription>
+                    This will remove your saved API key. You'll need to re-enter it to use paid models or if the platform rate limits are reached.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => {
+                      deleteApiKey();
+                    }}
+                  >
+                    Delete API Key
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
         
         <div className="mt-2">

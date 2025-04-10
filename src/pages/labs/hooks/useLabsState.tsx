@@ -25,6 +25,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setIsSaved,
     isUsingEnvKey,
     saveApiKey,
+    deleteApiKey,
     getActiveApiKey
   } = useApiKey();
 
@@ -166,6 +167,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setAnalyzerModel,
       handleInputChange,
       saveApiKey,
+      deleteApiKey,
       getActiveApiKey,
       goToStep,
       handleStartConversation,
