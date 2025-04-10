@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,7 +63,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-4">
             <p className="text-sm text-green-800 flex items-center">
               <Check className="h-4 w-4 mr-2" />
-              A default API key is available for free models
+              A default API key is available for free models - usage is on the house but daily limits apply
             </p>
             <p className="text-xs text-green-700 mt-2">
               <TooltipProvider>
@@ -72,13 +71,14 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
                   <TooltipTrigger asChild>
                     <span className="flex items-center">
                       <Info className="h-3 w-3 mr-1" /> 
-                      Free models will use the default API key. Paid models require your own key.
+                      Free models will use the default API key until rate limits are reached. For continued usage or paid models, your own key is required.
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs max-w-xs">
-                      The default API key works with models marked as "free". To use other models, 
-                      you'll need to provide your own OpenRouter API key.
+                      The default API key works with models marked as "free" but has daily usage limits. 
+                      If these limits are reached, you'll need to provide your own OpenRouter API key to continue 
+                      or switch to using paid models with your own key.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -106,7 +106,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
             How API Keys Work
           </p>
           <p className="text-xs text-amber-700 mt-1">
-            <strong>For free models:</strong> The app will use the default API key if available.<br />
+            <strong>For free models:</strong> The app will use the default API key if available, but is subject to daily usage limits.<br />
             <strong>For paid models:</strong> Your personal API key will be used to access your OpenRouter credits.<br />
             <strong>Important:</strong> After entering your API key, make sure to click <strong>Save Key</strong> before proceeding.
           </p>
