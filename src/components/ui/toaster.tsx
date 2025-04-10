@@ -36,9 +36,7 @@ export function Toaster() {
                   {action.label}
                 </Button>
               </ToastAction>
-            ) : (
-              action
-            )}
+            ) : action}
             <ToastClose />
           </Toast>
         )

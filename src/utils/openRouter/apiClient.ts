@@ -103,7 +103,8 @@ export const callOpenRouter = async (
           variant: "destructive",
           action: {
             label: "Add API Key",
-            onClick: () => window.location.href = "/labs"
+            onClick: () => window.location.href = "/labs",
+            className: "border-white text-white hover:bg-white hover:text-destructive"
           },
           duration: 10000, // Show for longer (10 seconds)
         });
@@ -155,7 +156,8 @@ export const callOpenRouter = async (
           variant: "destructive",
           action: {
             label: "Add API Key",
-            onClick: () => window.location.href = "/labs"
+            onClick: () => window.location.href = "/labs",
+            className: "border-white text-white hover:bg-white hover:text-destructive"
           },
           duration: 10000, // Show for longer
         });
