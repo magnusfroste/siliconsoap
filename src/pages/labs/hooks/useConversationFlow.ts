@@ -48,7 +48,7 @@ export const useConversationFlow = (
     responseLength,
     getCurrentScenario,
     getCurrentPrompt,
-    userApiKey
+    userApiKey // Ensure userApiKey is passed to useAgentConversation
   );
 
   // Use the analysis hook for conversation analysis
@@ -60,16 +60,18 @@ export const useConversationFlow = (
     analyzerModel,
     setAnalyzerModel,
     handleAnalyzeConversation: analyzeConversation
-  } = useConversationAnalysis(savedApiKey, conversation, userApiKey);
+  } = useConversationAnalysis(savedApiKey, conversation, userApiKey); // Ensure userApiKey is passed to useConversationAnalysis
 
   // Custom wrapper around startConversation that also updates the step
   const handleStartConversation = async () => {
+    console.log("Starting conversation with userApiKey:", userApiKey ? "provided" : "not provided");
     setCurrentStep(3); // Move to step 3 when starting conversation
     await startConversation();
   };
 
   // Custom wrapper around analyzeConversation that passes the current prompt
   const handleAnalyzeConversation = async (model?: string) => {
+    console.log("Analyzing conversation with userApiKey:", userApiKey ? "provided" : "not provided");
     const currentPrompt = getCurrentPrompt();
     await analyzeConversation(model, currentPrompt);
   };

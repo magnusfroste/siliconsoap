@@ -32,7 +32,10 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
   
   // Helper function to determine if the save button should be disabled
   const isSaveButtonDisabled = () => {
-    // Enable the save button when there's a non-empty API key that's different from the saved one
+    // Only disable if:
+    // 1. Currently saving
+    // 2. API key is empty
+    // 3. API key hasn't changed from saved key
     return isSaving || !apiKey.trim() || apiKey === savedApiKey;
   };
   
@@ -100,11 +103,12 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
         <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
           <p className="text-sm text-amber-800 flex items-center font-medium">
             <Info className="h-4 w-4 mr-2" />
-            Note about Free Model Limits
+            How API Keys Work
           </p>
           <p className="text-xs text-amber-700 mt-1">
-            OpenRouter has daily limits on free model usage. If you encounter rate limit errors, 
-            you can either wait until tomorrow or add credits to your OpenRouter account.
+            <strong>For free models:</strong> The app will use the default API key if available.<br />
+            <strong>For paid models:</strong> Your personal API key will be used to access your OpenRouter credits.<br />
+            <strong>Important:</strong> After entering your API key, make sure to click <strong>Save Key</strong> before proceeding.
           </p>
         </div>
         

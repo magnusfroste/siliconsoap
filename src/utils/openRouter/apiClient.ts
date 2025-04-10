@@ -28,7 +28,13 @@ export const callOpenRouter = async (
   const modelIsFree = isModelFree(model);
   
   // Use user API key for non-free models if available
-  const effectiveApiKey = !modelIsFree && userApiKey ? userApiKey : apiKey;
+  let effectiveApiKey = apiKey;
+  
+  // For paid models, always prefer the user's API key
+  if (!modelIsFree && userApiKey) {
+    console.log("Using user API key for paid model:", model);
+    effectiveApiKey = userApiKey;
+  }
   
   console.log("Model is free:", modelIsFree);
   console.log("Using API key:", effectiveApiKey ? "API key available" : "No API key");
@@ -65,6 +71,8 @@ export const callOpenRouter = async (
       { role: "user", content: prompt }
     ];
 
+    console.log("Sending request to OpenRouter with model:", model);
+
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
@@ -83,6 +91,7 @@ export const callOpenRouter = async (
 
     if (!response.ok) {
       const errorData = await response.json() as ApiError;
+      console.error("OpenRouter API error:", errorData);
       
       // Handle rate limit errors specifically
       if (response.status === 429) {
@@ -94,6 +103,16 @@ export const callOpenRouter = async (
           variant: "destructive",
         });
         return "Error: Rate limit exceeded for OpenRouter API. You've reached the daily quota for free models. Please try again tomorrow or add credits to your OpenRouter account.";
+      }
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        toast({
+          title: "Authentication Error",
+          description: "Your API key was rejected. Please check that you've entered a valid OpenRouter API key.",
+          variant: "destructive",
+        });
+        return "Error: Authentication failed. Please check your API key and try again.";
       }
       
       throw new Error(errorData.message || "Failed to get response from OpenRouter");

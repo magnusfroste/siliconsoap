@@ -32,6 +32,8 @@ export const useApiKey = () => {
     const storedUserApiKey = localStorage.getItem('userOpenRouterApiKey');
     if (storedUserApiKey) {
       setUserApiKey(storedUserApiKey);
+      console.log("Loaded user API key from localStorage:", 
+        storedUserApiKey ? storedUserApiKey.substring(0, 8) + "..." : "none");
     }
     
     console.log("Initial API keys setup - Environment key exists:", !!envApiKey);
@@ -73,7 +75,7 @@ export const useApiKey = () => {
     
     toast({
       title: "API Key Saved",
-      description: "Your OpenRouter API key has been saved.",
+      description: "Your OpenRouter API key has been saved for use with all models.",
       variant: "default",
     });
     
@@ -93,18 +95,27 @@ export const useApiKey = () => {
     console.log("User API key:", userApiKey ? "exists" : "doesn't exist");
     console.log("Environment API key:", import.meta.env.VITE_OPENROUTER_API_KEY ? "exists" : "doesn't exist");
     
-    // For free models, prefer the env API key
-    if (modelIsFree && import.meta.env.VITE_OPENROUTER_API_KEY) {
-      return import.meta.env.VITE_OPENROUTER_API_KEY;
-    }
-    
-    // For non-free models, require the user's API key
+    // For paid models, always use the user's API key first
     if (!modelIsFree && userApiKey) {
+      console.log("Using user API key for paid model");
       return userApiKey;
     }
     
-    // Otherwise, fallback to any available key
-    return userApiKey || savedApiKey;
+    // For free models, prefer the env API key if it exists
+    if (modelIsFree && import.meta.env.VITE_OPENROUTER_API_KEY) {
+      console.log("Using env API key for free model");
+      return import.meta.env.VITE_OPENROUTER_API_KEY;
+    }
+    
+    // If user has saved their API key, use it as a fallback
+    if (userApiKey) {
+      console.log("Using user API key as fallback");
+      return userApiKey;
+    }
+    
+    // Otherwise, use any available saved key
+    console.log("Using saved API key");
+    return savedApiKey;
   };
 
   return {
