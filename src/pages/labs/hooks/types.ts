@@ -55,7 +55,7 @@ export interface LabsActions {
   setAnalysisResults: React.Dispatch<React.SetStateAction<string>>; // Changed to match the string type
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
-  saveApiKey: () => boolean;
+  saveApiKey: () => Promise<boolean>; // Change from boolean to Promise<boolean>
   getActiveApiKey: (modelIsFree?: boolean) => string;
   goToStep: (step: number) => void;
   handleStartConversation: () => void;

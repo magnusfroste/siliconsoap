@@ -77,7 +77,7 @@ export const useApiKey = () => {
     }
   };
 
-  const saveApiKey = async () => {
+  const saveApiKey = async (): Promise<boolean> => {
     setIsSaving(true);
     
     // Don't allow saving empty API keys
