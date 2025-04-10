@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -38,7 +39,19 @@ export const useApiKey = () => {
   const saveApiKey = () => {
     setIsSaving(true);
     
-    if (!apiKey.trim() || !apiKey.startsWith('sk-or-')) {
+    // Don't allow saving empty API keys
+    if (!apiKey.trim()) {
+      toast({
+        title: "Invalid API Key",
+        description: "Please enter a valid OpenRouter API key.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+      return false;
+    }
+    
+    // Validate that it's an OpenRouter key
+    if (!apiKey.startsWith('sk-or-')) {
       toast({
         title: "Invalid API Key",
         description: "Please enter a valid OpenRouter API key (starting with 'sk-or-').",
@@ -48,6 +61,7 @@ export const useApiKey = () => {
       return false;
     }
     
+    // Save to localStorage
     localStorage.setItem('userOpenRouterApiKey', apiKey);
     setUserApiKey(apiKey);
     localStorage.setItem('openRouterApiKey', apiKey);
@@ -62,6 +76,7 @@ export const useApiKey = () => {
     setIsSaving(false);
     setIsSaved(true);
     
+    // Reset isSaved after a timeout
     setTimeout(() => {
       setIsSaved(false);
     }, 3000);

@@ -29,6 +29,23 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
 }) => {
   const hasEnvApiKey = import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.length > 0;
   
+  // Helper function to determine if the save button should be disabled
+  const isSaveButtonDisabled = () => {
+    // Enable the save button when there's a non-empty API key that's different from the saved one
+    return isSaving || !apiKey.trim() || apiKey === savedApiKey;
+  };
+  
+  // Helper function to stop any ongoing speech synthesis before navigation
+  const stopSpeech = () => {
+    try {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (error) {
+      console.error("Error stopping speech:", error);
+    }
+  };
+  
   return (
     <Card className="mb-6">
       <CardHeader className="pb-2">
@@ -76,7 +93,7 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
           />
           <Button 
             onClick={saveApiKey} 
-            disabled={isSaving || apiKey === savedApiKey}
+            disabled={isSaveButtonDisabled()}
             className={isSaved ? "bg-green-500 hover:bg-green-600" : ""}
           >
             {isSaving ? (
@@ -111,7 +128,10 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({
       </CardContent>
       <CardFooter className="pt-0">
         <Button 
-          onClick={() => goToStep(2)} 
+          onClick={() => {
+            stopSpeech();
+            goToStep(2);
+          }} 
           disabled={!savedApiKey && !hasEnvApiKey} 
           className="ml-auto"
         >
