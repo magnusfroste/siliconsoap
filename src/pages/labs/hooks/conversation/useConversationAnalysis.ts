@@ -1,18 +1,23 @@
 
-import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { callOpenRouter, isModelFree } from '@/utils/openRouter';
-import { ConversationMessage, ResponseLength } from '../../types';
+import { ConversationMessage } from '../../types';
+import { useAnalysisState } from './analysis/useAnalysisState';
+import { analyzeConversation } from './analysis/analyzerService';
 
 export const useConversationAnalysis = (
   savedApiKey: string, 
   conversation: ConversationMessage[],
   userApiKey?: string
 ) => {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<string>('');
-  // Updated to use Llama 3.3 70B instead of Claude
-  const [analyzerModel, setAnalyzerModel] = useState<string>('meta-llama/llama-3.3-70b-instruct:free');
+  // Use the analysis state hook
+  const {
+    isAnalyzing,
+    setIsAnalyzing,
+    analysisResults,
+    setAnalysisResults,
+    analyzerModel,
+    setAnalyzerModel
+  } = useAnalysisState();
 
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
     if (!savedApiKey && !userApiKey) {
@@ -26,67 +31,26 @@ export const useConversationAnalysis = (
 
     const selectedModel = model || analyzerModel;
     
-    // Check if selected model needs a user API key
-    const needsUserKey = !isModelFree(selectedModel);
-    if (needsUserKey && !userApiKey) {
-      toast({
-        title: "API Key Required",
-        description: "The selected analysis model requires your own OpenRouter API key. Please provide it in the settings.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsAnalyzing(true);
     setAnalysisResults('');
     
     try {
-      if (conversation.length === 0) {
-        toast({
-          title: "No Conversation",
-          description: "There is no conversation to analyze.",
-          variant: "destructive",
-        });
-        setIsAnalyzing(false);
-        return;
-      }
-      
-      // Format the conversation for analysis
-      let conversationText = "";
-      conversation.forEach(entry => {
-        conversationText += `${entry.agent} (${entry.persona}): ${entry.message}\n\n`;
-      });
-      
-      const analysisPrompt = `
-        Analyze the following multi-agent AI conversation. ${prompt ? `The conversation was about: "${prompt}"` : ""}
-        
-        ${conversationText}
-        
-        Please provide an analysis of:
-        1. The main points and insights from the conversation
-        2. How each agent's unique perspective contributed
-        3. Areas of agreement and disagreement
-        4. Overall quality of the discussion
-        5. Suggestions for further exploration
-        
-        Format your response with clear headings and bullet points where appropriate. Use markdown formatting for better readability.
-      `;
-      
-      const analysis = await callOpenRouter(
-        analysisPrompt,
+      const analysis = await analyzeConversation(
+        conversation,
         selectedModel,
-        'analytical', 
         savedApiKey,
-        'long' as ResponseLength,
+        prompt,
+        'long',
         userApiKey
       );
       
       setAnalysisResults(analysis);
     } catch (error) {
       console.error("Error analyzing conversation:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze the conversation. Please try again.";
       toast({
         title: "Analysis Error",
-        description: "Failed to analyze the conversation. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
