@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Atom, Loader2 } from 'lucide-react';
@@ -29,6 +28,16 @@ const LabsContent: React.FC = () => {
   });
 
   const [state, actions] = useLabsState();
+  
+  // Log API key status when component mounts
+  useEffect(() => {
+    console.log("=== API KEY STATUS CHECK ===");
+    console.log("User API key in localStorage:", !!localStorage.getItem('userOpenRouterApiKey'));
+    if (localStorage.getItem('userOpenRouterApiKey')) {
+      console.log("User API key starts with:", localStorage.getItem('userOpenRouterApiKey')?.substring(0, 8) + "...");
+    }
+    console.log("===========================");
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -50,15 +59,21 @@ const LabsContent: React.FC = () => {
           <div className="mt-8">
             {state.currentStep === 1 && (
               <APIKeyInput 
-                apiKey={state.apiKey}
-                setApiKey={actions.setApiKey}
-                savedApiKey={state.savedApiKey}
-                isSaving={state.isSaving}
-                isSaved={state.isSaved}
-                isUsingEnvKey={state.isUsingEnvKey}
-                saveApiKey={actions.saveApiKey}
-                deleteApiKey={actions.deleteApiKey}
                 goToStep={actions.goToStep}
+                refreshModels={() => {
+                  console.log("Refreshing models from LabsContent");
+                  // Get the current API key from localStorage
+                  const apiKey = localStorage.getItem('userOpenRouterApiKey');
+                  if (apiKey) {
+                    console.log("Found API key in localStorage, refreshing models");
+                    // Force a refresh of the models using the API key from localStorage
+                    if (actions.refreshModels) {
+                      actions.refreshModels(apiKey);
+                    }
+                  } else {
+                    console.log("No API key found in localStorage");
+                  }
+                }}
               />
             )}
             
@@ -92,13 +107,16 @@ const LabsContent: React.FC = () => {
                 formA={formA}
                 formB={formB}
                 formC={formC}
-                modelsByProvider={state.availableModels.reduce((acc, model) => {
-                  if (!acc[model.provider]) {
-                    acc[model.provider] = [];
-                  }
-                  acc[model.provider].push(model);
-                  return acc;
-                }, {} as Record<string, any[]>)}
+                modelsByProvider={state.availableModels.length > 0 ? 
+                  state.availableModels.reduce((acc, model) => {
+                    if (!acc[model.provider]) {
+                      acc[model.provider] = [];
+                    }
+                    acc[model.provider].push(model);
+                    return acc;
+                  }, {} as Record<string, any[]>) : 
+                  {}
+                }
                 loadingModels={state.loadingModels}
                 goToStep={actions.goToStep}
                 handleStartConversation={actions.handleStartConversation}
@@ -150,7 +168,10 @@ const LabsContent: React.FC = () => {
             <h2 className="text-lg font-semibold mb-2">About OpenRouter Integration</h2>
             <p className="mb-2">
               This demo uses <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">OpenRouter</a> to access multiple AI models through a single API. 
-              If you would like to play with non-free models, sign up for an OpenRouter account and enter your API key to use models from providers like OpenAI, Anthropic, and Mistral.
+              You'll need to create an OpenRouter account and enter your API key to use the available models from providers like OpenAI, Anthropic, and Mistral.
+            </p>
+            <p>
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Get your free OpenRouter API key here</a>
             </p>
           </div>
         </div>

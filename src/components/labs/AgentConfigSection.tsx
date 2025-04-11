@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { CardFooter } from '@/components/ui/card';
 import { ScenarioSelector, ScenarioType } from './ScenarioSelector';
 import { UseFormReturn } from 'react-hook-form';
@@ -10,6 +9,10 @@ import {
   AgentGridSection
 } from './agent-config';
 import { Profile } from './agent-card/types';
+import { checkApiAvailability } from '@/utils/openRouter';
+import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface AgentConfigSectionProps {
   numberOfAgents: number;
@@ -33,9 +36,9 @@ interface AgentConfigSectionProps {
   agentAPersona: string;
   agentBPersona: string;
   agentCPersona: string;
-  handleAgentAPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleAgentBPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleAgentCPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleAgentAPersonaChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  handleAgentBPersonaChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  handleAgentCPersonaChange: (e: ChangeEvent<HTMLSelectElement>) => void;
   profiles: Profile[];
   formA: UseFormReturn<{ persona: string }>;
   formB: UseFormReturn<{ persona: string }>;
@@ -86,15 +89,114 @@ export const AgentConfigSection: React.FC<AgentConfigSectionProps> = ({
   getCurrentPrompt,
   savedApiKey
 }) => {
-  const isStartButtonDisabled = !getCurrentPrompt().trim() || 
+  const [apiKeyWarning, setApiKeyWarning] = useState<string | null>(null);
+  
+  // Create adapter functions to convert between event handlers and string value handlers
+  const handleAgentAPersonaChangeAdapter = (value: string) => {
+    // Create a synthetic event object
+    const syntheticEvent = {
+      target: { value }
+    } as ChangeEvent<HTMLSelectElement>;
+    
+    handleAgentAPersonaChange(syntheticEvent);
+  };
+  
+  const handleAgentBPersonaChangeAdapter = (value: string) => {
+    const syntheticEvent = {
+      target: { value }
+    } as ChangeEvent<HTMLSelectElement>;
+    
+    handleAgentBPersonaChange(syntheticEvent);
+  };
+  
+  const handleAgentCPersonaChangeAdapter = (value: string) => {
+    const syntheticEvent = {
+      target: { value }
+    } as ChangeEvent<HTMLSelectElement>;
+    
+    handleAgentCPersonaChange(syntheticEvent);
+  };
+  
+  // Add effect to log when key props change
+  useEffect(() => {
+    console.log("AgentConfigSection props changed:", {
+      savedApiKey: savedApiKey ? `${savedApiKey.substring(0, 8)}...` : null,
+      agentAModel,
+      agentBModel,
+      agentCModel,
+      numberOfAgents,
+      loadingModels
+    });
+  }, [savedApiKey, agentAModel, agentBModel, agentCModel, numberOfAgents, loadingModels]);
+
+  // Check for rate limit status in localStorage - this function is no longer needed with BYOK
+  const checkForRateLimit = () => {
+    // With BYOK approach, we don't need to check for rate limits
+    // The user is responsible for their own API key and its rate limits
+    return false;
+  };
+
+  // Get the current prompt
+  const currentPrompt = getCurrentPrompt();
+  console.log("Current prompt:", currentPrompt);
+
+  // Add detailed debugging for API key and models
+  const localStorageApiKey = localStorage.getItem('userOpenRouterApiKey');
+  console.log("API Key Debug:", {
+    savedApiKey: savedApiKey ? `${savedApiKey.substring(0, 8)}...` : null,
+    savedApiKeyLength: savedApiKey ? savedApiKey.length : 0,
+    localStorageApiKey: localStorageApiKey ? 
+      `${localStorageApiKey.substring(0, 8)}...` : null
+  });
+
+  console.log("Models Debug:", {
+    agentAModel,
+    agentBModel,
+    agentCModel,
+    numberOfAgents,
+    availableModelsCount: modelsByProvider ? 
+      Object.values(modelsByProvider).reduce((acc, models) => acc + models.length, 0) : 0
+  });
+
+  // Simplified logic for button disabled state - with fallback to localStorage API key
+  const isStartButtonDisabled = 
     loadingModels || 
-    !savedApiKey || 
+    (!savedApiKey && !localStorageApiKey) || 
     !agentAModel || 
     (numberOfAgents >= 2 && !agentBModel) || 
     (numberOfAgents >= 3 && !agentCModel);
+    
+  // Debug logs for button disabled state
+  console.log("Button disabled state:", {
+    promptEmpty: !currentPrompt?.trim(),
+    loadingModels: loadingModels,
+    noApiKey: !savedApiKey && !localStorageApiKey,
+    noAgentAModel: !agentAModel,
+    agentBMissing: numberOfAgents >= 2 && !agentBModel,
+    agentCMissing: numberOfAgents >= 3 && !agentCModel,
+    finalState: isStartButtonDisabled
+  });
 
   return (
     <>
+      {apiKeyWarning && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>API Key Required</AlertTitle>
+          <AlertDescription>
+            {apiKeyWarning}
+            <div className="mt-2">
+              <button 
+                onClick={() => goToStep(1)} 
+                className="text-white underline hover:no-underline"
+              >
+                Go back to add your API key
+              </button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+    
       <SettingsCard title="Conversation Settings">
         <ConversationSettings
           numberOfAgents={numberOfAgents}
@@ -126,9 +228,9 @@ export const AgentConfigSection: React.FC<AgentConfigSectionProps> = ({
         agentAPersona={agentAPersona}
         agentBPersona={agentBPersona}
         agentCPersona={agentCPersona}
-        handleAgentAPersonaChange={handleAgentAPersonaChange}
-        handleAgentBPersonaChange={handleAgentBPersonaChange}
-        handleAgentCPersonaChange={handleAgentCPersonaChange}
+        handleAgentAPersonaChange={handleAgentAPersonaChangeAdapter}
+        handleAgentBPersonaChange={handleAgentBPersonaChangeAdapter}
+        handleAgentCPersonaChange={handleAgentCPersonaChangeAdapter}
         profiles={profiles}
         formA={formA}
         formB={formB}

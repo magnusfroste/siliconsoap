@@ -19,52 +19,50 @@ import {
  * Checks API availability before starting a conversation
  */
 export const checkBeforeStarting = async (
-  savedApiKey: string,
-  userApiKey?: string
+  apiKey: string
 ): Promise<boolean> => {
-  // If we have no API keys at all, fail immediately
-  if (!savedApiKey && !userApiKey) {
+  // If we have no API key, fail immediately
+  if (!apiKey) {
     toast({
       title: "API Key Required",
-      description: "No API key available. Please add your own OpenRouter API key.",
+      description: "No API key available. Please add your OpenRouter API key.",
       variant: "destructive",
     });
     return false;
   }
 
   console.log("Checking API availability before starting conversation");
-  const result = await checkApiAvailability(savedApiKey, userApiKey);
+  console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
   
-  if (!result.available) {
-    // If result mentions rate limits and we have no user key, redirect to API key page
-    const isRateLimit = result.message.includes("free model credits") || 
-                        result.message.includes("rate limit") || 
-                        result.message.includes("reached its rate limit");
+  try {
+    const result = await checkApiAvailability(apiKey);
+    
+    if (!result.available) {
+      console.error("API not available:", result.message);
+      
+      toast({
+        title: "API Key Issue",
+        description: result.message,
+        variant: "destructive",
+        duration: 5000,
+      });
+      
+      return false;
+    }
+    
+    console.log("API availability check passed");
+    return true;
+  } catch (error) {
+    console.error("Error checking API availability:", error);
     
     toast({
-      title: "API Availability Check Failed",
-      description: result.message,
+      title: "API Error",
+      description: "Failed to check API availability. Please try again.",
       variant: "destructive",
-      action: isRateLimit && !userApiKey ? {
-        label: "Add API Key",
-        onClick: () => window.location.href = "/labs",
-        className: "border-white text-white hover:bg-white hover:text-destructive"
-      } : undefined,
-      duration: 10000,
     });
-    
-    // If this is a rate limit without a user key, redirect to API key page
-    if (isRateLimit && !userApiKey) {
-      setTimeout(() => {
-        window.location.href = "/labs";
-      }, 1500);
-    }
     
     return false;
   }
-  
-  console.log("API availability check passed");
-  return true;
 };
 
 /**
@@ -72,12 +70,11 @@ export const checkBeforeStarting = async (
  */
 export const validateConversationRequirements = (
   currentPrompt: string,
-  savedApiKey: string,
+  apiKey: string,
   agentAModel: string,
   agentBModel: string,
   agentCModel: string,
-  numberOfAgents: number,
-  userApiKey?: string
+  numberOfAgents: number
 ): boolean => {
   if (!currentPrompt.trim()) {
     toast({
@@ -88,7 +85,7 @@ export const validateConversationRequirements = (
     return false;
   }
   
-  if (!savedApiKey) {
+  if (!apiKey) {
     toast({
       title: "API Key Required",
       description: "Please enter your OpenRouter API key.",
@@ -97,18 +94,8 @@ export const validateConversationRequirements = (
     return false;
   }
   
-  const needsAgentAUserKey = !isModelFree(agentAModel);
-  const needsAgentBUserKey = numberOfAgents >= 2 && !isModelFree(agentBModel);
-  const needsAgentCUserKey = numberOfAgents >= 3 && !isModelFree(agentCModel);
-  
-  if ((needsAgentAUserKey || needsAgentBUserKey || needsAgentCUserKey) && !userApiKey) {
-    toast({
-      title: "API Key Required",
-      description: "One or more selected models require your own OpenRouter API key. Please provide it in the settings.",
-      variant: "destructive",
-    });
-    return false;
-  }
+  // With BYOK approach, we don't need to check if models are free or not
+  // since the user is always providing their own API key
   
   return true;
 };
@@ -126,9 +113,8 @@ export const handleInitialRound = async (
   agentAPersona: string,
   agentBPersona: string,
   agentCPersona: string,
-  savedApiKey: string,
-  responseLength: ResponseLength,
-  userApiKey?: string
+  apiKey: string,
+  responseLength: ResponseLength
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -143,9 +129,8 @@ export const handleInitialRound = async (
     agentAPrompt,
     agentAModel,
     agentAPersona,
-    savedApiKey,
-    responseLength,
-    userApiKey
+    apiKey,
+    responseLength
   );
   
   messages.push({
@@ -171,9 +156,8 @@ export const handleInitialRound = async (
     agentBPrompt,
     agentBModel,
     agentBPersona,
-    savedApiKey,
-    responseLength,
-    userApiKey
+    apiKey,
+    responseLength
   );
   
   messages.push({
@@ -200,9 +184,8 @@ export const handleInitialRound = async (
       agentCPrompt,
       agentCModel,
       agentCPersona,
-      savedApiKey,
-      responseLength,
-      userApiKey
+      apiKey,
+      responseLength
     );
     
     messages.push({
@@ -237,9 +220,8 @@ export const handleAdditionalRounds = async (
   agentAResponse: string,
   agentBResponse: string,
   conversation: ConversationMessage[],
-  savedApiKey: string,
-  responseLength: ResponseLength,
-  userApiKey?: string
+  apiKey: string,
+  responseLength: ResponseLength
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -262,9 +244,8 @@ export const handleAdditionalRounds = async (
     agentAFollowupPrompt,
     agentAModel,
     agentAPersona,
-    savedApiKey,
-    responseLength,
-    userApiKey
+    apiKey,
+    responseLength
   );
   
   additionalMessages.push({
@@ -288,9 +269,8 @@ export const handleAdditionalRounds = async (
       agentBFinalPrompt,
       agentBModel,
       agentBPersona,
-      savedApiKey,
-      responseLength,
-      userApiKey
+      apiKey,
+      responseLength
     );
     
     additionalMessages.push({
@@ -313,9 +293,8 @@ export const handleAdditionalRounds = async (
         agentCFinalPrompt,
         agentCModel,
         agentCPersona,
-        savedApiKey,
-        responseLength,
-        userApiKey
+        apiKey,
+        responseLength
       );
       
       additionalMessages.push({

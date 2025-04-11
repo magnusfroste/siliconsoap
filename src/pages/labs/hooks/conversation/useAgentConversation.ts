@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ConversationMessage, ResponseLength, ScenarioType } from '../../types';
@@ -10,7 +9,7 @@ import {
 } from './agent/conversationManager';
 
 export const useAgentConversation = (
-  savedApiKey: string,
+  apiKey: string,
   agentAModel: string,
   agentBModel: string,
   agentCModel: string,
@@ -21,8 +20,7 @@ export const useAgentConversation = (
   rounds: number,
   responseLength: ResponseLength,
   getCurrentScenario: () => ScenarioType,
-  getCurrentPrompt: () => string,
-  userApiKey?: string
+  getCurrentPrompt: () => string
 ) => {
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +32,17 @@ export const useAgentConversation = (
     // First check API availability
     setIsLoading(true);
     
-    // Check if the API is available and has credits before proceeding
-    const apiAvailable = await checkBeforeStarting(savedApiKey, userApiKey);
+    // Double-check if we have an API key from localStorage if needed
+    const storedApiKey = !apiKey ? localStorage.getItem('userOpenRouterApiKey') : null;
+    const effectiveApiKey = apiKey || storedApiKey || '';
+    
+    console.log("Starting conversation with API key:", effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : "none");
+    console.log("Agent models:", { agentAModel, agentBModel, agentCModel });
+    console.log("Number of agents:", numberOfAgents);
+    console.log("Rounds:", rounds);
+    
+    // Check if the API is available before proceeding
+    const apiAvailable = await checkBeforeStarting(effectiveApiKey);
     if (!apiAvailable) {
       setIsLoading(false);
       return;
@@ -44,21 +51,21 @@ export const useAgentConversation = (
     // Validate requirements before starting
     if (!validateConversationRequirements(
       currentPrompt,
-      savedApiKey,
+      effectiveApiKey,
       agentAModel,
       agentBModel,
       agentCModel,
-      numberOfAgents,
-      userApiKey
+      numberOfAgents
     )) {
       setIsLoading(false);
       return;
     }
     
-    setConversation([]);
-    
     try {
-      // Handle the first round of conversation
+      // Clear any previous conversation
+      setConversation([]);
+      
+      // Start with initial round
       const { 
         conversationMessages, 
         agentAResponse, 
@@ -73,46 +80,47 @@ export const useAgentConversation = (
         agentAPersona,
         agentBPersona,
         agentCPersona,
-        savedApiKey,
-        responseLength,
-        userApiKey
+        effectiveApiKey,
+        responseLength
       );
       
+      // Update conversation with initial messages
       setConversation(conversationMessages);
       
-      // If only one round is required or only one agent, we're done
-      if (rounds <= 1 || numberOfAgents === 1) {
-        setIsLoading(false);
-        return;
+      // If more than one round, handle additional rounds
+      if (rounds > 1) {
+        const additionalMessages = await handleAdditionalRounds(
+          currentPrompt,
+          currentScenario,
+          rounds,
+          numberOfAgents,
+          agentAModel,
+          agentBModel,
+          agentCModel,
+          agentAPersona,
+          agentBPersona,
+          agentCPersona,
+          agentAResponse,
+          agentBResponse,
+          conversationMessages,
+          effectiveApiKey,
+          responseLength
+        );
+        
+        // Update conversation with all messages
+        setConversation(additionalMessages);
       }
       
-      // Handle additional rounds if needed
-      const updatedConversation = await handleAdditionalRounds(
-        currentPrompt,
-        currentScenario,
-        rounds,
-        numberOfAgents,
-        agentAModel,
-        agentBModel,
-        agentCModel,
-        agentAPersona,
-        agentBPersona,
-        agentCPersona,
-        agentAResponse,
-        agentBResponse,
-        conversationMessages,
-        savedApiKey,
-        responseLength,
-        userApiKey
-      );
-      
-      setConversation(updatedConversation);
+      toast({
+        title: "Conversation Complete",
+        description: `Agents have completed their ${rounds} round${rounds > 1 ? 's' : ''} of conversation.`,
+      });
       
     } catch (error) {
-      console.error("Error in agent conversation:", error);
+      console.error("Error in conversation flow:", error);
       toast({
-        title: "Error",
-        description: "Failed to get responses from AI models. Please try again.",
+        title: "Conversation Error",
+        description: error instanceof Error ? error.message : "An error occurred during the conversation.",
         variant: "destructive",
       });
     } finally {

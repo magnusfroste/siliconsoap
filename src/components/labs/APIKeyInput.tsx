@@ -1,205 +1,291 @@
-
-import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Loader2, Check, Save, ArrowRight, Info, AlertTriangle, Trash2 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2, X, Clipboard, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { useApiKey } from '@/pages/labs/hooks/useApiKey';
+import { toast } from '@/hooks/use-toast';
+import { fetchOpenRouterModels } from '@/utils/openRouter';
 
 interface APIKeyInputProps {
-  apiKey: string;
-  setApiKey: (key: string) => void;
-  savedApiKey: string;
-  isSaving: boolean;
-  isSaved: boolean;
-  isUsingEnvKey?: boolean;
-  saveApiKey: () => void;
-  deleteApiKey?: () => void;
   goToStep: (step: number) => void;
+  refreshModels?: () => void;
 }
 
-export const APIKeyInput: React.FC<APIKeyInputProps> = ({
-  apiKey,
-  setApiKey,
-  savedApiKey,
-  isSaving,
-  isSaved,
-  isUsingEnvKey,
-  saveApiKey,
-  deleteApiKey,
-  goToStep
-}) => {
-  const hasEnvApiKey = import.meta.env.VITE_OPENROUTER_API_KEY && import.meta.env.VITE_OPENROUTER_API_KEY.length > 0;
-  const hasUserKey = apiKey && apiKey !== import.meta.env.VITE_OPENROUTER_API_KEY;
-  
-  // Helper function to determine if the save button should be disabled
-  const isSaveButtonDisabled = () => {
-    // Only disable if:
-    // 1. Currently saving
-    // 2. API key is empty
-    // 3. API key hasn't changed from saved key
-    return isSaving || !apiKey.trim() || apiKey === savedApiKey;
+export const APIKeyInput: React.FC<APIKeyInputProps> = ({ goToStep, refreshModels }) => {
+  const [apiKey, setApiKey] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const { saveApiKey, deleteApiKey, validateApiKey, userApiKey } = useApiKey();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load user API key from localStorage on component mount
+  useEffect(() => {
+    if (userApiKey) {
+      setApiKey(userApiKey);
+    }
+  }, [userApiKey]);
+
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenRouter API key.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const isValid = await validateApiKey(apiKey);
+    
+    if (isValid) {
+      saveApiKey(apiKey);
+      toast({
+        title: "API Key Saved",
+        description: "Your OpenRouter API key has been saved successfully.",
+      });
+      
+      // Refresh models before proceeding to the next step
+      if (refreshModels) {
+        console.log("Refreshing models after saving API key");
+        refreshModels();
+      }
+      
+      // Add a small delay before proceeding to the next step
+      // This gives time for the models to load
+      setTimeout(() => {
+        goToStep(2);
+      }, 1000);
+    } else {
+      toast({
+        title: "Invalid API Key",
+        description: "The API key you entered is invalid. Please check and try again.",
+        variant: "destructive",
+      });
+    }
+    
+    setIsLoading(false);
   };
-  
-  // Helper function to stop any ongoing speech synthesis before navigation
-  const stopSpeech = () => {
+
+  const handleDeleteApiKey = () => {
+    deleteApiKey();
+    setApiKey('');
+    toast({
+      title: "API Key Deleted",
+      description: "Your OpenRouter API key has been removed.",
+    });
+  };
+
+  const handleContinue = () => {
+    if (!userApiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenRouter API key to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Refresh models before proceeding to the next step
+    if (refreshModels) {
+      refreshModels();
+    }
+    
+    goToStep(2);
+  };
+
+  const handleRefreshModels = async () => {
+    if (!userApiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenRouter API key to refresh models.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsRefreshing(true);
+    
     try {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      // Manually refresh models
+      if (refreshModels) {
+        refreshModels();
+        toast({
+          title: "Models Refreshed",
+          description: "Available models have been refreshed.",
+        });
       }
     } catch (error) {
-      console.error("Error stopping speech:", error);
+      console.error("Error refreshing models:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh models. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
     }
   };
-  
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setApiKey(text.trim());
+      toast({
+        title: "Pasted from clipboard",
+        description: "API key has been pasted from clipboard.",
+      });
+    } catch (err) {
+      console.error("Failed to read clipboard:", err);
+      toast({
+        title: "Clipboard Error",
+        description: "Could not access clipboard. Please paste manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleShowApiKey = () => {
+    setShowApiKey(!showApiKey);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Submit on Enter key
+    if (e.key === 'Enter' && !userApiKey && !isLoading) {
+      handleSaveApiKey();
+    }
+  };
+
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <MessageSquare className="h-4 w-4 text-purple-600" />
-          OpenRouter API Key
-        </CardTitle>
-        <CardDescription>Required to enable real AI model interactions</CardDescription>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Bring Your Own API Key</CardTitle>
+        <CardDescription>
+          This app uses a "Bring Your Own Key" approach for privacy and security. Your key stays in your browser and is never sent to our servers.
+        </CardDescription>
       </CardHeader>
+      
       <CardContent>
-        {hasEnvApiKey ? (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-4">
-            <p className="text-sm text-green-800 flex items-center">
-              <Check className="h-4 w-4 mr-2" />
-              A default API key is available for free models - usage is on the house but daily limits apply
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Quick Setup</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Get your free OpenRouter API key in just 30 seconds:
             </p>
-            <p className="text-xs text-green-700 mt-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="flex items-center">
-                      <Info className="h-3 w-3 mr-1" /> 
-                      Free models will use the default API key until rate limits are reached. For continued usage or paid models, your own key is required.
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs max-w-xs">
-                      The default API key works with models marked as "free" but has daily usage limits. 
-                      If these limits are reached, you'll need to provide your own OpenRouter API key to continue 
-                      or switch to using paid models with your own key.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <ol className="list-decimal ml-5 space-y-1">
+              <li>Visit <a 
+                href="https://openrouter.ai/keys" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="underline hover:text-blue-500 font-medium"
+              >
+                openrouter.ai/keys
+              </a></li>
+              <li>Sign in with Google, GitHub, or email</li>
+              <li>Copy your API key and paste it below</li>
+            </ol>
+            <p className="text-xs mt-2 text-gray-600">
+              OpenRouter provides access to the latest AI models with a generous free tier.
             </p>
-          </div>
-        ) : null}
+          </AlertDescription>
+        </Alert>
         
-        {!hasUserKey && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-            <p className="text-sm text-red-800 flex items-center font-medium">
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Personal API Key Required for Paid Models
-            </p>
-            <p className="text-xs text-red-700 mt-1">
-              You must enter your own OpenRouter API key to use paid models like Claude, GPT-4, etc.
-              Free models will work with the default key.
-            </p>
+        <div className="grid w-full items-center gap-4">
+          <div className="flex flex-col space-y-1.5">
+            <Label htmlFor="apiKey">Your OpenRouter API Key</Label>
+            <div className="flex">
+              <div className="relative flex-grow">
+                <Input
+                  id="apiKey"
+                  ref={inputRef}
+                  placeholder="Enter your OpenRouter API key"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="pr-10"
+                  type={showApiKey ? "text" : "password"}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={toggleShowApiKey}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="ml-2" 
+                onClick={handlePaste}
+                title="Paste from clipboard"
+              >
+                <Clipboard className="h-4 w-4" />
+              </Button>
+              {userApiKey && (
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="ml-2" 
+                  onClick={handleDeleteApiKey}
+                  title="Delete API key"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+              {userApiKey && (
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="ml-2" 
+                  onClick={handleRefreshModels}
+                  title="Refresh models"
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <div className="flex justify-between items-center">
+              <p className="text-xs text-gray-500 mt-1">
+                API keys start with "sk-or-"
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Stored in your browser only
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {userApiKey && (
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            API key is saved in your browser
           </div>
         )}
-        
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-4">
-          <p className="text-sm text-amber-800 flex items-center font-medium">
-            <Info className="h-4 w-4 mr-2" />
-            How API Keys Work
-          </p>
-          <p className="text-xs text-amber-700 mt-1">
-            <strong>For free models:</strong> The app will use the default API key if available, but is subject to daily usage limits.<br />
-            <strong>For paid models:</strong> Your personal API key will be used to access your OpenRouter credits.<br />
-            <strong>Important:</strong> After entering your API key, make sure to click <strong>Save Key</strong> before proceeding.
-          </p>
-        </div>
-        
-        <div className="flex gap-2 mt-4">
-          <Input
-            type="password"
-            placeholder="sk-or-..."
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="font-mono flex-1"
-          />
-          <Button 
-            onClick={saveApiKey} 
-            disabled={isSaveButtonDisabled()}
-            className={isSaved ? "bg-green-500 hover:bg-green-600" : ""}
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isSaved ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            <span className="ml-2">{isSaving ? "Saving..." : isSaved ? "Saved" : "Save Key"}</span>
-          </Button>
-          
-          {deleteApiKey && hasUserKey && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                  <span className="ml-2 hidden sm:inline">Delete Key</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Delete API Key?</DialogTitle>
-                  <DialogDescription>
-                    This will remove your saved API key. You'll need to re-enter it to use paid models or if the platform rate limits are reached.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => {
-                      deleteApiKey();
-                    }}
-                  >
-                    Delete API Key
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
-        
-        <div className="mt-2">
-          <p className="text-xs text-gray-500">
-            Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">openrouter.ai/keys</a>
-          </p>
-          
-          {savedApiKey || hasEnvApiKey ? (
-            <p className="text-xs text-green-600 mt-1">
-              <Check className="h-3 w-3 inline mr-1" />
-              {hasEnvApiKey && !hasUserKey ? 
-                "Default API key is available for free models. Your own key is required for paid models." : 
-                "API key is saved and active. You can now proceed to the next step."}
-            </p>
-          ) : (
-            <p className="text-xs text-amber-600 mt-1">
-              Please save your API key to continue to the next step.
-            </p>
-          )}
-        </div>
       </CardContent>
-      <CardFooter className="pt-0">
-        <Button 
-          onClick={() => {
-            stopSpeech();
-            goToStep(2);
-          }} 
-          disabled={!savedApiKey && !hasEnvApiKey} 
-          className="ml-auto"
-        >
-          Next Step
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
+      
+      <CardFooter className="flex justify-between">
+        <div className="text-xs text-gray-500">
+          Your key is stored locally and never leaves your device
+        </div>
+        <div>
+          {userApiKey ? (
+            <Button onClick={handleContinue}>
+              Continue
+            </Button>
+          ) : (
+            <Button onClick={handleSaveApiKey} disabled={isLoading}>
+              {isLoading ? "Validating..." : "Save API Key"}
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

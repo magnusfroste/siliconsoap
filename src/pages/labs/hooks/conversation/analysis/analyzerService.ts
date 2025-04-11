@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 import { callOpenRouter, isModelFree } from '@/utils/openRouter';
 import { ResponseLength, ConversationMessage } from '../../../types';
@@ -11,20 +10,18 @@ import { createAnalysisPrompt } from './analyzerPrompts';
 export const analyzeConversation = async (
   conversation: ConversationMessage[],
   model: string,
-  savedApiKey: string,
+  apiKey: string,
   userPrompt?: string,
-  responseLength: ResponseLength = 'long',
-  userApiKey?: string
+  responseLength: ResponseLength = 'long'
 ): Promise<string> => {
   // Check if there's a conversation to analyze
   if (conversation.length === 0) {
     throw new Error("No conversation to analyze");
   }
   
-  // Check if selected model needs a user API key
-  const needsUserKey = !isModelFree(model);
-  if (needsUserKey && !userApiKey) {
-    throw new Error("The selected analysis model requires your own OpenRouter API key");
+  // Check if we have an API key
+  if (!apiKey) {
+    throw new Error("API key is required for analysis");
   }
 
   // Format the conversation for analysis
@@ -33,13 +30,15 @@ export const analyzeConversation = async (
   // Create the analysis prompt
   const analysisPrompt = createAnalysisPrompt(conversationText, userPrompt);
   
+  console.log("Analyzing conversation with model:", model);
+  console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
+  
   // Call the API to get the analysis
   return callOpenRouter(
     analysisPrompt,
     model,
     'analytical', 
-    savedApiKey,
-    responseLength,
-    userApiKey
+    apiKey,
+    responseLength
   );
 };

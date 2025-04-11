@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
 import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
 import { OpenRouterModel } from '@/utils/openRouter/types';
+import { toast } from '@/hooks/use-toast';
 
-export const useModels = (savedApiKey: string) => {
+export const useModels = (apiKey: string) => {
   const [agentAModel, setAgentAModel] = useState('');
   const [agentBModel, setAgentBModel] = useState('');
   const [agentCModel, setAgentCModel] = useState('');
@@ -13,10 +13,28 @@ export const useModels = (savedApiKey: string) => {
 
   useEffect(() => {
     const getModels = async () => {
-      if (savedApiKey) {
+      console.log("useModels: API key exists:", !!apiKey);
+      if (apiKey) {
         setLoadingModels(true);
         try {
-          const models = await fetchOpenRouterModels(savedApiKey);
+          console.log("Fetching models with API key:", apiKey.substring(0, 8) + "...");
+          const models = await fetchOpenRouterModels(apiKey);
+          console.log("Fetched models count:", models.length);
+          
+          if (models.length === 0) {
+            toast({
+              title: "No Models Available",
+              description: "Could not fetch models from OpenRouter. Please check your API key.",
+              variant: "destructive",
+            });
+          } else {
+            console.log("Models loaded successfully:", models.length);
+            // Log some sample models
+            if (models.length > 0) {
+              console.log("Sample models:", models.slice(0, 3).map(m => m.id));
+            }
+          }
+          
           setAvailableModels(models);
           
           if (models.length > 0) {
@@ -68,6 +86,11 @@ export const useModels = (savedApiKey: string) => {
           }
         } catch (error) {
           console.error("Failed to fetch models:", error);
+          toast({
+            title: "Error Fetching Models",
+            description: "Failed to fetch models from OpenRouter. Please check your API key and try again.",
+            variant: "destructive",
+          });
         } finally {
           setLoadingModels(false);
         }
@@ -75,7 +98,37 @@ export const useModels = (savedApiKey: string) => {
     };
     
     getModels();
-  }, [savedApiKey]);
+  }, [apiKey]);
+
+  // Force refresh models function
+  const refreshModels = async () => {
+    if (!apiKey) return;
+    
+    console.log("Manually refreshing models with API key:", apiKey.substring(0, 8) + "...");
+    setLoadingModels(true);
+    
+    try {
+      const models = await fetchOpenRouterModels(apiKey);
+      console.log("Manually refreshed models count:", models.length);
+      setAvailableModels(models);
+      
+      if (models.length > 0) {
+        // Find default models for each agent
+        const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
+        const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
+        const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+        
+        // Set models independently
+        if (defaultAgentA) setAgentAModel(defaultAgentA);
+        if (defaultAgentB) setAgentBModel(defaultAgentB);
+        if (defaultAgentC) setAgentCModel(defaultAgentC);
+      }
+    } catch (error) {
+      console.error("Failed to manually refresh models:", error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
 
   return {
     agentAModel,
@@ -87,6 +140,7 @@ export const useModels = (savedApiKey: string) => {
     availableModels,
     setAvailableModels,
     loadingModels,
-    setLoadingModels
+    setLoadingModels,
+    refreshModels
   };
 };

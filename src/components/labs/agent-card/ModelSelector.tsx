@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { ModelsByProvider } from './types';
@@ -19,18 +18,35 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   loadingModels,
   isDisabled,
 }) => {
+  // Debug log when component renders or props change
+  useEffect(() => {
+    console.log("ModelSelector rendered with:", {
+      agentModel,
+      loadingModels,
+      isDisabled,
+      providersCount: Object.keys(modelsByProvider || {}).length,
+      providers: Object.keys(modelsByProvider || {})
+    });
+  }, [agentModel, modelsByProvider, loadingModels, isDisabled]);
+
+  // Check if we have any models to display
+  const hasModels = modelsByProvider && Object.keys(modelsByProvider).length > 0;
+
   return (
     <div>
-      <h3 className="text-xs font-medium mb-1">Model</h3>
-      <Select value={agentModel} onValueChange={setAgentModel} disabled={isDisabled}>
+      <Select value={agentModel} onValueChange={setAgentModel} disabled={isDisabled || (!hasModels && !loadingModels)}>
         <SelectTrigger className="h-8 text-sm">
-          <SelectValue placeholder={loadingModels ? "Loading models..." : "Select model"} />
+          <SelectValue placeholder={loadingModels ? "Loading models..." : hasModels ? "Select model" : "No models available"} />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
           {loadingModels ? (
             <div className="flex items-center justify-center py-2">
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
               <span>Loading models...</span>
+            </div>
+          ) : !hasModels ? (
+            <div className="flex items-center justify-center py-2 text-sm text-gray-500">
+              <span>No models available. Please check your API key.</span>
             </div>
           ) : (
             Object.keys(modelsByProvider).sort().map(provider => (

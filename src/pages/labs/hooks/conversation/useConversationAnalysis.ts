@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 import { ConversationMessage } from '../../types';
 import { useAnalysisState } from './analysis/useAnalysisState';
@@ -6,8 +5,7 @@ import { analyzeConversation } from './analysis/analyzerService';
 
 export const useConversationAnalysis = (
   savedApiKey: string, 
-  conversation: ConversationMessage[],
-  userApiKey?: string
+  conversation: ConversationMessage[]
 ) => {
   // Use the analysis state hook
   const {
@@ -20,7 +18,18 @@ export const useConversationAnalysis = (
   } = useAnalysisState();
 
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
-    if (!savedApiKey && !userApiKey) {
+    // Check for API key in localStorage as fallback
+    const storedApiKey = localStorage.getItem('userOpenRouterApiKey');
+    const effectiveApiKey = savedApiKey || storedApiKey || '';
+    
+    console.log("Analysis API Key Debug:", {
+      savedApiKey: savedApiKey ? `${savedApiKey.substring(0, 8)}...` : null,
+      storedApiKey: storedApiKey ? `${storedApiKey.substring(0, 8)}...` : null,
+      effectiveApiKey: effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : null
+    });
+
+    // Only show toast if we truly have no API key available
+    if (!effectiveApiKey) {
       toast({
         title: "API Key Required",
         description: "Please provide an OpenRouter API key to analyze the conversation.",
@@ -38,10 +47,9 @@ export const useConversationAnalysis = (
       const analysis = await analyzeConversation(
         conversation,
         selectedModel,
-        savedApiKey,
+        effectiveApiKey,
         prompt,
-        'long',
-        userApiKey
+        'long'
       );
       
       setAnalysisResults(analysis);

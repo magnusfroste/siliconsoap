@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ModelSelector } from '../../agent-card/ModelSelector';
@@ -35,7 +34,6 @@ export const AnalyzerSelector: React.FC<AnalyzerSelectorProps> = ({
   return (
     <div className="flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-md mb-6">
-        <h3 className="text-sm font-medium mb-2">Select Analysis Model</h3>
         <ModelSelector
           agentModel={analyzerModel}
           setAgentModel={setAnalyzerModel}

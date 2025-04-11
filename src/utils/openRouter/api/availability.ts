@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { ApiError } from "../types";
 import { OPENROUTER_API_URL } from "../constants";
@@ -8,8 +7,7 @@ import { OPENROUTER_API_URL } from "../constants";
  * @returns Object with status and message
  */
 export const checkApiAvailability = async (
-  apiKey: string,
-  userApiKey?: string
+  apiKey: string
 ): Promise<{ available: boolean; message: string }> => {
   try {
     // Use the simplest possible model and prompt to minimize token usage
@@ -17,27 +15,50 @@ export const checkApiAvailability = async (
     const testPrompt = "Hi";
     
     console.log("Testing API availability with minimal request");
-    
-    // If no API keys at all, fail immediately
-    if (!apiKey && !userApiKey) {
-      console.error("No API keys available for availability check");
+    console.log("API key provided:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
+
+    // If no API key, fail immediately
+    if (!apiKey) {
+      console.error("No API key available for availability check");
       return { 
         available: false, 
         message: "No API key available. Please provide an OpenRouter API key." 
       };
     }
     
-    // Try user API key first if provided, as it's most likely to work if the default key is rate-limited
-    const effectiveApiKey = userApiKey || apiKey;
-    
     console.log("Checking API availability using API key:", 
-      effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : "none");
+      apiKey ? `${apiKey.substring(0, 8)}...` : "none");
+    console.log("Using API URL:", OPENROUTER_API_URL);
+
+    // Check if we have a stored rate limit status for this specific API key
+    const rateLimitKey = 'openRouterRateLimitStatus';
+    const storedRateLimitStatus = localStorage.getItem(rateLimitKey);
+    
+    if (storedRateLimitStatus) {
+      try {
+        const rateLimitStatus = JSON.parse(storedRateLimitStatus);
+        const now = Date.now();
+        
+        // If we have a recent rate limit (within the last 5 minutes), return immediately
+        if (rateLimitStatus.timestamp > now - 5 * 60 * 1000 && 
+            rateLimitStatus.isRateLimited) {
+          console.log("Using cached rate limit status - API is rate limited");
+          return {
+            available: false,
+            message: "Your API key has reached its rate limit. Please try again later or use a different API key."
+          };
+        }
+      } catch (e) {
+        console.error("Error parsing stored rate limit status:", e);
+        localStorage.removeItem(rateLimitKey);
+      }
+    }
 
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${effectiveApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": window.location.origin,
         "X-Title": "Magnus Froste Labs"
       },
@@ -50,60 +71,57 @@ export const checkApiAvailability = async (
     });
 
     if (!response.ok) {
-      const errorData = await response.json() as ApiError;
-      console.error("API availability check failed:", errorData);
-      console.error("Status code:", response.status);
+      let errorMessage = "API request failed";
       
-      // Handle rate limit specifically
-      if (response.status === 429) {
-        console.error("Rate limit detected during availability check:", errorData);
+      try {
+        const errorData = await response.json() as ApiError;
+        console.error("API availability check failed:", errorData);
+        console.error("Status code:", response.status);
         
-        // If we used a user API key and hit rate limits, that's a problem
-        if (userApiKey && effectiveApiKey === userApiKey) {
+        // Use the error message from the API if available
+        errorMessage = errorData.message || errorMessage;
+        
+        // Handle rate limit specifically
+        if (response.status === 429) {
+          console.error("Rate limit detected during availability check:", errorData);
+          
+          // Store the rate limit status in localStorage
+          localStorage.setItem(rateLimitKey, JSON.stringify({
+            isRateLimited: true,
+            timestamp: Date.now()
+          }));
+          
           return { 
             available: false, 
             message: "Your API key has reached its rate limit. Please try again later or use a different API key."
           };
         }
-        
-        // If we're using the default key, suggest adding a personal key
-        return { 
-          available: false, 
-          message: "Free model credits have been used up for today. Add your own API key to continue." 
-        };
-      }
-      
-      // Handle authentication issues
-      if (response.status === 401) {
-        // If an invalid user key was provided, give a more specific message
-        if (userApiKey && effectiveApiKey === userApiKey) {
-          return { 
-            available: false, 
-            message: "Your API key seems to be invalid. Please check your API key and try again." 
-          };
-        }
-        
-        return { 
-          available: false, 
-          message: "Authentication failed. Please check your API key and try again." 
-        };
+      } catch (e) {
+        // If we couldn't parse the JSON, use a generic error message
+        console.error("Error parsing API error response:", e);
       }
       
       return { 
         available: false, 
-        message: errorData.message || "Unknown error connecting to OpenRouter API" 
+        message: errorMessage
       };
     }
 
-    // If we got here, the API is available and we have credits
+    // If we get here, the API is available
     console.log("API availability check successful");
-    return { available: true, message: "API is available and has credits" };
     
+    // Update the rate limit status in localStorage to indicate no rate limit
+    localStorage.setItem(rateLimitKey, JSON.stringify({
+      isRateLimited: false,
+      timestamp: Date.now()
+    }));
+    
+    return { available: true, message: "API is available" };
   } catch (error) {
     console.error("Error checking API availability:", error);
     return { 
       available: false, 
-      message: error instanceof Error ? error.message : "Unknown error checking API availability" 
+      message: error instanceof Error ? error.message : "Unknown error checking API availability"
     };
   }
 };

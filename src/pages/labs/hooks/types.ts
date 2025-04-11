@@ -1,4 +1,3 @@
-
 import { ConversationMessage, ResponseLength } from '../types';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { ScenarioType } from '../types';
@@ -58,8 +57,9 @@ export interface LabsActions {
   setAnalysisResults: (results: any | null) => void;
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
-  saveApiKey: () => Promise<boolean>;
+  saveApiKey: (key: string) => Promise<boolean>;
   deleteApiKey: () => void;
+  validateApiKey: (key: string) => Promise<boolean>;
   getActiveApiKey: (modelIsFree?: boolean) => string | null;
   goToStep: (step: number) => void;
   handleStartConversation: () => Promise<void>;
@@ -70,4 +70,5 @@ export interface LabsActions {
   getCurrentScenario: () => ScenarioType;
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
+  refreshModels: (apiKey: string) => void;
 }

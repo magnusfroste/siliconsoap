@@ -1,208 +1,100 @@
-
 import { useState, useEffect } from 'react';
+import { checkApiAvailability } from '@/utils/openRouter';
 import { toast } from '@/hooks/use-toast';
 
 export const useApiKey = () => {
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENROUTER_API_KEY || '');
-  const [savedApiKey, setSavedApiKey] = useState(import.meta.env.VITE_OPENROUTER_API_KEY || '');
-  const [userApiKey, setUserApiKey] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isUsingEnvKey, setIsUsingEnvKey] = useState(false);
-  const [keyIsValidated, setKeyIsValidated] = useState(false);
+  const [apiKey, setApiKey] = useState<string>('');
+  const [savedApiKey, setSavedApiKey] = useState<string>('');
+  const [userApiKey, setUserApiKey] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [isUsingEnvKey, setIsUsingEnvKey] = useState<boolean>(false);
 
+  // Load API key from localStorage on component mount
   useEffect(() => {
-    // Use environment variable API key if present, otherwise try localStorage
-    const envApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    
-    if (envApiKey) {
-      setApiKey(envApiKey);
-      setSavedApiKey(envApiKey);
-      setIsUsingEnvKey(true);
-      // Store in localStorage as well for client-side persistence
-      localStorage.setItem('openRouterApiKey', envApiKey);
-    } else {
-      // Fallback to localStorage if no environment variable
-      const storedApiKey = localStorage.getItem('openRouterApiKey');
-      if (storedApiKey) {
-        setApiKey(storedApiKey);
-        setSavedApiKey(storedApiKey);
-      }
-    }
-
-    // Also check for user-provided API key
     const storedUserApiKey = localStorage.getItem('userOpenRouterApiKey');
-    if (storedUserApiKey) {
-      setUserApiKey(storedUserApiKey);
-      setKeyIsValidated(true); // If we have a stored user API key, consider it initially validated
-      console.log("Loaded user API key from localStorage:", 
-        storedUserApiKey ? `${storedUserApiKey.substring(0, 8)}...` : "none");
-    }
     
-    console.log("Initial API keys setup - Environment key exists:", !!envApiKey);
-    console.log("Initial API keys setup - User key exists:", !!storedUserApiKey);
+    if (storedUserApiKey) {
+      console.log("Found user API key in localStorage");
+      setUserApiKey(storedUserApiKey);
+      setApiKey(storedUserApiKey);
+      setSavedApiKey(storedUserApiKey);
+      setIsSaved(true);
+      setIsUsingEnvKey(false);
+    } else {
+      console.log("No user API key found in localStorage");
+      setUserApiKey(null);
+      setApiKey('');
+      setSavedApiKey('');
+      setIsSaved(false);
+      setIsUsingEnvKey(false);
+    }
   }, []);
 
-  // Validate OpenRouter API key format
-  const isValidApiKeyFormat = (key: string): boolean => {
-    return key.trim().startsWith('sk-or-');
-  };
-
-  // Verify API key with OpenRouter
+  // Validate API key with OpenRouter
   const validateApiKey = async (key: string): Promise<boolean> => {
-    if (!isValidApiKeyFormat(key)) {
-      return false;
-    }
-    
     try {
-      // Use a simple request to check if the API key is valid
-      const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Magnus Froste Labs'
-        }
-      });
-      
-      if (response.ok) {
-        setKeyIsValidated(true);
-        return true;
-      }
-      
-      console.error("API key validation failed with status:", response.status);
-      return false;
+      console.log("Validating API key...");
+      const result = await checkApiAvailability(key);
+      console.log("API key validation result:", result);
+      return result.available;
     } catch (error) {
       console.error("Error validating API key:", error);
       return false;
     }
   };
 
-  const saveApiKey = async (): Promise<boolean> => {
-    setIsSaving(true);
-    
-    // Don't allow saving empty API keys
-    if (!apiKey.trim()) {
+  // Save API key to localStorage
+  const saveApiKey = (key: string) => {
+    try {
+      console.log("Saving API key to localStorage");
+      localStorage.setItem('userOpenRouterApiKey', key);
+      setUserApiKey(key);
+      setSavedApiKey(key);
+      setIsSaved(true);
+      setIsUsingEnvKey(false);
+    } catch (error) {
+      console.error("Error saving API key to localStorage:", error);
       toast({
-        title: "Invalid API Key",
-        description: "Please enter a valid OpenRouter API key.",
+        title: "Error",
+        description: "Failed to save API key. Please try again.",
         variant: "destructive",
       });
-      setIsSaving(false);
-      return false;
     }
-    
-    // Validate that it's an OpenRouter key format
-    if (!isValidApiKeyFormat(apiKey)) {
-      toast({
-        title: "Invalid API Key Format",
-        description: "Please enter a valid OpenRouter API key (starting with 'sk-or-').",
-        variant: "destructive",
-      });
-      setIsSaving(false);
-      return false;
-    }
-    
-    console.log("Saving API key:", `${apiKey.substring(0, 10)}...`);
-    
-    // Validate the key with OpenRouter
-    const isValid = await validateApiKey(apiKey);
-    if (!isValid) {
-      toast({
-        title: "API Key Validation Failed",
-        description: "Your API key format is correct but could not be validated with OpenRouter. Please check the key and try again.",
-        variant: "destructive",
-      });
-      setIsSaving(false);
-      return false;
-    }
-    
-    // Save to localStorage - this is crucial for paid models
-    localStorage.setItem('userOpenRouterApiKey', apiKey);
-    setUserApiKey(apiKey);
-    
-    // Also save as the general API key
-    localStorage.setItem('openRouterApiKey', apiKey);
-    setSavedApiKey(apiKey);
-    
-    toast({
-      title: "API Key Saved and Validated",
-      description: "Your OpenRouter API key has been saved and validated successfully. You can now use paid models.",
-      variant: "default",
-    });
-    
-    setIsSaving(false);
-    setIsSaved(true);
-    setKeyIsValidated(true);
-    
-    // Reset isSaved after a timeout
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 3000);
-
-    return true;
   };
 
-  // New function to delete the API key
+  // Delete API key from localStorage
   const deleteApiKey = () => {
-    // Clear localStorage
-    localStorage.removeItem('userOpenRouterApiKey');
-    localStorage.removeItem('openRouterApiKey');
-    
-    // Reset state
-    setUserApiKey('');
-    setKeyIsValidated(false);
-    
-    // Preserve environment API key if available
-    const envApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    if (envApiKey) {
-      setApiKey(envApiKey);
-      setSavedApiKey(envApiKey);
-    } else {
+    try {
+      console.log("Deleting API key from localStorage");
+      localStorage.removeItem('userOpenRouterApiKey');
+      setUserApiKey(null);
       setApiKey('');
       setSavedApiKey('');
+      setIsSaved(false);
+      setIsUsingEnvKey(false);
+
+      // Also clear any stored rate limit status
+      localStorage.removeItem('openRouterRateLimitStatus');
+
+      toast({
+        title: "API Key Deleted",
+        description: "Your API key has been removed.",
+      });
+    } catch (error) {
+      console.error("Error deleting API key from localStorage:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete API key. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    toast({
-      title: "API Key Deleted",
-      description: "Your API key has been successfully removed. You can now test the application without a personal API key.",
-      variant: "default",
-    });
   };
 
-  const getActiveApiKey = (modelIsFree = true) => {
-    console.log("getActiveApiKey called for", modelIsFree ? "free model" : "paid model");
-    console.log("User API key exists:", !!userApiKey);
-    console.log("User API key validated:", keyIsValidated);
-    console.log("Environment API key exists:", !!import.meta.env.VITE_OPENROUTER_API_KEY);
-    
-    // For paid models, always use the user's validated API key first
-    if (!modelIsFree) {
-      if (userApiKey && keyIsValidated) {
-        console.log("Using validated user API key for paid model");
-        return userApiKey;
-      } else {
-        console.log("Warning: Paid model requested but no validated user API key found");
-        // No need to show toast here, as the actual API call will handle this
-        return null;
-      }
-    }
-    
-    // For free models, prefer the env API key if it exists
-    if (modelIsFree && import.meta.env.VITE_OPENROUTER_API_KEY) {
-      console.log("Using env API key for free model");
-      return import.meta.env.VITE_OPENROUTER_API_KEY;
-    }
-    
-    // If user has saved their API key, use it as a fallback for free models
-    if (userApiKey && keyIsValidated) {
-      console.log("Using validated user API key as fallback for free model");
-      return userApiKey;
-    }
-    
-    // Otherwise, use any available saved key
-    console.log("Using saved API key");
-    return savedApiKey;
+  // Get the active API key to use for API calls
+  const getActiveApiKey = (): string => {
+    // Always return the user's API key
+    return userApiKey || '';
   };
 
   return {
@@ -211,15 +103,15 @@ export const useApiKey = () => {
     savedApiKey,
     setSavedApiKey,
     userApiKey,
-    setUserApiKey,
     isSaving,
     setIsSaving,
     isSaved,
     setIsSaved,
     isUsingEnvKey,
-    keyIsValidated,
     saveApiKey,
     deleteApiKey,
-    getActiveApiKey
+    validateApiKey,
+    getActiveApiKey,
+    setUserApiKey
   };
 };
