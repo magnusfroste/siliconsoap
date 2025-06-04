@@ -84,13 +84,13 @@ const Hero = () => {
               <div className="max-w-2xl mx-auto mb-16 animate-fade-in">
                 <div className="glass-card p-8 bg-white bg-opacity-70 backdrop-blur-sm border border-gray-200 rounded-2xl">
                   <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
-                    Chat with Magnet - My Digital Twin
+                    Chat with Magnet - My Agentic AI Digital Twin
                   </h3>
                   <p className="text-gray-600 mb-6">
                     Ask me anything about innovation, strategy, or AI integration. Click the chat button to get started!
                   </p>
                   <div className="text-sm text-gray-500">
-                    💬 Look for the chat widget positioned centrally on your screen
+                    💬 Look for the chat widget positioned down right on your screen
                   </div>
                 </div>
               </div>
