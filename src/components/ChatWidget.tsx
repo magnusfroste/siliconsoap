@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
@@ -292,7 +293,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             
             .chat-hint {
               position: fixed;
-              bottom: 120px;
+              bottom: 160px;
               right: 30px;
               background: #9b87f5;
               color: white;
@@ -303,6 +304,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               z-index: 999;
               animation: fade-in-out 5s forwards;
               pointer-events: none;
+              max-width: 200px;
+              text-align: center;
             }
             
             .chat-hint::after {
