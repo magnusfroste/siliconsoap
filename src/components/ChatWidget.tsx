@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
 import { toast } from '@/hooks/use-toast';
-import { checkApiAvailability } from '@/utils/openRouter';
 
 interface ChatWidgetProps {
   webhookUrl: string;
@@ -457,15 +456,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           console.log('Chat initialization completed');
         };
         
-        // Check API status before initializing chat
-        checkApiStatus().then(apiAvailable => {
-          if (apiAvailable) {
-            initializeChat();
-          } else {
-            // If API is not available, mark as initialized to prevent retries
-            setInitialized(true);
-          }
-        });
+        // Initialize chat directly without API checks
+        initializeChat();
         
       } catch (error) {
         console.error('Error initializing chat:', error);
