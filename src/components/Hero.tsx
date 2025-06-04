@@ -110,7 +110,7 @@ const Hero = () => {
       {/* Centrally positioned ChatWidget */}
       <ChatWidget 
         webhookUrl="https://agent.froste.eu/webhook/3092ebad-b671-44ad-8b3d-b4d12b7ea76b/chat"
-        greeting="Hi! I'm Magnet, Magnus' digital twin. Ask me anything about innovation, strategy, or AI!"
+        greeting="Hi, how are you!?"
         mode="floating"
       />
 
