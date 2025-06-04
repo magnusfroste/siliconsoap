@@ -334,8 +334,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             initialMessages: [greeting],
             i18n: {
               en: {
-                title: "Hi, I'm 'Magnet', Magnus digital twin!", 
-                subtitle: "I can help with a lot as an agentic AI bot...",
+                title: "Hi, I'm 'Magnet'!", 
+                subtitle: "Magnus Agentic Digital Twin",
                 footer: '',
                 getStarted: 'New Conversation',
                 inputPlaceholder: 'Type your question..',
