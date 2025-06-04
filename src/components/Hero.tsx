@@ -3,7 +3,7 @@ import React from 'react';
 import { ChevronDown, Rocket, BarChart, Brain, Lightbulb, Building, LineChart, Layers, Users } from 'lucide-react';
 import { useHero } from '@/lib/airtable';
 import { Skeleton } from '@/components/ui/skeleton';
-import MagnetChat from './MagnetChat';
+import ChatWidget from './ChatWidget';
 
 // Map of icon names to components
 const iconMap: Record<string, React.ReactNode> = {
@@ -81,8 +81,20 @@ const Hero = () => {
                 </div>
               </div>
 
-              {/* Central Chat Interface */}
-              <MagnetChat />
+              {/* Central Call-to-Action for Chat */}
+              <div className="max-w-2xl mx-auto mb-16 animate-fade-in">
+                <div className="glass-card p-8 bg-white bg-opacity-70 backdrop-blur-sm border border-gray-200 rounded-2xl">
+                  <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
+                    Chat with Magnet - My Digital Twin
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Ask me anything about innovation, strategy, or AI integration. Click the chat button to get started!
+                  </p>
+                  <div className="text-sm text-gray-500">
+                    💬 Look for the chat widget positioned centrally on your screen
+                  </div>
+                </div>
+              </div>
             </>
           )}
           
@@ -95,6 +107,29 @@ const Hero = () => {
           </a>
         </div>
       </div>
+
+      {/* Centrally positioned ChatWidget */}
+      <ChatWidget 
+        webhookUrl="https://agent.froste.eu/webhook/3092ebad-b671-44ad-8b3d-b4d12b7ea76b/chat"
+        greeting="Hi! I'm Magnet, Magnus' digital twin. Ask me anything about innovation, strategy, or AI!"
+        mode="floating"
+      />
+
+      <style jsx>{`
+        /* Override ChatWidget positioning to be more central */
+        :global(.n8n-chat-toggle) {
+          position: fixed !important;
+          bottom: 50% !important;
+          right: 50px !important;
+          transform: translateY(50%) !important;
+          z-index: 1000 !important;
+        }
+        
+        :global(.chat-hint) {
+          bottom: calc(50% + 80px) !important;
+          right: 50px !important;
+        }
+      `}</style>
     </section>
   );
 };
