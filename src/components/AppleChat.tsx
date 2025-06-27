@@ -26,9 +26,12 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -146,7 +149,10 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     <div className="max-w-3xl mx-auto">
       <div className="glass-card bg-white bg-opacity-90 backdrop-blur-xl border border-gray-200 rounded-3xl overflow-hidden shadow-apple">
         {/* Messages */}
-        <div className="h-80 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+        <div 
+          ref={messagesContainerRef}
+          className="h-80 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white scroll-smooth"
+        >
           {messages.map((message) => (
             <div
               key={message.id}
