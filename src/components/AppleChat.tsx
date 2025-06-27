@@ -57,7 +57,8 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
 
     try {
       const requestBody = { 
-        message: inputValue
+        message: inputValue,
+        sessionId: sessionId
       };
       console.log('Request body:', JSON.stringify(requestBody));
 
