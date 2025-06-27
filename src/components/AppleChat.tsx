@@ -46,25 +46,55 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       timestamp: new Date()
     };
 
+    console.log('Sending message:', inputValue);
+    console.log('Webhook URL:', webhookUrl);
+
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
     try {
+      const requestBody = { message: inputValue };
+      console.log('Request body:', JSON.stringify(requestBody));
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: inputValue }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to send message'}`);
       }
 
       const data = await response.json();
-      const botResponse = data[0]?.output || "I'm sorry, I couldn't process that request.";
+      console.log('Response data:', data);
+
+      // Handle different response formats
+      let botResponse = "I'm sorry, I couldn't process that request.";
+      
+      if (Array.isArray(data) && data.length > 0) {
+        // If response is an array, take the first item's output
+        botResponse = data[0]?.output || data[0]?.message || data[0];
+      } else if (data.output) {
+        // If response has output property
+        botResponse = data.output;
+      } else if (data.message) {
+        // If response has message property
+        botResponse = data.message;
+      } else if (typeof data === 'string') {
+        // If response is a string
+        botResponse = data;
+      } else {
+        console.warn('Unexpected response format:', data);
+      }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -74,11 +104,30 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       };
 
       setMessages(prev => [...prev, botMessage]);
+      
+      toast({
+        title: "Message sent successfully",
+        description: "Magnet has responded!",
+      });
+
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // Add error message to chat
+      const errorBotMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: `Error: ${errorMessage}. Please check the console for more details.`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorBotMessage]);
+      
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: `Failed to send message: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -103,6 +152,9 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
           </h3>
           <p className="text-white text-opacity-90 text-sm">
             Your AI-powered innovation strategist
+          </p>
+          <p className="text-white text-opacity-70 text-xs mt-1">
+            Webhook: {webhookUrl}
           </p>
         </div>
 
