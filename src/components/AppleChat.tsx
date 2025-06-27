@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { parseMarkdown } from '@/pages/labs/hooks/utils';
@@ -51,16 +51,27 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     setIsModalOpen(true);
   };
 
-  const sendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const sendPrefilledMessage = async (message: string) => {
+    if (isLoading) return;
+    
+    setInputValue(message);
+    
+    // Small delay to show the message being set, then send it
+    setTimeout(() => {
+      sendMessageWithText(message);
+    }, 100);
+  };
+
+  const sendMessageWithText = async (messageText: string) => {
+    if (!messageText.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: messageText,
       isUser: true
     };
 
-    console.log('Sending message:', inputValue);
+    console.log('Sending message:', messageText);
     console.log('Webhook URL:', webhookUrl);
     console.log('Session ID:', sessionId);
 
@@ -70,7 +81,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
 
     try {
       const requestBody = { 
-        message: inputValue,
+        message: messageText,
         sessionId: sessionId
       };
       console.log('Request body:', JSON.stringify(requestBody));
@@ -159,6 +170,10 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     }
   };
 
+  const sendMessage = async () => {
+    await sendMessageWithText(inputValue);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -166,9 +181,34 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     }
   };
 
+  const quickActions = [
+    { label: "AI Strategy", message: "outline an ai strategy" },
+    { label: "Magnus Resume", message: "show magnus resume" },
+    { label: "AI Agents", message: "tell me about ai agents" }
+  ];
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="glass-card bg-white bg-opacity-90 backdrop-blur-xl border border-gray-200 rounded-3xl overflow-hidden shadow-apple">
+        {/* Quick Action Buttons */}
+        <div className="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+          <div className="flex gap-2 justify-center flex-wrap">
+            {quickActions.map((action) => (
+              <Button
+                key={action.label}
+                onClick={() => sendPrefilledMessage(action.message)}
+                disabled={isLoading}
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-apple-light-blue hover:text-apple-blue border-gray-200 text-gray-700 text-xs px-3 py-1 h-7"
+              >
+                <Zap className="h-3 w-3 mr-1" />
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Messages */}
         <div 
           ref={messagesContainerRef}
