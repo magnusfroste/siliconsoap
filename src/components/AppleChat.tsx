@@ -8,7 +8,6 @@ interface Message {
   id: string;
   text: string;
   isUser: boolean;
-  timestamp: Date;
 }
 
 interface AppleChatProps {
@@ -20,8 +19,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     {
       id: '1',
       text: "Hi! I'm Magnet, Magnus' digital twin. Ask me anything about innovation, strategy, or AI!",
-      isUser: false,
-      timestamp: new Date()
+      isUser: false
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -43,8 +41,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
-      isUser: true,
-      timestamp: new Date()
+      isUser: true
     };
 
     console.log('Sending message:', inputValue);
@@ -104,8 +101,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
-        isUser: false,
-        timestamp: new Date()
+        isUser: false
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -124,8 +120,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       const errorBotMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: `Error: ${errorMessage}. Please check the console for more details.`,
-        isUser: false,
-        timestamp: new Date()
+        isUser: false
       };
       
       setMessages(prev => [...prev, errorBotMessage]);
@@ -158,9 +153,6 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
           <p className="text-white text-opacity-90 text-sm">
             Your AI-powered innovation strategist
           </p>
-          <p className="text-white text-opacity-70 text-xs mt-1">
-            Session: {sessionId}
-          </p>
         </div>
 
         {/* Messages */}
@@ -178,14 +170,6 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
-                <p className={`text-xs mt-1 ${
-                  message.isUser ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                  {message.timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
               </div>
             </div>
           ))}
