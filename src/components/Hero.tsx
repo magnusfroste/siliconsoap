@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { ChevronDown, Rocket, BarChart, Brain, Lightbulb, Building, LineChart, Layers, Users } from 'lucide-react';
 import { useHero } from '@/lib/airtable';
 import { Skeleton } from '@/components/ui/skeleton';
-import ChatWidget from './ChatWidget';
 import AppleChat from './AppleChat';
 
 // Map of icon names to components
@@ -89,10 +89,10 @@ const Hero = () => {
                       Chat with Magnet - My Agentic AI Digital Twin
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Ask me anything about innovation, strategy, or AI integration. Click the chat button to get started!
+                      Ask me anything about innovation, strategy, or AI integration. Scroll down to start chatting!
                     </p>
                     <div className="text-sm text-gray-500">
-                      💬 Look for the chat widget positioned down right on your screen
+                      💬 Interactive chat experience below
                     </div>
                   </div>
                 </div>
@@ -108,30 +108,6 @@ const Hero = () => {
             </a>
           </div>
         </div>
-
-        {/* Centrally positioned ChatWidget */}
-        <ChatWidget 
-          webhookUrl="https://agent.froste.eu/webhook/3092ebad-b671-44ad-8b3d-b4d12b7ea76b/chat"
-          greeting="Hi, how are you!?"
-          mode="floating"
-        />
-
-        <style>
-          {`
-          .n8n-chat-toggle {
-            position: fixed !important;
-            bottom: 50% !important;
-            right: 50px !important;
-            transform: translateY(50%) !important;
-            z-index: 1000 !important;
-          }
-          
-          .chat-hint {
-            bottom: calc(50% + 80px) !important;
-            right: 50px !important;
-          }
-          `}
-        </style>
       </section>
 
       {/* Apple Chat Section */}

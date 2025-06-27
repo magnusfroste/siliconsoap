@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import Labs from "./pages/Labs";
 import Demo from "./pages/Demo";
 import N8nTest from "./pages/N8nTest";
 import NotFound from "./pages/NotFound";
-import ChatWidget from "./components/ChatWidget";
 
 // Google Analytics page view tracking component
 const PageTracker = () => {
@@ -36,12 +36,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Updated webhook URL with the actual production URL
-const CHAT_WEBHOOK_URL = "https://agent.froste.eu/webhook/3092ebad-b671-44ad-8b3d-b4d12b7ea76b/chat";
-
-// Updated greeting message with the new text
-const CHAT_GREETING = "What's on your mind, can I help?";
-
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -50,11 +44,6 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <PageTracker />
-          <ChatWidget 
-            webhookUrl={CHAT_WEBHOOK_URL} 
-            greeting={CHAT_GREETING}
-            enableSpeech={true}
-          />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/labs" element={<Labs />} />
