@@ -3,6 +3,8 @@ import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { parseMarkdown } from '@/pages/labs/hooks/utils';
+import ResponseModal from './ResponseModal';
+import TruncatedMessage from './TruncatedMessage';
 
 interface Message {
   id: string;
@@ -25,6 +27,8 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [modalContent, setModalContent] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +41,15 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const isLongResponse = (text: string) => {
+    return text.length > 300 || text.split('\n').length > 5;
+  };
+
+  const handleViewFullResponse = (content: string) => {
+    setModalContent(content);
+    setIsModalOpen(true);
+  };
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -78,11 +91,9 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
         throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to send message'}`);
       }
 
-      // Get response text first
       const responseText = await response.text();
       console.log('Raw response text:', responseText);
 
-      // Check if response is empty
       if (!responseText || responseText.trim() === '') {
         console.warn('Empty response from webhook');
         throw new Error('Empty response from server');
@@ -98,7 +109,6 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
         throw new Error('Invalid JSON response from server');
       }
 
-      // Handle different response formats
       let botResponse = "I'm sorry, I couldn't process that request.";
       
       if (Array.isArray(data) && data.length > 0) {
@@ -179,10 +189,19 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
                 {message.isUser ? (
                   <p className="text-sm leading-relaxed">{message.text}</p>
                 ) : (
-                  <div 
-                    className="text-sm leading-relaxed prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: parseMarkdown(message.text) }}
-                  />
+                  <>
+                    {isLongResponse(message.text) ? (
+                      <TruncatedMessage
+                        content={message.text}
+                        onViewFull={() => handleViewFullResponse(message.text)}
+                      />
+                    ) : (
+                      <div 
+                        className="text-sm leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: parseMarkdown(message.text) }}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -226,6 +245,13 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
           </div>
         </div>
       </div>
+
+      <ResponseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        content={modalContent}
+        title="Full Response from Magnet"
+      />
     </div>
   );
 };
