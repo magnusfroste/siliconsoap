@@ -26,6 +26,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -48,13 +49,17 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
 
     console.log('Sending message:', inputValue);
     console.log('Webhook URL:', webhookUrl);
+    console.log('Session ID:', sessionId);
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
     try {
-      const requestBody = { message: inputValue };
+      const requestBody = { 
+        message: inputValue,
+        session_id: sessionId
+      };
       console.log('Request body:', JSON.stringify(requestBody));
 
       const response = await fetch(webhookUrl, {
@@ -154,7 +159,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
             Your AI-powered innovation strategist
           </p>
           <p className="text-white text-opacity-70 text-xs mt-1">
-            Webhook: {webhookUrl}
+            Session: {sessionId}
           </p>
         </div>
 
