@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { parseMarkdown } from '@/pages/labs/hooks/utils';
 
 interface Message {
   id: string;
@@ -57,8 +57,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
 
     try {
       const requestBody = { 
-        message: inputValue,
-        session_id: sessionId
+        message: inputValue
       };
       console.log('Request body:', JSON.stringify(requestBody));
 
@@ -71,7 +70,6 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       });
 
       console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -86,16 +84,12 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       let botResponse = "I'm sorry, I couldn't process that request.";
       
       if (Array.isArray(data) && data.length > 0) {
-        // If response is an array, take the first item's output
         botResponse = data[0]?.output || data[0]?.message || data[0];
       } else if (data.output) {
-        // If response has output property
         botResponse = data.output;
       } else if (data.message) {
-        // If response has message property
         botResponse = data.message;
       } else if (typeof data === 'string') {
-        // If response is a string
         botResponse = data;
       } else {
         console.warn('Unexpected response format:', data);
@@ -119,7 +113,6 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
-      // Add error message to chat
       const errorBotMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: `Error: ${errorMessage}. Please check the console for more details.`,
@@ -165,7 +158,14 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
                     : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.text}</p>
+                {message.isUser ? (
+                  <p className="text-sm leading-relaxed">{message.text}</p>
+                ) : (
+                  <div 
+                    className="text-sm leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: parseMarkdown(message.text) }}
+                  />
+                )}
               </div>
             </div>
           ))}
