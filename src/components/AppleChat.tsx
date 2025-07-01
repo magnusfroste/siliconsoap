@@ -183,6 +183,7 @@ const AppleChat: React.FC<AppleChatProps> = ({ webhookUrl }) => {
   };
 
   const quickActions = [
+    { label: "Toolbox", message: "tools I have access to" },
     { label: "AI Strategy", message: "outline an ai strategy" },
     { label: "Magnus Resume", message: "show magnus resume" },
     { label: "AI Agents", message: "tell me about ai agents" }
