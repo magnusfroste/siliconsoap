@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, X } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { parseMarkdown } from '@/pages/labs/hooks/utils';
 
@@ -40,25 +40,14 @@ const ResponseModal: React.FC<ResponseModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
         <DialogHeader className="flex-row items-center justify-between space-y-0 pb-4">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              className="h-8 w-8 p-0"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogClose>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyToClipboard}
+            className="h-8 w-8 p-0"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
         </DialogHeader>
         
         <div className="overflow-y-auto max-h-[60vh] pr-2">
