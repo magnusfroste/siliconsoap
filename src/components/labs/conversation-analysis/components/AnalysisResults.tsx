@@ -3,6 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Printer, CheckCircle, ListChecks, AlertCircle, Speech } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 import { ConversationEntry } from '../../types';
 
@@ -116,6 +118,18 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     }, 500);
   };
 
+  // Compute simple contributions and token estimates
+  const agentCounts = conversation.reduce((acc: Record<string, number>, entry) => {
+    acc[entry.agent] = (acc[entry.agent] || 0) + 1;
+    return acc;
+  }, {});
+  const chartData = Object.entries(agentCounts).map(([agent, count]) => ({ agent, count }));
+  const totalChars = conversation.reduce((sum, e) => sum + e.message.length, 0) + (analysisResults?.length || 0);
+  const estTokens = Math.max(1, Math.round(totalChars / 4)); // ~4 chars/token heuristic
+  const uniqueModels = Array.from(new Set(conversation.map(e => e.model))).length;
+  const allFree = conversation.length > 0 && conversation.every(e => e.model.includes(':free'));
+  const estCostDisplay = allFree ? '$0.00' : '—'; // Pricing varies by model/provider
+
   return (
     <div className="space-y-6">
       <div>
@@ -137,6 +151,48 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
             </Button>
           </div>
         </div>
+        {/* Run Stats */}
+        <div className="grid gap-3 md:grid-cols-4 mb-4">
+          <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="text-xs text-gray-500">Estimated tokens</div>
+            <div className="text-base font-medium">{estTokens.toLocaleString()}</div>
+          </div>
+          <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="text-xs text-gray-500">Messages</div>
+            <div className="text-base font-medium">{conversation.length}</div>
+          </div>
+          <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="text-xs text-gray-500">Models used</div>
+            <div className="text-base font-medium">{uniqueModels}</div>
+          </div>
+          <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="text-xs text-gray-500">Est. cost</div>
+            <div className="text-base font-medium">{estCostDisplay}</div>
+          </div>
+        </div>
+
+        {/* Agent Contributions Chart */}
+        {chartData.length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-sm font-medium mb-2">Agent Contributions</h4>
+            <ChartContainer
+              config={{
+                count: { label: 'Messages', color: 'hsl(var(--primary))' }
+              }}
+              className="w-full h-56"
+            >
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="agent" />
+                <YAxis allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </div>
+        )}
+
+        {/* Analysis markdown */}
         <div 
           className="text-gray-700 bg-gray-50 p-5 rounded-md border border-gray-200 prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(analysisResults) }}
