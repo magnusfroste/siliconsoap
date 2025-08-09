@@ -45,7 +45,7 @@ const App = () => {
         <BrowserRouter>
           <PageTracker />
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Labs />} />
             <Route path="/labs" element={<Labs />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/n8n-test" element={<N8nTest />} />
