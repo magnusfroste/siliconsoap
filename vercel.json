@@ -1,5 +1,8 @@
 
 {
+  "redirects": [
+    { "source": "/", "destination": "/labs", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],

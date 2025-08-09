@@ -8,7 +8,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const isHomePage = location.pathname === '/';
+  const isHomePage = location.pathname === '/labs';
 
   // Toggle mobile menu
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -48,7 +48,7 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div>
-            <Link to="/" className="text-2xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
+            <Link to="/labs" className="text-2xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
               froste.eu
             </Link>
           </div>
@@ -56,7 +56,7 @@ const Header = () => {
           <nav className="hidden md:flex space-x-10 items-center">
             {!isHomePage && (
               <Link 
-                to="/" 
+                to="/labs" 
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium transition-all hover:bg-purple-200"
                 onClick={stopSpeech}
               >
@@ -81,7 +81,7 @@ const Header = () => {
           <nav className="md:hidden py-4 pb-6 space-y-4 flex flex-col items-center">
             {!isHomePage && (
               <Link 
-                to="/" 
+                to="/labs" 
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium"
                 onClick={() => {
                   stopSpeech();
