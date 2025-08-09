@@ -27,14 +27,22 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                   className={`relative flex items-center justify-center ${
                     stepState === 'completed' || stepState === 'current' ? 'cursor-pointer' : 'cursor-not-allowed'
                   }`}
-                  onClick={() => goToStep(step)}
+                  role="button"
+                  tabIndex={stepState === 'completed' || stepState === 'current' ? 0 : -1}
+                  aria-current={stepState === 'current' ? 'step' : undefined}
+                  aria-disabled={stepState === 'not-started'}
+                  onClick={() => {
+                    if (stepState === 'completed' || stepState === 'current') {
+                      goToStep(step);
+                    }
+                  }}
                 >
                   <div className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-colors ${
                     stepState === 'completed' 
-                      ? 'bg-green-100 border-green-500 text-green-500' 
+                      ? 'bg-primary/10 border-primary text-primary' 
                       : stepState === 'current'
-                        ? 'bg-purple-100 border-purple-500 text-purple-500'
-                        : 'bg-gray-100 border-gray-300 text-gray-400'
+                        ? 'bg-primary/20 border-primary text-primary'
+                        : 'bg-muted border-border text-muted-foreground'
                   }`}>
                     {stepState === 'completed' ? (
                       <CheckCircle className="h-5 w-5" />
@@ -42,7 +50,7 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                       <span className="text-sm font-medium">{step}</span>
                     )}
                   </div>
-                  <div className="absolute -bottom-6 whitespace-nowrap text-xs font-medium">
+                  <div className="absolute -bottom-6 whitespace-nowrap text-xs font-medium text-muted-foreground">
                     {step === 1 ? 'API Settings' : 
                      step === 2 ? 'Agent Configuration' : 
                      step === 3 ? 'Conversation' : 'Analysis'}
@@ -50,7 +58,7 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                 </div>
                 {step < 4 && (
                   <div className={`flex-1 h-1 mx-2 ${
-                    stepState === 'completed' ? 'bg-green-500' : 'bg-gray-200'
+                    stepState === 'completed' ? 'bg-primary' : 'bg-muted'
                   }`} />
                 )}
               </div>

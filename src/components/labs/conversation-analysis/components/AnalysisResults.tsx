@@ -27,7 +27,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     parsed = parsed.replace(/\*(.*?)\*/g, '<em>$1</em>');
     parsed = parsed.replace(/__(.*?)__/g, '<strong>$1</strong>');
     parsed = parsed.replace(/_(.*?)_/g, '<em>$1</em>');
-    parsed = parsed.replace(/`(.*?)`/g, '<code class="bg-gray-100 text-purple-600 px-1 rounded">$1</code>');
+    parsed = parsed.replace(/`(.*?)`/g, '<code class="bg-muted text-primary px-1 rounded">$1</code>');
     parsed = parsed.replace(/\n/g, '<br/>');
     return parsed;
   };
@@ -152,24 +152,24 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
           </div>
         </div>
         {/* Run Stats */}
-        <div className="grid gap-3 md:grid-cols-4 mb-4">
-          <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs text-gray-500">Estimated tokens</div>
-            <div className="text-base font-medium">{estTokens.toLocaleString()}</div>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 mb-4">
+            <div className="rounded-md border bg-card text-card-foreground p-3">
+              <div className="text-xs text-muted-foreground">Estimated tokens</div>
+              <div className="text-base font-medium">{estTokens.toLocaleString()}</div>
+            </div>
+            <div className="rounded-md border bg-card text-card-foreground p-3">
+              <div className="text-xs text-muted-foreground">Messages</div>
+              <div className="text-base font-medium">{conversation.length}</div>
+            </div>
+            <div className="rounded-md border bg-card text-card-foreground p-3">
+              <div className="text-xs text-muted-foreground">Models used</div>
+              <div className="text-base font-medium">{uniqueModels}</div>
+            </div>
+            <div className="rounded-md border bg-card text-card-foreground p-3">
+              <div className="text-xs text-muted-foreground">Est. cost</div>
+              <div className="text-base font-medium">{estCostDisplay}</div>
+            </div>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs text-gray-500">Messages</div>
-            <div className="text-base font-medium">{conversation.length}</div>
-          </div>
-          <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs text-gray-500">Models used</div>
-            <div className="text-base font-medium">{uniqueModels}</div>
-          </div>
-          <div className="rounded-md border border-gray-200 bg-white p-3">
-            <div className="text-xs text-gray-500">Est. cost</div>
-            <div className="text-base font-medium">{estCostDisplay}</div>
-          </div>
-        </div>
 
         {/* Agent Contributions Chart */}
         {chartData.length > 0 && (
@@ -194,23 +194,23 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
         {/* Analysis markdown */}
         <div 
-          className="text-gray-700 bg-gray-50 p-5 rounded-md border border-gray-200 prose prose-sm max-w-none"
+          className="text-foreground bg-muted p-5 rounded-md border prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(analysisResults) }}
         />
         <div className="flex flex-wrap gap-3 mt-4">
-          <div className="flex items-center text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
+          <div className="flex items-center text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">
             <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
             <span>Key Insights</span>
           </div>
-          <div className="flex items-center text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+          <div className="flex items-center text-sm bg-accent text-accent-foreground px-3 py-1 rounded-full">
             <ListChecks className="h-3.5 w-3.5 mr-1.5" />
             <span>Discussion Points</span>
           </div>
-          <div className="flex items-center text-sm bg-amber-50 text-amber-700 px-3 py-1 rounded-full">
+          <div className="flex items-center text-sm bg-destructive/10 text-destructive px-3 py-1 rounded-full">
             <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
             <span>Areas of Disagreement</span>
           </div>
-          <div className="flex items-center text-sm bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
+          <div className="flex items-center text-sm bg-secondary/10 text-secondary-foreground px-3 py-1 rounded-full">
             <Speech className="h-3.5 w-3.5 mr-1.5" />
             <span>Further Exploration</span>
           </div>
