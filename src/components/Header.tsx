@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Atom, Home } from 'lucide-react';
+import { Menu, X, Home } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -53,33 +53,15 @@ const Header = () => {
             </Link>
           </div>
           
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-10 items-center">
-            {isHomePage ? (
-              // Home page links
-              <>
-                <a href="#about" className="nav-link">About</a>
-                <a href="#expertise" className="nav-link">Expertise</a>
-                <a href="#projects" className="nav-link">Portfolio</a>
-                <a href="#contact" className="nav-link">Contact</a>
-                <Link 
-                  to="/labs" 
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium transition-all hover:bg-purple-200"
-                  onClick={stopSpeech}
-                >
-                  <Atom size={18} />
-                  Labs
-                </Link>
-              </>
-            ) : (
-              // Links for other pages (Labs, etc.)
+            {!isHomePage && (
               <Link 
                 to="/" 
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium transition-all hover:bg-purple-200"
                 onClick={stopSpeech}
               >
                 <Home size={18} />
-                Home
+                Labs Home
               </Link>
             )}
           </nav>
@@ -97,27 +79,7 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <nav className="md:hidden py-4 pb-6 space-y-4 flex flex-col items-center">
-            {isHomePage ? (
-              // Home page mobile links
-              <>
-                <a href="#about" className="nav-link-mobile" onClick={toggleMenu}>About</a>
-                <a href="#expertise" className="nav-link-mobile" onClick={toggleMenu}>Expertise</a>
-                <a href="#projects" className="nav-link-mobile" onClick={toggleMenu}>Portfolio</a>
-                <a href="#contact" className="nav-link-mobile" onClick={toggleMenu}>Contact</a>
-                <Link 
-                  to="/labs" 
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium"
-                  onClick={() => {
-                    stopSpeech();
-                    toggleMenu();
-                  }}
-                >
-                  <Atom size={18} />
-                  Labs
-                </Link>
-              </>
-            ) : (
-              // Mobile links for other pages (Labs, etc.)
+            {!isHomePage && (
               <Link 
                 to="/" 
                 className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium"
@@ -127,7 +89,7 @@ const Header = () => {
                 }}
               >
                 <Home size={18} />
-                Home
+                Labs Home
               </Link>
             )}
           </nav>
