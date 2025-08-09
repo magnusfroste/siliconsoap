@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Printer, CheckCircle, ListChecks, AlertCircle, Speech } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { parseMarkdown } from '@/pages/labs/hooks/utils';
+
 import { ConversationEntry } from '../../types';
 
 interface AnalysisResultsProps {
@@ -15,6 +15,21 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
   analysisResults,
   conversation
 }) => {
+  const renderMarkdown = (markdown: string) => {
+    if (!markdown) return '';
+    let parsed = markdown
+      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4">$1</h1>');
+    parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    parsed = parsed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    parsed = parsed.replace(/__(.*?)__/g, '<strong>$1</strong>');
+    parsed = parsed.replace(/_(.*?)_/g, '<em>$1</em>');
+    parsed = parsed.replace(/`(.*?)`/g, '<code class="bg-gray-100 text-purple-600 px-1 rounded">$1</code>');
+    parsed = parsed.replace(/\n/g, '<br/>');
+    return parsed;
+  };
+
   const handleCopySummary = () => {
     if (analysisResults) {
       // Copy the original markdown text, not the HTML
@@ -79,7 +94,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         <h1>AI Agents Conversation Analysis</h1>
         
         <h2>Conversation Analysis</h2>
-        <div class="analysis">${parseMarkdown(analysisResults)}</div>
+        <div class="analysis">${renderMarkdown(analysisResults)}</div>
         
         <hr>
         
@@ -124,7 +139,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
         </div>
         <div 
           className="text-gray-700 bg-gray-50 p-5 rounded-md border border-gray-200 prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: parseMarkdown(analysisResults) }}
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(analysisResults) }}
         />
         <div className="flex flex-wrap gap-3 mt-4">
           <div className="flex items-center text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
