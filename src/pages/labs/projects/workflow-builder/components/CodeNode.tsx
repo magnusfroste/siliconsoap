@@ -1,15 +1,18 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
-import { Code, Edit, Save, X } from 'lucide-react';
+import { Code, Edit, Save, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import NodeDataViewer from './NodeDataViewer';
 
 interface CodeNodeData {
   label?: string;
   code?: string;
   isExecuting?: boolean;
   isExecuted?: boolean;
+  inputData?: any[];
+  outputData?: any[];
 }
 
 const defaultCode = `// Loop over input items and add a new field called 'myNewField' to the JSON of each one
@@ -24,6 +27,7 @@ const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tempCode, setTempCode] = useState(code);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDataViewerOpen, setIsDataViewerOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
   const handleDelete = () => {
@@ -38,6 +42,17 @@ const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
   const handleCancel = () => {
     setTempCode(code);
     setIsOpen(false);
+  };
+
+  const handleSaveCode = (newCode: string) => {
+    setCode(newCode);
+    setNodes((nodes) => 
+      nodes.map((node) => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, code: newCode } }
+          : node
+      )
+    );
   };
 
   const getNodeStyle = () => {
@@ -83,7 +98,7 @@ const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
         </div>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-1">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
@@ -114,7 +129,33 @@ const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
             </div>
           </DialogContent>
         </Dialog>
+        
+        {data.isExecuted && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-6 w-6 p-0"
+            onClick={() => setIsDataViewerOpen(true)}
+          >
+            <Eye className="h-3 w-3" />
+          </Button>
+        )}
       </div>
+      
+      <NodeDataViewer
+        isOpen={isDataViewerOpen}
+        onClose={() => setIsDataViewerOpen(false)}
+        nodeData={{
+          id,
+          type: 'code',
+          label: data.label || 'Code',
+          code,
+          inputData: data.inputData,
+          outputData: data.outputData,
+          isExecuted: data.isExecuted,
+        }}
+        onSaveCode={handleSaveCode}
+      />
       
       <Handle type="source" position={Position.Right} className={getHandleStyle()} />
     </div>

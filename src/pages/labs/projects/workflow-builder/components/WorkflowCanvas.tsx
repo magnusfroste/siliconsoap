@@ -153,6 +153,18 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
             ...node.data,
             isExecuting: false,
             isExecuted: true,
+            // Simulate input/output data
+            inputData: [
+              { id: 1, name: 'Sample Item 1', value: 100 },
+              { id: 2, name: 'Sample Item 2', value: 200 }
+            ],
+            outputData: node.type === 'code' ? [
+              { id: 1, name: 'Sample Item 1', value: 100, myNewField: 1 },
+              { id: 2, name: 'Sample Item 2', value: 200, myNewField: 1 }
+            ] : [
+              { id: 1, name: 'Processed Item 1', result: 'success' },
+              { id: 2, name: 'Processed Item 2', result: 'success' }
+            ],
           },
         }))
       );
