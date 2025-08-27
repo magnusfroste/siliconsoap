@@ -17,8 +17,8 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
   };
 
   return (
-    <div className="flex items-center justify-center mb-8">
-      <div className="flex items-center w-full max-w-3xl">
+    <div className="flex items-center justify-center mb-8 px-4">
+      <div className="flex items-center w-full max-w-2xl">
         {[1, 2, 3, 4].map((step) => {
           const stepState = getStepState(step);
           return (
@@ -37,12 +37,12 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                     }
                   }}
                 >
-                  <div className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-colors ${
+                  <div className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-all duration-200 ${
                     stepState === 'completed' 
-                      ? 'bg-primary/10 border-primary text-primary' 
+                      ? 'bg-primary/15 border-primary text-primary shadow-sm' 
                       : stepState === 'current'
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : 'bg-muted border-border text-muted-foreground'
+                        ? 'bg-primary/20 border-primary text-primary shadow-md scale-105'
+                        : 'bg-muted border-border text-muted-foreground hover:border-muted-foreground/40'
                   }`}>
                     {stepState === 'completed' ? (
                       <CheckCircle className="h-5 w-5" />
@@ -50,14 +50,16 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                       <span className="text-sm font-medium">{step}</span>
                     )}
                   </div>
-                  <div className="absolute -bottom-6 whitespace-nowrap text-xs font-medium text-muted-foreground">
+                  <div className={`absolute -bottom-6 whitespace-nowrap text-xs font-medium transition-colors ${
+                    stepState === 'current' ? 'text-primary' : 'text-muted-foreground'
+                  }`}>
                     {step === 1 ? 'API Settings' : 
                      step === 2 ? 'Agent Configuration' : 
                      step === 3 ? 'Conversation' : 'Analysis'}
                   </div>
                 </div>
                 {step < 4 && (
-                  <div className={`flex-1 h-1 mx-2 ${
+                  <div className={`flex-1 h-1 mx-3 rounded-full transition-colors ${
                     stepState === 'completed' ? 'bg-primary' : 'bg-muted'
                   }`} />
                 )}
