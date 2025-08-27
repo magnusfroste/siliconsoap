@@ -19,6 +19,8 @@ import AINode from './AINode';
 import RunNode from './RunNode';
 import CodeNode from './CodeNode';
 import DeletableEdge from './DeletableEdge';
+import NodeSelector from './NodeSelector';
+import { Plus } from 'lucide-react';
 
 const nodeTypes = {
   chat: ChatNode,
@@ -71,6 +73,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
   const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || initialEdges);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
 
   // Update workflow from imported data
   React.useEffect(() => {
@@ -183,6 +186,15 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
           🧪 {isExecuting ? 'Executing...' : 'Execute workflow'}
         </button>
       </div>
+
+      <div className="absolute top-4 right-4 z-10">
+        <button 
+          onClick={() => setIsNodeSelectorOpen(true)}
+          className="w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center shadow-lg transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+      </div>
       
       <ReactFlow
         nodes={nodes}
@@ -206,6 +218,11 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
         />
         <Background gap={20} className="bg-gray-100" />
       </ReactFlow>
+
+      <NodeSelector 
+        isOpen={isNodeSelectorOpen}
+        onClose={() => setIsNodeSelectorOpen(false)}
+      />
     </div>
   );
 };
