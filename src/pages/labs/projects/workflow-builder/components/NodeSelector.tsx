@@ -2,11 +2,12 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Search, Brain, Code, Play, Zap, Globe, Database, GitBranch, User, Webhook } from 'lucide-react';
-import { useReactFlow } from '@xyflow/react';
+import { Node } from '@xyflow/react';
 
 interface NodeSelectorProps {
   isOpen: boolean;
   onClose: () => void;
+  onAddNode: (nodeType: string, title: string) => void;
 }
 
 const nodeCategories = [
@@ -54,34 +55,9 @@ const nodeCategories = [
   },
 ];
 
-const NodeSelector: React.FC<NodeSelectorProps> = ({ isOpen, onClose }) => {
-  const { setNodes, getNodes } = useReactFlow();
-
-  const addNode = (nodeType: string, title: string) => {
-    const nodes = getNodes();
-    const newId = `${nodeType}-${Date.now()}`;
-    
-    // Position new node to the right of existing nodes
-    const rightmostNode = nodes.reduce((rightmost, node) => 
-      node.position.x > rightmost.position.x ? node : rightmost, 
-      nodes[0] || { position: { x: 0, y: 100 } }
-    );
-    
-    const newPosition = {
-      x: rightmostNode.position.x + 250,
-      y: rightmostNode.position.y || 100,
-    };
-
-    const newNode = {
-      id: newId,
-      type: nodeType === 'action' || nodeType === 'transform' || nodeType === 'flow' || nodeType === 'human' ? 'chat' : nodeType,
-      position: newPosition,
-      data: {
-        label: title,
-      },
-    };
-
-    setNodes((nodes) => [...nodes, newNode]);
+const NodeSelector: React.FC<NodeSelectorProps> = ({ isOpen, onClose, onAddNode }) => {
+  const handleAddNode = (nodeType: string, title: string) => {
+    onAddNode(nodeType, title);
     onClose();
   };
 
@@ -107,7 +83,7 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ isOpen, onClose }) => {
               return (
                 <button
                   key={category.nodeType}
-                  onClick={() => addNode(category.nodeType, category.title)}
+                  onClick={() => handleAddNode(category.nodeType, category.title)}
                   className="w-full p-4 text-left border border-border rounded-lg hover:bg-accent/50 transition-colors group"
                 >
                   <div className="flex items-start gap-3">

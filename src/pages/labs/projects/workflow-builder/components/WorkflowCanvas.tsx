@@ -175,6 +175,32 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
     [setEdges],
   );
 
+  const handleAddNode = useCallback((nodeType: string, title: string) => {
+    const newId = `${nodeType}-${Date.now()}`;
+    
+    // Position new node to the right of existing nodes
+    const rightmostNode = nodes.reduce((rightmost, node) => 
+      node.position.x > rightmost.position.x ? node : rightmost, 
+      nodes[0] || { position: { x: 0, y: 100 } }
+    );
+    
+    const newPosition = {
+      x: rightmostNode.position.x + 250,
+      y: rightmostNode.position.y || 100,
+    };
+
+    const newNode = {
+      id: newId,
+      type: nodeType === 'action' || nodeType === 'transform' || nodeType === 'flow' || nodeType === 'human' ? 'chat' : nodeType,
+      position: newPosition,
+      data: {
+        label: title,
+      },
+    };
+
+    setNodes((currentNodes) => [...currentNodes, newNode]);
+  }, [nodes, setNodes]);
+
   return (
     <div className="h-full w-full relative">
       <div className="absolute top-4 left-4 z-10">
@@ -222,6 +248,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
       <NodeSelector 
         isOpen={isNodeSelectorOpen}
         onClose={() => setIsNodeSelectorOpen(false)}
+        onAddNode={handleAddNode}
       />
     </div>
   );
