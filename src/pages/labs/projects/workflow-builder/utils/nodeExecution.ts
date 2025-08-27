@@ -15,6 +15,8 @@ export const executeHttpRequest = async (config: {
   timeout: number;
 }, inputData: any[]): Promise<ExecutionResult> => {
   try {
+    console.log('Making HTTP request to:', config.url, 'with method:', config.method);
+    
     if (!config.url) {
       return { success: false, data: [], error: 'URL is required' };
     }
@@ -36,6 +38,7 @@ export const executeHttpRequest = async (config: {
     }
 
     const response = await fetch(config.url, requestOptions);
+    console.log('HTTP Response:', response.status, response.statusText);
     clearTimeout(timeoutId);
 
     let responseData;
@@ -43,8 +46,10 @@ export const executeHttpRequest = async (config: {
     
     if (contentType && contentType.includes('application/json')) {
       responseData = await response.json();
+      console.log('JSON Response data:', responseData);
     } else {
       responseData = await response.text();
+      console.log('Text Response data:', responseData);
     }
 
     const result = {
@@ -63,8 +68,10 @@ export const executeHttpRequest = async (config: {
       };
     }
 
+    console.log('HTTP execution result:', { success: true, data: [result] });
     return { success: true, data: [result] };
   } catch (error: any) {
+    console.error('HTTP request failed:', error);
     if (error.name === 'AbortError') {
       return { success: false, data: [], error: 'Request timeout' };
     }
