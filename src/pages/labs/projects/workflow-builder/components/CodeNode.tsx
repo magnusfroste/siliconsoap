@@ -1,7 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Code, Edit, Save, X } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -9,15 +8,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 interface CodeNodeData {
   label?: string;
   code?: string;
+  isExecuting?: boolean;
+  isExecuted?: boolean;
 }
 
-const defaultCode = `// Simple calculation example
-const a = 10;
-const b = 20;
-const result = a + b;
+const defaultCode = `// Loop over input items and add a new field called 'myNewField' to the JSON of each one
+for (const item of $input.all()) {
+  item.json.myNewField = 1;
+}
 
-console.log('Result:', result);
-return result;`;
+return $input.all();`;
 
 const CodeNode = memo(({ data }: { data: CodeNodeData }) => {
   const [code, setCode] = useState(data.code || defaultCode);
@@ -34,21 +34,41 @@ const CodeNode = memo(({ data }: { data: CodeNodeData }) => {
     setIsOpen(false);
   };
 
-  const getCodePreview = () => {
-    const lines = code.split('\n');
-    return lines.length > 2 ? `${lines[0]}\n${lines[1]}\n...` : code;
+  const getNodeStyle = () => {
+    if (data.isExecuted) return "border-2 border-green-500 bg-background shadow-lg";
+    if (data.isExecuting) return "border-2 border-yellow-500 bg-background shadow-lg animate-pulse";
+    return "border-2 border-gray-300 bg-background hover:border-gray-400 transition-colors";
+  };
+
+  const getHandleStyle = () => {
+    if (data.isExecuted) return "!bg-green-500";
+    if (data.isExecuting) return "!bg-yellow-500";
+    return "!bg-gray-400";
   };
 
   return (
-    <Card className="min-w-[220px] p-4 border-2 border-destructive/20 bg-background">
-      <Handle type="target" position={Position.Left} className="!bg-destructive" />
+    <div className={`min-w-[180px] p-4 rounded-lg ${getNodeStyle()}`}>
+      <Handle type="target" position={Position.Left} className={getHandleStyle()} />
       
-      <div className="flex items-center gap-2 mb-2">
-        <Code className="h-4 w-4 text-destructive" />
-        <span className="font-medium text-sm">JavaScript Code</span>
+      <div className="flex items-center justify-center mb-3">
+        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+          <Code className="h-5 w-5 text-orange-600" />
+        </div>
+      </div>
+      
+      <div className="text-center mb-2">
+        <div className="font-medium text-sm mb-1">
+          {data.label || "Code"}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          JavaScript execution
+        </div>
+      </div>
+
+      <div className="flex justify-center">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 ml-auto">
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
               <Edit className="h-3 w-3" />
             </Button>
           </DialogTrigger>
@@ -78,18 +98,8 @@ const CodeNode = memo(({ data }: { data: CodeNodeData }) => {
         </Dialog>
       </div>
       
-      <div className="text-xs text-muted-foreground mb-2">
-        Custom JavaScript execution
-      </div>
-      
-      <div className="bg-muted/50 p-2 rounded text-xs font-mono">
-        <pre className="whitespace-pre-wrap overflow-hidden">
-          {getCodePreview()}
-        </pre>
-      </div>
-      
-      <Handle type="source" position={Position.Right} className="!bg-destructive" />
-    </Card>
+      <Handle type="source" position={Position.Right} className={getHandleStyle()} />
+    </div>
   );
 });
 
