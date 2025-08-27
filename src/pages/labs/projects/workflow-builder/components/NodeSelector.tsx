@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Search, Brain, Code, Play, Zap, Globe, Database, GitBranch, User, Webhook } from 'lucide-react';
+import { Search, Brain, Code, Play, Zap, Globe, Database, GitBranch, User, Webhook, Filter, Settings2 } from 'lucide-react';
 import { Node } from '@xyflow/react';
 
 interface NodeSelectorProps {
@@ -34,6 +34,30 @@ const nodeCategories = [
     icon: GitBranch,
     description: 'Branch, merge or loop the flow, etc.',
     nodeType: 'flow',
+  },
+  {
+    title: 'HTTP Request',
+    icon: Globe,
+    description: 'Make HTTP requests to APIs and external services',
+    nodeType: 'http',
+  },
+  {
+    title: 'If',
+    icon: GitBranch,
+    description: 'Branch workflow based on conditions',
+    nodeType: 'if',
+  },
+  {
+    title: 'Set',
+    icon: Settings2,
+    description: 'Transform and manipulate data fields',
+    nodeType: 'set',
+  },
+  {
+    title: 'Filter',
+    icon: Filter,
+    description: 'Filter items based on conditions',
+    nodeType: 'filter',
   },
   {
     title: 'Core',

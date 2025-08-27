@@ -23,12 +23,21 @@ import NodeSelector from './NodeSelector';
 import { Plus } from 'lucide-react';
 import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
 
+import HttpRequestNode from './HttpRequestNode';
+import IfNode from './IfNode';
+import SetNode from './SetNode';
+import FilterNode from './FilterNode';
+
 const nodeTypes = {
   chat: ChatNode,
   ai: AINode,
   run: RunNode,
   code: CodeNode,
   manualTrigger: ChatNode,
+  http: HttpRequestNode,
+  if: IfNode,
+  set: SetNode,
+  filter: FilterNode,
 };
 
 const edgeTypes: EdgeTypes = {
