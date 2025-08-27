@@ -21,6 +21,7 @@ import CodeNode from './CodeNode';
 import DeletableEdge from './DeletableEdge';
 import NodeSelector from './NodeSelector';
 import { Plus } from 'lucide-react';
+import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
 
 const nodeTypes = {
   chat: ChatNode,
@@ -124,61 +125,144 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
   const executeWorkflow = useCallback(() => {
     setIsExecuting(true);
     
-    // Update nodes to show execution state
+    // First, reset all nodes
     setNodes((nds) =>
       nds.map((node) => ({
         ...node,
         data: {
           ...node.data,
-          isExecuting: true,
+          isExecuting: false,
+          isExecuted: false,
+          inputData: [],
+          outputData: [],
         },
       }))
     );
 
-    // Update edges to show execution state
-    setEdges((eds) =>
-      eds.map((edge) => ({
-        ...edge,
-        style: { stroke: '#10b981', strokeWidth: 2 },
-        animated: true,
-      }))
-    );
-
-    // Simulate execution completion
+    // Then start execution animation
     setTimeout(() => {
       setNodes((nds) =>
         nds.map((node) => ({
           ...node,
           data: {
             ...node.data,
-            isExecuting: false,
-            isExecuted: true,
-            // Simulate input/output data
-            inputData: [
-              { id: 1, name: 'Sample Item 1', value: 100 },
-              { id: 2, name: 'Sample Item 2', value: 200 }
-            ],
-            outputData: node.type === 'code' ? [
-              { id: 1, name: 'Sample Item 1', value: 100, myNewField: 1 },
-              { id: 2, name: 'Sample Item 2', value: 200, myNewField: 1 }
-            ] : [
-              { id: 1, name: 'Processed Item 1', result: 'success' },
-              { id: 2, name: 'Processed Item 2', result: 'success' }
-            ],
+            isExecuting: true,
           },
         }))
       );
 
+      // Update edges to show execution state
       setEdges((eds) =>
         eds.map((edge) => ({
           ...edge,
           style: { stroke: '#10b981', strokeWidth: 2 },
-          animated: false,
+          animated: true,
         }))
       );
+    }, 100);
 
-      setIsExecuting(false);
-      onExecuteWorkflow?.();
+    // Execute nodes in topological order
+    setTimeout(() => {
+      setNodes((currentNodes) => {
+        setEdges((currentEdges) => {
+          // Create a map to store execution results
+          const executionResults = new Map();
+          
+          // Get nodes in execution order (topological sort)
+          const getExecutionOrder = (nodes: Node[], edges: Edge[]) => {
+            const visited = new Set<string>();
+            const order: Node[] = [];
+            
+            const visit = (nodeId: string) => {
+              if (visited.has(nodeId)) return;
+              visited.add(nodeId);
+              
+              // Visit all dependencies first
+              const incomingEdges = edges.filter(edge => edge.target === nodeId);
+              for (const edge of incomingEdges) {
+                visit(edge.source);
+              }
+              
+              const node = nodes.find(n => n.id === nodeId);
+              if (node) order.push(node);
+            };
+            
+            // Start with nodes that have no incoming edges
+            const startNodes = nodes.filter(node => 
+              !edges.some(edge => edge.target === node.id)
+            );
+            
+            for (const node of startNodes) {
+              visit(node.id);
+            }
+            
+            return order;
+          };
+          
+          const executionOrder = getExecutionOrder(currentNodes, currentEdges);
+          
+          // Execute each node
+          const updatedNodes = currentNodes.map((node) => {
+            const inputData = getNodeInputData(node.id, currentNodes, currentEdges);
+            let outputData = inputData;
+            let executionError: string | undefined;
+            
+            // Execute based on node type
+            if (node.type === 'code') {
+              const code = (node.data.code as string) || `// Default code
+for (const item of $input.all()) {
+  item.myNewField = 1;
+}
+return $input.all();`;
+              
+              const result = executeJavaScript(code, inputData);
+              outputData = result.output;
+              executionError = result.error;
+            } else if (node.type === 'manualTrigger') {
+              // Trigger nodes generate initial data
+              outputData = [
+                { id: 1, name: 'Item 1', value: 100, timestamp: new Date().toISOString() },
+                { id: 2, name: 'Item 2', value: 200, timestamp: new Date().toISOString() }
+              ];
+            } else {
+              // Other nodes pass through or transform data
+              outputData = inputData.map((item, index) => ({
+                ...item,
+                processedBy: node.type,
+                processedAt: new Date().toISOString(),
+                nodeId: node.id
+              }));
+            }
+            
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                isExecuting: false,
+                isExecuted: true,
+                inputData,
+                outputData,
+                executionError,
+              },
+            };
+          });
+
+          // Update edges
+          const updatedEdges = currentEdges.map((edge) => ({
+            ...edge,
+            style: { stroke: '#10b981', strokeWidth: 2 },
+            animated: false,
+          }));
+
+          setEdges(updatedEdges);
+          setIsExecuting(false);
+          onExecuteWorkflow?.();
+          
+          return currentEdges;
+        });
+        
+        return currentNodes;
+      });
     }, 2000);
   }, [setNodes, setEdges, onExecuteWorkflow]);
 

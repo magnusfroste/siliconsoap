@@ -17,6 +17,7 @@ interface NodeDataViewerProps {
     inputData?: any[];
     outputData?: any[];
     isExecuted?: boolean;
+    executionError?: string;
   };
   onSaveCode?: (code: string) => void;
 }
@@ -106,6 +107,9 @@ const NodeDataViewer: React.FC<NodeDataViewerProps> = ({
             <Badge variant={nodeData.isExecuted ? 'default' : 'secondary'}>
               {nodeData.isExecuted ? 'Executed' : 'Not executed'}
             </Badge>
+            {nodeData.executionError && (
+              <Badge variant="destructive">Error</Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -150,6 +154,12 @@ const NodeDataViewer: React.FC<NodeDataViewerProps> = ({
             <div className="flex-1 p-4">
               {nodeData.type === 'code' ? (
                 <div className="space-y-4 h-full flex flex-col">
+                  {nodeData.executionError && (
+                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                      <div className="text-sm font-medium text-destructive mb-1">Execution Error:</div>
+                      <div className="text-sm text-destructive/80">{nodeData.executionError}</div>
+                    </div>
+                  )}
                   <Textarea
                     value={code}
                     onChange={(e) => setCode(e.target.value)}

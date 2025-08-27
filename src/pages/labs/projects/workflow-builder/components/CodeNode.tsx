@@ -13,6 +13,7 @@ interface CodeNodeData {
   isExecuted?: boolean;
   inputData?: any[];
   outputData?: any[];
+  executionError?: string;
 }
 
 const defaultCode = `// Loop over input items and add a new field called 'myNewField' to the JSON of each one
@@ -153,6 +154,7 @@ const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
           inputData: data.inputData,
           outputData: data.outputData,
           isExecuted: data.isExecuted,
+          executionError: data.executionError,
         }}
         onSaveCode={handleSaveCode}
       />
