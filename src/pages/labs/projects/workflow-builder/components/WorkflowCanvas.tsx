@@ -15,10 +15,14 @@ import '@xyflow/react/dist/style.css';
 
 import ChatNode from './ChatNode';
 import AINode from './AINode';
+import RunNode from './RunNode';
+import CodeNode from './CodeNode';
 
 const nodeTypes = {
   chat: ChatNode,
   ai: AINode,
+  run: RunNode,
+  code: CodeNode,
 };
 
 interface WorkflowCanvasProps {
@@ -45,6 +49,23 @@ const initialNodes: Node[] = [
       hasCredentials: false
     },
   },
+  {
+    id: 'code-1',
+    type: 'code',
+    position: { x: 700, y: 100 },
+    data: { 
+      label: 'JavaScript Code',
+      code: '// Simple calculation\nconst result = 10 + 20;\nconsole.log(result);\nreturn result;'
+    },
+  },
+  {
+    id: 'run-1',
+    type: 'run',
+    position: { x: 1000, y: 100 },
+    data: { 
+      label: 'Execute Workflow'
+    },
+  },
 ];
 
 const initialEdges: Edge[] = [
@@ -52,6 +73,20 @@ const initialEdges: Edge[] = [
     id: 'e1-2',
     source: 'chat-1',
     target: 'ai-1',
+    type: 'smoothstep',
+    animated: true,
+  },
+  {
+    id: 'e2-3',
+    source: 'ai-1',
+    target: 'code-1',
+    type: 'smoothstep',
+    animated: true,
+  },
+  {
+    id: 'e3-4',
+    source: 'code-1',
+    target: 'run-1',
     type: 'smoothstep',
     animated: true,
   },
@@ -102,6 +137,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials }) => {
             switch (node.type) {
               case 'chat': return 'hsl(var(--primary))';
               case 'ai': return 'hsl(var(--secondary))';
+              case 'code': return 'hsl(var(--destructive))';
+              case 'run': return 'hsl(var(--accent))';
               default: return 'hsl(var(--muted))';
             }
           }}
