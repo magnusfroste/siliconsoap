@@ -22,6 +22,13 @@ import DeletableEdge from './DeletableEdge';
 import NodeSelector from './NodeSelector';
 import { Plus } from 'lucide-react';
 import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
+import {
+  executeHttpRequest,
+  executeIfNode,
+  executeFilterNode,
+  executeSetNode,
+  getNodeInputData as getNodeInput,
+} from '../utils/nodeExecution';
 
 import HttpRequestNode from './HttpRequestNode';
 import IfNode from './IfNode';
@@ -55,17 +62,60 @@ const initialNodes: Node[] = [
   {
     id: 'trigger-1',
     type: 'manualTrigger',
-    position: { x: 100, y: 100 },
+    position: { x: 50, y: 100 },
     data: { 
       label: "When clicking 'Execute workflow'",
     },
   },
   {
-    id: 'code-1',
-    type: 'code',
-    position: { x: 400, y: 100 },
+    id: 'http-1',
+    type: 'http',
+    position: { x: 350, y: 100 },
     data: { 
-      label: 'Code',
+      label: 'Fetch Users',
+      method: 'GET',
+      url: 'https://jsonplaceholder.typicode.com/users',
+      headers: {},
+      timeout: 30000,
+    },
+  },
+  {
+    id: 'filter-1',
+    type: 'filter',
+    position: { x: 650, y: 100 },
+    data: { 
+      label: 'Filter Active Users',
+      conditions: [
+        {
+          field: 'data.website',
+          operator: 'is_not_empty',
+          value: '',
+          dataType: 'string'
+        }
+      ],
+      combineConditions: 'AND',
+    },
+  },
+  {
+    id: 'set-1',
+    type: 'set',
+    position: { x: 950, y: 100 },
+    data: { 
+      label: 'Transform Data',
+      operation: 'add_fields',
+      fieldMappings: [
+        {
+          outputField: 'full_name',
+          inputValue: 'data.name',
+          type: 'expression'
+        },
+        {
+          outputField: 'contact_email',
+          inputValue: 'data.email',
+          type: 'expression'
+        }
+      ],
+      keepOnlySet: false,
     },
   },
 ];
@@ -74,7 +124,19 @@ const initialEdges: Edge[] = [
   {
     id: 'e1-2',
     source: 'trigger-1',
-    target: 'code-1',
+    target: 'http-1',
+    type: 'smoothstep',
+  },
+  {
+    id: 'e2-3',
+    source: 'http-1',
+    target: 'filter-1',
+    type: 'smoothstep',
+  },
+  {
+    id: 'e3-4',
+    source: 'filter-1',
+    target: 'set-1',
     type: 'smoothstep',
   },
 ];
@@ -131,7 +193,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
     );
   }, [hasCredentials, setNodes]);
 
-  const executeWorkflow = useCallback(() => {
+  const executeWorkflow = useCallback(async () => {
     setIsExecuting(true);
     
     // First, reset all nodes
@@ -144,11 +206,12 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
           isExecuted: false,
           inputData: [],
           outputData: [],
+          executionError: undefined,
         },
       }))
     );
 
-    // Then start execution animation
+    // Start execution animation
     setTimeout(() => {
       setNodes((nds) =>
         nds.map((node) => ({
@@ -160,7 +223,6 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
         }))
       );
 
-      // Update edges to show execution state
       setEdges((eds) =>
         eds.map((edge) => ({
           ...edge,
@@ -171,97 +233,195 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
     }, 100);
 
     // Execute nodes in topological order
-    setTimeout(() => {
-      // Get current state for execution
-      const currentNodes = nodes;
-      const currentEdges = edges;
-      
-      // Create a map to store execution results
-      const executionResults = new Map();
-      
-      // Get nodes in execution order (topological sort)
-      const getExecutionOrder = (nodes: Node[], edges: Edge[]) => {
-        const visited = new Set<string>();
-        const order: Node[] = [];
+    setTimeout(async () => {
+      try {
+        const currentNodes = nodes;
+        const currentEdges = edges;
         
-        const visit = (nodeId: string) => {
-          if (visited.has(nodeId)) return;
-          visited.add(nodeId);
+        // Get execution order
+        const getExecutionOrder = (nodes: Node[], edges: Edge[]) => {
+          const visited = new Set<string>();
+          const order: Node[] = [];
           
-          // Visit all dependencies first
-          const incomingEdges = edges.filter(edge => edge.target === nodeId);
-          for (const edge of incomingEdges) {
-            visit(edge.source);
+          const visit = (nodeId: string) => {
+            if (visited.has(nodeId)) return;
+            visited.add(nodeId);
+            
+            const incomingEdges = edges.filter(edge => edge.target === nodeId);
+            for (const edge of incomingEdges) {
+              visit(edge.source);
+            }
+            
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) order.push(node);
+          };
+          
+          const startNodes = nodes.filter(node => 
+            !edges.some(edge => edge.target === node.id)
+          );
+          
+          for (const node of startNodes) {
+            visit(node.id);
           }
           
-          const node = nodes.find(n => n.id === nodeId);
-          if (node) order.push(node);
+          return order;
         };
         
-        // Start with nodes that have no incoming edges
-        const startNodes = nodes.filter(node => 
-          !edges.some(edge => edge.target === node.id)
-        );
+        const executionOrder = getExecutionOrder(currentNodes, currentEdges);
+        const executionResults = new Map();
         
-        for (const node of startNodes) {
-          visit(node.id);
-        }
-        
-        return order;
-      };
-      
-      const executionOrder = getExecutionOrder(currentNodes, currentEdges);
-      
-      // Execute each node
-      const updatedNodes = currentNodes.map((node) => {
-        const inputData = getNodeInputData(node.id, currentNodes, currentEdges);
-        let outputData = inputData;
-        let executionError: string | undefined;
-        
-        // Execute based on node type
-        if (node.type === 'code') {
-          const code = (node.data.code as string) || `// Default code
+        // Execute nodes sequentially
+        for (const node of executionOrder) {
+          const inputData = getNodeInput(node.id, currentNodes, currentEdges);
+          let outputData = inputData;
+          let executionError: string | undefined;
+          
+          try {
+            switch (node.type) {
+              case 'manualTrigger':
+                outputData = inputData; // Already handled in getNodeInput
+                break;
+                
+              case 'http':
+                const httpConfig = {
+                  method: String(node.data.method || 'GET'),
+                  url: String(node.data.url || ''),
+                  headers: (node.data.headers as Record<string, string>) || {},
+                  body: String(node.data.body || ''),
+                  timeout: Number(node.data.timeout || 30000),
+                };
+                
+                const httpResult = await executeHttpRequest(httpConfig, inputData);
+                outputData = httpResult.data;
+                if (!httpResult.success) {
+                  executionError = httpResult.error;
+                }
+                break;
+                
+              case 'if':
+                const ifConfig = {
+                  conditions: (node.data.conditions as any[]) || [],
+                  combineConditions: (node.data.combineConditions as 'AND' | 'OR') || 'AND',
+                };
+                
+                const ifResult = executeIfNode(ifConfig, inputData);
+                outputData = ifResult.trueItems; // Main output goes to true path
+                
+                // Store both results for the node
+                executionResults.set(node.id, {
+                  trueItems: ifResult.trueItems,
+                  falseItems: ifResult.falseItems,
+                });
+                break;
+                
+              case 'filter':
+                const filterConfig = {
+                  conditions: (node.data.conditions as any[]) || [],
+                  combineConditions: (node.data.combineConditions as 'AND' | 'OR') || 'AND',
+                };
+                
+                const filterResult = executeFilterNode(filterConfig, inputData);
+                outputData = filterResult.data;
+                if (!filterResult.success) {
+                  executionError = filterResult.error;
+                }
+                break;
+                
+              case 'set':
+                const setConfig = {
+                  operation: String(node.data.operation || 'add_fields'),
+                  fieldMappings: (node.data.fieldMappings as any[]) || [],
+                  keepOnlySet: Boolean(node.data.keepOnlySet || false),
+                };
+                
+                const setResult = executeSetNode(setConfig, inputData);
+                outputData = setResult.data;
+                if (!setResult.success) {
+                  executionError = setResult.error;
+                }
+                break;
+                
+              case 'code':
+                const code = (node.data.code as string) || `// Default code
 for (const item of $input.all()) {
   item.myNewField = 1;
 }
 return $input.all();`;
-          
-          const result = executeJavaScript(code, inputData);
-          outputData = result.output;
-          executionError = result.error;
-        } else if (node.type === 'manualTrigger') {
-          // Trigger nodes generate initial data
-          outputData = [
-            { id: 1, name: 'Item 1', value: 100, timestamp: new Date().toISOString() },
-            { id: 2, name: 'Item 2', value: 200, timestamp: new Date().toISOString() }
-          ];
-        } else {
-          // Other nodes pass through or transform data
-          outputData = inputData.map((item, index) => ({
-            ...item,
-            processedBy: node.type,
-            processedAt: new Date().toISOString(),
-            nodeId: node.id
-          }));
+                
+                const codeResult = executeJavaScript(code, inputData);
+                outputData = codeResult.output;
+                executionError = codeResult.error;
+                break;
+                
+              default:
+                // Pass through for unknown node types
+                outputData = inputData.map((item, index) => ({
+                  ...item,
+                  processedBy: node.type,
+                  processedAt: new Date().toISOString(),
+                  nodeId: node.id
+                }));
+            }
+            
+            // Update the current nodes with execution results
+            const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
+            if (nodeIndex !== -1) {
+              currentNodes[nodeIndex] = {
+                ...currentNodes[nodeIndex],
+                data: {
+                  ...currentNodes[nodeIndex].data,
+                  inputData,
+                  outputData,
+                  executionError,
+                  isExecuted: true,
+                  isExecuting: false,
+                },
+              };
+            }
+            
+          } catch (error: any) {
+            executionError = error.message;
+            const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
+            if (nodeIndex !== -1) {
+              currentNodes[nodeIndex] = {
+                ...currentNodes[nodeIndex],
+                data: {
+                  ...currentNodes[nodeIndex].data,
+                  inputData,
+                  outputData: [],
+                  executionError,
+                  isExecuted: true,
+                  isExecuting: false,
+                },
+              };
+            }
+          }
         }
         
-        return {
+        // Update all nodes at once
+        setNodes(currentNodes.map(node => ({
           ...node,
           data: {
             ...node.data,
             isExecuting: false,
-            isExecuted: true,
-            inputData,
-            outputData,
-            executionError,
           },
-        };
-      });
-
-      // Update nodes first
-      setNodes(updatedNodes);
+        })));
+        
+      } catch (error: any) {
+        console.error('Workflow execution failed:', error);
+        setNodes((nds) =>
+          nds.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              isExecuting: false,
+              executionError: 'Workflow execution failed',
+            },
+          }))
+        );
+      }
       
-      // Then update edges
+      // Update edges
       setEdges((currentEdges) => 
         currentEdges.map((edge) => ({
           ...edge,
@@ -270,11 +430,10 @@ return $input.all();`;
         }))
       );
 
-      // Finally stop execution
       setIsExecuting(false);
       onExecuteWorkflow?.();
-    }, 2000);
-  }, [setNodes, setEdges, onExecuteWorkflow]);
+    }, 1000);
+  }, [nodes, edges, setNodes, setEdges, onExecuteWorkflow]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
