@@ -17,12 +17,13 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
   };
 
   return (
-    <div className="flex items-center justify-center mb-8 px-4">
-      <div className="flex items-center w-full max-w-2xl">
+    <div className="flex items-center justify-center mb-12 px-4">
+      <div className="flex items-center space-x-8 max-w-4xl">{/* increased spacing and max-width */}
         {[1, 2, 3, 4].map((step) => {
           const stepState = getStepState(step);
           return (
-              <div className="flex items-center" key={step}>
+            <React.Fragment key={step}>
+              <div className="flex flex-col items-center">{/* changed to flex-col and removed wrapping div */}
                 <div 
                   className={`relative flex items-center justify-center ${
                     stepState === 'completed' || stepState === 'current' ? 'cursor-pointer' : 'cursor-not-allowed'
@@ -50,7 +51,7 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                       <span className="text-sm font-medium">{step}</span>
                     )}
                   </div>
-                  <div className={`absolute -bottom-6 whitespace-nowrap text-xs font-medium transition-colors ${
+                  <div className={`mt-2 text-xs font-medium transition-colors text-center ${
                     stepState === 'current' ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                     {step === 1 ? 'API Settings' : 
@@ -58,12 +59,13 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({ currentStep, g
                      step === 3 ? 'Conversation' : 'Analysis'}
                   </div>
                 </div>
-                {step < 4 && (
-                  <div className={`flex-1 h-1 mx-3 rounded-full transition-colors ${
-                    stepState === 'completed' ? 'bg-primary' : 'bg-muted'
-                  }`} />
-                )}
               </div>
+              {step < 4 && (
+                <div className={`flex-1 h-1 mx-4 rounded-full transition-colors ${
+                  stepState === 'completed' ? 'bg-primary' : 'bg-muted'
+                }`} />
+              )}
+            </React.Fragment>
           );
         })}
       </div>
