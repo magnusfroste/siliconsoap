@@ -18,6 +18,7 @@ const DeletableEdge: React.FC<EdgeProps> = ({
   targetPosition,
   style = {},
   markerEnd,
+  animated,
   ...props
 }) => {
   const { setEdges } = useReactFlow();
@@ -47,7 +48,6 @@ const DeletableEdge: React.FC<EdgeProps> = ({
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        {...props}
       />
       {isHovered && (
         <EdgeLabelRenderer>
