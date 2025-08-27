@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { Play } from 'lucide-react';
+import React, { memo, useState } from 'react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
+import { Play, X } from 'lucide-react';
 
 interface ChatNodeData {
   label?: string;
@@ -9,7 +9,14 @@ interface ChatNodeData {
   isExecuted?: boolean;
 }
 
-const ChatNode = memo(({ data }: { data: ChatNodeData }) => {
+const ChatNode = memo(({ data, id }: { data: ChatNodeData; id: string }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const { setNodes } = useReactFlow();
+
+  const handleDelete = () => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+  };
+
   const getNodeStyle = () => {
     if (data.isExecuted) return "border-2 border-green-500 bg-background shadow-lg";
     if (data.isExecuting) return "border-2 border-yellow-500 bg-background shadow-lg animate-pulse";
@@ -23,7 +30,19 @@ const ChatNode = memo(({ data }: { data: ChatNodeData }) => {
   };
 
   return (
-    <div className={`min-w-[180px] p-4 rounded-lg ${getNodeStyle()}`}>
+    <div 
+      className={`min-w-[180px] p-4 rounded-lg relative ${getNodeStyle()}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {isHovered && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
       <Handle type="target" position={Position.Left} className={getHandleStyle()} />
       
       <div className="flex items-center justify-center mb-3">

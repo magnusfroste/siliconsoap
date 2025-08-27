@@ -10,6 +10,7 @@ import {
   Connection,
   Edge,
   Node,
+  EdgeTypes,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -17,6 +18,7 @@ import ChatNode from './ChatNode';
 import AINode from './AINode';
 import RunNode from './RunNode';
 import CodeNode from './CodeNode';
+import DeletableEdge from './DeletableEdge';
 
 const nodeTypes = {
   chat: ChatNode,
@@ -24,6 +26,11 @@ const nodeTypes = {
   run: RunNode,
   code: CodeNode,
   manualTrigger: ChatNode,
+};
+
+const edgeTypes: EdgeTypes = {
+  default: DeletableEdge,
+  smoothstep: DeletableEdge,
 };
 
 interface WorkflowCanvasProps {
@@ -184,6 +191,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         className="bg-gray-50"
       >

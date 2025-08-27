@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { Code, Edit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,10 +19,16 @@ for (const item of $input.all()) {
 
 return $input.all();`;
 
-const CodeNode = memo(({ data }: { data: CodeNodeData }) => {
+const CodeNode = memo(({ data, id }: { data: CodeNodeData; id: string }) => {
   const [code, setCode] = useState(data.code || defaultCode);
   const [isOpen, setIsOpen] = useState(false);
   const [tempCode, setTempCode] = useState(code);
+  const [isHovered, setIsHovered] = useState(false);
+  const { setNodes } = useReactFlow();
+
+  const handleDelete = () => {
+    setNodes((nodes) => nodes.filter((node) => node.id !== id));
+  };
 
   const handleSave = () => {
     setCode(tempCode);
@@ -47,7 +53,19 @@ const CodeNode = memo(({ data }: { data: CodeNodeData }) => {
   };
 
   return (
-    <div className={`min-w-[180px] p-4 rounded-lg ${getNodeStyle()}`}>
+    <div 
+      className={`min-w-[180px] p-4 rounded-lg relative ${getNodeStyle()}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {isHovered && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
       <Handle type="target" position={Position.Left} className={getHandleStyle()} />
       
       <div className="flex items-center justify-center mb-3">
