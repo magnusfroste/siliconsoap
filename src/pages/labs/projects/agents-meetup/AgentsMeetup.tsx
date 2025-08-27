@@ -14,7 +14,7 @@ import {
 import { useLabsState } from './hooks/useLabsState';
 import { profiles, responseLengthOptions, scenarioTypes } from './constants';
 
-const LabsContent: React.FC = () => {
+const AgentsMeetup: React.FC = () => {
   const formA = useForm({
     defaultValues: { persona: 'analytical' }
   });
@@ -181,4 +181,4 @@ const LabsContent: React.FC = () => {
   );
 };
 
-export default LabsContent;
+export default AgentsMeetup;

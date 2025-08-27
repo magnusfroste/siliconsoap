@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { useEffect } from "react";
 
 import Labs from "./pages/Labs";
+import AgentsMeetupPage from "./pages/labs/projects/agents-meetup";
 import NotFound from "./pages/NotFound";
 
 // Google Analytics page view tracking component
@@ -45,6 +46,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/labs" replace />} />
             <Route path="/labs" element={<Labs />} />
+            <Route path="/labs/agents-meetup" element={<AgentsMeetupPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

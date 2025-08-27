@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, X, Clipboard, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { useApiKey } from '@/pages/labs/hooks/useApiKey';
+import { useApiKey } from '@/pages/labs/projects/agents-meetup/hooks/useApiKey';
 import { toast } from '@/hooks/use-toast';
 import { fetchOpenRouterModels } from '@/utils/openRouter';
 

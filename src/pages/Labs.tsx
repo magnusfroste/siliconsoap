@@ -1,9 +1,9 @@
 
 import React from 'react';
-import LabsContent from './labs/LabsContent';
+import LabsLanding from './labs/LabsLanding';
 
 const Labs = () => {
-  return <LabsContent />;
+  return <LabsLanding />;
 };
 
 export default Labs;
