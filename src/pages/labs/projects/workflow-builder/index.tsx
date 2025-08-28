@@ -3,72 +3,159 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CredentialsPanel from './components/CredentialsPanel';
 import WorkflowCanvas from './components/WorkflowCanvas';
+import WorkflowTabs, { Workflow } from './components/WorkflowTabs';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 
 const WorkflowBuilder: React.FC = () => {
   const [hasCredentials, setHasCredentials] = useState(false);
-  const [workflowData, setWorkflowData] = useState(null);
+  const [workflows, setWorkflows] = useState<Workflow[]>([
+    {
+      id: 'workflow-1',
+      name: 'Sample Workflow',
+      data: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+  ]);
+  const [activeWorkflowId, setActiveWorkflowId] = useState('workflow-1');
 
-  const handleImportJSON = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const jsonData = JSON.parse(e.target?.result as string);
-            setWorkflowData(jsonData);
-          } catch (error) {
-            console.error('Error parsing JSON:', error);
-            alert('Invalid JSON file');
-          }
-        };
-        reader.readAsText(file);
-      }
+  const activeWorkflow = workflows.find(w => w.id === activeWorkflowId);
+
+  const handleWorkflowSelect = (workflowId: string) => {
+    setActiveWorkflowId(workflowId);
+  };
+
+  const handleWorkflowCreate = (name: string) => {
+    const newWorkflow: Workflow = {
+      id: `workflow-${Date.now()}`,
+      name,
+      data: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    input.click();
+    setWorkflows(prev => [...prev, newWorkflow]);
+    setActiveWorkflowId(newWorkflow.id);
+  };
+
+  const handleWorkflowDelete = (workflowId: string) => {
+    if (workflows.length <= 1) return;
+    
+    setWorkflows(prev => prev.filter(w => w.id !== workflowId));
+    
+    if (activeWorkflowId === workflowId) {
+      const remainingWorkflows = workflows.filter(w => w.id !== workflowId);
+      setActiveWorkflowId(remainingWorkflows[0]?.id || '');
+    }
+  };
+
+  const handleWorkflowRename = (workflowId: string, newName: string) => {
+    setWorkflows(prev => prev.map(w => 
+      w.id === workflowId 
+        ? { ...w, name: newName, updatedAt: new Date() }
+        : w
+    ));
+  };
+
+  const handleWorkflowDuplicate = (workflowId: string) => {
+    const workflow = workflows.find(w => w.id === workflowId);
+    if (!workflow) return;
+
+    const duplicatedWorkflow: Workflow = {
+      id: `workflow-${Date.now()}`,
+      name: `${workflow.name} (Copy)`,
+      data: workflow.data ? JSON.parse(JSON.stringify(workflow.data)) : null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    setWorkflows(prev => [...prev, duplicatedWorkflow]);
+    setActiveWorkflowId(duplicatedWorkflow.id);
+  };
+
+  const handleWorkflowImport = (data: any) => {
+    const newWorkflow: Workflow = {
+      id: `workflow-${Date.now()}`,
+      name: data.name || 'Imported Workflow',
+      data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setWorkflows(prev => [...prev, newWorkflow]);
+    setActiveWorkflowId(newWorkflow.id);
+  };
+
+  const handleWorkflowExport = (workflowId: string) => {
+    const workflow = workflows.find(w => w.id === workflowId);
+    if (!workflow) return;
+
+    const dataToExport = workflow.data || { name: workflow.name, nodes: [], edges: [] };
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${workflow.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleWorkflowDataUpdate = (data: any) => {
+    setWorkflows(prev => prev.map(w => 
+      w.id === activeWorkflowId 
+        ? { ...w, data, updatedAt: new Date() }
+        : w
+    ));
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow flex">
-        {/* Sidebar */}
-        <div className="w-80 bg-muted/20 p-4 border-r border-border">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold mb-2">Workflow Builder</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create AI workflows by connecting nodes
-            </p>
+      <main className="flex-grow flex flex-col">
+        {/* Workflow Tabs */}
+        <WorkflowTabs
+          workflows={workflows}
+          activeWorkflowId={activeWorkflowId}
+          onWorkflowSelect={handleWorkflowSelect}
+          onWorkflowCreate={handleWorkflowCreate}
+          onWorkflowDelete={handleWorkflowDelete}
+          onWorkflowRename={handleWorkflowRename}
+          onWorkflowDuplicate={handleWorkflowDuplicate}
+          onWorkflowImport={handleWorkflowImport}
+          onWorkflowExport={handleWorkflowExport}
+        />
+
+        <div className="flex flex-1">
+          {/* Sidebar */}
+          <div className="w-80 bg-muted/20 p-4 border-r border-border">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold mb-2">Workflow Builder</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create AI workflows by connecting nodes
+              </p>
+              
+              <div className="text-sm text-muted-foreground">
+                Active: <span className="font-medium">{activeWorkflow?.name}</span>
+              </div>
+            </div>
             
-            <Button 
-              onClick={handleImportJSON}
-              className="w-full mb-4"
-              variant="outline"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Import n8n JSON
-            </Button>
+            <CredentialsPanel onCredentialsChange={setHasCredentials} />
+            
+            <div className="text-xs text-muted-foreground mt-4">
+              Use the workflow tabs above to manage multiple workflows.
+            </div>
           </div>
           
-          <CredentialsPanel onCredentialsChange={setHasCredentials} />
-          
-          <div className="text-xs text-muted-foreground mt-4">
-            Import n8n workflow JSON files to visualize and execute them.
+          {/* Canvas */}
+          <div className="flex-1">
+            <WorkflowCanvas 
+              hasCredentials={hasCredentials} 
+              workflowData={activeWorkflow?.data}
+              onWorkflowDataUpdate={handleWorkflowDataUpdate}
+              onExecuteWorkflow={() => console.log('Workflow executed!')}
+            />
           </div>
-        </div>
-        
-        {/* Canvas */}
-        <div className="flex-1">
-          <WorkflowCanvas 
-            hasCredentials={hasCredentials} 
-            workflowData={workflowData}
-            onExecuteWorkflow={() => console.log('Workflow executed!')}
-          />
         </div>
       </main>
       <Footer />

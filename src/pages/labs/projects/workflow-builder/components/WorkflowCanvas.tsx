@@ -59,6 +59,7 @@ const edgeTypes: EdgeTypes = {
 interface WorkflowCanvasProps {
   hasCredentials: boolean;
   workflowData?: any;
+  onWorkflowDataUpdate?: (data: any) => void;
   onExecuteWorkflow?: () => void;
 }
 
@@ -154,7 +155,12 @@ const initialEdges: Edge[] = [
   },
 ];
 
-const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflowData, onExecuteWorkflow }) => {
+const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ 
+  hasCredentials, 
+  workflowData,
+  onWorkflowDataUpdate,
+  onExecuteWorkflow 
+}) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || initialEdges);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -588,7 +594,7 @@ return $input.all();`;
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-xl font-semibold">Workflow Builder</h2>
+        <h2 className="text-xl font-semibold">Canvas</h2>
         <div className="flex items-center gap-2">
           {/* Execute Controls */}
           <Button
