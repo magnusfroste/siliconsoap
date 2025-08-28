@@ -73,6 +73,8 @@ const initialEdges: Edge[] = [
 interface WorkflowCanvasProps {
   onNodeAdd?: (nodeType: NodeType, position: { x: number; y: number }) => void;
   onNodeSelect?: (node: WorkflowNode | null) => void;
+  onNodeClick?: (node: WorkflowNode) => void;
+  onDataUpdate?: (nodes: WorkflowNode[], edges: any[]) => void;
   className?: string;
 }
 
@@ -81,10 +83,16 @@ export interface WorkflowCanvasHandle {
 }
 
 const WorkflowCanvas = React.forwardRef<WorkflowCanvasHandle, WorkflowCanvasProps>((props, ref) => {
-  const { onNodeAdd, onNodeSelect, className = '' } = props;
+  const { onNodeAdd, onNodeSelect, onNodeClick, onDataUpdate, className = '' } = props;
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Notify parent of data changes
+  React.useEffect(() => {
+    const workflowNodes = nodes.map(node => node.data as unknown as WorkflowNode);
+    onDataUpdate?.(workflowNodes, edges);
+  }, [nodes, edges, onDataUpdate]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -97,10 +105,12 @@ const WorkflowCanvas = React.forwardRef<WorkflowCanvasHandle, WorkflowCanvasProp
     [setEdges]
   );
 
-  const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
+  const onNodeClickHandler: NodeMouseHandler = useCallback((event, node) => {
+    const workflowNode = node.data as unknown as WorkflowNode;
     setSelectedNode(node.id);
-    onNodeSelect?.(node.data as unknown as WorkflowNode);
-  }, [onNodeSelect]);
+    onNodeSelect?.(workflowNode);
+    onNodeClick?.(workflowNode);
+  }, [onNodeSelect, onNodeClick]);
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
@@ -154,7 +164,7 @@ const WorkflowCanvas = React.forwardRef<WorkflowCanvasHandle, WorkflowCanvasProp
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={onNodeClick}
+        onNodeClick={onNodeClickHandler}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         fitView
