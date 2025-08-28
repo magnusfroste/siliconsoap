@@ -1,71 +1,59 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
-  BackgroundVariant,
-  useNodesState,
-  useEdgesState,
   addEdge,
   Connection,
   Edge,
   Node,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  MiniMap,
+  Background,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-
 import { Button } from '@/components/ui/button';
-import { Play, Square, Trash2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-// Import node components
-import ChatNode from './ChatNode';
-import HttpRequestNode from './HttpRequestNode';
-import CodeNode from './CodeNode';
-import FilterNode from './FilterNode';
-import IfNode from './IfNode';
-import SetNode from './SetNode';
-import RunNode from './RunNode';
-import AINode from './AINode';
+import BasicNode from './BasicNode';
 
-// Import other components
-import NodeSelector from './NodeSelector';
-import ExecutionBottomPanel from './ExecutionBottomPanel';
-import DeletableEdge from './DeletableEdge';
-
-// Define node types
+// Simple node types mapping - starting with just one
 const nodeTypes = {
-  chat: ChatNode,
-  ai: AINode,
-  http: HttpRequestNode,
-  code: CodeNode,
-  filter: FilterNode,
-  if: IfNode,
-  set: SetNode,
-  run: RunNode,
-  manualTrigger: RunNode,
+  basic: BasicNode,
 };
 
-const edgeTypes = {
-  default: DeletableEdge,
-  smoothstep: DeletableEdge,
-};
+// Initial sample data for testing
+const initialNodes: Node[] = [
+  {
+    id: '1',
+    type: 'basic',
+    position: { x: 100, y: 100 },
+    data: { label: 'Start Node' },
+  },
+  {
+    id: '2',
+    type: 'basic',
+    position: { x: 400, y: 100 },
+    data: { label: 'Process Node' },
+  },
+];
 
-interface ExecutionStep {
-  nodeId: string;
-  nodeLabel: string;
-  status: 'success' | 'error' | 'running';
-  duration?: number;
-  timestamp: Date;
-  error?: string;
-}
+const initialEdges: Edge[] = [
+  {
+    id: 'e1-2',
+    source: '1',
+    target: '2',
+    type: 'smoothstep',
+  },
+];
 
 interface WorkflowCanvasProps {
-  hasCredentials: boolean;
+  hasCredentials?: boolean;
   workflowData?: any;
   onWorkflowDataUpdate?: (data: any) => void;
   onExecuteWorkflow?: () => void;
 }
-
 
 const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ 
   hasCredentials, 
@@ -73,233 +61,90 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onWorkflowDataUpdate,
   onExecuteWorkflow 
 }) => {
-  // Initialize nodes and edges from workflowData
-  const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || []);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || []);
+  console.log('WorkflowCanvas rendering');
+  console.log('workflowData:', workflowData);
   
-  // Execution state
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
-  const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
-  
-  // UI state
-  const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
-  const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
-  const [selectedNodeId, setSelectedNodeId] = useState<string>();
-
-  // Update parent when nodes or edges change (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (onWorkflowDataUpdate) {
-        onWorkflowDataUpdate({ nodes, edges });
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [nodes, edges, onWorkflowDataUpdate]);
-
-  // Update AI node credentials
-  useEffect(() => {
-    setNodes(prevNodes => 
-      prevNodes.map(node => {
-        if (node.type === 'ai') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              hasCredentials,
-            },
-          };
-        }
-        return node;
-      })
-    );
-  }, [hasCredentials, setNodes]);
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
+  // Use sample data if no workflow data provided, otherwise use provided data
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    workflowData?.nodes?.length ? workflowData.nodes : initialNodes
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    workflowData?.edges?.length ? workflowData.edges : initialEdges
   );
 
-  const handleAddNode = useCallback((nodeType: string, title: string) => {
-    const newId = `${nodeType}-${Date.now()}`;
-    
-    // Position new node to the right of existing nodes
-    const rightmostNode = nodes.reduce((rightmost, node) => 
-      node.position.x > rightmost.position.x ? node : rightmost, 
-      { position: { x: 0, y: 100 } }
-    );
-    
-    const newPosition = {
-      x: (rightmostNode?.position?.x || 0) + 300,
-      y: rightmostNode?.position?.y || 100,
-    };
+  console.log('Current nodes in state:', nodes);
+  console.log('Current edges in state:', edges);
 
+  const onConnect = useCallback(
+    (params: Connection) => {
+      console.log('Connecting nodes:', params);
+      setEdges((eds) => addEdge(params, eds));
+    },
+    [setEdges]
+  );
+
+  const handleAddNode = useCallback(() => {
     const newNode: Node = {
-      id: newId,
-      type: nodeType === 'action' || nodeType === 'transform' || nodeType === 'flow' || nodeType === 'human' ? 'chat' : nodeType,
-      position: newPosition,
-      data: {
-        label: title,
-        ...(nodeType === 'ai' && { hasCredentials })
-      },
+      id: `basic-${Date.now()}`,
+      type: 'basic',
+      position: { x: 200 + nodes.length * 100, y: 200 },
+      data: { label: `New Node ${nodes.length + 1}` },
     };
-
-    setNodes((currentNodes) => [...currentNodes, newNode]);
-    setIsNodeSelectorOpen(false);
-  }, [nodes, setNodes, hasCredentials]);
-
-  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNodeId(node.id);
-    if (!isBottomPanelOpen) {
-      setIsBottomPanelOpen(true);
-    }
-  }, [isBottomPanelOpen]);
-
-  const executeWorkflow = useCallback(async () => {
-    setIsExecuting(true);
-    setExecutionSteps([]);
-    setNodeExecutionData({});
-    
-    // Simple execution simulation
-    const nodeIds = nodes.map(n => n.id);
-    
-    for (const nodeId of nodeIds) {
-      const node = nodes.find(n => n.id === nodeId);
-      setExecutionSteps(prev => [...prev, {
-        nodeId,
-        nodeLabel: (node?.data?.label as string) || 'Unknown Node',
-        status: 'running' as const,
-        timestamp: new Date()
-      }]);
-      
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setExecutionSteps(prev => 
-        prev.map(step => 
-          step.nodeId === nodeId 
-            ? { ...step, status: 'success' as const, duration: 1000 }
-            : step
-        )
-      );
-    }
-    
-    setIsExecuting(false);
-    onExecuteWorkflow?.();
-  }, [nodes, onExecuteWorkflow]);
-
-  const handleClearExecution = () => {
-    setExecutionSteps([]);
-    setNodeExecutionData({});
-    setSelectedNodeId(undefined);
-  };
-
-  const hasAINodes = nodes.some(node => node.type === 'ai');
+    console.log('Adding new node:', newNode);
+    setNodes((nds) => [...nds, newNode]);
+  }, [setNodes, nodes.length]);
 
   return (
-    <div className="w-full h-full flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b bg-background">
-        <h2 className="text-xl font-semibold">Canvas</h2>
-        <div className="flex items-center gap-2">
-          {/* Execute Button */}
-          <Button
-            onClick={executeWorkflow}
-            disabled={(!hasCredentials && hasAINodes) || isExecuting}
-            className="bg-red-600 hover:bg-red-700 text-white px-6"
-            size="lg"
-          >
-            {isExecuting ? (
-              <>
-                <Square className="h-4 w-4 mr-2" />
-                Executing...
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4 mr-2" />
-                Execute workflow
-              </>
-            )}
-          </Button>
-          
-          {/* Clear Button */}
-          {executionSteps.length > 0 && (
-            <Button
-              onClick={handleClearExecution}
-              variant="outline"
-              size="lg"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-          )}
-          
-          {/* Add Node Button */}
-          <Button
-            onClick={() => setIsNodeSelectorOpen(true)}
-            className="bg-primary hover:bg-primary/90"
-            size="lg"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Add Node
-          </Button>
-        </div>
+    <div className="w-full h-full bg-background">
+      {/* Debug Info */}
+      <div className="absolute top-4 left-4 z-10 bg-card border rounded p-3 text-sm space-y-1">
+        <div className="font-medium">Debug Info:</div>
+        <div>Nodes: {nodes.length}</div>
+        <div>Edges: {edges.length}</div>
+        <div>Has Credentials: {String(hasCredentials)}</div>
+        <Button 
+          onClick={handleAddNode}
+          size="sm"
+          className="mt-2"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          Add Node
+        </Button>
       </div>
-      
-      {/* Main Canvas Area */}
-      <div className="flex-1 relative" style={{ minHeight: '500px' }}>
+
+      {/* ReactFlow Canvas with explicit styling */}
+      <div 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          minHeight: '600px',
+          background: 'hsl(var(--muted))'
+        }}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeClick={handleNodeClick}
           nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
           fitView
-          className="bg-gray-50"
-          style={{ width: '100%', height: '100%' }}
+          fitViewOptions={{ padding: 0.2 }}
+          attributionPosition="bottom-left"
+          proOptions={{ hideAttribution: true }}
         >
-          <Controls />
+          <Controls position="top-right" />
           <MiniMap 
-            nodeColor={(node) => {
-              if (node.data?.isExecuted) return '#10b981';
-              if (node.data?.isExecuting) return '#f59e0b';
-              return '#6b7280';
-            }}
+            position="bottom-right"
             className="!bg-background border border-border"
           />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={20} 
+            size={1}
+            color="hsl(var(--border))"
+          />
         </ReactFlow>
-
-        {/* API Key Warning - only for AI workflows */}
-        {!hasCredentials && hasAINodes && (
-          <div className="absolute top-4 left-4 z-10 text-sm text-muted-foreground bg-background border rounded-md px-3 py-2 max-w-xs shadow-lg">
-            Please add your OpenRouter API key to execute AI workflows
-          </div>
-        )}
-        
-        {/* Node Selector */}
-        <NodeSelector 
-          isOpen={isNodeSelectorOpen}
-          onClose={() => setIsNodeSelectorOpen(false)}
-          onAddNode={handleAddNode}
-        />
-
-        {/* Execution Panel */}
-        {isBottomPanelOpen && (
-          <div className="absolute bottom-0 left-0 right-0 z-10">
-            <ExecutionBottomPanel
-              isOpen={isBottomPanelOpen}
-              onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
-              executionSteps={executionSteps}
-              selectedNodeId={selectedNodeId}
-              nodeData={nodeExecutionData}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
