@@ -7,27 +7,59 @@ export interface ExecutionContext {
   $input: ExecutionInput;
 }
 
-export const executeJavaScript = (code: string, inputData: any[] = []): { output: any[], error?: string } => {
+export const executeJavaScript = (code: string, inputData: any[] = []): { output: any[], error?: string, consoleOutput?: string[] } => {
   try {
+    // Capture console output
+    const consoleOutput: string[] = [];
+    const originalConsole = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn
+    };
+
+    // Override console methods to capture output
+    const mockConsole = {
+      log: (...args: any[]) => {
+        consoleOutput.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+        originalConsole.log(...args);
+      },
+      error: (...args: any[]) => {
+        consoleOutput.push('ERROR: ' + args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+        originalConsole.error(...args);
+      },
+      warn: (...args: any[]) => {
+        consoleOutput.push('WARN: ' + args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+        originalConsole.warn(...args);
+      }
+    };
+
     // Create the execution context similar to n8n
     const $input: ExecutionInput = {
       all: () => inputData
     };
 
-    // Create a safe execution environment
-    const func = new Function('$input', code);
+    // Create a safe execution environment with console override
+    const func = new Function('$input', 'console', code);
     
-    // Execute the code
-    const result = func($input);
+    // Execute the code with mocked console
+    const result = func($input, mockConsole);
     
     // Handle different return types
     if (Array.isArray(result)) {
-      return { output: result };
+      return { output: result, consoleOutput };
     } else if (result !== undefined && result !== null) {
-      return { output: [result] };
+      return { output: [result], consoleOutput };
     } else {
-      // If no return, assume the input was modified in place
-      return { output: inputData };
+      // If no return, check if input was modified or use default output
+      const hasConsoleOutput = consoleOutput.length > 0;
+      if (hasConsoleOutput || inputData.length > 0) {
+        return { output: inputData, consoleOutput };
+      }
+      // Generate sample output if nothing else
+      return { 
+        output: [{ message: 'Code executed successfully', timestamp: new Date().toISOString() }], 
+        consoleOutput 
+      };
     }
   } catch (error) {
     return { 

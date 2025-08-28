@@ -115,6 +115,15 @@ const WorkflowBuilder: React.FC = () => {
           const codeResult = executeJavaScript(node.data.code || 'return $input.all();', inputData);
           outputData = codeResult.output;
           if (codeResult.error) throw new Error(codeResult.error);
+          
+          // Store console output in node data
+          if (codeResult.consoleOutput && codeResult.consoleOutput.length > 0) {
+            setNodes(prev => prev.map(n => 
+              n.id === nodeId 
+                ? { ...n, data: { ...n.data, consoleOutput: codeResult.consoleOutput } }
+                : n
+            ));
+          }
           break;
           
         case NodeType.IF:
@@ -179,8 +188,15 @@ const WorkflowBuilder: React.FC = () => {
 
   const handleSaveCode = (code: string) => {
     if (clickedNode) {
-      // Update node with new code
-      console.log('Saving code for node:', clickedNode.id, code);
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === clickedNode.id
+            ? { ...node, data: { ...node.data, code } }
+            : node
+        )
+      );
+      // Update clickedNode state
+      setClickedNode(prev => prev ? { ...prev, code } : null);
     }
   };
 
