@@ -131,35 +131,12 @@ const WorkflowBuilder: React.FC = () => {
 
         {/* Content Area */}
         {activeView === 'workflows' && (
-          <div className="flex flex-1">
-            {/* Sidebar */}
-            <div className="w-80 bg-muted/20 p-4 border-r border-border">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold mb-2">Workflow Builder</h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Create AI workflows by connecting nodes
-                </p>
-                
-                <div className="text-sm text-muted-foreground">
-                  Active: <span className="font-medium">{activeWorkflow?.name}</span>
-                </div>
-              </div>
-              
-              <div className="text-xs text-muted-foreground mt-4">
-                Use the workflow tabs above to manage multiple workflows.
-              </div>
-            </div>
-            
-            {/* Canvas */}
-            <div className="flex-1">
-              <WorkflowCanvas 
-                hasCredentials={hasCredentials} 
-                workflowData={activeWorkflow?.data}
-                onWorkflowDataUpdate={handleWorkflowDataUpdate}
-                onExecuteWorkflow={() => console.log('Workflow executed!')}
-              />
-            </div>
-          </div>
+          <WorkflowCanvas 
+            hasCredentials={hasCredentials} 
+            workflowData={activeWorkflow?.data}
+            onWorkflowDataUpdate={handleWorkflowDataUpdate}
+            onExecuteWorkflow={() => console.log('Workflow executed!')}
+          />
         )}
 
         {activeView === 'credentials' && (
