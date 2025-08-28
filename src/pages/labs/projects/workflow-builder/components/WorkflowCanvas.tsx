@@ -11,6 +11,7 @@ import {
   Edge,
   Node,
   EdgeTypes,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -20,6 +21,8 @@ import RunNode from './RunNode';
 import CodeNode from './CodeNode';
 import DeletableEdge from './DeletableEdge';
 import NodeSelector from './NodeSelector';
+import ExecutionBottomPanel from './ExecutionBottomPanel';
+import WorkflowToolbar from './WorkflowToolbar';
 import { Plus } from 'lucide-react';
 import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
 import {
@@ -56,6 +59,15 @@ interface WorkflowCanvasProps {
   hasCredentials: boolean;
   workflowData?: any;
   onExecuteWorkflow?: () => void;
+}
+
+interface ExecutionStep {
+  nodeId: string;
+  nodeLabel: string;
+  status: 'success' | 'error' | 'running';
+  duration?: number;
+  timestamp: Date;
+  error?: string;
 }
 
 const initialNodes: Node[] = [
@@ -146,6 +158,10 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
   const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || initialEdges);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
+  const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
+  const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>();
+  const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
 
   // Update workflow from imported data
   React.useEffect(() => {
@@ -272,6 +288,16 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
         
         // Execute nodes sequentially
         for (const node of executionOrder) {
+          const startTime = Date.now();
+          
+          // Add execution step
+          setExecutionSteps(prev => [...prev, {
+            nodeId: node.id,
+            nodeLabel: String(node.data?.label || node.type),
+            status: 'running',
+            timestamp: new Date(),
+          }]);
+          
           const inputData = getNodeInput(node.id, currentNodes, currentEdges, executionResults);
           let outputData = inputData;
           let executionError: string | undefined;
@@ -363,8 +389,25 @@ return $input.all();`;
                 }));
             }
             
+            const duration = Date.now() - startTime;
+            
             // Store execution result for data flow
             executionResults.set(node.id, outputData);
+            
+            // Update execution data for bottom panel
+            setNodeExecutionData(prev => ({
+              ...prev,
+              [node.id]: { inputData, outputData }
+            }));
+            
+            // Update execution step with success
+            setExecutionSteps(prev => 
+              prev.map(step => 
+                step.nodeId === node.id 
+                  ? { ...step, status: 'success' as const, duration }
+                  : step
+              )
+            );
             
             // Update the current nodes with execution results
             const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
@@ -403,6 +446,23 @@ return $input.all();`;
             
           } catch (error: any) {
             executionError = error.message;
+            console.error(`Error executing node ${node.id}:`, error);
+            
+            // Update execution data for bottom panel
+            setNodeExecutionData(prev => ({
+              ...prev,
+              [node.id]: { inputData, outputData: [] }
+            }));
+            
+            // Update execution step with error
+            setExecutionSteps(prev => 
+              prev.map(step => 
+                step.nodeId === node.id 
+                  ? { ...step, status: 'error' as const, error: executionError }
+                  : step
+              )
+            );
+            
             const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
             if (nodeIndex !== -1) {
               currentNodes[nodeIndex] = {
@@ -498,54 +558,91 @@ return $input.all();`;
     setNodes((currentNodes) => [...currentNodes, newNode]);
   }, [nodes, setNodes]);
 
-  return (
-    <div className="h-full w-full relative">
-      <div className="absolute top-4 left-4 z-10">
-        <button 
-          onClick={executeWorkflow}
-          disabled={isExecuting}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium flex items-center gap-2 shadow-lg transition-colors disabled:opacity-50"
-        >
-          🧪 {isExecuting ? 'Executing...' : 'Execute workflow'}
-        </button>
-      </div>
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+    if (!isBottomPanelOpen) {
+      setIsBottomPanelOpen(true);
+    }
+  }, [isBottomPanelOpen]);
 
-      <div className="absolute top-4 right-4 z-10">
-        <button 
-          onClick={() => setIsNodeSelectorOpen(true)}
-          className="w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center shadow-lg transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+  const handleClearExecution = () => {
+    setExecutionSteps([]);
+    setNodeExecutionData({});
+    setSelectedNodeId(undefined);
+    setNodes(prevNodes => 
+      prevNodes.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          isExecuted: false,
+          isExecuting: false,
+          executionError: undefined,
+          inputData: undefined,
+          outputData: undefined,
+        },
+      }))
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center p-4 border-b">
+        <h2 className="text-xl font-semibold">Workflow Builder</h2>
+        <div className="absolute top-4 right-4 z-10">
+          <button 
+            onClick={() => setIsNodeSelectorOpen(true)}
+            className="w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center shadow-lg transition-colors"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        </div>
       </div>
       
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        className="bg-gray-50"
-      >
-        <Controls />
-        <MiniMap 
-          nodeColor={(node) => {
-            if (node.data?.isExecuted) return '#10b981';
-            if (node.data?.isExecuting) return '#f59e0b';
-            return '#6b7280';
-          }}
-          className="!bg-background border border-border"
+      <div className="flex-1 relative" style={{ marginBottom: isBottomPanelOpen ? '320px' : '60px' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={handleNodeClick}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          className="bg-gray-50"
+        >
+          <Controls />
+          <MiniMap 
+            nodeColor={(node) => {
+              if (node.data?.isExecuted) return '#10b981';
+              if (node.data?.isExecuting) return '#f59e0b';
+              return '#6b7280';
+            }}
+            className="!bg-background border border-border"
+          />
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        </ReactFlow>
+        
+        <NodeSelector 
+          isOpen={isNodeSelectorOpen}
+          onClose={() => setIsNodeSelectorOpen(false)}
+          onAddNode={handleAddNode}
         />
-        <Background gap={20} className="bg-gray-100" />
-      </ReactFlow>
+      </div>
 
-      <NodeSelector 
-        isOpen={isNodeSelectorOpen}
-        onClose={() => setIsNodeSelectorOpen(false)}
-        onAddNode={handleAddNode}
+      <ExecutionBottomPanel
+        isOpen={isBottomPanelOpen}
+        onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
+        executionSteps={executionSteps}
+        selectedNodeId={selectedNodeId}
+        nodeData={nodeExecutionData}
+      />
+
+      <WorkflowToolbar
+        hasCredentials={hasCredentials}
+        isExecuting={isExecuting}
+        onExecute={executeWorkflow}
+        onClear={handleClearExecution}
       />
     </div>
   );
