@@ -7,13 +7,98 @@ import CredentialsManager from './components/CredentialsManager';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 
+// Default workflow data with sample nodes and edges
+const defaultWorkflowData = {
+  nodes: [
+    {
+      id: 'trigger-1',
+      type: 'manualTrigger',
+      position: { x: 50, y: 100 },
+      data: { 
+        label: "When clicking 'Execute workflow'",
+      },
+    },
+    {
+      id: 'http-1',
+      type: 'http',
+      position: { x: 350, y: 100 },
+      data: { 
+        label: 'Fetch Users',
+        method: 'GET',
+        url: 'https://jsonplaceholder.typicode.com/users',
+        headers: {},
+        timeout: 30000,
+      },
+    },
+    {
+      id: 'filter-1',
+      type: 'filter',
+      position: { x: 650, y: 100 },
+      data: { 
+        label: 'Filter Active Users',
+        conditions: [
+          {
+            field: 'data.website',
+            operator: 'is_not_empty',
+            value: '',
+            dataType: 'string'
+          }
+        ],
+        combineConditions: 'AND',
+      },
+    },
+    {
+      id: 'set-1',
+      type: 'set',
+      position: { x: 950, y: 100 },
+      data: { 
+        label: 'Transform Data',
+        operation: 'add_fields',
+        fieldMappings: [
+          {
+            outputField: 'full_name',
+            inputValue: 'data.name',
+            type: 'expression'
+          },
+          {
+            outputField: 'contact_email',
+            inputValue: 'data.email',
+            type: 'expression'
+          }
+        ],
+        keepOnlySet: false,
+      },
+    },
+  ],
+  edges: [
+    {
+      id: 'e1-2',
+      source: 'trigger-1',
+      target: 'http-1',
+      type: 'smoothstep',
+    },
+    {
+      id: 'e2-3',
+      source: 'http-1',
+      target: 'filter-1',
+      type: 'smoothstep',
+    },
+    {
+      id: 'e3-4',
+      source: 'filter-1',
+      target: 'set-1',
+      type: 'smoothstep',
+    },
+  ],
+};
+
 const WorkflowBuilder: React.FC = () => {
   const [hasCredentials, setHasCredentials] = useState(false);
   const [workflows, setWorkflows] = useState<Workflow[]>([
     {
       id: 'workflow-1',
       name: 'Sample Workflow',
-      data: null,
+      data: defaultWorkflowData,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
