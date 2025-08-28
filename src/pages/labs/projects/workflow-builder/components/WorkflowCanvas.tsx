@@ -161,8 +161,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onWorkflowDataUpdate,
   onExecuteWorkflow 
 }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || []);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
@@ -170,33 +170,12 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
   const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
 
-  // Update workflow from imported data
+  // Sync nodes and edges changes back to parent
   React.useEffect(() => {
-    if (workflowData) {
-      const convertedNodes = workflowData.nodes.map((n8nNode: any) => ({
-        id: n8nNode.id,
-        type: n8nNode.type.includes('manualTrigger') ? 'manualTrigger' : 
-              n8nNode.type.includes('code') ? 'code' : 'chat',
-        position: { x: n8nNode.position[0], y: n8nNode.position[1] },
-        data: {
-          label: n8nNode.name,
-          code: n8nNode.parameters?.jsCode,
-        },
-      }));
-
-      const convertedEdges = Object.entries(workflowData.connections || {}).flatMap(([sourceNode, connections]: any) => 
-        connections.main?.[0]?.map((connection: any, index: number) => ({
-          id: `${sourceNode}-${connection.node}-${index}`,
-          source: workflowData.nodes.find((n: any) => n.name === sourceNode)?.id,
-          target: workflowData.nodes.find((n: any) => n.name === connection.node)?.id,
-          type: 'smoothstep',
-        })) || []
-      );
-
-      setNodes(convertedNodes);
-      setEdges(convertedEdges);
+    if (onWorkflowDataUpdate) {
+      onWorkflowDataUpdate({ nodes, edges });
     }
-  }, [workflowData, setNodes, setEdges]);
+  }, [nodes, edges, onWorkflowDataUpdate]);
 
   // Update AI node credentials status
   React.useEffect(() => {

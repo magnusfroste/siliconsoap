@@ -116,7 +116,7 @@ const WorkflowBuilder: React.FC = () => {
     const newWorkflow: Workflow = {
       id: `workflow-${Date.now()}`,
       name,
-      data: null,
+      data: { nodes: [], edges: [] },
       createdAt: new Date(),
       updatedAt: new Date(),
     };
