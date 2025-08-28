@@ -272,7 +272,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ hasCredentials, workflo
         
         // Execute nodes sequentially
         for (const node of executionOrder) {
-          const inputData = getNodeInput(node.id, currentNodes, currentEdges);
+          const inputData = getNodeInput(node.id, currentNodes, currentEdges, executionResults);
           let outputData = inputData;
           let executionError: string | undefined;
           
@@ -363,6 +363,9 @@ return $input.all();`;
                 }));
             }
             
+            // Store execution result for data flow
+            executionResults.set(node.id, outputData);
+            
             // Update the current nodes with execution results
             const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
             if (nodeIndex !== -1) {
@@ -378,6 +381,25 @@ return $input.all();`;
                 },
               };
             }
+            
+            // Update nodes in real-time for visual feedback
+            setNodes(prevNodes => 
+              prevNodes.map(n => 
+                n.id === node.id 
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        inputData,
+                        outputData,
+                        executionError,
+                        isExecuted: true,
+                        isExecuting: false,
+                      },
+                    }
+                  : n
+              )
+            );
             
           } catch (error: any) {
             executionError = error.message;
@@ -395,17 +417,27 @@ return $input.all();`;
                 },
               };
             }
+            
+            // Update nodes with error state
+            setNodes(prevNodes => 
+              prevNodes.map(n => 
+                n.id === node.id 
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        inputData,
+                        outputData: [],
+                        executionError,
+                        isExecuted: true,
+                        isExecuting: false,
+                      },
+                    }
+                  : n
+              )
+            );
           }
         }
-        
-        // Update all nodes at once
-        setNodes(currentNodes.map(node => ({
-          ...node,
-          data: {
-            ...node.data,
-            isExecuting: false,
-          },
-        })));
         
       } catch (error: any) {
         console.error('Workflow execution failed:', error);

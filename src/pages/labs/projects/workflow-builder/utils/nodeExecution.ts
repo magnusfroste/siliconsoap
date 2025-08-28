@@ -299,7 +299,7 @@ export const executeSetNode = (config: {
 };
 
 // Get input data for a node
-export const getNodeInputData = (nodeId: string, nodes: any[], edges: any[]): any[] => {
+export const getNodeInputData = (nodeId: string, nodes: any[], edges: any[], executionResults?: Map<string, any>): any[] => {
   const incomingEdges = edges.filter(edge => edge.target === nodeId);
   
   if (incomingEdges.length === 0) {
@@ -318,9 +318,18 @@ export const getNodeInputData = (nodeId: string, nodes: any[], edges: any[]): an
   // Combine data from all source nodes
   let combinedInput: any[] = [];
   for (const edge of incomingEdges) {
-    const sourceNode = nodes.find(n => n.id === edge.source);
-    if (sourceNode?.data?.outputData) {
-      combinedInput = [...combinedInput, ...sourceNode.data.outputData];
+    // First try to get from execution results (live data flow)
+    if (executionResults && executionResults.has(edge.source)) {
+      const sourceOutput = executionResults.get(edge.source);
+      if (Array.isArray(sourceOutput)) {
+        combinedInput = [...combinedInput, ...sourceOutput];
+      }
+    } else {
+      // Fallback to node data
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      if (sourceNode?.data?.outputData) {
+        combinedInput = [...combinedInput, ...sourceNode.data.outputData];
+      }
     }
   }
   
