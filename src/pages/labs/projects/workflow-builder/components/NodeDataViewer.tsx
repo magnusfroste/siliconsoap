@@ -16,6 +16,7 @@ interface NodeDataViewerProps {
     code?: string;
     inputData?: any[];
     outputData?: any[];
+    consoleOutput?: string[];
     isExecuted?: boolean;
     executionError?: string;
   };
@@ -166,6 +167,18 @@ const NodeDataViewer: React.FC<NodeDataViewerProps> = ({
                     className="flex-1 font-mono text-sm resize-none"
                     placeholder="Enter your JavaScript code here..."
                   />
+                  {/* Console Output */}
+                  {nodeData.consoleOutput && nodeData.consoleOutput.length > 0 && (
+                    <div className="border rounded-lg bg-black text-green-400 p-3 max-h-32 overflow-y-auto">
+                      <div className="text-xs font-medium text-green-300 mb-2">Console Output:</div>
+                      <div className="font-mono text-xs space-y-1">
+                        {nodeData.consoleOutput.map((log, index) => (
+                          <div key={index}>{log}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleSaveCode} className="flex-1">
                       <Save className="h-4 w-4 mr-2" />

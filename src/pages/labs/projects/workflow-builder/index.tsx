@@ -240,6 +240,7 @@ const WorkflowBuilder: React.FC = () => {
           code: clickedNode.data.code,
           inputData: nodeData[clickedNode.id]?.inputData,
           outputData: nodeData[clickedNode.id]?.outputData,
+          consoleOutput: clickedNode.data.consoleOutput,
           isExecuted: nodeData[clickedNode.id]?.outputData?.length > 0,
         } : {
           id: '',
