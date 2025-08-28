@@ -1,67 +1,54 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
-  addEdge,
   MiniMap,
   Controls,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
+  addEdge,
   Connection,
   Edge,
   Node,
-  EdgeTypes,
-  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import ChatNode from './ChatNode';
-import AINode from './AINode';
-import RunNode from './RunNode';
-import CodeNode from './CodeNode';
-import DeletableEdge from './DeletableEdge';
-import NodeSelector from './NodeSelector';
-import ExecutionBottomPanel from './ExecutionBottomPanel';
 import { Button } from '@/components/ui/button';
-import { Play, Square, Trash2 } from 'lucide-react';
-import { Plus } from 'lucide-react';
-import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
-import {
-  executeHttpRequest,
-  executeIfNode,
-  executeFilterNode,
-  executeSetNode,
-  getNodeInputData as getNodeInput,
-} from '../utils/nodeExecution';
+import { Play, Square, Trash2, Plus } from 'lucide-react';
 
+// Import node components
+import ChatNode from './ChatNode';
 import HttpRequestNode from './HttpRequestNode';
+import CodeNode from './CodeNode';
+import FilterNode from './FilterNode';
 import IfNode from './IfNode';
 import SetNode from './SetNode';
-import FilterNode from './FilterNode';
+import RunNode from './RunNode';
+import AINode from './AINode';
 
+// Import other components
+import NodeSelector from './NodeSelector';
+import ExecutionBottomPanel from './ExecutionBottomPanel';
+import DeletableEdge from './DeletableEdge';
+
+// Define node types
 const nodeTypes = {
   chat: ChatNode,
   ai: AINode,
-  run: RunNode,
-  code: CodeNode,
-  manualTrigger: ChatNode,
   http: HttpRequestNode,
+  code: CodeNode,
+  filter: FilterNode,
   if: IfNode,
   set: SetNode,
-  filter: FilterNode,
+  run: RunNode,
+  manualTrigger: RunNode,
 };
 
-const edgeTypes: EdgeTypes = {
+const edgeTypes = {
   default: DeletableEdge,
   smoothstep: DeletableEdge,
 };
-
-interface WorkflowCanvasProps {
-  hasCredentials: boolean;
-  workflowData?: any;
-  onWorkflowDataUpdate?: (data: any) => void;
-  onExecuteWorkflow?: () => void;
-}
 
 interface ExecutionStep {
   nodeId: string;
@@ -72,7 +59,15 @@ interface ExecutionStep {
   error?: string;
 }
 
-const initialNodes: Node[] = [
+interface WorkflowCanvasProps {
+  hasCredentials: boolean;
+  workflowData?: any;
+  onWorkflowDataUpdate?: (data: any) => void;
+  onExecuteWorkflow?: () => void;
+}
+
+// Sample workflow nodes for demo
+const sampleNodes: Node[] = [
   {
     id: 'trigger-1',
     type: 'manualTrigger',
@@ -134,7 +129,7 @@ const initialNodes: Node[] = [
   },
 ];
 
-const initialEdges: Edge[] = [
+const sampleEdges: Edge[] = [
   {
     id: 'e1-2',
     source: 'trigger-1',
@@ -161,36 +156,46 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onWorkflowDataUpdate,
   onExecuteWorkflow 
 }) => {
-  // Initialize with initial nodes if no workflow data, otherwise use workflow data
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    workflowData?.nodes || (workflowData === null ? [] : initialNodes)
-  );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
-    workflowData?.edges || (workflowData === null ? [] : initialEdges)
-  );
+  // Determine initial nodes and edges
+  const getInitialData = () => {
+    if (workflowData && workflowData.nodes && workflowData.edges) {
+      return {
+        nodes: workflowData.nodes,
+        edges: workflowData.edges
+      };
+    }
+    // If no workflow data, check if it's meant to be empty (new workflow) or sample
+    if (workflowData === null || (workflowData && workflowData.nodes && workflowData.nodes.length === 0)) {
+      return { nodes: [], edges: [] }; // New workflow
+    }
+    return { nodes: sampleNodes, edges: sampleEdges }; // Sample workflow
+  };
+
+  const initialData = getInitialData();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges);
+  
+  // Execution state
   const [isExecuting, setIsExecuting] = useState(false);
-  const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
+  const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
+  
+  // UI state
+  const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
   const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
-  const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
 
-  // Sync nodes and edges changes back to parent (avoid infinite loops)
-  const syncToParent = React.useCallback(() => {
+  // Update parent when nodes or edges change
+  useEffect(() => {
     if (onWorkflowDataUpdate) {
       onWorkflowDataUpdate({ nodes, edges });
     }
-  }, [nodes, edges, onWorkflowDataUpdate]);
+  }, [nodes, edges]); // Removed onWorkflowDataUpdate from deps to prevent loops
 
-  // Only sync when nodes or edges actually change (not on mount or parent callback change)
-  React.useEffect(() => {
-    syncToParent();
-  }, [nodes, edges]); // Removed onWorkflowDataUpdate from deps to prevent infinite loops
-
-  // Update AI node credentials status
-  React.useEffect(() => {
-    setNodes((nds) =>
-      nds.map((node) => {
+  // Update AI node credentials
+  useEffect(() => {
+    setNodes(prevNodes => 
+      prevNodes.map(node => {
         if (node.type === 'ai') {
           return {
             ...node,
@@ -205,324 +210,6 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
     );
   }, [hasCredentials, setNodes]);
 
-  const executeWorkflow = useCallback(async () => {
-    setIsExecuting(true);
-    
-    // First, reset all nodes
-    setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          isExecuting: false,
-          isExecuted: false,
-          inputData: [],
-          outputData: [],
-          executionError: undefined,
-        },
-      }))
-    );
-
-    // Start execution animation
-    setTimeout(() => {
-      setNodes((nds) =>
-        nds.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            isExecuting: true,
-          },
-        }))
-      );
-
-      setEdges((eds) =>
-        eds.map((edge) => ({
-          ...edge,
-          style: { stroke: '#10b981', strokeWidth: 2 },
-          animated: true,
-        }))
-      );
-    }, 100);
-
-    // Execute nodes in topological order
-    setTimeout(async () => {
-      try {
-        const currentNodes = nodes;
-        const currentEdges = edges;
-        
-        // Get execution order
-        const getExecutionOrder = (nodes: Node[], edges: Edge[]) => {
-          const visited = new Set<string>();
-          const order: Node[] = [];
-          
-          const visit = (nodeId: string) => {
-            if (visited.has(nodeId)) return;
-            visited.add(nodeId);
-            
-            const incomingEdges = edges.filter(edge => edge.target === nodeId);
-            for (const edge of incomingEdges) {
-              visit(edge.source);
-            }
-            
-            const node = nodes.find(n => n.id === nodeId);
-            if (node) order.push(node);
-          };
-          
-          const startNodes = nodes.filter(node => 
-            !edges.some(edge => edge.target === node.id)
-          );
-          
-          for (const node of startNodes) {
-            visit(node.id);
-          }
-          
-          return order;
-        };
-        
-        const executionOrder = getExecutionOrder(currentNodes, currentEdges);
-        const executionResults = new Map();
-        
-        // Execute nodes sequentially
-        for (const node of executionOrder) {
-          const startTime = Date.now();
-          
-          // Add execution step
-          setExecutionSteps(prev => [...prev, {
-            nodeId: node.id,
-            nodeLabel: String(node.data?.label || node.type),
-            status: 'running',
-            timestamp: new Date(),
-          }]);
-          
-          const inputData = getNodeInput(node.id, currentNodes, currentEdges, executionResults);
-          let outputData = inputData;
-          let executionError: string | undefined;
-          
-          try {
-            switch (node.type) {
-              case 'manualTrigger':
-                outputData = inputData; // Already handled in getNodeInput
-                break;
-                
-              case 'http':
-                const httpConfig = {
-                  method: String(node.data.method || 'GET'),
-                  url: String(node.data.url || ''),
-                  headers: (node.data.headers as Record<string, string>) || {},
-                  body: String(node.data.body || ''),
-                  timeout: Number(node.data.timeout || 30000),
-                };
-                
-                const httpResult = await executeHttpRequest(httpConfig, inputData);
-                outputData = httpResult.data;
-                if (!httpResult.success) {
-                  executionError = httpResult.error;
-                }
-                break;
-                
-              case 'if':
-                const ifConfig = {
-                  conditions: (node.data.conditions as any[]) || [],
-                  combineConditions: (node.data.combineConditions as 'AND' | 'OR') || 'AND',
-                };
-                
-                const ifResult = executeIfNode(ifConfig, inputData);
-                outputData = ifResult.trueItems; // Main output goes to true path
-                
-                // Store both results for the node
-                executionResults.set(node.id, {
-                  trueItems: ifResult.trueItems,
-                  falseItems: ifResult.falseItems,
-                });
-                break;
-                
-              case 'filter':
-                const filterConfig = {
-                  conditions: (node.data.conditions as any[]) || [],
-                  combineConditions: (node.data.combineConditions as 'AND' | 'OR') || 'AND',
-                };
-                
-                const filterResult = executeFilterNode(filterConfig, inputData);
-                outputData = filterResult.data;
-                if (!filterResult.success) {
-                  executionError = filterResult.error;
-                }
-                break;
-                
-              case 'set':
-                const setConfig = {
-                  operation: String(node.data.operation || 'add_fields'),
-                  fieldMappings: (node.data.fieldMappings as any[]) || [],
-                  keepOnlySet: Boolean(node.data.keepOnlySet || false),
-                };
-                
-                const setResult = executeSetNode(setConfig, inputData);
-                outputData = setResult.data;
-                if (!setResult.success) {
-                  executionError = setResult.error;
-                }
-                break;
-                
-              case 'code':
-                const code = (node.data.code as string) || `// Default code
-for (const item of $input.all()) {
-  item.myNewField = 1;
-}
-return $input.all();`;
-                
-                const codeResult = executeJavaScript(code, inputData);
-                outputData = codeResult.output;
-                executionError = codeResult.error;
-                break;
-                
-              default:
-                // Pass through for unknown node types
-                outputData = inputData.map((item, index) => ({
-                  ...item,
-                  processedBy: node.type,
-                  processedAt: new Date().toISOString(),
-                  nodeId: node.id
-                }));
-            }
-            
-            const duration = Date.now() - startTime;
-            
-            // Store execution result for data flow
-            executionResults.set(node.id, outputData);
-            
-            // Update execution data for bottom panel
-            setNodeExecutionData(prev => ({
-              ...prev,
-              [node.id]: { inputData, outputData }
-            }));
-            
-            // Update execution step with success
-            setExecutionSteps(prev => 
-              prev.map(step => 
-                step.nodeId === node.id 
-                  ? { ...step, status: 'success' as const, duration }
-                  : step
-              )
-            );
-            
-            // Update the current nodes with execution results
-            const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
-            if (nodeIndex !== -1) {
-              currentNodes[nodeIndex] = {
-                ...currentNodes[nodeIndex],
-                data: {
-                  ...currentNodes[nodeIndex].data,
-                  inputData,
-                  outputData,
-                  executionError,
-                  isExecuted: true,
-                  isExecuting: false,
-                },
-              };
-            }
-            
-            // Update nodes in real-time for visual feedback
-            setNodes(prevNodes => 
-              prevNodes.map(n => 
-                n.id === node.id 
-                  ? {
-                      ...n,
-                      data: {
-                        ...n.data,
-                        inputData,
-                        outputData,
-                        executionError,
-                        isExecuted: true,
-                        isExecuting: false,
-                      },
-                    }
-                  : n
-              )
-            );
-            
-          } catch (error: any) {
-            executionError = error.message;
-            console.error(`Error executing node ${node.id}:`, error);
-            
-            // Update execution data for bottom panel
-            setNodeExecutionData(prev => ({
-              ...prev,
-              [node.id]: { inputData, outputData: [] }
-            }));
-            
-            // Update execution step with error
-            setExecutionSteps(prev => 
-              prev.map(step => 
-                step.nodeId === node.id 
-                  ? { ...step, status: 'error' as const, error: executionError }
-                  : step
-              )
-            );
-            
-            const nodeIndex = currentNodes.findIndex(n => n.id === node.id);
-            if (nodeIndex !== -1) {
-              currentNodes[nodeIndex] = {
-                ...currentNodes[nodeIndex],
-                data: {
-                  ...currentNodes[nodeIndex].data,
-                  inputData,
-                  outputData: [],
-                  executionError,
-                  isExecuted: true,
-                  isExecuting: false,
-                },
-              };
-            }
-            
-            // Update nodes with error state
-            setNodes(prevNodes => 
-              prevNodes.map(n => 
-                n.id === node.id 
-                  ? {
-                      ...n,
-                      data: {
-                        ...n.data,
-                        inputData,
-                        outputData: [],
-                        executionError,
-                        isExecuted: true,
-                        isExecuting: false,
-                      },
-                    }
-                  : n
-              )
-            );
-          }
-        }
-        
-      } catch (error: any) {
-        console.error('Workflow execution failed:', error);
-        setNodes((nds) =>
-          nds.map((node) => ({
-            ...node,
-            data: {
-              ...node.data,
-              isExecuting: false,
-              executionError: 'Workflow execution failed',
-            },
-          }))
-        );
-      }
-      
-      // Update edges
-      setEdges((currentEdges) => 
-        currentEdges.map((edge) => ({
-          ...edge,
-          style: { stroke: '#10b981', strokeWidth: 2 },
-          animated: false,
-        }))
-      );
-
-      setIsExecuting(false);
-      onExecuteWorkflow?.();
-    }, 1000);
-  }, [nodes, edges, setNodes, setEdges, onExecuteWorkflow]);
-
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges],
@@ -534,25 +221,27 @@ return $input.all();`;
     // Position new node to the right of existing nodes
     const rightmostNode = nodes.reduce((rightmost, node) => 
       node.position.x > rightmost.position.x ? node : rightmost, 
-      nodes[0] || { position: { x: 0, y: 100 } }
+      { position: { x: 0, y: 100 } }
     );
     
     const newPosition = {
-      x: rightmostNode.position.x + 250,
-      y: rightmostNode.position.y || 100,
+      x: (rightmostNode?.position?.x || 0) + 300,
+      y: rightmostNode?.position?.y || 100,
     };
 
-    const newNode = {
+    const newNode: Node = {
       id: newId,
       type: nodeType === 'action' || nodeType === 'transform' || nodeType === 'flow' || nodeType === 'human' ? 'chat' : nodeType,
       position: newPosition,
       data: {
         label: title,
+        ...(nodeType === 'ai' && { hasCredentials })
       },
     };
 
     setNodes((currentNodes) => [...currentNodes, newNode]);
-  }, [nodes, setNodes]);
+    setIsNodeSelectorOpen(false);
+  }, [nodes, setNodes, hasCredentials]);
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
@@ -561,34 +250,57 @@ return $input.all();`;
     }
   }, [isBottomPanelOpen]);
 
+  const executeWorkflow = useCallback(async () => {
+    setIsExecuting(true);
+    setExecutionSteps([]);
+    setNodeExecutionData({});
+    
+    // Simple execution simulation
+    const nodeIds = nodes.map(n => n.id);
+    
+    for (const nodeId of nodeIds) {
+      const node = nodes.find(n => n.id === nodeId);
+      setExecutionSteps(prev => [...prev, {
+        nodeId,
+        nodeLabel: (node?.data?.label as string) || 'Unknown Node',
+        status: 'running' as const,
+        timestamp: new Date()
+      }]);
+      
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setExecutionSteps(prev => 
+        prev.map(step => 
+          step.nodeId === nodeId 
+            ? { ...step, status: 'success' as const, duration: 1000 }
+            : step
+        )
+      );
+    }
+    
+    setIsExecuting(false);
+    onExecuteWorkflow?.();
+  }, [nodes, onExecuteWorkflow]);
+
   const handleClearExecution = () => {
     setExecutionSteps([]);
     setNodeExecutionData({});
     setSelectedNodeId(undefined);
-    setNodes(prevNodes => 
-      prevNodes.map(n => ({
-        ...n,
-        data: {
-          ...n.data,
-          isExecuted: false,
-          isExecuting: false,
-          executionError: undefined,
-          inputData: undefined,
-          outputData: undefined,
-        },
-      }))
-    );
   };
 
+  const hasAINodes = nodes.some(node => node.type === 'ai');
+
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="flex justify-between items-center p-4 border-b shrink-0">
+    <div className="w-full h-full flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b bg-background">
         <h2 className="text-xl font-semibold">Canvas</h2>
         <div className="flex items-center gap-2">
-          {/* Execute Controls */}
+          {/* Execute Button */}
           <Button
             onClick={executeWorkflow}
-            disabled={(!hasCredentials && nodes.some(node => node.type === 'ai')) || isExecuting}
+            disabled={(!hasCredentials && hasAINodes) || isExecuting}
             className="bg-red-600 hover:bg-red-700 text-white px-6"
             size="lg"
           >
@@ -605,6 +317,7 @@ return $input.all();`;
             )}
           </Button>
           
+          {/* Clear Button */}
           {executionSteps.length > 0 && (
             <Button
               onClick={handleClearExecution}
@@ -617,16 +330,19 @@ return $input.all();`;
           )}
           
           {/* Add Node Button */}
-          <button 
+          <Button
             onClick={() => setIsNodeSelectorOpen(true)}
-            className="w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center shadow-lg transition-colors"
+            className="bg-primary hover:bg-primary/90"
+            size="lg"
           >
-            <Plus className="h-5 w-5" />
-          </button>
+            <Plus className="h-5 w-5 mr-2" />
+            Add Node
+          </Button>
         </div>
       </div>
       
-      <div className="flex-1 relative w-full h-full" style={{ paddingBottom: isBottomPanelOpen ? '320px' : '0px' }}>
+      {/* Main Canvas Area */}
+      <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -637,7 +353,8 @@ return $input.all();`;
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          className="bg-gray-50 w-full h-full"
+          className="bg-gray-50"
+          style={{ width: '100%', height: '100%' }}
         >
           <Controls />
           <MiniMap 
@@ -651,27 +368,32 @@ return $input.all();`;
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
 
-        {/* API Key Warning - only show if workflow contains AI nodes */}
-        {!hasCredentials && nodes.some(node => node.type === 'ai') && (
-          <div className="absolute top-4 left-4 z-10 text-sm text-muted-foreground bg-background border rounded-md px-3 py-2 max-w-xs">
+        {/* API Key Warning - only for AI workflows */}
+        {!hasCredentials && hasAINodes && (
+          <div className="absolute top-4 left-4 z-10 text-sm text-muted-foreground bg-background border rounded-md px-3 py-2 max-w-xs shadow-lg">
             Please add your OpenRouter API key to execute AI workflows
           </div>
         )}
         
+        {/* Node Selector */}
         <NodeSelector 
           isOpen={isNodeSelectorOpen}
           onClose={() => setIsNodeSelectorOpen(false)}
           onAddNode={handleAddNode}
         />
 
-        {/* Execution Panel - Fixed to bottom of canvas */}
-        <ExecutionBottomPanel
-          isOpen={isBottomPanelOpen}
-          onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
-          executionSteps={executionSteps}
-          selectedNodeId={selectedNodeId}
-          nodeData={nodeExecutionData}
-        />
+        {/* Execution Panel */}
+        {isBottomPanelOpen && (
+          <div className="absolute bottom-0 left-0 right-0 z-10">
+            <ExecutionBottomPanel
+              isOpen={isBottomPanelOpen}
+              onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
+              executionSteps={executionSteps}
+              selectedNodeId={selectedNodeId}
+              nodeData={nodeExecutionData}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
