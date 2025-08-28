@@ -106,7 +106,10 @@ const AIAgentNode = memo<NodeProps>(({ id, data, selected }) => {
         />
 
         <button
-          onClick={handleDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }}
           className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center hover:bg-destructive/90 transition-colors"
         >
           <X className="w-3 h-3" />
@@ -157,7 +160,10 @@ const AIAgentNode = memo<NodeProps>(({ id, data, selected }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleOpenConfig}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenConfig();
+            }}
             className="flex-1 text-xs"
           >
             <Settings className="w-3 h-3 mr-1" />
@@ -168,7 +174,10 @@ const AIAgentNode = memo<NodeProps>(({ id, data, selected }) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsDataViewerOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDataViewerOpen(true);
+              }}
               className="flex-1 text-xs"
             >
               <Zap className="w-3 h-3 mr-1" />
