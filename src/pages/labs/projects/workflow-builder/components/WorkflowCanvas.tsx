@@ -22,7 +22,8 @@ import CodeNode from './CodeNode';
 import DeletableEdge from './DeletableEdge';
 import NodeSelector from './NodeSelector';
 import ExecutionBottomPanel from './ExecutionBottomPanel';
-import WorkflowToolbar from './WorkflowToolbar';
+import { Button } from '@/components/ui/button';
+import { Play, Square, Trash2 } from 'lucide-react';
 import { Plus } from 'lucide-react';
 import { executeJavaScript, getNodeInputData } from '../utils/codeExecution';
 import {
@@ -588,7 +589,39 @@ return $input.all();`;
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-xl font-semibold">Workflow Builder</h2>
-        <div className="absolute top-4 right-4 z-10">
+        <div className="flex items-center gap-2">
+          {/* Execute Controls */}
+          <Button
+            onClick={executeWorkflow}
+            disabled={!hasCredentials || isExecuting}
+            className="bg-red-600 hover:bg-red-700 text-white px-6"
+            size="lg"
+          >
+            {isExecuting ? (
+              <>
+                <Square className="h-4 w-4 mr-2" />
+                Executing...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Execute workflow
+              </>
+            )}
+          </Button>
+          
+          {executionSteps.length > 0 && (
+            <Button
+              onClick={handleClearExecution}
+              variant="outline"
+              size="lg"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear
+            </Button>
+          )}
+          
+          {/* Add Node Button */}
           <button 
             onClick={() => setIsNodeSelectorOpen(true)}
             className="w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center justify-center shadow-lg transition-colors"
@@ -598,7 +631,7 @@ return $input.all();`;
         </div>
       </div>
       
-      <div className="flex-1 relative" style={{ marginBottom: isBottomPanelOpen ? '320px' : '60px' }}>
+      <div className="flex-1 relative" style={{ marginBottom: isBottomPanelOpen ? '320px' : '0px' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -622,6 +655,13 @@ return $input.all();`;
           />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
+
+        {/* API Key Warning */}
+        {!hasCredentials && (
+          <div className="absolute top-4 left-4 z-10 text-sm text-muted-foreground bg-background border rounded-md px-3 py-2 max-w-xs">
+            Please add your OpenRouter API key to execute workflows
+          </div>
+        )}
         
         <NodeSelector 
           isOpen={isNodeSelectorOpen}
@@ -636,13 +676,6 @@ return $input.all();`;
         executionSteps={executionSteps}
         selectedNodeId={selectedNodeId}
         nodeData={nodeExecutionData}
-      />
-
-      <WorkflowToolbar
-        hasCredentials={hasCredentials}
-        isExecuting={isExecuting}
-        onExecute={executeWorkflow}
-        onClear={handleClearExecution}
       />
     </div>
   );
