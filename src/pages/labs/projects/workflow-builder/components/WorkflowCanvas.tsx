@@ -161,8 +161,13 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onWorkflowDataUpdate,
   onExecuteWorkflow 
 }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || []);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || []);
+  // Initialize with initial nodes if no workflow data, otherwise use workflow data
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    workflowData?.nodes || (workflowData === null ? [] : initialNodes)
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    workflowData?.edges || (workflowData === null ? [] : initialEdges)
+  );
   const [isExecuting, setIsExecuting] = useState(false);
   const [isNodeSelectorOpen, setIsNodeSelectorOpen] = useState(false);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
@@ -170,12 +175,17 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
   const [nodeExecutionData, setNodeExecutionData] = useState<{[nodeId: string]: {inputData?: any[], outputData?: any[]}}>({});
 
-  // Sync nodes and edges changes back to parent
-  React.useEffect(() => {
+  // Sync nodes and edges changes back to parent (avoid infinite loops)
+  const syncToParent = React.useCallback(() => {
     if (onWorkflowDataUpdate) {
       onWorkflowDataUpdate({ nodes, edges });
     }
   }, [nodes, edges, onWorkflowDataUpdate]);
+
+  // Only sync when nodes or edges actually change (not on mount or parent callback change)
+  React.useEffect(() => {
+    syncToParent();
+  }, [nodes, edges]); // Removed onWorkflowDataUpdate from deps to prevent infinite loops
 
   // Update AI node credentials status
   React.useEffect(() => {
