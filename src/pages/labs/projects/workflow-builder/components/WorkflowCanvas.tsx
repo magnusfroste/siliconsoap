@@ -588,7 +588,7 @@ return $input.all();`;
           {/* Execute Controls */}
           <Button
             onClick={executeWorkflow}
-            disabled={!hasCredentials || isExecuting}
+            disabled={(!hasCredentials && nodes.some(node => node.type === 'ai')) || isExecuting}
             className="bg-red-600 hover:bg-red-700 text-white px-6"
             size="lg"
           >
@@ -651,10 +651,10 @@ return $input.all();`;
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
 
-        {/* API Key Warning */}
-        {!hasCredentials && (
+        {/* API Key Warning - only show if workflow contains AI nodes */}
+        {!hasCredentials && nodes.some(node => node.type === 'ai') && (
           <div className="absolute top-4 left-4 z-10 text-sm text-muted-foreground bg-background border rounded-md px-3 py-2 max-w-xs">
-            Please add your OpenRouter API key to execute workflows
+            Please add your OpenRouter API key to execute AI workflows
           </div>
         )}
         
