@@ -66,89 +66,6 @@ interface WorkflowCanvasProps {
   onExecuteWorkflow?: () => void;
 }
 
-// Sample workflow nodes for demo
-const sampleNodes: Node[] = [
-  {
-    id: 'trigger-1',
-    type: 'manualTrigger',
-    position: { x: 50, y: 100 },
-    data: { 
-      label: "When clicking 'Execute workflow'",
-    },
-  },
-  {
-    id: 'http-1',
-    type: 'http',
-    position: { x: 350, y: 100 },
-    data: { 
-      label: 'Fetch Users',
-      method: 'GET',
-      url: 'https://jsonplaceholder.typicode.com/users',
-      headers: {},
-      timeout: 30000,
-    },
-  },
-  {
-    id: 'filter-1',
-    type: 'filter',
-    position: { x: 650, y: 100 },
-    data: { 
-      label: 'Filter Active Users',
-      conditions: [
-        {
-          field: 'data.website',
-          operator: 'is_not_empty',
-          value: '',
-          dataType: 'string'
-        }
-      ],
-      combineConditions: 'AND',
-    },
-  },
-  {
-    id: 'set-1',
-    type: 'set',
-    position: { x: 950, y: 100 },
-    data: { 
-      label: 'Transform Data',
-      operation: 'add_fields',
-      fieldMappings: [
-        {
-          outputField: 'full_name',
-          inputValue: 'data.name',
-          type: 'expression'
-        },
-        {
-          outputField: 'contact_email',
-          inputValue: 'data.email',
-          type: 'expression'
-        }
-      ],
-      keepOnlySet: false,
-    },
-  },
-];
-
-const sampleEdges: Edge[] = [
-  {
-    id: 'e1-2',
-    source: 'trigger-1',
-    target: 'http-1',
-    type: 'smoothstep',
-  },
-  {
-    id: 'e2-3',
-    source: 'http-1',
-    target: 'filter-1',
-    type: 'smoothstep',
-  },
-  {
-    id: 'e3-4',
-    source: 'filter-1',
-    target: 'set-1',
-    type: 'smoothstep',
-  },
-];
 
 const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ 
   hasCredentials, 
@@ -156,24 +73,9 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onWorkflowDataUpdate,
   onExecuteWorkflow 
 }) => {
-  // Determine initial nodes and edges
-  const getInitialData = () => {
-    if (workflowData && workflowData.nodes && workflowData.edges) {
-      return {
-        nodes: workflowData.nodes,
-        edges: workflowData.edges
-      };
-    }
-    // If no workflow data, check if it's meant to be empty (new workflow) or sample
-    if (workflowData === null || (workflowData && workflowData.nodes && workflowData.nodes.length === 0)) {
-      return { nodes: [], edges: [] }; // New workflow
-    }
-    return { nodes: sampleNodes, edges: sampleEdges }; // Sample workflow
-  };
-
-  const initialData = getInitialData();
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges);
+  // Initialize nodes and edges from workflowData
+  const [nodes, setNodes, onNodesChange] = useNodesState(workflowData?.nodes || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(workflowData?.edges || []);
   
   // Execution state
   const [isExecuting, setIsExecuting] = useState(false);
@@ -185,12 +87,16 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string>();
 
-  // Update parent when nodes or edges change
+  // Update parent when nodes or edges change (debounced)
   useEffect(() => {
-    if (onWorkflowDataUpdate) {
-      onWorkflowDataUpdate({ nodes, edges });
-    }
-  }, [nodes, edges]); // Removed onWorkflowDataUpdate from deps to prevent loops
+    const timer = setTimeout(() => {
+      if (onWorkflowDataUpdate) {
+        onWorkflowDataUpdate({ nodes, edges });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [nodes, edges, onWorkflowDataUpdate]);
 
   // Update AI node credentials
   useEffect(() => {
@@ -342,7 +248,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       </div>
       
       {/* Main Canvas Area */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" style={{ minHeight: '500px' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
