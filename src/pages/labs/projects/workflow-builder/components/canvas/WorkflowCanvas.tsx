@@ -17,10 +17,16 @@ import '@xyflow/react/dist/style.css';
 import { NodeType, WorkflowNode, ExecutionStatus, NodeCategory } from '../../types';
 import { NODE_DEFINITIONS } from '../../constants/nodeDefinitions';
 import WorkflowNodeComponent from '../nodes/WorkflowNodeComponent';
+import AIAgentNode from '../AIAgentNode';
+import AIModelNode from '../AIModelNode';
+import AIMemoryNode from '../AIMemoryNode';
 
 // Node types mapping
 const nodeTypes = {
   workflowNode: WorkflowNodeComponent,
+  aiAgent: AIAgentNode,
+  aiModel: AIModelNode,
+  aiMemory: AIMemoryNode,
 };
 
 // Initial sample nodes för demonstration
@@ -137,9 +143,23 @@ const WorkflowCanvas = React.forwardRef<WorkflowCanvasHandle, WorkflowCanvasProp
       status: ExecutionStatus.IDLE,
     };
 
+    // Determine the correct node component type
+    const getNodeComponentType = (nodeType: NodeType): string => {
+      switch (nodeType) {
+        case NodeType.AI_AGENT:
+          return 'aiAgent';
+        case NodeType.AI_MODEL:
+          return 'aiModel';
+        case NodeType.AI_MEMORY:
+          return 'aiMemory';
+        default:
+          return 'workflowNode';
+      }
+    };
+
     const newNode: Node = {
       id: newId,
-      type: 'workflowNode',
+      type: getNodeComponentType(nodeType),
       position: nodePosition,
       data: newWorkflowNode as any,
     };
