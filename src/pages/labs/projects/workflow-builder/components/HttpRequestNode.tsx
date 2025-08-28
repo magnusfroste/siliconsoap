@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Globe, Settings, X, Save, MoreHorizontal } from 'lucide-react';
+import { Handle, Position, NodeProps, useReactFlow } from '@xyflow/react';
+import { Globe, Settings, X, Save, MoreHorizontal, Shield, Key, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import NodeDataViewer from './NodeDataViewer';
 
+type AuthType = 'none' | 'bearer' | 'apikey' | 'basic' | 'custom';
+
 interface HttpRequestNodeData {
   id: string;
   label: string;
@@ -19,6 +21,20 @@ interface HttpRequestNodeData {
   headers: Record<string, string>;
   body: string;
   timeout: number;
+  authType: AuthType;
+  authConfig: {
+    token?: string;
+    apiKey?: string;
+    apiKeyLocation?: 'header' | 'query';
+    apiKeyName?: string;
+    username?: string;
+    password?: string;
+    customHeaderName?: string;
+    customHeaderValue?: string;
+  };
+  queryParams: Record<string, string>;
+  responseFormat: 'auto' | 'json' | 'text';
+  failOnError: boolean;
   inputData?: any[];
   outputData?: any[];
   isExecuted: boolean;
@@ -27,6 +43,7 @@ interface HttpRequestNodeData {
 
 const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
   const nodeData = data as any;
+  const { setNodes } = useReactFlow();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isDataViewOpen, setIsDataViewOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -36,11 +53,22 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
     headers: nodeData.headers || {},
     body: nodeData.body || '',
     timeout: nodeData.timeout || 30000,
+    authType: nodeData.authType || 'none' as AuthType,
+    authConfig: nodeData.authConfig || {},
+    queryParams: nodeData.queryParams || {},
+    responseFormat: nodeData.responseFormat || 'auto',
+    failOnError: nodeData.failOnError ?? true,
   });
 
   const handleSaveConfig = () => {
-    // Update node data with new configuration
-    Object.assign(nodeData, tempConfig);
+    // Update node data with new configuration using setNodes
+    setNodes(nodes => 
+      nodes.map(node => 
+        node.id === id 
+          ? { ...node, data: { ...node.data, ...tempConfig } }
+          : node
+      )
+    );
     setIsConfigOpen(false);
   };
 
@@ -51,6 +79,11 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
       headers: nodeData.headers || {},
       body: nodeData.body || '',
       timeout: nodeData.timeout || 30000,
+      authType: nodeData.authType || 'none' as AuthType,
+      authConfig: nodeData.authConfig || {},
+      queryParams: nodeData.queryParams || {},
+      responseFormat: nodeData.responseFormat || 'auto',
+      failOnError: nodeData.failOnError ?? true,
     });
     setIsConfigOpen(false);
   };
@@ -79,6 +112,42 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
       delete newHeaders[key];
       return { ...prev, headers: newHeaders };
     });
+  };
+
+  const addQueryParam = () => {
+    setTempConfig(prev => ({
+      ...prev,
+      queryParams: { ...prev.queryParams, '': '' }
+    }));
+  };
+
+  const updateQueryParam = (oldKey: string, newKey: string, value: string) => {
+    setTempConfig(prev => {
+      const newParams = { ...prev.queryParams };
+      if (oldKey !== newKey) {
+        delete newParams[oldKey];
+      }
+      newParams[newKey] = value;
+      return { ...prev, queryParams: newParams };
+    });
+  };
+
+  const removeQueryParam = (key: string) => {
+    setTempConfig(prev => {
+      const newParams = { ...prev.queryParams };
+      delete newParams[key];
+      return { ...prev, queryParams: newParams };
+    });
+  };
+
+  const getAuthIcon = () => {
+    switch (tempConfig.authType) {
+      case 'bearer': return <Shield className="w-3 h-3" />;
+      case 'apikey': return <Key className="w-3 h-3" />;
+      case 'basic': return <Lock className="w-3 h-3" />;
+      case 'custom': return <Settings className="w-3 h-3" />;
+      default: return null;
+    }
   };
 
   const getStatusColor = () => {
@@ -119,10 +188,24 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
               <Badge variant="secondary" className="text-xs">
                 {tempConfig.method}
               </Badge>
+              {tempConfig.authType !== 'none' && (
+                <div className="flex items-center gap-1">
+                  {getAuthIcon()}
+                  <span className="text-xs text-muted-foreground">Auth</span>
+                </div>
+              )}
               <span className="text-xs text-muted-foreground truncate">
                 {tempConfig.url || 'No URL configured'}
               </span>
             </div>
+            
+            {Object.keys(tempConfig.queryParams).length > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {Object.keys(tempConfig.queryParams).length} params
+                </Badge>
+              </div>
+            )}
             
             {nodeData.isExecuted && (
               <div className="flex items-center gap-2">
@@ -157,8 +240,10 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
           </DialogHeader>
           
           <Tabs defaultValue="request" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="request">Request</TabsTrigger>
+              <TabsTrigger value="auth">Authentication</TabsTrigger>
+              <TabsTrigger value="params">Parameters</TabsTrigger>
               <TabsTrigger value="headers">Headers</TabsTrigger>
               <TabsTrigger value="options">Options</TabsTrigger>
             </TabsList>
@@ -208,6 +293,190 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
               )}
             </TabsContent>
             
+            <TabsContent value="auth" className="space-y-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-4 gap-2">
+                  <Label htmlFor="authType" className="text-right">Type</Label>
+                  <Select value={tempConfig.authType} onValueChange={(value: AuthType) => setTempConfig(prev => ({ ...prev, authType: value, authConfig: {} }))}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Authentication</SelectItem>
+                      <SelectItem value="bearer">Bearer Token</SelectItem>
+                      <SelectItem value="apikey">API Key</SelectItem>
+                      <SelectItem value="basic">Basic Authentication</SelectItem>
+                      <SelectItem value="custom">Custom Header</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {tempConfig.authType === 'bearer' && (
+                  <div className="grid grid-cols-4 gap-2">
+                    <Label htmlFor="token" className="text-right">Token</Label>
+                    <Input
+                      id="token"
+                      type="password"
+                      className="col-span-3"
+                      value={tempConfig.authConfig.token || ''}
+                      onChange={(e) => setTempConfig(prev => ({ 
+                        ...prev, 
+                        authConfig: { ...prev.authConfig, token: e.target.value }
+                      }))}
+                      placeholder="Bearer token"
+                    />
+                  </div>
+                )}
+                
+                {tempConfig.authType === 'apikey' && (
+                  <>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="apiKeyLocation" className="text-right">Location</Label>
+                      <Select value={tempConfig.authConfig.apiKeyLocation || 'header'} onValueChange={(value: 'header' | 'query') => setTempConfig(prev => ({ 
+                        ...prev, 
+                        authConfig: { ...prev.authConfig, apiKeyLocation: value }
+                      }))}>
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="header">Header</SelectItem>
+                          <SelectItem value="query">Query Parameter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="apiKeyName" className="text-right">Name</Label>
+                      <Input
+                        id="apiKeyName"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.apiKeyName || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, apiKeyName: e.target.value }
+                        }))}
+                        placeholder="X-API-Key"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="apiKey" className="text-right">Value</Label>
+                      <Input
+                        id="apiKey"
+                        type="password"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.apiKey || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, apiKey: e.target.value }
+                        }))}
+                        placeholder="API key value"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {tempConfig.authType === 'basic' && (
+                  <>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="username" className="text-right">Username</Label>
+                      <Input
+                        id="username"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.username || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, username: e.target.value }
+                        }))}
+                        placeholder="Username"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="password" className="text-right">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.password || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, password: e.target.value }
+                        }))}
+                        placeholder="Password"
+                      />
+                    </div>
+                  </>
+                )}
+                
+                {tempConfig.authType === 'custom' && (
+                  <>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="customHeaderName" className="text-right">Header Name</Label>
+                      <Input
+                        id="customHeaderName"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.customHeaderName || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, customHeaderName: e.target.value }
+                        }))}
+                        placeholder="Custom-Auth-Header"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Label htmlFor="customHeaderValue" className="text-right">Header Value</Label>
+                      <Input
+                        id="customHeaderValue"
+                        type="password"
+                        className="col-span-3"
+                        value={tempConfig.authConfig.customHeaderValue || ''}
+                        onChange={(e) => setTempConfig(prev => ({ 
+                          ...prev, 
+                          authConfig: { ...prev.authConfig, customHeaderValue: e.target.value }
+                        }))}
+                        placeholder="Header value"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="params" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium">Query Parameters</h3>
+                <Button onClick={addQueryParam} size="sm" variant="outline">
+                  Add Parameter
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                {Object.entries(tempConfig.queryParams).map(([key, value], index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={key}
+                      onChange={(e) => updateQueryParam(key, e.target.value, String(value))}
+                      placeholder="Parameter name"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={String(value)}
+                      onChange={(e) => updateQueryParam(key, key, e.target.value)}
+                      placeholder="Parameter value"
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => removeQueryParam(key)}
+                      size="sm"
+                      variant="ghost"
+                      className="h-10 w-10 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
             <TabsContent value="headers" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-medium">Headers</h3>
@@ -254,6 +523,33 @@ const HttpRequestNode = memo<NodeProps>(({ id, data, selected }) => {
                   value={tempConfig.timeout}
                   onChange={(e) => setTempConfig(prev => ({ ...prev, timeout: parseInt(e.target.value) }))}
                 />
+              </div>
+              
+              <div className="grid grid-cols-4 gap-2">
+                <Label htmlFor="responseFormat" className="text-right">Response Format</Label>
+                <Select value={tempConfig.responseFormat} onValueChange={(value: 'auto' | 'json' | 'text') => setTempConfig(prev => ({ ...prev, responseFormat: value }))}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto-detect</SelectItem>
+                    <SelectItem value="json">JSON</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="failOnError"
+                  checked={tempConfig.failOnError}
+                  onChange={(e) => setTempConfig(prev => ({ ...prev, failOnError: e.target.checked }))}
+                  className="rounded"
+                />
+                <Label htmlFor="failOnError" className="text-sm">
+                  Fail workflow on HTTP error status codes
+                </Label>
               </div>
             </TabsContent>
           </Tabs>

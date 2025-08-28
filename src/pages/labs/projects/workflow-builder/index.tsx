@@ -103,11 +103,17 @@ const WorkflowBuilder: React.FC = () => {
           break;
           
         case NodeType.HTTP_REQUEST:
-          const httpResult = await executeHttpRequest(node.data.config || {
-            method: 'GET',
-            url: 'https://jsonplaceholder.typicode.com/posts/1',
-            headers: {},
-            timeout: 10000
+          const httpResult = await executeHttpRequest({
+            method: node.data.method || 'GET',
+            url: node.data.url || 'https://jsonplaceholder.typicode.com/posts/1',
+            headers: node.data.headers || {},
+            body: node.data.body,
+            timeout: node.data.timeout || 30000,
+            authType: node.data.authType,
+            authConfig: node.data.authConfig,
+            queryParams: node.data.queryParams,
+            responseFormat: node.data.responseFormat,
+            failOnError: node.data.failOnError,
           }, inputData);
           outputData = httpResult.data;
           if (!httpResult.success) throw new Error(httpResult.error);

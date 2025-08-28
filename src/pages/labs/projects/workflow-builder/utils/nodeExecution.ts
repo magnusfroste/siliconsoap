@@ -13,6 +13,11 @@ export const executeHttpRequest = async (config: {
   headers: Record<string, string>;
   body?: string;
   timeout: number;
+  authType?: string;
+  authConfig?: any;
+  queryParams?: Record<string, string>;
+  responseFormat?: string;
+  failOnError?: boolean;
 }, inputData: any[]): Promise<ExecutionResult> => {
   try {
     console.log('Making HTTP request to:', config.url, 'with method:', config.method);
@@ -21,15 +26,67 @@ export const executeHttpRequest = async (config: {
       return { success: false, data: [], error: 'URL is required' };
     }
 
+    let url = config.url;
+    let headers = { ...config.headers };
+    const authType = config.authType || 'none';
+    const authConfig = config.authConfig || {};
+    const queryParams = config.queryParams || {};
+    const responseFormat = config.responseFormat || 'auto';
+    const failOnError = config.failOnError ?? true;
+
+    // Add query parameters to URL
+    if (Object.keys(queryParams).length > 0) {
+      const urlObj = new URL(url);
+      Object.entries(queryParams).forEach(([key, value]) => {
+        if (key && value) {
+          urlObj.searchParams.set(key, String(value));
+        }
+      });
+      url = urlObj.toString();
+    }
+
+    // Handle authentication
+    switch (authType) {
+      case 'bearer':
+        if (authConfig.token) {
+          headers['Authorization'] = `Bearer ${authConfig.token}`;
+        }
+        break;
+      case 'apikey':
+        if (authConfig.apiKey && authConfig.apiKeyName) {
+          if (authConfig.apiKeyLocation === 'query') {
+            const urlObj = new URL(url);
+            urlObj.searchParams.set(authConfig.apiKeyName, authConfig.apiKey);
+            url = urlObj.toString();
+          } else {
+            headers[authConfig.apiKeyName] = authConfig.apiKey;
+          }
+        }
+        break;
+      case 'basic':
+        if (authConfig.username && authConfig.password) {
+          const encoded = btoa(`${authConfig.username}:${authConfig.password}`);
+          headers['Authorization'] = `Basic ${encoded}`;
+        }
+        break;
+      case 'custom':
+        if (authConfig.customHeaderName && authConfig.customHeaderValue) {
+          headers[authConfig.customHeaderName] = authConfig.customHeaderValue;
+        }
+        break;
+    }
+
+    // Set default content type for requests with body
+    if (config.method !== 'GET' && config.method !== 'HEAD' && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.timeout);
 
     const requestOptions: RequestInit = {
       method: config.method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...config.headers,
-      },
+      headers,
       signal: controller.signal,
     };
 
@@ -37,30 +94,36 @@ export const executeHttpRequest = async (config: {
       requestOptions.body = config.body;
     }
 
-    const response = await fetch(config.url, requestOptions);
+    const response = await fetch(url, requestOptions);
     console.log('HTTP Response:', response.status, response.statusText);
     clearTimeout(timeoutId);
 
     let responseData;
-    const contentType = response.headers.get('content-type');
-    
-    if (contentType && contentType.includes('application/json')) {
-      responseData = await response.json();
-      console.log('JSON Response data:', responseData);
-    } else {
+    if (responseFormat === 'text') {
       responseData = await response.text();
-      console.log('Text Response data:', responseData);
+    } else if (responseFormat === 'json') {
+      responseData = await response.json();
+    } else {
+      // Auto-detect based on content type
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
     }
+    console.log('Response data:', responseData);
 
     const result = {
       status: response.status,
       statusText: response.statusText,
       headers: Object.fromEntries(response.headers.entries()),
       data: responseData,
+      url: response.url,
       timestamp: new Date().toISOString(),
     };
 
-    if (!response.ok) {
+    if (!response.ok && failOnError) {
       return {
         success: false,
         data: [result],
