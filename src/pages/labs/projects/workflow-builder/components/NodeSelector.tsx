@@ -12,9 +12,9 @@ interface NodeSelectorProps {
 
 const nodeCategories = [
   {
-    title: 'AI',
+    title: 'AI Agent',
     icon: Brain,
-    description: 'Build autonomous agents, summarize or search documents, etc.',
+    description: 'Interact with AI language models using OpenRouter API',
     nodeType: 'ai',
   },
   {

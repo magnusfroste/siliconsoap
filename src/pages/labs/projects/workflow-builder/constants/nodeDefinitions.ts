@@ -127,38 +127,73 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     ]
   },
 
-  [NodeType.AI_CHAT]: {
-    type: NodeType.AI_CHAT,
+  [NodeType.AI_AGENT]: {
+    type: NodeType.AI_AGENT,
     category: NodeCategory.ACTIONS,
-    name: 'AI Chat',
-    description: 'Interact with AI language models',
+    name: 'AI Agent',
+    description: 'Interact with AI language models using OpenRouter',
     icon: 'Brain',
     color: NODE_COLORS[NodeCategory.ACTIONS],
     inputs: [
-      { id: 'input', type: 'input', dataType: 'string' }
+      { id: 'input', type: 'input', dataType: 'any' }
     ],
     outputs: [
-      { id: 'output', type: 'output', dataType: 'string' }
+      { id: 'output', type: 'output', dataType: 'any' }
     ],
     parameters: [
       {
         name: 'model',
         type: 'select',
         required: true,
-        default: 'gpt-4',
+        default: 'meta-llama/llama-3.3-70b-instruct:free',
         options: [
-          { label: 'GPT-4', value: 'gpt-4' },
-          { label: 'GPT-3.5', value: 'gpt-3.5-turbo' },
-          { label: 'Claude', value: 'claude-3' }
+          { label: 'Meta Llama 3.3 70B (Free)', value: 'meta-llama/llama-3.3-70b-instruct:free' },
+          { label: 'DeepSeek V3 (Free)', value: 'deepseek/deepseek-chat-v3-0324:free' },
+          { label: 'Google Gemma 3 27B (Free)', value: 'google/gemma-3-27b-it:free' },
+          { label: 'GPT-4o Mini', value: 'openai/gpt-4o-mini' },
+          { label: 'Claude 3.5 Sonnet', value: 'anthropic/claude-3.5-sonnet' }
         ],
         description: 'AI model to use'
       },
       {
-        name: 'prompt',
+        name: 'systemMessage',
+        type: 'string',
+        required: false,
+        default: 'You are a helpful AI assistant.',
+        description: 'System message/instructions for the AI'
+      },
+      {
+        name: 'userPrompt',
         type: 'string',
         required: true,
-        default: '',
-        description: 'Prompt template'
+        default: '{{input}}',
+        description: 'User prompt template (use {{input}} for input data)'
+      },
+      {
+        name: 'temperature',
+        type: 'number',
+        required: false,
+        default: 0.7,
+        description: 'Temperature (0.0-2.0) - controls randomness'
+      },
+      {
+        name: 'maxTokens',
+        type: 'number',
+        required: false,
+        default: 1000,
+        description: 'Maximum tokens to generate'
+      },
+      {
+        name: 'responseFormat',
+        type: 'select',
+        required: false,
+        default: 'text',
+        options: [
+          { label: 'Text', value: 'text' },
+          { label: 'JSON', value: 'json' },
+          { label: 'Auto', value: 'auto' }
+        ],
+        description: 'Expected response format'
       }
     ]
   },

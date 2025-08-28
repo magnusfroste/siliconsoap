@@ -10,7 +10,7 @@ export enum NodeType {
   HTTP_REQUEST = 'http-request',
   EMAIL = 'email',
   DATABASE = 'database',
-  AI_CHAT = 'ai-chat',
+  AI_AGENT = 'ai-agent',
   
   // Logic
   IF = 'if',

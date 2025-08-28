@@ -1,4 +1,7 @@
 // Real execution logic for workflow nodes
+import { WorkflowNode, Connection } from '../types';
+import { toast } from '@/hooks/use-toast';
+import { callOpenRouter } from '@/utils/openRouter';
 
 export interface ExecutionResult {
   success: boolean;
@@ -397,4 +400,126 @@ export const getNodeInputData = (nodeId: string, nodes: any[], edges: any[], exe
   }
   
   return combinedInput;
+};
+
+// AI Agent execution
+export const executeAIAgent = async (config: {
+  model: string;
+  systemMessage: string;
+  userPrompt: string;
+  temperature?: number;
+  maxTokens?: number;
+  responseFormat?: string;
+  apiKey: string;
+}, inputData: any[]): Promise<ExecutionResult> => {
+  try {
+    console.log('Executing AI Agent with model:', config.model);
+    
+    if (!config.apiKey) {
+      return { success: false, data: [], error: 'OpenRouter API key is required' };
+    }
+
+    if (!config.model) {
+      return { success: false, data: [], error: 'AI model is required' };
+    }
+
+    if (!config.userPrompt) {
+      return { success: false, data: [], error: 'User prompt is required' };
+    }
+
+    const results = [];
+
+    // Process each input item (or single request if no input data)
+    const itemsToProcess = inputData.length > 0 ? inputData : [{}];
+
+    for (let i = 0; i < itemsToProcess.length; i++) {
+      const item = itemsToProcess[i];
+      
+      try {
+        // Replace template variables in the user prompt
+        let processedPrompt = config.userPrompt;
+        
+        // Replace {{input}} with the entire input data
+        if (processedPrompt.includes('{{input}}')) {
+          const inputText = inputData.length > 0 ? JSON.stringify(item) : '';
+          processedPrompt = processedPrompt.replace(/\{\{input\}\}/g, inputText);
+        }
+
+        // Replace {{input.field}} with specific fields
+        const fieldMatches = processedPrompt.match(/\{\{input\.(\w+)\}\}/g);
+        if (fieldMatches) {
+          for (const match of fieldMatches) {
+            const fieldName = match.replace(/\{\{input\.|\}\}/g, '');
+            const fieldValue = item[fieldName] || '';
+            processedPrompt = processedPrompt.replace(match, String(fieldValue));
+          }
+        }
+
+        // Replace {{json input}} with JSON formatted input
+        if (processedPrompt.includes('{{json input}}')) {
+          const jsonInput = JSON.stringify(item, null, 2);
+          processedPrompt = processedPrompt.replace(/\{\{json input\}\}/g, jsonInput);
+        }
+
+        console.log('Processed prompt for item', i + 1, ':', processedPrompt);
+
+        // Call OpenRouter API
+        const response = await callOpenRouter(
+          processedPrompt,
+          config.model,
+          config.systemMessage || 'analytical',
+          config.apiKey,
+          'medium' // Default response length
+        );
+
+        console.log('AI response for item', i + 1, ':', response);
+
+        // Process response based on format
+        let processedResponse = response;
+        if (config.responseFormat === 'json') {
+          try {
+            processedResponse = JSON.parse(response);
+          } catch (e) {
+            console.warn('Failed to parse JSON response, returning as text');
+          }
+        }
+
+        // Create result object
+        const result = {
+          input: item,
+          prompt: processedPrompt,
+          response: processedResponse,
+          model: config.model,
+          timestamp: new Date().toISOString(),
+          tokens: response.length, // Approximate token count
+          index: i
+        };
+
+        results.push(result);
+
+      } catch (itemError: any) {
+        console.error(`Failed to process item ${i + 1}:`, itemError);
+        
+        // Add error result for this item
+        results.push({
+          input: item,
+          error: itemError.message || 'Unknown error',
+          model: config.model,
+          timestamp: new Date().toISOString(),
+          index: i
+        });
+      }
+    }
+
+    console.log('AI Agent execution completed. Results:', results);
+    return { success: true, data: results };
+
+  } catch (error: any) {
+    console.error('AI Agent execution failed:', error);
+    return {
+      success: false,
+      data: [],
+      error: error.message || 'AI execution failed',
+    };
+  }
 };

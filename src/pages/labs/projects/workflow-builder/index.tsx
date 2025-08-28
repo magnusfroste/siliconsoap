@@ -7,7 +7,7 @@ import NodeDataViewer from './components/NodeDataViewer';
 import ExecutionBottomPanel from './components/ExecutionBottomPanel';
 import WorkflowToolbar from './components/WorkflowToolbar';
 import { NodeType, WorkflowNode, ExecutionStatus } from './types';
-import { executeHttpRequest, executeIfNode, executeFilterNode, executeSetNode, getNodeInputData } from './utils/nodeExecution';
+import { executeHttpRequest, executeIfNode, executeFilterNode, executeSetNode, executeAIAgent, getNodeInputData } from './utils/nodeExecution';
 import { executeJavaScript } from './utils/codeExecution';
 
 interface ExecutionStep {
@@ -159,6 +159,20 @@ const WorkflowBuilder: React.FC = () => {
           }, inputData);
           outputData = setResult.data;
           if (!setResult.success) throw new Error(setResult.error);
+          break;
+          
+        case NodeType.AI_AGENT:
+          const aiResult = await executeAIAgent({
+            model: node.data.model || 'meta-llama/llama-3.3-70b-instruct:free',
+            systemMessage: node.data.systemMessage || 'You are a helpful AI assistant.',
+            userPrompt: node.data.userPrompt || '{{input}}',
+            temperature: node.data.temperature || 0.7,
+            maxTokens: node.data.maxTokens || 1000,
+            responseFormat: node.data.responseFormat || 'text',
+            apiKey: node.data.apiKey || '',
+          }, inputData);
+          outputData = aiResult.data;
+          if (!aiResult.success) throw new Error(aiResult.error);
           break;
           
         default:
