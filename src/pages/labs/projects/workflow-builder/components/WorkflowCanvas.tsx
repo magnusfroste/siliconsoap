@@ -592,7 +592,7 @@ return $input.all();`;
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-[600px]">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-xl font-semibold">Canvas</h2>
         <div className="flex items-center gap-2">

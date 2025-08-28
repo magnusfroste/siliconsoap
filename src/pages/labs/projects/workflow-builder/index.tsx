@@ -216,12 +216,14 @@ const WorkflowBuilder: React.FC = () => {
 
         {/* Content Area */}
         {activeView === 'workflows' && (
-          <WorkflowCanvas 
-            hasCredentials={hasCredentials} 
-            workflowData={activeWorkflow?.data}
-            onWorkflowDataUpdate={handleWorkflowDataUpdate}
-            onExecuteWorkflow={() => console.log('Workflow executed!')}
-          />
+          <div className="flex-1 h-full">
+            <WorkflowCanvas 
+              hasCredentials={hasCredentials} 
+              workflowData={activeWorkflow?.data}
+              onWorkflowDataUpdate={handleWorkflowDataUpdate}
+              onExecuteWorkflow={() => console.log('Workflow executed!')}
+            />
+          </div>
         )}
 
         {activeView === 'credentials' && (
