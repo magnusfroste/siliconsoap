@@ -26,7 +26,8 @@ import {
   Trash2, 
   Settings,
   Upload,
-  FileText
+  FileText,
+  Key,
 } from 'lucide-react';
 
 export interface Workflow {
@@ -40,6 +41,8 @@ export interface Workflow {
 interface WorkflowTabsProps {
   workflows: Workflow[];
   activeWorkflowId: string;
+  activeView: 'workflows' | 'credentials' | 'executions';
+  onViewChange: (view: 'workflows' | 'credentials' | 'executions') => void;
   onWorkflowSelect: (workflowId: string) => void;
   onWorkflowCreate: (name: string) => void;
   onWorkflowDelete: (workflowId: string) => void;
@@ -52,6 +55,8 @@ interface WorkflowTabsProps {
 const WorkflowTabs: React.FC<WorkflowTabsProps> = ({
   workflows,
   activeWorkflowId,
+  activeView,
+  onViewChange,
   onWorkflowSelect,
   onWorkflowCreate,
   onWorkflowDelete,
@@ -130,80 +135,110 @@ const WorkflowTabs: React.FC<WorkflowTabsProps> = ({
 
   return (
     <>
-      <div className="flex items-center gap-2 px-4 py-2 border-b">
-        {/* Workflow Selector */}
-        <div className="flex items-center gap-1">
-          {workflows.map((workflow) => (
-            <div key={workflow.id} className="flex items-center">
-              <Button
-                variant={workflow.id === activeWorkflowId ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => onWorkflowSelect(workflow.id)}
-                className="rounded-r-none border-r-0"
-              >
-                <FileText className="h-4 w-4 mr-1" />
-                {workflow.name}
-              </Button>
-              {workflow.id === activeWorkflowId && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-l-none px-2"
-                    >
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem onClick={() => onWorkflowDuplicate(workflow.id)}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onWorkflowExport(workflow.id)}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openRenameDialog(workflow.id, workflow.name)}>
-                      <Edit3 className="h-4 w-4 mr-2" />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleImportJSON}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import from File...
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => openDeleteDialog(workflow.id)}
-                      className="text-destructive focus:text-destructive"
-                      disabled={workflows.length <= 1}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          ))}
+      <div className="flex items-center border-b">
+        {/* Main Navigation Tabs */}
+        <div className="flex">
+          <Button
+            variant={activeView === 'workflows' ? 'secondary' : 'ghost'}
+            onClick={() => onViewChange('workflows')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-6 py-3"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Workflows
+          </Button>
+          <Button
+            variant={activeView === 'credentials' ? 'secondary' : 'ghost'}
+            onClick={() => onViewChange('credentials')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-6 py-3"
+          >
+            <Key className="h-4 w-4 mr-2" />
+            Credentials
+          </Button>
+          <Button
+            variant={activeView === 'executions' ? 'secondary' : 'ghost'}
+            onClick={() => onViewChange('executions')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-6 py-3"
+            disabled
+          >
+            Executions
+          </Button>
         </div>
 
-        {/* Add New Workflow Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowCreateDialog(true)}
-          className="ml-2"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          New Workflow
-        </Button>
+        {/* Workflow Selector - Only show when on workflows view */}
+        {activeView === 'workflows' && (
+          <div className="flex items-center gap-1 ml-6 px-4 py-2">
+            {workflows.map((workflow) => (
+              <div key={workflow.id} className="flex items-center">
+                <Button
+                  variant={workflow.id === activeWorkflowId ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => onWorkflowSelect(workflow.id)}
+                  className="rounded-r-none border-r-0"
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  {workflow.name}
+                </Button>
+                {workflow.id === activeWorkflowId && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="rounded-l-none px-2"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={() => onWorkflowDuplicate(workflow.id)}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onWorkflowExport(workflow.id)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openRenameDialog(workflow.id, workflow.name)}>
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleImportJSON}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Import from File...
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => openDeleteDialog(workflow.id)}
+                        className="text-destructive focus:text-destructive"
+                        disabled={workflows.length <= 1}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            ))}
+
+            {/* Add New Workflow Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCreateDialog(true)}
+              className="ml-2"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              New Workflow
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Create Workflow Dialog */}
