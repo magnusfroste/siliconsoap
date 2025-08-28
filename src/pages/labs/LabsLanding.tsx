@@ -38,7 +38,7 @@ const projects: Project[] = [
     id: 'agent-workflow',
     title: 'Agent Workflow Builder',
     description: 'Create complex AI workflows by chaining agents together in visual flowcharts with conditional logic and parallel processing.',
-    status: 'live',
+    status: 'coming-soon',
     icon: Network,
     path: '/labs/workflow-builder',
     tags: ['Workflow', 'Visual Builder', 'Automation'],
