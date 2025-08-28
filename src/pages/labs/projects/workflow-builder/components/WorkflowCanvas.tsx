@@ -581,7 +581,7 @@ return $input.all();`;
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[600px]">
+    <div className="flex flex-col h-full w-full relative">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-xl font-semibold">Canvas</h2>
         <div className="flex items-center gap-2">
@@ -626,7 +626,7 @@ return $input.all();`;
         </div>
       </div>
       
-      <div className="flex-1 relative" style={{ marginBottom: isBottomPanelOpen ? '320px' : '0px' }}>
+      <div className="flex-1 relative w-full h-full" style={{ paddingBottom: isBottomPanelOpen ? '320px' : '0px' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -637,7 +637,7 @@ return $input.all();`;
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          className="bg-gray-50"
+          className="bg-gray-50 w-full h-full"
         >
           <Controls />
           <MiniMap 
@@ -663,15 +663,16 @@ return $input.all();`;
           onClose={() => setIsNodeSelectorOpen(false)}
           onAddNode={handleAddNode}
         />
-      </div>
 
-      <ExecutionBottomPanel
-        isOpen={isBottomPanelOpen}
-        onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
-        executionSteps={executionSteps}
-        selectedNodeId={selectedNodeId}
-        nodeData={nodeExecutionData}
-      />
+        {/* Execution Panel - Fixed to bottom of canvas */}
+        <ExecutionBottomPanel
+          isOpen={isBottomPanelOpen}
+          onToggle={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
+          executionSteps={executionSteps}
+          selectedNodeId={selectedNodeId}
+          nodeData={nodeExecutionData}
+        />
+      </div>
     </div>
   );
 };
