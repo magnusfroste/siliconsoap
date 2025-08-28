@@ -94,9 +94,11 @@ const WorkflowBuilder: React.FC = () => {
       // Execute based on node type
       switch (node.type) {
         case NodeType.MANUAL_TRIGGER:
-          outputData = inputData.length > 0 ? inputData : [
+          // Manual trigger always generates initial data to start the workflow
+          outputData = [
             { id: 1, name: 'Sample Item 1', value: 100, category: 'A', timestamp: new Date().toISOString() },
             { id: 2, name: 'Sample Item 2', value: 200, category: 'B', timestamp: new Date().toISOString() },
+            { id: 3, name: 'Sample Item 3', value: 300, category: 'C', timestamp: new Date().toISOString() },
           ];
           break;
           
