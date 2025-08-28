@@ -216,7 +216,7 @@ const WorkflowBuilder: React.FC = () => {
 
         {/* Content Area */}
         {activeView === 'workflows' && (
-          <div className="flex-1 h-full">
+          <div className="flex-1 w-full" style={{ height: 'calc(100vh - 120px)' }}>
             <WorkflowCanvas 
               hasCredentials={hasCredentials} 
               workflowData={activeWorkflow?.data}

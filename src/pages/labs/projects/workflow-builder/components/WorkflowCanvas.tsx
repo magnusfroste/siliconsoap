@@ -581,8 +581,8 @@ return $input.all();`;
   };
 
   return (
-    <div className="flex flex-col h-full w-full relative">
-      <div className="flex justify-between items-center p-4 border-b">
+    <div className="flex flex-col w-full h-full">
+      <div className="flex justify-between items-center p-4 border-b shrink-0">
         <h2 className="text-xl font-semibold">Canvas</h2>
         <div className="flex items-center gap-2">
           {/* Execute Controls */}
