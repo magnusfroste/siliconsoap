@@ -1,22 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import WorkflowCanvas from './components/WorkflowCanvas';
 
 const WorkflowBuilder: React.FC = () => {
-  console.log('WorkflowBuilder rendering');
-  
-  const [workflowData, setWorkflowData] = useState(null);
-
-  const handleWorkflowDataUpdate = (data: any) => {
-    console.log('Workflow data updated:', data);
-    setWorkflowData(data);
-  };
-
-  const handleExecuteWorkflow = () => {
-    console.log('Execute workflow requested');
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -27,14 +13,14 @@ const WorkflowBuilder: React.FC = () => {
           <p className="text-muted-foreground">Build and execute automated workflows</p>
         </div>
         
-        {/* Full height container for ReactFlow */}
-        <div className="flex-1" style={{ height: 'calc(100vh - 200px)' }}>
-          <WorkflowCanvas
-            hasCredentials={true}
-            workflowData={workflowData}
-            onWorkflowDataUpdate={handleWorkflowDataUpdate}
-            onExecuteWorkflow={handleExecuteWorkflow}
-          />
+        {/* Placeholder för workflow builder */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-4">Coming Soon</h2>
+            <p className="text-muted-foreground">
+              Vi bygger en kraftfull workflow builder inspirerad av n8n.
+            </p>
+          </div>
         </div>
       </main>
       
