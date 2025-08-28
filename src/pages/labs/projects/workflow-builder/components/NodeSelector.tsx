@@ -18,10 +18,16 @@ const nodeCategories = [
     nodeType: 'ai',
   },
   {
-    title: 'Action in an app',
-    icon: Globe,
-    description: 'Do something in an app or service like Google Sheets, Telegram or Notion',
-    nodeType: 'action',
+    title: 'AI Chat Model',
+    icon: Brain,
+    description: 'Configure foundation model for AI Agent',
+    nodeType: 'aiModel',
+  },
+  {
+    title: 'Simple Memory',
+    icon: Database,
+    description: 'Conversation memory for AI Agent',
+    nodeType: 'aiMemory',
   },
   {
     title: 'Data transformation',

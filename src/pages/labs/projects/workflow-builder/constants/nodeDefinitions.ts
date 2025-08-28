@@ -198,6 +198,144 @@ export const NODE_DEFINITIONS: Record<NodeType, NodeDefinition> = {
     ]
   },
 
+  [NodeType.AI_MODEL]: {
+    type: NodeType.AI_MODEL,
+    category: NodeCategory.ACTIONS,
+    name: 'AI Chat Model',
+    description: 'Configure foundation model for AI Agent',
+    icon: 'Brain',
+    color: '#8B5CF6',
+    inputs: [],
+    outputs: [
+      { id: 'model', type: 'output', dataType: 'any' }
+    ],
+    parameters: [
+      {
+        name: 'provider',
+        type: 'select',
+        required: true,
+        default: 'openrouter',
+        options: [
+          { label: 'OpenRouter', value: 'openrouter' },
+          { label: 'OpenAI', value: 'openai' },
+          { label: 'Anthropic', value: 'anthropic' }
+        ],
+        description: 'Model provider'
+      },
+      {
+        name: 'model',
+        type: 'select',
+        required: true,
+        default: 'meta-llama/llama-3.3-70b-instruct:free',
+        options: [
+          { label: 'Meta Llama 3.3 70B (Free)', value: 'meta-llama/llama-3.3-70b-instruct:free' },
+          { label: 'DeepSeek V3 (Free)', value: 'deepseek/deepseek-chat-v3-0324:free' },
+          { label: 'Google Gemma 3 27B (Free)', value: 'google/gemma-3-27b-it:free' },
+          { label: 'Claude Opus 4', value: 'claude-opus-4-20250514' },
+          { label: 'Claude Sonnet 4', value: 'claude-sonnet-4-20250514' },
+          { label: 'GPT-4o', value: 'openai/gpt-4o' }
+        ],
+        description: 'Foundation model to use'
+      },
+      {
+        name: 'temperature',
+        type: 'number',
+        required: false,
+        default: 0.7,
+        description: 'Temperature (0.0-2.0)'
+      },
+      {
+        name: 'maxTokens',
+        type: 'number',
+        required: false,
+        default: 1000,
+        description: 'Maximum tokens to generate'
+      },
+      {
+        name: 'credentialId',
+        type: 'string',
+        required: true,
+        default: '',
+        description: 'Credential ID for API access'
+      }
+    ]
+  },
+
+  [NodeType.AI_MEMORY]: {
+    type: NodeType.AI_MEMORY,
+    category: NodeCategory.ACTIONS,
+    name: 'Simple Memory',
+    description: 'Conversation memory for AI Agent',
+    icon: 'Database',
+    color: '#8B5CF6',
+    inputs: [],
+    outputs: [
+      { id: 'memory', type: 'output', dataType: 'any' }
+    ],
+    parameters: [
+      {
+        name: 'memoryType',
+        type: 'select',
+        required: true,
+        default: 'simple',
+        options: [
+          { label: 'Simple Memory', value: 'simple' },
+          { label: 'Buffer Memory', value: 'buffer' },
+          { label: 'Summary Memory', value: 'summary' }
+        ],
+        description: 'Type of memory to use'
+      },
+      {
+        name: 'maxMessages',
+        type: 'number',
+        required: false,
+        default: 10,
+        description: 'Maximum messages to keep in memory'
+      }
+    ]
+  },
+
+  [NodeType.AI_TOOL]: {
+    type: NodeType.AI_TOOL,
+    category: NodeCategory.ACTIONS,
+    name: 'AI Tool',
+    description: 'Tool configuration for AI Agent',
+    icon: 'Wrench',
+    color: '#8B5CF6',
+    inputs: [],
+    outputs: [
+      { id: 'tool', type: 'output', dataType: 'any' }
+    ],
+    parameters: [
+      {
+        name: 'toolType',
+        type: 'select',
+        required: true,
+        default: 'custom',
+        options: [
+          { label: 'Custom Tool', value: 'custom' },
+          { label: 'Web Search', value: 'web_search' },
+          { label: 'Calculator', value: 'calculator' }
+        ],
+        description: 'Type of tool'
+      },
+      {
+        name: 'toolName',
+        type: 'string',
+        required: true,
+        default: '',
+        description: 'Tool name'
+      },
+      {
+        name: 'toolDescription',
+        type: 'string',
+        required: true,
+        default: '',
+        description: 'Tool description'
+      }
+    ]
+  },
+
   [NodeType.EMAIL]: {
     type: NodeType.EMAIL,
     category: NodeCategory.ACTIONS,

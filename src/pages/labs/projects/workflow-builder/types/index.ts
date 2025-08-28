@@ -11,6 +11,9 @@ export enum NodeType {
   EMAIL = 'email',
   DATABASE = 'database',
   AI_AGENT = 'ai-agent',
+  AI_MODEL = 'ai-model',
+  AI_MEMORY = 'ai-memory',
+  AI_TOOL = 'ai-tool',
   
   // Logic
   IF = 'if',
