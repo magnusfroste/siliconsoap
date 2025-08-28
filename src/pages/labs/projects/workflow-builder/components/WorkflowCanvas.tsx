@@ -95,9 +95,9 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   }, [setNodes, nodes.length]);
 
   return (
-    <div className="w-full h-full bg-background">
+    <div className="w-full h-full relative" style={{ minHeight: '500px' }}>
       {/* Debug Info */}
-      <div className="absolute top-4 left-4 z-10 bg-card border rounded p-3 text-sm space-y-1">
+      <div className="absolute top-4 left-4 z-50 bg-white dark:bg-gray-800 border rounded p-3 text-sm space-y-1 shadow-lg">
         <div className="font-medium">Debug Info:</div>
         <div>Nodes: {nodes.length}</div>
         <div>Edges: {edges.length}</div>
@@ -112,40 +112,31 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         </Button>
       </div>
 
-      {/* ReactFlow Canvas with explicit styling */}
-      <div 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          minHeight: '600px',
-          background: 'hsl(var(--muted))'
-        }}
+      {/* ReactFlow Canvas */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        className="w-full h-full"
+        style={{ background: '#f8f9fa' }}
       >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
-          attributionPosition="bottom-left"
-          proOptions={{ hideAttribution: true }}
-        >
-          <Controls position="top-right" />
-          <MiniMap 
-            position="bottom-right"
-            className="!bg-background border border-border"
-          />
-          <Background 
-            variant={BackgroundVariant.Dots} 
-            gap={20} 
-            size={1}
-            color="hsl(var(--border))"
-          />
-        </ReactFlow>
-      </div>
+        <Controls position="top-right" />
+        <MiniMap 
+          position="bottom-right"
+          className="border border-gray-300"
+        />
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={20} 
+          size={1}
+          color="#e5e7eb"
+        />
+      </ReactFlow>
     </div>
   );
 };
