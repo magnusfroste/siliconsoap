@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '../components/ChatMessage';
 import { ChatInput } from '../components/ChatInput';
@@ -10,20 +9,9 @@ import { Loader2 } from 'lucide-react';
 
 export const ChatView = () => {
   const { chatId } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { chat, messages, loading } = useChat(chatId, user?.id);
   const [state] = useLabsState();
-
-  useEffect(() => {
-    // Wait for auth to finish loading before making any decisions
-    if (loading) return;
-    
-    // Redirect to auth if not logged in
-    if (!user) {
-      navigate('/auth', { state: { from: { pathname: `/labs/agents-meetup/chat/${chatId}` } } });
-    }
-  }, [user, loading, chatId, navigate]);
 
   if (loading) {
     return (

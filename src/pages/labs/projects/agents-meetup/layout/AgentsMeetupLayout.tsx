@@ -1,15 +1,32 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatHeader } from './ChatHeader';
 import { SettingsDrawer } from '@/components/labs/SettingsDrawer';
 import { useLabsState } from '../hooks/useLabsState';
+import { useAuth } from '../hooks/useAuth';
 import { profiles, responseLengthOptions } from '../constants';
+import { Loader2 } from 'lucide-react';
 
 export const AgentsMeetupLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [state, actions] = useLabsState();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle authentication at layout level
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (loading) return;
+    
+    // Only redirect to auth if we're not already on a public route
+    // and the user is not authenticated
+    if (!user && !location.pathname.includes('/auth')) {
+      navigate('/auth', { state: { from: location } });
+    }
+  }, [user, loading, navigate, location]);
 
   // Group models by provider for the drawer
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
@@ -19,6 +36,15 @@ export const AgentsMeetupLayout = () => {
     acc[model.provider].push(model);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -31,6 +57,7 @@ export const AgentsMeetupLayout = () => {
         <ChatSidebar 
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          user={user}
         />
       </aside>
 
@@ -42,7 +69,7 @@ export const AgentsMeetupLayout = () => {
             onClick={() => setSidebarOpen(false)}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background z-50 md:hidden animate-slide-in-right">
-            <ChatSidebar onClose={() => setSidebarOpen(false)} />
+            <ChatSidebar onClose={() => setSidebarOpen(false)} user={user} />
           </aside>
         </>
       )}
