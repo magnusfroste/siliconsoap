@@ -11,6 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
 import { scenarioTypes } from '../constants';
+import { AnalysisFloatingButton } from '../components/AnalysisFloatingButton';
+import { AnalysisDrawer } from '../components/AnalysisDrawer';
+import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -19,6 +22,13 @@ export const ChatView = () => {
   const [state] = useLabsState();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
+  const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
+  
+  const {
+    isAnalyzing,
+    analysisResults,
+    handleAnalyzeConversation
+  } = useConversationAnalysis(state.apiKey, messages);
 
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
@@ -150,6 +160,24 @@ export const ChatView = () => {
         }}
         disabled={isGenerating}
         placeholder="Continue the conversation..."
+      />
+
+      {/* Floating Analysis Button */}
+      {!isGenerating && messages.length > 0 && (
+        <AnalysisFloatingButton 
+          onClick={() => setShowAnalysisDrawer(true)}
+          isAnalyzing={isAnalyzing}
+        />
+      )}
+
+      {/* Analysis Drawer */}
+      <AnalysisDrawer
+        open={showAnalysisDrawer}
+        onOpenChange={setShowAnalysisDrawer}
+        isAnalyzing={isAnalyzing}
+        analysisResults={analysisResults}
+        conversation={messages}
+        onAnalyze={() => handleAnalyzeConversation()}
       />
     </div>
   );
