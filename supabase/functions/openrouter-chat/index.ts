@@ -13,7 +13,29 @@ serve(async (req) => {
   }
 
   try {
-    const { model, messages, max_tokens, temperature, top_p } = await req.json();
+    // Get the raw body text first for debugging
+    const bodyText = await req.text();
+    console.log('Received body:', bodyText);
+    
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('Failed to parse body as JSON:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body',
+          code: 'INVALID_JSON',
+          receivedBody: bodyText.substring(0, 100) // Log first 100 chars
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    const { model, messages, max_tokens, temperature, top_p } = body;
     
     // Check if user provided their own API key
     const userApiKey = req.headers.get('x-user-api-key');
