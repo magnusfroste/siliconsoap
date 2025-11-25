@@ -79,7 +79,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+      <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Conversation Settings</SheetTitle>
           <SheetDescription>
