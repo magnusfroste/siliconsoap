@@ -1,1 +1,4 @@
 project_id = "apfrjuomozdvdeondzaz"
+
+[functions.openrouter-chat]
+verify_jwt = false

@@ -2,9 +2,77 @@ import { toast } from "@/hooks/use-toast";
 import { OpenRouterMessage, OpenRouterResponse, ResponseLength, ApiError } from "../types";
 import { OPENROUTER_API_URL, createSystemPrompt, getMaxTokens } from "../constants";
 import { isModelFree } from "./modelHelper";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Calls OpenRouter API to get a response from the AI model
+ * Calls OpenRouter API via edge function (supports shared key + BYOK)
+ */
+export const callOpenRouterViaEdge = async (
+  prompt: string, 
+  model: string, 
+  persona: string,
+  userApiKey: string | null,
+  responseLength: ResponseLength = "medium"
+): Promise<string> => {
+  const systemPrompt = createSystemPrompt(persona, responseLength);
+  const maxTokens = getMaxTokens(responseLength);
+
+  const messages: OpenRouterMessage[] = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: prompt }
+  ];
+
+  try {
+    console.log(`Calling OpenRouter via edge function with model: ${model}`);
+    console.log(`Using ${userApiKey ? 'user' : 'shared'} API key`);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add user's API key to header if they have one
+    if (userApiKey) {
+      headers['x-user-api-key'] = userApiKey;
+    }
+
+    const { data, error } = await supabase.functions.invoke('openrouter-chat', {
+      body: {
+        model,
+        messages,
+        max_tokens: maxTokens,
+        temperature: 0.7,
+        top_p: 0.9,
+      },
+      headers,
+    });
+
+    if (error) {
+      console.error("Edge function error:", error);
+      throw error;
+    }
+
+    if (data.error) {
+      console.error("OpenRouter API error:", data);
+      
+      // Handle rate limit with BYOK prompt
+      if (data.code === 'RATE_LIMIT' && data.shouldPromptBYOK) {
+        const error = new Error(data.message) as Error & { shouldPromptBYOK: boolean };
+        error.shouldPromptBYOK = true;
+        throw error;
+      }
+      
+      throw new Error(data.error);
+    }
+
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error("Error calling OpenRouter via edge:", error);
+    throw error;
+  }
+};
+
+/**
+ * Calls OpenRouter API directly (legacy BYOK approach)
  */
 export const callOpenRouter = async (
   prompt: string, 
@@ -13,8 +81,6 @@ export const callOpenRouter = async (
   apiKey: string,
   responseLength: ResponseLength = "medium"
 ): Promise<string> => {
-  // With BYOK approach, we always use the provided API key
-  
   if (!apiKey) {
     console.error("No API key provided for model:", model);
     throw new Error("API key is required to use this model.");

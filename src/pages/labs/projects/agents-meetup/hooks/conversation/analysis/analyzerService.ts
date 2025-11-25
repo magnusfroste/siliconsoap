@@ -1,5 +1,6 @@
 import { toast } from '@/hooks/use-toast';
-import { callOpenRouter, isModelFree } from '@/utils/openRouter';
+import { isModelFree } from '@/utils/openRouter';
+import { callOpenRouterViaEdge } from '@/utils/openRouter/api/completions';
 import { ResponseLength, ConversationMessage } from '../../../types';
 import { formatConversationForAnalysis } from './conversationFormatter';
 import { createAnalysisPrompt } from './analyzerPrompts';
@@ -10,7 +11,7 @@ import { createAnalysisPrompt } from './analyzerPrompts';
 export const analyzeConversation = async (
   conversation: ConversationMessage[],
   model: string,
-  apiKey: string,
+  apiKey: string | null,
   userPrompt?: string,
   responseLength: ResponseLength = 'long'
 ): Promise<string> => {
@@ -19,10 +20,7 @@ export const analyzeConversation = async (
     throw new Error("No conversation to analyze");
   }
   
-  // Check if we have an API key
-  if (!apiKey) {
-    throw new Error("API key is required for analysis");
-  }
+  // API key is optional now (shared key mode)
 
   // Format the conversation for analysis
   const conversationText = formatConversationForAnalysis(conversation);
@@ -31,10 +29,10 @@ export const analyzeConversation = async (
   const analysisPrompt = createAnalysisPrompt(conversationText, userPrompt);
   
   console.log("Analyzing conversation with model:", model);
-  console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
+  console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "shared key");
   
-  // Call the API to get the analysis
-  return callOpenRouter(
+  // Call the API to get the analysis via edge function
+  return callOpenRouterViaEdge(
     analysisPrompt,
     model,
     'analytical', 

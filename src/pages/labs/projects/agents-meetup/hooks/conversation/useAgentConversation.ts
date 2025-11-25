@@ -9,7 +9,7 @@ import {
 } from './agent/conversationManager';
 
 export const useAgentConversation = (
-  apiKey: string,
+  apiKey: string | null,
   agentAModel: string,
   agentBModel: string,
   agentCModel: string,
@@ -34,9 +34,9 @@ export const useAgentConversation = (
     
     // Double-check if we have an API key from localStorage if needed
     const storedApiKey = !apiKey ? localStorage.getItem('userOpenRouterApiKey') : null;
-    const effectiveApiKey = apiKey || storedApiKey || '';
+    const effectiveApiKey = apiKey || storedApiKey || null;
     
-    console.log("Starting conversation with API key:", effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : "none");
+    console.log("Starting conversation with API key:", effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : "shared key");
     console.log("Agent models:", { agentAModel, agentBModel, agentCModel });
     console.log("Number of agents:", numberOfAgents);
     console.log("Rounds:", rounds);
@@ -118,11 +118,21 @@ export const useAgentConversation = (
       
     } catch (error) {
       console.error("Error in conversation flow:", error);
-      toast({
-        title: "Conversation Error",
-        description: error instanceof Error ? error.message : "An error occurred during the conversation.",
-        variant: "destructive",
-      });
+      
+      // Check if this is a rate limit error that should prompt BYOK
+      if (error instanceof Error && 'shouldPromptBYOK' in error && (error as any).shouldPromptBYOK) {
+        toast({
+          title: "Rate Limit Reached",
+          description: "Shared API key limit reached. Please add your own OpenRouter API key to continue with unlimited usage.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Conversation Error",
+          description: error instanceof Error ? error.message : "An error occurred during the conversation.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

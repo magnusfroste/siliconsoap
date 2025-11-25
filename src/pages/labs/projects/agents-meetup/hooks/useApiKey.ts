@@ -9,6 +9,7 @@ export const useApiKey = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isUsingEnvKey, setIsUsingEnvKey] = useState<boolean>(false);
+  const [isUsingSharedKey, setIsUsingSharedKey] = useState<boolean>(false);
 
   // Load API key from localStorage on component mount
   useEffect(() => {
@@ -93,8 +94,27 @@ export const useApiKey = () => {
 
   // Get the active API key to use for API calls
   const getActiveApiKey = (): string => {
-    // Always return the user's API key
+    // Return user's API key or null (for shared key mode)
     return userApiKey || '';
+  };
+
+  // Enable shared key mode (no user API key needed)
+  const enableSharedKeyMode = () => {
+    setIsUsingSharedKey(true);
+    setUserApiKey(null);
+    setApiKey('');
+    setSavedApiKey('');
+    setIsSaved(false);
+  };
+
+  // Prompt user to add their own API key
+  const promptForBYOK = () => {
+    setIsUsingSharedKey(false);
+    toast({
+      title: "API Key Required",
+      description: "Shared API key limit reached. Please add your own OpenRouter API key to continue.",
+      variant: "destructive",
+    });
   };
 
   return {
@@ -108,10 +128,13 @@ export const useApiKey = () => {
     isSaved,
     setIsSaved,
     isUsingEnvKey,
+    isUsingSharedKey,
     saveApiKey,
     deleteApiKey,
     validateApiKey,
     getActiveApiKey,
-    setUserApiKey
+    setUserApiKey,
+    enableSharedKeyMode,
+    promptForBYOK
   };
 };
