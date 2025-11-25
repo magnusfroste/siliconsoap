@@ -8,6 +8,7 @@ import { profiles, responseLengthOptions } from '../constants';
 
 export const AgentsMeetupLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [state, actions] = useLabsState();
 
   // Group models by provider for the drawer
@@ -22,18 +23,25 @@ export const AgentsMeetupLayout = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:block w-64 border-r">
-        <ChatSidebar />
+      <aside 
+        className={`hidden md:block border-r transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? 'w-16' : 'w-64'
+        }`}
+      >
+        <ChatSidebar 
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
       </aside>
 
       {/* Sidebar - Mobile Overlay */}
       {sidebarOpen && (
         <>
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background z-50 md:hidden">
+          <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background z-50 md:hidden animate-slide-in-right">
             <ChatSidebar onClose={() => setSidebarOpen(false)} />
           </aside>
         </>
