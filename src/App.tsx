@@ -10,6 +10,10 @@ import Labs from "./pages/Labs";
 import { AgentsMeetupLayout } from "./pages/labs/projects/agents-meetup/layout/AgentsMeetupLayout";
 import { NewChatView } from "./pages/labs/projects/agents-meetup/views/NewChatView";
 import { ChatView } from "./pages/labs/projects/agents-meetup/views/ChatView";
+import { ProfileView } from "./pages/labs/projects/agents-meetup/views/ProfileView";
+import { AgentProfilesView } from "./pages/labs/projects/agents-meetup/views/AgentProfilesView";
+import { APISettingsView } from "./pages/labs/projects/agents-meetup/views/APISettingsView";
+import { SettingsView } from "./pages/labs/projects/agents-meetup/views/SettingsView";
 import WorkflowBuilder from "./pages/labs/projects/workflow-builder";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -53,6 +57,10 @@ const App = () => {
             <Route path="/labs/agents-meetup" element={<AgentsMeetupLayout />}>
               <Route index element={<NewChatView />} />
               <Route path="chat/:chatId" element={<ChatView />} />
+              <Route path="profile" element={<ProfileView />} />
+              <Route path="agent-profiles" element={<AgentProfilesView />} />
+              <Route path="api-settings" element={<APISettingsView />} />
+              <Route path="settings" element={<SettingsView />} />
             </Route>
             <Route path="/labs/workflow-builder" element={<WorkflowBuilder />} />
             <Route path="/auth" element={<Auth />} />
