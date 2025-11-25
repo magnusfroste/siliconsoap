@@ -75,8 +75,8 @@ export const callOpenRouter = async (
 
 /**
  * Calls OpenRouter API via edge function (supports shared key + BYOK).
- * If the edge function fails (e.g. internal error), it falls back to the
- * direct BYOK call when a userApiKey is available.
+ * If user has their own API key, calls OpenRouter directly to avoid edge function overhead.
+ * Edge function is only used when there's no user API key (shared key scenario).
  */
 export const callOpenRouterViaEdge = async (
   prompt: string,
@@ -85,6 +85,14 @@ export const callOpenRouterViaEdge = async (
   userApiKey: string | null,
   responseLength: ResponseLength = "medium"
 ): Promise<string> => {
+  // If user has their own API key, call OpenRouter directly
+  // This avoids edge function DNS issues and is more efficient
+  if (userApiKey) {
+    console.log("User has API key, calling OpenRouter directly");
+    return await callOpenRouter(prompt, model, persona, userApiKey, responseLength);
+  }
+
+  // No user API key - use edge function with shared key
   const systemPrompt = createSystemPrompt(persona, responseLength);
   const maxTokens = getMaxTokens(responseLength);
 
@@ -95,15 +103,7 @@ export const callOpenRouterViaEdge = async (
 
   try {
     console.log(`Calling OpenRouter via edge function with model: ${model}`);
-    console.log(`Using ${userApiKey ? "user" : "shared"} API key`);
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (userApiKey) {
-      headers["x-user-api-key"] = userApiKey;
-    }
+    console.log("Using shared API key");
 
     const payload = {
       model,
@@ -115,18 +115,13 @@ export const callOpenRouterViaEdge = async (
 
     const { data, error } = await supabase.functions.invoke("openrouter-chat", {
       body: JSON.stringify(payload),
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (error) {
       console.error("Edge function error:", error);
-
-      // Fallback to direct call when we have a user key
-      if (userApiKey) {
-        console.log("Falling back to direct OpenRouter call due to edge function error.");
-        return await callOpenRouter(prompt, model, persona, userApiKey, responseLength);
-      }
-
       throw error;
     }
 
@@ -140,27 +135,12 @@ export const callOpenRouterViaEdge = async (
         throw err;
       }
 
-      // If the edge function reports an internal error but we have a user key,
-      // fall back to direct call.
-      if (userApiKey && (data as any).code === "INTERNAL_ERROR") {
-        console.log("Edge function INTERNAL_ERROR, falling back to direct OpenRouter call.");
-        return await callOpenRouter(prompt, model, persona, userApiKey, responseLength);
-      }
-
       throw new Error((data as any).error);
     }
 
     return (data as OpenRouterResponse).choices[0].message.content;
   } catch (error) {
     console.error("Error calling OpenRouter via edge:", error);
-
-    // Final safety fallback: if anything goes wrong and we have a user key,
-    // try the direct path once.
-    if (userApiKey) {
-      console.log("Final fallback to direct OpenRouter call from catch block.");
-      return await callOpenRouter(prompt, model, persona, userApiKey, responseLength);
-    }
-
     throw error;
   }
 };
