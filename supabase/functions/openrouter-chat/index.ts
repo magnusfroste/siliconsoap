@@ -13,27 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    // Get the raw body text first for debugging
-    const bodyText = await req.text();
-    console.log('Received body:', bodyText);
-    
-    let body;
-    try {
-      body = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.error('Failed to parse body as JSON:', parseError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid JSON in request body',
-          code: 'INVALID_JSON',
-          receivedBody: bodyText.substring(0, 100) // Log first 100 chars
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const body = await req.json();
+    console.log('Received request for model:', body.model);
     
     const { model, messages, max_tokens, temperature, top_p } = body;
     
