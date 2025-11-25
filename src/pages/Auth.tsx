@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Atom } from 'lucide-react';
+import { Atom, Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -16,12 +16,16 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [checking, setChecking] = useState(true);
+
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         const from = (location.state as any)?.from?.pathname || '/labs/agents-meetup';
         navigate(from, { replace: true });
+      } else {
+        setChecking(false);
       }
     });
   }, [navigate, location]);
@@ -64,6 +68,14 @@ const Auth = () => {
       navigate(from, { replace: true });
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

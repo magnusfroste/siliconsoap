@@ -16,8 +16,11 @@ export const ChatView = () => {
   const [state] = useLabsState();
 
   useEffect(() => {
+    // Wait for auth to finish loading before making any decisions
+    if (loading) return;
+    
     // Redirect to auth if not logged in
-    if (!user && !loading) {
+    if (!user) {
       navigate('/auth', { state: { from: { pathname: `/labs/agents-meetup/chat/${chatId}` } } });
     }
   }, [user, loading, chatId, navigate]);
