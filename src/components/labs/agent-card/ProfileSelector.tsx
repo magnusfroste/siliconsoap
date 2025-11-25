@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Form, FormField, FormItem, FormControl } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UseFormReturn } from 'react-hook-form';
 import { ProfileInfoPopover } from './ProfileInfoPopover';
 import { Profile } from './types';
+import { Check } from 'lucide-react';
 
 interface ProfileSelectorProps {
   form: UseFormReturn<{ persona: string }>;
@@ -47,24 +47,45 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({
                   className="grid grid-cols-2 gap-2"
                   disabled={isDisabled}
                 >
-                  {profiles.map((profile) => (
-                    <div 
-                      key={profile.id}
-                      className={`flex items-center p-2 rounded-md border ${
-                        agentPersona === profile.id ? `border-${borderColorClass.split('-')[1]} bg-${borderColorClass.split('-')[1]}-50` : 'border-gray-200'
-                      } ${isDisabled ? 'opacity-50' : ''}`}
-                    >
-                      <label className="flex items-center gap-1 cursor-pointer w-full text-xs">
-                        <RadioGroupItem value={profile.id} disabled={isDisabled} />
-                        <div className="flex items-center gap-1">
-                          <span className="p-1 bg-purple-100 rounded-full">
+                  {profiles.map((profile) => {
+                    const isSelected = agentPersona === profile.id;
+                    return (
+                      <div 
+                        key={profile.id}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            field.onChange(profile.id);
+                            handleAgentPersonaChange(profile.id);
+                          }
+                        }}
+                        className={`
+                          relative cursor-pointer p-2.5 rounded-md border-2 transition-all
+                          ${isSelected 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          }
+                          ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="p-1 bg-primary/10 rounded-full shrink-0">
                             {profile.icon}
                           </span>
-                          <span>{profile.name}</span>
+                          <span className="text-xs font-medium leading-tight">
+                            {profile.name}
+                          </span>
                         </div>
-                      </label>
-                    </div>
-                  ))}
+                        {isSelected && (
+                          <Check className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-primary" />
+                        )}
+                        <RadioGroupItem 
+                          value={profile.id} 
+                          disabled={isDisabled}
+                          className="sr-only"
+                        />
+                      </div>
+                    );
+                  })}
                 </RadioGroup>
               </FormControl>
             </FormItem>
