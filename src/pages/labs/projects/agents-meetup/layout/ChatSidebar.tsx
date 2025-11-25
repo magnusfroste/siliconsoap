@@ -2,9 +2,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Atom } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Atom, Ticket } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
+import { useCredits } from '../hooks/useCredits';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +19,7 @@ interface ChatSidebarProps {
 
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
+  const { creditsRemaining, isGuest } = useCredits(user?.id);
   const location = useLocation();
 
   const navItems = [
@@ -176,6 +179,22 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
       {/* Footer Navigation */}
       <div className="border-t">
+        {/* Credits Display */}
+        <div className="p-3 border-b">
+          <div className="flex items-center gap-2 text-sm">
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Credits:</span>
+            <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"}>
+              {creditsRemaining}
+            </Badge>
+          </div>
+          {isGuest && creditsRemaining > 0 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Sign up for {10 - creditsRemaining} more credits
+            </p>
+          )}
+        </div>
+
         <Separator />
         <div className="p-2 space-y-1">
           {navItems.map((item) => {

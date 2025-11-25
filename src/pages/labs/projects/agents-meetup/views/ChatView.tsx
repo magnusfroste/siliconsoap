@@ -30,6 +30,8 @@ export const ChatView = () => {
     handleAnalyzeConversation
   } = useConversationAnalysis(state.apiKey, messages);
 
+  const isGuest = !user;
+
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
     if (!chat || !chatId || loading || messages.length > 0 || isGenerating) return;
@@ -178,6 +180,7 @@ export const ChatView = () => {
         analysisResults={analysisResults}
         conversation={messages}
         onAnalyze={() => handleAnalyzeConversation()}
+        isGuest={isGuest}
       />
     </div>
   );

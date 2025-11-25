@@ -5,6 +5,7 @@ export * from './useModels';
 export * from './useProfiles';
 export * from './useScenarios';
 export * from './useConversationFlow';
+export * from './useCredits';
 export * from './conversation';
 export * from './types';
 export * from './utils';

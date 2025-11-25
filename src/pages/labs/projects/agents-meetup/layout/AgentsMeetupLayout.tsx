@@ -12,19 +12,9 @@ export const AgentsMeetupLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle authentication at layout level
-  useEffect(() => {
-    // Wait for auth to finish loading
-    if (loading) return;
-    
-    // Only redirect to auth if we're not already on a public route
-    // and the user is not authenticated
-    if (!user && !location.pathname.includes('/auth')) {
-      navigate('/auth', { state: { from: location } });
-    }
-  }, [user, loading, navigate, location]);
+  // No authentication redirect - allow guest access
 
-  // Show loading state while checking authentication
+  // Show loading state while checking authentication (brief initial check only)
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
