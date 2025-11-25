@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
+import { scenarioTypes } from '../constants';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -34,6 +35,12 @@ export const ChatView = () => {
           return;
         }
 
+        // Look up the full scenario object from the scenario_id
+        const scenario = scenarioTypes.find(s => s.id === chat.scenario_id);
+        if (!scenario) {
+          throw new Error('Scenario not found');
+        }
+
         const onMessageReceived = async (message: any) => {
           if (!chatId) return;
           setCurrentAgent(message.agent);
@@ -43,7 +50,7 @@ export const ChatView = () => {
         setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
-          chat.scenario_id as any,
+          scenario,
           settings.numberOfAgents,
           settings.models.agentA,
           settings.models.agentB,
@@ -59,7 +66,7 @@ export const ChatView = () => {
         if (settings.rounds > 1) {
           await handleAdditionalRounds(
             chat.prompt,
-            chat.scenario_id as any,
+            scenario,
             settings.rounds,
             settings.numberOfAgents,
             settings.models.agentA,
