@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
-import { AgentGridSection } from '@/components/labs/AgentGridSection';
+import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
+import { Badge } from '@/components/ui/badge';
 import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
@@ -170,6 +171,20 @@ export const NewChatView = () => {
             promptInputs={state.promptInputs}
             handleInputChange={actions.handleInputChange}
           />
+
+          {/* Suggested Topics */}
+          <div className="flex flex-wrap gap-2">
+            {suggestedTopics.map((topic, idx) => (
+              <Badge
+                key={idx}
+                variant="outline"
+                className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                onClick={() => actions.handleInputChange(state.activeScenario, topic)}
+              >
+                {topic}
+              </Badge>
+            ))}
+          </div>
 
           {/* Conversation Settings */}
           <div className="space-y-4">

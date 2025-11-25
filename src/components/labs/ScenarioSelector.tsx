@@ -45,7 +45,8 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
               className="flex items-center gap-2"
             >
               {scenario.icon}
-              <span className="hidden md:inline">{scenario.name}</span>
+              <span className="hidden sm:inline">{scenario.name}</span>
+              <span className="sm:hidden text-xs">{scenario.name.split(' ')[0]}</span>
             </TabsTrigger>
           ))}
         </TabsList>
