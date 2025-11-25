@@ -7,8 +7,11 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { useEffect } from "react";
 
 import Labs from "./pages/Labs";
-import AgentsMeetupPage from "./pages/labs/projects/agents-meetup";
+import { AgentsMeetupLayout } from "./pages/labs/projects/agents-meetup/layout/AgentsMeetupLayout";
+import { NewChatView } from "./pages/labs/projects/agents-meetup/views/NewChatView";
+import { ChatView } from "./pages/labs/projects/agents-meetup/views/ChatView";
 import WorkflowBuilder from "./pages/labs/projects/workflow-builder";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Google Analytics page view tracking component
@@ -47,8 +50,12 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/labs" replace />} />
             <Route path="/labs" element={<Labs />} />
-            <Route path="/labs/agents-meetup" element={<AgentsMeetupPage />} />
+            <Route path="/labs/agents-meetup" element={<AgentsMeetupLayout />}>
+              <Route index element={<NewChatView />} />
+              <Route path="chat/:chatId" element={<ChatView />} />
+            </Route>
             <Route path="/labs/workflow-builder" element={<WorkflowBuilder />} />
+            <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
