@@ -1,18 +1,15 @@
-
 import { useState } from 'react';
 
-export const useConversationNavigation = () => {
-  const [currentStep, setCurrentStep] = useState<number>(1);
+export type ViewState = 'input' | 'conversation' | 'analysis';
 
-  const goToStep = (step: number) => {
-    if (step <= currentStep || step === currentStep + 1) {
-      setCurrentStep(step);
-    }
-  };
+export const useConversationNavigation = () => {
+  const [currentView, setCurrentView] = useState<ViewState>('input');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return {
-    currentStep,
-    setCurrentStep,
-    goToStep
+    currentView,
+    setCurrentView,
+    settingsOpen,
+    setSettingsOpen
   };
 };

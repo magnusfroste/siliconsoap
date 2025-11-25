@@ -21,11 +21,12 @@ export const useConversationFlow = (
   getCurrentScenario: () => ScenarioType,
   getCurrentPrompt: () => string
 ) => {
-  // Use the navigation hook for step management
+  // Use the navigation hook for view management
   const {
-    currentStep,
-    setCurrentStep,
-    goToStep
+    currentView,
+    setCurrentView,
+    settingsOpen,
+    setSettingsOpen
   } = useConversationNavigation();
 
   // Use the agent conversation hook for conversation management
@@ -90,7 +91,7 @@ export const useConversationFlow = (
         description: "Please provide your OpenRouter API key to use this feature.",
         variant: "destructive",
       });
-      goToStep(1); // Go back to the API key input step
+      // No step navigation needed in new design
       setIsLoading(false);
       return;
     }
@@ -132,8 +133,6 @@ export const useConversationFlow = (
           variant: "destructive",
         });
         
-        // Go back to step 1 (API key input) if there's an issue
-        goToStep(1);
         setIsLoading(false);
         return;
       }
@@ -150,8 +149,8 @@ export const useConversationFlow = (
       return;
     }
     
-    // Only move to the next step if API is available
-    setCurrentStep(3);
+    // Switch to conversation view
+    setCurrentView('conversation');
     
     try {
       console.log("Starting conversation with API key:", effectiveApiKey.substring(0, 8) + "...");
@@ -192,7 +191,6 @@ export const useConversationFlow = (
         description: "Please provide your OpenRouter API key to continue.",
         variant: "destructive",
       });
-      goToStep(1);
       return;
     }
     
@@ -247,15 +245,16 @@ export const useConversationFlow = (
     setConversation,
     isLoading,
     setIsLoading,
-    currentStep,
-    setCurrentStep,
+    currentView,
+    setCurrentView,
+    settingsOpen,
+    setSettingsOpen,
     isAnalyzing,
     setIsAnalyzing,
     analysisResults,
     setAnalysisResults,
     analyzerModel,
     setAnalyzerModel,
-    goToStep,
     handleStartConversation,
     handleAnalyzeConversation
   };

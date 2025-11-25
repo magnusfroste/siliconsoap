@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Atom, Loader2 } from 'lucide-react';
+import { Atom, Settings, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useForm } from 'react-hook-form';
 import { 
-  APIKeyInput,
-  ProgressStepper,
-  AgentConfigSection,
+  QuickTopicInput,
   ConversationCard,
-  ConversationAnalysis
+  ConversationAnalysis,
+  SettingsDrawer
 } from '@/components/labs';
 import { useLabsState } from './hooks/useLabsState';
 import { profiles, responseLengthOptions, scenarioTypes } from './constants';
@@ -29,154 +29,196 @@ const AgentsMeetup: React.FC = () => {
 
   const [state, actions] = useLabsState();
   
-  // Log API key status when component mounts
+  // Auto-load models on mount with shared API key
   useEffect(() => {
-    console.log("=== API KEY STATUS CHECK ===");
-    console.log("User API key in localStorage:", !!localStorage.getItem('userOpenRouterApiKey'));
-    if (localStorage.getItem('userOpenRouterApiKey')) {
-      console.log("User API key starts with:", localStorage.getItem('userOpenRouterApiKey')?.substring(0, 8) + "...");
-    }
-    console.log("===========================");
-  }, []);
+    const initializeModels = async () => {
+      if (state.availableModels.length === 0 && !state.loadingModels) {
+        console.log("Auto-loading models with shared API key");
+        // Empty string triggers shared key usage in edge function
+        if (actions.refreshModels) {
+          await actions.refreshModels('');
+        }
+      }
+    };
+    
+    initializeModels();
+  }, []); // Only run on mount
+
+  const showConversation = state.conversation.length > 0 || state.isLoading;
+  const showAnalysis = state.analysisResults && !state.isLoading;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          {/* Hero Section */}
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="inline-block p-3 rounded-full bg-purple-100 mb-4">
-              <Atom className="h-8 w-8 text-purple-600" />
+            <div className="inline-block p-3 rounded-full bg-primary/10 mb-4">
+              <Atom className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-4xl font-bold mb-4">AI Agents Meetup</h1>
-            <p className="text-lg text-gray-600 max-w-3xl">
-              Watch AI agents from leading LLMs providers with different profiles collaborate to solve problems. Configure each agent's model and profile to see how diversity of thought leads to better outcomes.
+            <p className="text-lg text-muted-foreground max-w-3xl mb-6">
+              Watch AI agents collaborate in real-time. Simply enter a topic and see diverse AI perspectives work together to solve problems.
             </p>
+            
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => actions.setSettingsOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </Button>
+              
+              {state.isUsingSharedKey && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Powered by OpenRouter
+                </Badge>
+              )}
+            </div>
           </div>
 
-          <ProgressStepper currentStep={state.currentStep} goToStep={actions.goToStep} />
-
-          <div className="mt-8">
-            {state.currentStep === 1 && (
-              <APIKeyInput 
-                goToStep={actions.goToStep}
-                refreshModels={() => {
-                  console.log("Refreshing models from LabsContent");
-                  // Get the current API key from localStorage
-                  const apiKey = localStorage.getItem('userOpenRouterApiKey');
-                  if (apiKey) {
-                    console.log("Found API key in localStorage, refreshing models");
-                    // Force a refresh of the models using the API key from localStorage
-                    if (actions.refreshModels) {
-                      actions.refreshModels(apiKey);
-                    }
-                  } else {
-                    console.log("No API key found in localStorage");
-                  }
-                }}
-              />
-            )}
-            
-            {state.currentStep === 2 && (
-              <AgentConfigSection
-                numberOfAgents={state.numberOfAgents}
-                setNumberOfAgents={actions.setNumberOfAgents}
-                rounds={state.rounds}
-                setRounds={actions.setRounds}
-                responseLength={state.responseLength}
-                setResponseLength={(length: string) => actions.setResponseLength(length as any)}
-                responseLengthOptions={responseLengthOptions}
+          {/* Main Content Area */}
+          <div className="space-y-8">
+            {/* Topic Input - Always visible at top */}
+            {!showConversation && (
+              <QuickTopicInput
                 scenarioTypes={scenarioTypes}
                 activeScenario={state.activeScenario}
                 setActiveScenario={actions.setActiveScenario}
                 promptInputs={state.promptInputs}
                 handleInputChange={actions.handleInputChange}
-                agentAModel={state.agentAModel}
-                setAgentAModel={actions.setAgentAModel}
-                agentBModel={state.agentBModel}
-                setAgentBModel={actions.setAgentBModel}
-                agentCModel={state.agentCModel}
-                setAgentCModel={actions.setAgentCModel}
-                agentAPersona={state.agentAPersona}
-                agentBPersona={state.agentBPersona}
-                agentCPersona={state.agentCPersona}
-                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
-                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
-                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
-                profiles={profiles}
-                formA={formA}
-                formB={formB}
-                formC={formC}
-                modelsByProvider={state.availableModels.length > 0 ? 
-                  state.availableModels.reduce((acc, model) => {
-                    if (!acc[model.provider]) {
-                      acc[model.provider] = [];
-                    }
-                    acc[model.provider].push(model);
-                    return acc;
-                  }, {} as Record<string, any[]>) : 
-                  {}
-                }
-                loadingModels={state.loadingModels}
-                goToStep={actions.goToStep}
                 handleStartConversation={actions.handleStartConversation}
                 isLoading={state.isLoading}
                 getCurrentPrompt={actions.getCurrentPrompt}
-                savedApiKey={state.savedApiKey}
               />
             )}
-            
-            {state.currentStep === 3 && (
-              <>
-                {state.conversation.length === 0 && state.isLoading && (
-                  <div className="flex justify-center items-center mb-8">
-                    <div className="flex flex-col items-center">
-                      <Loader2 className="h-10 w-10 animate-spin text-purple-500 mb-4" />
-                      <p className="text-gray-600">Starting conversation with AI agents...</p>
-                    </div>
-                  </div>
-                )}
-                <ConversationCard
-                  conversation={state.conversation}
-                  isLoading={state.isLoading}
-                  profiles={profiles}
-                  getCurrentScenario={actions.getCurrentScenario}
-                  getCurrentPrompt={actions.getCurrentPrompt}
-                  goToStep={actions.goToStep}
-                  availableModels={state.availableModels}
-                  formatMessage={actions.formatMessage}
-                />
-              </>
+
+            {/* Conversation Display */}
+            {showConversation && (
+              <ConversationCard
+                conversation={state.conversation}
+                isLoading={state.isLoading}
+                profiles={profiles}
+                getCurrentScenario={actions.getCurrentScenario}
+                getCurrentPrompt={actions.getCurrentPrompt}
+                goToStep={(step) => {
+                  if (step === 2 || step === 1) {
+                    // Reset to input view
+                    actions.setCurrentView('input');
+                    actions.setConversation([]);
+                  }
+                }}
+                availableModels={state.availableModels}
+                formatMessage={actions.formatMessage}
+              />
             )}
-            
-            {state.currentStep === 4 && (
+
+            {/* Analysis Section - Inline after conversation */}
+            {showAnalysis && (
               <ConversationAnalysis
                 conversation={state.conversation}
                 isLoading={state.isLoading}
                 isAnalyzing={state.isAnalyzing}
                 analysisResults={state.analysisResults}
                 handleAnalyzeConversation={actions.handleAnalyzeConversation}
-                goToStep={actions.goToStep}
+                goToStep={(step) => {
+                  // Just scroll back up to conversation
+                }}
                 analyzerModel={state.analyzerModel}
                 availableModels={state.availableModels}
                 setAnalyzerModel={actions.setAnalyzerModel}
               />
             )}
-          </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-sm text-gray-600 mt-8">
-            <h2 className="text-lg font-semibold mb-2">About OpenRouter Integration</h2>
-            <p className="mb-2">
-              This demo uses <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">OpenRouter</a> to access multiple AI models through a single API. 
-              You'll need to create an OpenRouter account and enter your API key to use the available models from providers like OpenAI, Anthropic, and Mistral.
-            </p>
-            <p>
-              <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Get your free OpenRouter API key here</a>
-            </p>
+            {/* Info Section */}
+            {!showConversation && (
+              <div className="bg-muted/50 rounded-lg p-6 border text-sm">
+                <div className="flex items-start gap-3">
+                  <Zap className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold mb-2">Powered by OpenRouter</h3>
+                    <p className="text-muted-foreground mb-3">
+                      This demo uses OpenRouter to access multiple AI models. You can start using it right away with our shared API, or{' '}
+                      <button 
+                        onClick={actions.promptForBYOK}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        add your own API key
+                      </button>
+                      {' '}for unlimited usage.
+                    </p>
+                    <a 
+                      href="https://openrouter.ai/keys" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-primary hover:underline text-sm font-medium"
+                    >
+                      Get your free OpenRouter API key →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Settings Drawer */}
+      <SettingsDrawer
+        open={state.settingsOpen}
+        onOpenChange={actions.setSettingsOpen}
+        numberOfAgents={state.numberOfAgents}
+        setNumberOfAgents={actions.setNumberOfAgents}
+        rounds={state.rounds}
+        setRounds={actions.setRounds}
+        responseLength={state.responseLength}
+        setResponseLength={(length: string) => actions.setResponseLength(length as any)}
+        responseLengthOptions={responseLengthOptions}
+        agentAModel={state.agentAModel}
+        setAgentAModel={actions.setAgentAModel}
+        agentBModel={state.agentBModel}
+        setAgentBModel={actions.setAgentBModel}
+        agentCModel={state.agentCModel}
+        setAgentCModel={actions.setAgentCModel}
+        agentAPersona={state.agentAPersona}
+        agentBPersona={state.agentBPersona}
+        agentCPersona={state.agentCPersona}
+        handleAgentAPersonaChange={(value: string) => {
+          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
+          actions.handleAgentAPersonaChange(e);
+        }}
+        handleAgentBPersonaChange={(value: string) => {
+          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
+          actions.handleAgentBPersonaChange(e);
+        }}
+        handleAgentCPersonaChange={(value: string) => {
+          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
+          actions.handleAgentCPersonaChange(e);
+        }}
+        profiles={profiles}
+        formA={formA}
+        formB={formB}
+        formC={formC}
+        modelsByProvider={state.availableModels.length > 0 ? 
+          state.availableModels.reduce((acc, model) => {
+            if (!acc[model.provider]) {
+              acc[model.provider] = [];
+            }
+            acc[model.provider].push(model);
+            return acc;
+          }, {} as Record<string, any[]>) : 
+          {}
+        }
+        loadingModels={state.loadingModels}
+        isUsingSharedKey={state.isUsingSharedKey}
+        promptForBYOK={actions.promptForBYOK}
+      />
     </div>
   );
 };

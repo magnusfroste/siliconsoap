@@ -2,6 +2,7 @@ import { ConversationMessage, ResponseLength } from '../types';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { ScenarioType } from '../types';
 import React from 'react';
+import { ViewState } from './conversation/useConversationNavigation';
 
 export interface LabsState {
   apiKey: string;
@@ -10,6 +11,7 @@ export interface LabsState {
   isSaving: boolean;
   isSaved: boolean;
   isUsingEnvKey: boolean;
+  isUsingSharedKey: boolean;
   agentAModel: string;
   agentBModel: string;
   agentCModel: string;
@@ -23,7 +25,8 @@ export interface LabsState {
   isLoading: boolean;
   availableModels: OpenRouterModel[];
   loadingModels: boolean;
-  currentStep: number;
+  currentView: ViewState;
+  settingsOpen: boolean;
   activeScenario: string;
   promptInputs: Record<string, string>;
   isAnalyzing: boolean;
@@ -50,7 +53,8 @@ export interface LabsActions {
   setIsLoading: (loading: boolean) => void;
   setAvailableModels: (models: OpenRouterModel[]) => void;
   setLoadingModels: (loading: boolean) => void;
-  setCurrentStep: (step: number) => void;
+  setCurrentView: (view: ViewState) => void;
+  setSettingsOpen: (open: boolean) => void;
   setActiveScenario: (scenario: string) => void;
   setPromptInputs: (inputs: Record<string, string>) => void;
   setIsAnalyzing: (analyzing: boolean) => void;
@@ -61,7 +65,6 @@ export interface LabsActions {
   deleteApiKey: () => void;
   validateApiKey: (key: string) => Promise<boolean>;
   getActiveApiKey: (modelIsFree?: boolean) => string | null;
-  goToStep: (step: number) => void;
   handleStartConversation: () => Promise<void>;
   handleAnalyzeConversation: (model?: string) => Promise<void>;
   handleAgentAPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -71,4 +74,6 @@ export interface LabsActions {
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
   refreshModels: (apiKey: string) => void;
+  promptForBYOK: () => void;
+  enableSharedKeyMode: () => void;
 }
