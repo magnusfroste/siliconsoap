@@ -19,7 +19,7 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="bg-transparent">
+    <header className="bg-transparent absolute top-0 right-0 z-10">
       <div className="flex items-center justify-end px-4 py-2">
         {user ? (
           <DropdownMenu>
