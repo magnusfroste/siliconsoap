@@ -1,45 +1,70 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { scenarioTypes } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
-import { useAgentConversation } from '../hooks/conversation/useAgentConversation';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import type { ConversationMessage } from '../types';
 
 export const NewChatView = () => {
   const [state, actions] = useLabsState();
   const { user } = useAuth();
   const { saveChat } = useChat(undefined, user?.id);
   const navigate = useNavigate();
-
-  const { handleStartConversation, isLoading, conversation } = useAgentConversation(
-    state.savedApiKey,
-    state.agentAModel,
-    state.agentBModel,
-    state.agentCModel,
-    state.agentAPersona,
-    state.agentBPersona,
-    state.agentCPersona,
-    state.numberOfAgents,
-    state.rounds,
-    state.responseLength,
-    actions.getCurrentScenario,
-    actions.getCurrentPrompt
-  );
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPrompt.trim() || isLoading) return;
+    if (!currentPrompt.trim() || isGenerating) return;
 
-    // Start the conversation and get the messages
-    const conversationMessages = await handleStartConversation();
+    setIsGenerating(true);
 
-    // If logged in and conversation is successful, save the chat
-    if (user && conversationMessages && conversationMessages.length > 0) {
+    try {
+      // Get the current scenario and format the prompt
+      const scenario = actions.getCurrentScenario();
+      const formattedPrompt = scenario.promptTemplate(currentPrompt);
+
+      // Call edge function to generate conversation
+      const { data, error } = await supabase.functions.invoke('openrouter-chat', {
+        body: {
+          model: state.agentAModel,
+          messages: [
+            {
+              role: 'user',
+              content: formattedPrompt
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.7
+        },
+        headers: state.savedApiKey ? {
+          'x-user-api-key': state.savedApiKey
+        } : undefined
+      });
+
+      if (error) throw error;
+      if (!data?.choices?.[0]?.message?.content) {
+        throw new Error('No response from AI');
+      }
+
+      // Create conversation messages
+      const conversationMessages: ConversationMessage[] = [
+        {
+          agent: 'A',
+          message: data.choices[0].message.content,
+          model: state.agentAModel,
+          persona: state.agentAPersona
+        }
+      ];
+
+      // Save chat immediately and get the ID
       const title = currentPrompt.slice(0, 50) + (currentPrompt.length > 50 ? '...' : '');
       const chatId = await saveChat(
         title,
@@ -59,9 +84,20 @@ export const NewChatView = () => {
         conversationMessages
       );
 
+      // Navigate immediately with the returned chatId
       if (chatId) {
         navigate(`/labs/agents-meetup/chat/${chatId}`);
+      } else {
+        throw new Error('Failed to save chat');
       }
+
+    } catch (error: any) {
+      console.error('Error starting conversation:', error);
+      toast.error('Failed to start conversation', {
+        description: error.message || 'Please try again'
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -118,10 +154,19 @@ export const NewChatView = () => {
               type="submit"
               size="lg"
               className="gap-2"
-              disabled={!currentPrompt.trim() || isLoading}
+              disabled={!currentPrompt.trim() || isGenerating}
             >
-              <Sparkles className="h-4 w-4" />
-              Start Conversation
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Start Conversation
+                </>
+              )}
             </Button>
           </div>
         </form>
@@ -135,7 +180,7 @@ export const NewChatView = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => actions.handleInputChange(state.activeScenario, suggested)}
-                disabled={isLoading}
+                disabled={isGenerating}
               >
                 {suggested}
               </Button>
