@@ -35,11 +35,11 @@ export const NewChatView = () => {
     e.preventDefault();
     if (!currentPrompt.trim() || isLoading) return;
 
-    // Start the conversation
-    await handleStartConversation();
+    // Start the conversation and get the messages
+    const conversationMessages = await handleStartConversation();
 
     // If logged in and conversation is successful, save the chat
-    if (user && conversation.length > 0) {
+    if (user && conversationMessages && conversationMessages.length > 0) {
       const title = currentPrompt.slice(0, 50) + (currentPrompt.length > 50 ? '...' : '');
       const chatId = await saveChat(
         title,
@@ -56,7 +56,7 @@ export const NewChatView = () => {
           rounds: state.rounds,
           responseLength: state.responseLength
         },
-        conversation
+        conversationMessages
       );
 
       if (chatId) {

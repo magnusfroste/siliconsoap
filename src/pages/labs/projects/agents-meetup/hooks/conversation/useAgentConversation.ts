@@ -25,7 +25,7 @@ export const useAgentConversation = (
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleStartConversation = async () => {
+  const handleStartConversation = async (): Promise<ConversationMessage[] | null> => {
     const currentPrompt = getCurrentPrompt();
     const currentScenario = getCurrentScenario();
     
@@ -45,7 +45,7 @@ export const useAgentConversation = (
     const apiAvailable = await checkBeforeStarting(effectiveApiKey);
     if (!apiAvailable) {
       setIsLoading(false);
-      return;
+      return null;
     }
     
     // Validate requirements before starting
@@ -58,7 +58,7 @@ export const useAgentConversation = (
       numberOfAgents
     )) {
       setIsLoading(false);
-      return;
+      return null;
     }
     
     try {
@@ -87,6 +87,8 @@ export const useAgentConversation = (
       // Update conversation with initial messages
       setConversation(conversationMessages);
       
+      let finalMessages = conversationMessages;
+      
       // If more than one round, handle additional rounds
       if (rounds > 1) {
         const additionalMessages = await handleAdditionalRounds(
@@ -109,6 +111,7 @@ export const useAgentConversation = (
         
         // Update conversation with all messages
         setConversation(additionalMessages);
+        finalMessages = additionalMessages;
       }
       
       toast({
@@ -116,6 +119,7 @@ export const useAgentConversation = (
         description: `Agents have completed their ${rounds} round${rounds > 1 ? 's' : ''} of conversation.`,
       });
       
+      return finalMessages;
     } catch (error) {
       console.error("Error in conversation flow:", error);
       
@@ -133,6 +137,7 @@ export const useAgentConversation = (
           variant: "destructive",
         });
       }
+      return null;
     } finally {
       setIsLoading(false);
     }
