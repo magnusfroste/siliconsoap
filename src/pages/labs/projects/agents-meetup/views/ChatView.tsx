@@ -6,12 +6,90 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
+import { toast } from 'sonner';
 
 export const ChatView = () => {
   const { chatId } = useParams();
   const { user } = useAuth();
-  const { chat, messages, loading } = useChat(chatId, user?.id);
+  const { chat, messages, loading, saveMessage, setMessages } = useChat(chatId, user?.id);
   const [state] = useLabsState();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentAgent, setCurrentAgent] = useState<string | null>(null);
+
+  // Start generation when chat is loaded and has no messages
+  useEffect(() => {
+    if (!chat || !chatId || loading || messages.length > 0 || isGenerating) return;
+
+    const startGeneration = async () => {
+      setIsGenerating(true);
+      const settings = chat.settings as any;
+
+      try {
+        const apiAvailable = await checkBeforeStarting(state.apiKey);
+        if (!apiAvailable) {
+          setIsGenerating(false);
+          return;
+        }
+
+        const onMessageReceived = async (message: any) => {
+          if (!chatId) return;
+          setCurrentAgent(message.agent);
+          await saveMessage(chatId, message);
+        };
+
+        setCurrentAgent('Agent A');
+        const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
+          chat.prompt,
+          chat.scenario_id as any,
+          settings.numberOfAgents,
+          settings.models.agentA,
+          settings.models.agentB,
+          settings.models.agentC,
+          settings.personas.agentA,
+          settings.personas.agentB,
+          settings.personas.agentC,
+          state.apiKey || '',
+          settings.responseLength,
+          onMessageReceived
+        );
+
+        if (settings.rounds > 1) {
+          await handleAdditionalRounds(
+            chat.prompt,
+            chat.scenario_id as any,
+            settings.rounds,
+            settings.numberOfAgents,
+            settings.models.agentA,
+            settings.models.agentB,
+            settings.models.agentC,
+            settings.personas.agentA,
+            settings.personas.agentB,
+            settings.personas.agentC,
+            agentAResponse,
+            agentBResponse,
+            conversationMessages,
+            state.apiKey || '',
+            settings.responseLength,
+            onMessageReceived
+          );
+        }
+
+        setCurrentAgent(null);
+        toast.success('Conversation complete!');
+      } catch (error) {
+        console.error('Error generating conversation:', error);
+        toast.error('Failed to generate conversation');
+        setCurrentAgent(null);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    startGeneration();
+  }, [chat, chatId, loading, messages.length, isGenerating, state.apiKey, saveMessage]);
 
   if (loading) {
     return (
@@ -49,10 +127,10 @@ export const ChatView = () => {
             <ChatMessage key={index} message={message} />
           ))}
 
-          {state.isLoading && (
+          {isGenerating && currentAgent && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Agents are thinking...</span>
+              <span className="text-sm">{currentAgent} is thinking...</span>
             </div>
           )}
         </div>
@@ -64,7 +142,7 @@ export const ChatView = () => {
           // TODO: Implement follow-up conversation logic
           console.log('Follow-up:', message);
         }}
-        disabled={state.isLoading}
+        disabled={isGenerating}
         placeholder="Continue the conversation..."
       />
     </div>

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ConversationMessage } from '../types';
 import { toast } from 'sonner';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface ChatData {
   id: string;
@@ -23,6 +24,28 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     }
 
     loadChat();
+
+    // Set up real-time subscription for new messages
+    const channel: RealtimeChannel = supabase
+      .channel(`chat_messages_${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agent_chat_messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          const newMessage = payload.new as ConversationMessage;
+          setMessages(prev => [...prev, newMessage]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [chatId, userId]);
 
   const loadChat = async () => {
@@ -127,5 +150,22 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     }
   };
 
-  return { chat, messages, loading, saveChat, updateChatTitle, refreshChat: loadChat };
+  const saveMessage = useCallback(async (chatId: string, message: ConversationMessage) => {
+    const { error } = await supabase
+      .from('agent_chat_messages')
+      .insert({
+        chat_id: chatId,
+        agent: message.agent,
+        message: message.message,
+        model: message.model,
+        persona: message.persona
+      });
+
+    if (error) {
+      console.error('Error saving message:', error);
+      throw error;
+    }
+  }, []);
+
+  return { chat, messages, loading, saveChat, updateChatTitle, refreshChat: loadChat, saveMessage, setMessages };
 };
