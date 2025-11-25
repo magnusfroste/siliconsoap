@@ -7,9 +7,9 @@ import { scenarioTypes } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ConversationMessage } from '../types';
+import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
 
 export const NewChatView = () => {
   const [state, actions] = useLabsState();
@@ -27,42 +27,53 @@ export const NewChatView = () => {
     setIsGenerating(true);
 
     try {
-      // Get the current scenario and format the prompt
-      const scenario = actions.getCurrentScenario();
-      const formattedPrompt = scenario.promptTemplate(currentPrompt);
-
-      // Call edge function to generate conversation
-      const { data, error } = await supabase.functions.invoke('openrouter-chat', {
-        body: {
-          model: state.agentAModel,
-          messages: [
-            {
-              role: 'user',
-              content: formattedPrompt
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.7
-        },
-        headers: state.savedApiKey ? {
-          'x-user-api-key': state.savedApiKey
-        } : undefined
-      });
-
-      if (error) throw error;
-      if (!data?.choices?.[0]?.message?.content) {
-        throw new Error('No response from AI');
+      // Check API availability before starting (optional for shared key mode)
+      const isAvailable = await checkBeforeStarting(state.savedApiKey);
+      if (!isAvailable) {
+        setIsGenerating(false);
+        return;
       }
 
-      // Create conversation messages
-      const conversationMessages: ConversationMessage[] = [
-        {
-          agent: 'A',
-          message: data.choices[0].message.content,
-          model: state.agentAModel,
-          persona: state.agentAPersona
-        }
-      ];
+      // Get the current scenario
+      const scenario = actions.getCurrentScenario();
+
+      // Execute initial round with all agents based on numberOfAgents setting
+      const initialResult = await handleInitialRound(
+        currentPrompt,
+        scenario,
+        state.numberOfAgents,
+        state.agentAModel,
+        state.agentBModel,
+        state.agentCModel,
+        state.agentAPersona,
+        state.agentBPersona,
+        state.agentCPersona,
+        state.savedApiKey || '',
+        state.responseLength
+      );
+
+      let conversationMessages = initialResult.conversationMessages;
+
+      // Execute additional rounds if configured
+      if (state.rounds > 1) {
+        conversationMessages = await handleAdditionalRounds(
+          currentPrompt,
+          scenario,
+          state.rounds,
+          state.numberOfAgents,
+          state.agentAModel,
+          state.agentBModel,
+          state.agentCModel,
+          state.agentAPersona,
+          state.agentBPersona,
+          state.agentCPersona,
+          initialResult.agentAResponse,
+          initialResult.agentBResponse,
+          conversationMessages,
+          state.savedApiKey || '',
+          state.responseLength
+        );
+      }
 
       // Save chat immediately and get the ID
       const title = currentPrompt.slice(0, 50) + (currentPrompt.length > 50 ? '...' : '');
