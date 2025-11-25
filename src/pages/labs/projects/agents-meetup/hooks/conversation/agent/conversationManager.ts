@@ -101,7 +101,8 @@ export const handleInitialRound = async (
   agentBPersona: string,
   agentCPersona: string,
   apiKey: string,
-  responseLength: ResponseLength
+  responseLength: ResponseLength,
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -120,12 +121,15 @@ export const handleInitialRound = async (
     responseLength
   );
   
-  messages.push({
+  const agentAMessage: ConversationMessage = {
     agent: 'Agent A',
     message: agentAResponse,
     model: agentAModel,
     persona: agentAPersona
-  });
+  };
+  
+  messages.push(agentAMessage);
+  if (onMessageReceived) await onMessageReceived(agentAMessage);
   
   // If only one agent, we're done
   if (numberOfAgents === 1) {
@@ -147,12 +151,15 @@ export const handleInitialRound = async (
     responseLength
   );
   
-  messages.push({
+  const agentBMessage: ConversationMessage = {
     agent: 'Agent B',
     message: agentBResponse,
     model: agentBModel,
     persona: agentBPersona
-  });
+  };
+  
+  messages.push(agentBMessage);
+  if (onMessageReceived) await onMessageReceived(agentBMessage);
   
   // If only two agents or no additional rounds needed, we're done
   if (numberOfAgents === 2) {
@@ -175,12 +182,15 @@ export const handleInitialRound = async (
       responseLength
     );
     
-    messages.push({
+    const agentCMessage: ConversationMessage = {
       agent: 'Agent C',
       message: agentCResponse,
       model: agentCModel,
       persona: agentCPersona
-    });
+    };
+    
+    messages.push(agentCMessage);
+    if (onMessageReceived) await onMessageReceived(agentCMessage);
   }
   
   return {
@@ -208,7 +218,8 @@ export const handleAdditionalRounds = async (
   agentBResponse: string,
   conversation: ConversationMessage[],
   apiKey: string,
-  responseLength: ResponseLength
+  responseLength: ResponseLength,
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -235,12 +246,15 @@ export const handleAdditionalRounds = async (
     responseLength
   );
   
-  additionalMessages.push({
+  const agentAFollowupMessage: ConversationMessage = {
     agent: 'Agent A',
     message: agentAFollowup,
     model: agentAModel,
     persona: agentAPersona
-  });
+  };
+  
+  additionalMessages.push(agentAFollowupMessage);
+  if (onMessageReceived) await onMessageReceived(agentAFollowupMessage);
   
   if (rounds > 2 || (rounds === 2 && numberOfAgents === 3)) {
     // Final responses for third round
@@ -260,12 +274,15 @@ export const handleAdditionalRounds = async (
       responseLength
     );
     
-    additionalMessages.push({
+    const agentBFinalMessage: ConversationMessage = {
       agent: 'Agent B',
       message: agentBFinal,
       model: agentBModel,
       persona: agentBPersona
-    });
+    };
+    
+    additionalMessages.push(agentBFinalMessage);
+    if (onMessageReceived) await onMessageReceived(agentBFinalMessage);
     
     // Only for 3 agents, add final Agent C response
     if (numberOfAgents === 3 && rounds === 3) {
@@ -284,12 +301,15 @@ export const handleAdditionalRounds = async (
         responseLength
       );
       
-      additionalMessages.push({
+      const agentCFinalMessage: ConversationMessage = {
         agent: 'Agent C',
         message: agentCFinal,
         model: agentCModel,
         persona: agentCPersona
-      });
+      };
+      
+      additionalMessages.push(agentCFinalMessage);
+      if (onMessageReceived) await onMessageReceived(agentCFinalMessage);
     }
   }
   

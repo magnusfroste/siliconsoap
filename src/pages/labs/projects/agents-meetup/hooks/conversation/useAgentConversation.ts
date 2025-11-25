@@ -81,7 +81,8 @@ export const useAgentConversation = (
         agentBPersona,
         agentCPersona,
         effectiveApiKey,
-        responseLength
+        responseLength,
+        undefined
       );
       
       // Update conversation with initial messages
@@ -106,7 +107,8 @@ export const useAgentConversation = (
           agentBResponse,
           conversationMessages,
           effectiveApiKey,
-          responseLength
+          responseLength,
+          undefined
         );
         
         // Update conversation with all messages

@@ -36,90 +36,54 @@ export const NewChatView = () => {
     e.preventDefault();
     if (!currentPrompt.trim() || isGenerating) return;
 
+    if (!user?.id) {
+      toast.error('Please sign in to start a conversation');
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
-      // Check API availability before starting (optional for shared key mode)
-      const isAvailable = await checkBeforeStarting(state.savedApiKey);
-      if (!isAvailable) {
-        setIsGenerating(false);
-        return;
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Create chat immediately with just metadata
+      const { data: chatData, error: chatError } = await supabase
+        .from('agent_chats')
+        .insert({
+          user_id: user.id,
+          title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
+          scenario_id: state.activeScenario,
+          prompt: currentPrompt,
+          settings: {
+            numberOfAgents: state.numberOfAgents,
+            rounds: state.rounds,
+            responseLength: state.responseLength,
+            models: {
+              agentA: state.agentAModel,
+              agentB: state.agentBModel,
+              agentC: state.agentCModel
+            },
+            personas: {
+              agentA: state.agentAPersona,
+              agentB: state.agentBPersona,
+              agentC: state.agentCPersona
+            }
+          }
+        })
+        .select()
+        .single();
+
+      if (chatError || !chatData) {
+        throw chatError || new Error('Failed to create chat');
       }
 
-      // Get the current scenario
-      const scenario = actions.getCurrentScenario();
-
-      // Execute initial round with all agents based on numberOfAgents setting
-      const initialResult = await handleInitialRound(
-        currentPrompt,
-        scenario,
-        state.numberOfAgents,
-        state.agentAModel,
-        state.agentBModel,
-        state.agentCModel,
-        state.agentAPersona,
-        state.agentBPersona,
-        state.agentCPersona,
-        state.savedApiKey || '',
-        state.responseLength
-      );
-
-      let conversationMessages = initialResult.conversationMessages;
-
-      // Execute additional rounds if configured
-      if (state.rounds > 1) {
-        conversationMessages = await handleAdditionalRounds(
-          currentPrompt,
-          scenario,
-          state.rounds,
-          state.numberOfAgents,
-          state.agentAModel,
-          state.agentBModel,
-          state.agentCModel,
-          state.agentAPersona,
-          state.agentBPersona,
-          state.agentCPersona,
-          initialResult.agentAResponse,
-          initialResult.agentBResponse,
-          conversationMessages,
-          state.savedApiKey || '',
-          state.responseLength
-        );
-      }
-
-      // Save chat immediately and get the ID
-      const title = currentPrompt.slice(0, 50) + (currentPrompt.length > 50 ? '...' : '');
-      const chatId = await saveChat(
-        title,
-        state.activeScenario,
-        currentPrompt,
-        {
-          agentAModel: state.agentAModel,
-          agentBModel: state.agentBModel,
-          agentCModel: state.agentCModel,
-          agentAPersona: state.agentAPersona,
-          agentBPersona: state.agentBPersona,
-          agentCPersona: state.agentCPersona,
-          numberOfAgents: state.numberOfAgents,
-          rounds: state.rounds,
-          responseLength: state.responseLength
-        },
-        conversationMessages
-      );
-
-      // Navigate immediately with the returned chatId
-      if (chatId) {
-        navigate(`/labs/agents-meetup/chat/${chatId}`);
-      } else {
-        throw new Error('Failed to save chat');
-      }
-
+      // Navigate immediately to chat view
+      navigate(`/labs/agents-meetup/chat/${chatData.id}`);
     } catch (error: any) {
-      console.error('Error starting conversation:', error);
-      toast.error('Failed to start conversation', {
+      console.error('Error creating chat:', error);
+      toast.error('Failed to create conversation', {
         description: error.message || 'Please try again'
       });
-    } finally {
       setIsGenerating(false);
     }
   };
