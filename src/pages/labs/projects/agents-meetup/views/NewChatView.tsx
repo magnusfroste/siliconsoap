@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, ChevronDown, Settings as SettingsIcon, Users } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, Settings as SettingsIcon } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
-import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
+import { AgentGridSection } from '@/components/labs/AgentGridSection';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
@@ -21,7 +21,6 @@ export const NewChatView = () => {
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [conversationSettingsOpen, setConversationSettingsOpen] = useState(false);
-  const [agentConfigOpen, setAgentConfigOpen] = useState(false);
 
   // Group models by provider
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
@@ -202,43 +201,30 @@ export const NewChatView = () => {
           </Collapsible>
 
           {/* Agent Configuration */}
-          <Collapsible open={agentConfigOpen} onOpenChange={setAgentConfigOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-sm">Agent Configuration</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Configure models and personas for each agent
-                  </p>
-                </div>
-              </div>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${agentConfigOpen ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4">
-              <AgentGridSection
-                numberOfAgents={state.numberOfAgents}
-                agentAModel={state.agentAModel}
-                setAgentAModel={actions.setAgentAModel}
-                agentBModel={state.agentBModel}
-                setAgentBModel={actions.setAgentBModel}
-                agentCModel={state.agentCModel}
-                setAgentCModel={actions.setAgentCModel}
-                agentAPersona={state.agentAPersona}
-                agentBPersona={state.agentBPersona}
-                agentCPersona={state.agentCPersona}
-                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
-                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
-                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
-                profiles={profiles}
-                formA={state.formA}
-                formB={state.formB}
-                formC={state.formC}
-                modelsByProvider={modelsByProvider}
-                loadingModels={state.loadingModels}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-sm">Agent Configuration</h3>
+            <AgentGridSection
+              numberOfAgents={state.numberOfAgents}
+              agentAModel={state.agentAModel}
+              setAgentAModel={actions.setAgentAModel}
+              agentBModel={state.agentBModel}
+              setAgentBModel={actions.setAgentBModel}
+              agentCModel={state.agentCModel}
+              setAgentCModel={actions.setAgentCModel}
+              agentAPersona={state.agentAPersona}
+              agentBPersona={state.agentBPersona}
+              agentCPersona={state.agentCPersona}
+              handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+              handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+              handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
+              profiles={profiles}
+              formA={state.formA}
+              formB={state.formB}
+              formC={state.formC}
+              modelsByProvider={modelsByProvider}
+              loadingModels={state.loadingModels}
+            />
+          </div>
           
           <div className="flex justify-end">
             <Button
