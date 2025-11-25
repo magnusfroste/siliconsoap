@@ -22,13 +22,15 @@ export const useApiKey = () => {
       setSavedApiKey(storedUserApiKey);
       setIsSaved(true);
       setIsUsingEnvKey(false);
+      setIsUsingSharedKey(false);
     } else {
-      console.log("No user API key found in localStorage");
+      console.log("No user API key found in localStorage, using shared key mode");
       setUserApiKey(null);
       setApiKey('');
       setSavedApiKey('');
       setIsSaved(false);
       setIsUsingEnvKey(false);
+      setIsUsingSharedKey(true); // Enable shared key mode by default
     }
   }, []);
 

@@ -28,10 +28,13 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     isSaved,
     setIsSaved,
     isUsingEnvKey,
+    isUsingSharedKey,
     saveApiKey: originalSaveApiKey,
     deleteApiKey: originalDeleteApiKey,
     validateApiKey,
-    getActiveApiKey
+    getActiveApiKey,
+    promptForBYOK,
+    enableSharedKeyMode
   } = useApiKey();
 
   // Create a wrapper around the saveApiKey function to trigger model loading
@@ -121,15 +124,16 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setConversation,
     isLoading,
     setIsLoading,
-    currentStep,
-    setCurrentStep,
+    currentView,
+    setCurrentView,
+    settingsOpen,
+    setSettingsOpen,
     isAnalyzing,
     setIsAnalyzing,
     analysisResults,
     setAnalysisResults,
     analyzerModel,
     setAnalyzerModel,
-    goToStep,
     handleStartConversation,
     handleAnalyzeConversation
   } = useConversationFlow(
@@ -171,6 +175,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       isSaving,
       isSaved,
       isUsingEnvKey,
+      isUsingSharedKey,
       agentAModel,
       agentBModel,
       agentCModel,
@@ -184,7 +189,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       isLoading,
       availableModels,
       loadingModels,
-      currentStep,
+      currentView,
+      settingsOpen,
       activeScenario,
       promptInputs,
       isAnalyzing,
@@ -210,7 +216,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setIsLoading,
       setAvailableModels,
       setLoadingModels,
-      setCurrentStep,
+      setCurrentView,
+      setSettingsOpen,
       setActiveScenario,
       setPromptInputs,
       setIsAnalyzing,
@@ -221,7 +228,6 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       deleteApiKey,
       validateApiKey,
       getActiveApiKey,
-      goToStep,
       handleStartConversation,
       handleAnalyzeConversation,
       handleAgentAPersonaChange,
@@ -230,6 +236,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       getCurrentScenario: getCurrentScenarioFn,
       getCurrentPrompt: getCurrentPromptFn,
       formatMessage,
+      promptForBYOK,
+      enableSharedKeyMode,
       refreshModels: async (apiKey: string) => {
         console.log("Refreshing models with API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
         setLoadingModels(true);
