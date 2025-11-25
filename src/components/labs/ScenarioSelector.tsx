@@ -65,8 +65,13 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
               placeholder={scenario.placeholder}
               value={promptInputs[scenario.id] || ''}
               onChange={(e) => handleInputChange(scenario.id, e.target.value)}
-              className="w-full h-[200px]"
-              rows={8}
+              className="w-full min-h-[3.5rem] resize-none"
+              rows={2}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${target.scrollHeight}px`;
+              }}
             />
           </TabsContent>
         ))}
