@@ -14,7 +14,7 @@ export const NewChatView = () => {
   const { saveChat } = useChat(undefined, user?.id);
   const navigate = useNavigate();
 
-  const { handleStartConversation, isLoading } = useAgentConversation(
+  const { handleStartConversation, isLoading, conversation } = useAgentConversation(
     state.savedApiKey,
     state.agentAModel,
     state.agentBModel,
@@ -39,7 +39,7 @@ export const NewChatView = () => {
     await handleStartConversation();
 
     // If logged in and conversation is successful, save the chat
-    if (user && state.conversation.length > 0) {
+    if (user && conversation.length > 0) {
       const title = currentPrompt.slice(0, 50) + (currentPrompt.length > 50 ? '...' : '');
       const chatId = await saveChat(
         title,
@@ -56,7 +56,7 @@ export const NewChatView = () => {
           rounds: state.rounds,
           responseLength: state.responseLength
         },
-        state.conversation
+        conversation
       );
 
       if (chatId) {
