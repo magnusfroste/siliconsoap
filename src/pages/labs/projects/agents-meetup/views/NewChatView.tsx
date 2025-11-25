@@ -31,17 +31,22 @@ export const NewChatView = () => {
       const scenario = actions.getCurrentScenario();
       const formattedPrompt = scenario.promptTemplate(currentPrompt);
 
-      // Call edge function to generate conversation using Lovable AI
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
+      // Call edge function to generate conversation
+      const { data, error } = await supabase.functions.invoke('openrouter-chat', {
         body: {
-          model: 'google/gemini-2.5-flash',
+          model: state.agentAModel,
           messages: [
             {
               role: 'user',
               content: formattedPrompt
             }
-          ]
-        }
+          ],
+          max_tokens: 2000,
+          temperature: 0.7
+        },
+        headers: state.savedApiKey ? {
+          'x-user-api-key': state.savedApiKey
+        } : undefined
       });
 
       if (error) throw error;
