@@ -52,15 +52,6 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
         
         {scenarioTypes.map(scenario => (
           <TabsContent key={scenario.id} value={scenario.id} className="mt-0">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-purple-100 rounded-full">
-                {scenario.icon}
-              </div>
-              <div>
-                <h4 className="font-medium">{scenario.name}</h4>
-                <p className="text-sm text-gray-500">{scenario.description}</p>
-              </div>
-            </div>
             <Textarea 
               placeholder={scenario.placeholder}
               value={promptInputs[scenario.id] || ''}
