@@ -45,10 +45,10 @@ const Header = () => {
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center py-2">
           {/* Logo */}
           <div>
-            <Link to="/labs" className="text-2xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
+            <Link to="/labs" className="text-xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
               froste.eu
             </Link>
           </div>
@@ -57,10 +57,10 @@ const Header = () => {
             {!isHomePage && (
               <Link 
                 to="/labs" 
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium transition-all hover:bg-purple-200"
+                className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium transition-all hover:bg-purple-200"
                 onClick={stopSpeech}
               >
-                <Home size={18} />
+                <Home size={16} />
                 Labs Home
               </Link>
             )}
@@ -78,17 +78,17 @@ const Header = () => {
         
         {/* Mobile Navigation */}
         {isOpen && (
-          <nav className="md:hidden py-4 pb-6 space-y-4 flex flex-col items-center">
+          <nav className="md:hidden py-3 pb-4 space-y-4 flex flex-col items-center">
             {!isHomePage && (
               <Link 
                 to="/labs" 
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full font-medium"
+                className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
                 onClick={() => {
                   stopSpeech();
                   toggleMenu();
                 }}
               >
-                <Home size={18} />
+                <Home size={16} />
                 Labs Home
               </Link>
             )}

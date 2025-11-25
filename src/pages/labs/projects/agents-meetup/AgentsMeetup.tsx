@@ -51,35 +51,30 @@ const AgentsMeetup: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow">
-        <div className="container mx-auto px-4 py-12 max-w-6xl">
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
           {/* Hero Section */}
-          <div className="flex flex-col items-center text-center mb-8">
-            <div className="inline-block p-3 rounded-full bg-primary/10 mb-4">
-              <Atom className="h-8 w-8 text-primary" />
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="inline-flex items-center gap-2">
+              <Atom className="h-6 w-6 text-primary" />
+              <h1 className="text-2xl font-bold">AI Agents Meetup</h1>
             </div>
-            <h1 className="text-4xl font-bold mb-4">AI Agents Meetup</h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mb-6">
-              Watch AI agents collaborate in real-time. Simply enter a topic and see diverse AI perspectives work together to solve problems.
-            </p>
             
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => actions.setSettingsOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Button>
-              
-              {state.isUsingSharedKey && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  Powered by OpenRouter
-                </Badge>
-              )}
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => actions.setSettingsOpen(true)}
+              className="flex items-center gap-1.5"
+            >
+              <Settings className="h-4 w-4" />
+              Settings
+            </Button>
+            
+            {state.isUsingSharedKey && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                OpenRouter
+              </Badge>
+            )}
           </div>
 
           {/* Main Content Area */}
