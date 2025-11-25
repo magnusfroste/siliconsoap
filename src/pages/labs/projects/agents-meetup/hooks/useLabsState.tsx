@@ -195,7 +195,10 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       promptInputs,
       isAnalyzing,
       analysisResults,
-      analyzerModel
+      analyzerModel,
+      formA,
+      formB,
+      formC
     },
     {
       setApiKey,

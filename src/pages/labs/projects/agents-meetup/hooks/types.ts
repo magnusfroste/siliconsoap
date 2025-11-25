@@ -3,6 +3,7 @@ import { OpenRouterModel } from '@/utils/openRouter/types';
 import { ScenarioType } from '../types';
 import React from 'react';
 import { ViewState } from './conversation/useConversationNavigation';
+import { UseFormReturn } from 'react-hook-form';
 
 export interface LabsState {
   apiKey: string;
@@ -32,6 +33,9 @@ export interface LabsState {
   isAnalyzing: boolean;
   analysisResults: any | null;
   analyzerModel: string;
+  formA: UseFormReturn<{ persona: string }>;
+  formB: UseFormReturn<{ persona: string }>;
+  formC: UseFormReturn<{ persona: string }>;
 }
 
 export interface LabsActions {
