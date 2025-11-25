@@ -182,23 +182,6 @@ export const NewChatView = () => {
           </div>
         </form>
 
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Or try one of these:</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestedTopics.map((suggested, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                onClick={() => actions.handleInputChange(state.activeScenario, suggested)}
-                disabled={isGenerating}
-              >
-                {suggested}
-              </Button>
-            ))}
-          </div>
-        </div>
-
         {!user && (
           <div className="text-center text-sm text-muted-foreground">
             💡 Sign in to save your conversations and continue them later
