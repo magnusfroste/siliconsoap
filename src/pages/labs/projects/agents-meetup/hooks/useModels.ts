@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
-import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
+import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS, DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { toast } from '@/hooks/use-toast';
 
 export const useModels = (apiKey: string) => {
-  const [agentAModel, setAgentAModel] = useState('');
-  const [agentBModel, setAgentBModel] = useState('');
-  const [agentCModel, setAgentCModel] = useState('');
+  const [agentAModel, setAgentAModel] = useState(DEFAULT_MODEL_IDS.agentA);
+  const [agentBModel, setAgentBModel] = useState(DEFAULT_MODEL_IDS.agentB);
+  const [agentCModel, setAgentCModel] = useState(DEFAULT_MODEL_IDS.agentC);
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
