@@ -123,8 +123,7 @@ export const ChatView = () => {
     <div className="h-full flex flex-col">
       {/* Chat Title */}
       <div className="border-b px-4 py-3">
-        <h2 className="font-semibold truncate">{chat.title}</h2>
-        <p className="text-sm text-muted-foreground truncate">{chat.prompt}</p>
+        <h2 className="font-semibold truncate">{chat.prompt}</h2>
       </div>
 
       {/* Messages */}
