@@ -105,14 +105,16 @@ export const callOpenRouterViaEdge = async (
       headers["x-user-api-key"] = userApiKey;
     }
 
+    const payload = {
+      model,
+      messages,
+      max_tokens: maxTokens,
+      temperature: 0.7,
+      top_p: 0.9,
+    };
+
     const { data, error } = await supabase.functions.invoke("openrouter-chat", {
-      body: {
-        model,
-        messages,
-        max_tokens: maxTokens,
-        temperature: 0.7,
-        top_p: 0.9,
-      },
+      body: JSON.stringify(payload),
       headers,
     });
 
