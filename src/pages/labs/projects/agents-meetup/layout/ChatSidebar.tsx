@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, LogIn } from 'lucide-react';
+import { Plus, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
 
 interface ChatSidebarProps {
   onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export const ChatSidebar = ({ onClose }: ChatSidebarProps) => {
+export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse }: ChatSidebarProps) => {
   const { user } = useAuth();
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
 
@@ -34,10 +36,44 @@ export const ChatSidebar = ({ onClose }: ChatSidebarProps) => {
     return chatDate < yesterday;
   });
 
+  if (collapsed) {
+    return (
+      <div className="flex flex-col h-full bg-muted/30 border-r items-center py-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleCollapse}
+          className="mb-4"
+          title="Expand sidebar"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        
+        <Link to="/labs/agents-meetup">
+          <Button variant="ghost" size="icon" onClick={onClose} title="New Chat">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-muted/30 border-r">
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b space-y-2">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="shrink-0"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <Link to="/labs/agents-meetup">
           <Button className="w-full justify-start gap-2" onClick={onClose}>
             <Plus className="h-4 w-4" />
