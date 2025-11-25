@@ -14,8 +14,9 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown, Sparkles, X } from 'lucide-react';
+import { ChevronDown, Sparkles, X, LogIn } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AnalysisResults } from '@/components/labs/conversation-analysis/components/AnalysisResults';
 import { ConversationMessage } from '../types';
 
@@ -26,6 +27,7 @@ interface AnalysisDrawerProps {
   analysisResults: string;
   conversation: ConversationMessage[];
   onAnalyze: () => void;
+  isGuest?: boolean;
 }
 
 export const AnalysisDrawer = ({
@@ -34,7 +36,8 @@ export const AnalysisDrawer = ({
   isAnalyzing,
   analysisResults,
   conversation,
-  onAnalyze
+  onAnalyze,
+  isGuest = false
 }: AnalysisDrawerProps) => {
   const [showStats, setShowStats] = useState(true);
 
@@ -99,17 +102,33 @@ export const AnalysisDrawer = ({
                 </p>
               </div>
             ) : !analysisResults ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Sparkles className="h-16 w-16 text-muted-foreground" />
-                <p className="text-lg font-medium">Ready to judge?</p>
-                <p className="text-sm text-muted-foreground text-center max-w-md">
-                  Let Judge Bot analyze this conversation and provide insights, scores, and witty commentary!
-                </p>
-                <Button onClick={onAnalyze} size="lg" className="mt-4">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Analyze Conversation
-                </Button>
-              </div>
+              isGuest ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <LogIn className="h-16 w-16 text-muted-foreground" />
+                  <p className="text-lg font-medium">Analysis requires sign in</p>
+                  <p className="text-sm text-muted-foreground text-center max-w-md">
+                    Sign in to unlock conversation analysis by Judge Bot and get insights, scores, and witty commentary!
+                  </p>
+                  <Link to="/auth">
+                    <Button size="lg" className="mt-4">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In to Analyze
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <Sparkles className="h-16 w-16 text-muted-foreground" />
+                  <p className="text-lg font-medium">Ready to judge?</p>
+                  <p className="text-sm text-muted-foreground text-center max-w-md">
+                    Let Judge Bot analyze this conversation and provide insights, scores, and witty commentary!
+                  </p>
+                  <Button onClick={onAnalyze} size="lg" className="mt-4">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Analyze Conversation
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="space-y-4">
                 <Collapsible open={showStats} onOpenChange={setShowStats}>

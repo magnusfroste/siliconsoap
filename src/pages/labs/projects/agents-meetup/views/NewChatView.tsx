@@ -10,16 +10,20 @@ import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
+import { useCredits } from '../hooks/useCredits';
 import { toast } from 'sonner';
 import type { ConversationMessage } from '../types';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
+import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 
 export const NewChatView = () => {
   const [state, actions] = useLabsState();
   const { user } = useAuth();
   const { saveChat } = useChat(undefined, user?.id);
+  const { creditsRemaining, hasCredits, useCredit, isGuest } = useCredits(user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
 
   // Group models by provider
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
@@ -32,25 +36,56 @@ export const NewChatView = () => {
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
+  const handleApiKeySubmit = (apiKey: string) => {
+    // Store API key in localStorage for BYOK
+    localStorage.setItem('userOpenRouterApiKey', apiKey);
+    toast.success('API key saved! You can now continue with unlimited usage.');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPrompt.trim() || isGenerating) return;
 
-    if (!user?.id) {
-      toast.error('Please sign in to start a conversation');
+    // Check credits before proceeding
+    if (!hasCredits()) {
+      // Check if user has BYOK API key
+      const userApiKey = localStorage.getItem('userOpenRouterApiKey');
+      if (!userApiKey) {
+        setShowCreditsModal(true);
+        return;
+      }
+      // If user has API key, proceed without credit check
+    }
+
+    // For guests without credits, don't allow starting chat
+    if (isGuest && !hasCredits()) {
+      setShowCreditsModal(true);
+      return;
+    }
+
+    // For logged-in users, require user ID
+    if (!isGuest && !user?.id) {
+      toast.error('Please sign in to continue');
       return;
     }
 
     setIsGenerating(true);
 
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      // Create chat immediately with just metadata
-      const { data: chatData, error: chatError } = await supabase
-        .from('agent_chats')
-        .insert({
-          user_id: user.id,
+      // Use a credit before starting
+      const creditUsed = await useCredit();
+      if (!creditUsed && !localStorage.getItem('userOpenRouterApiKey')) {
+        setShowCreditsModal(true);
+        setIsGenerating(false);
+        return;
+      }
+
+      if (isGuest) {
+        // Guests: Store chat in localStorage temporarily
+        const guestChatId = `guest_${Date.now()}`;
+        const guestChats = JSON.parse(localStorage.getItem('guest_chats') || '[]');
+        guestChats.push({
+          id: guestChatId,
           title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
           scenario_id: state.activeScenario,
           prompt: currentPrompt,
@@ -68,17 +103,50 @@ export const NewChatView = () => {
               agentB: state.agentBPersona,
               agentC: state.agentCPersona
             }
-          }
-        })
-        .select()
-        .single();
+          },
+          created_at: new Date().toISOString(),
+        });
+        localStorage.setItem('guest_chats', JSON.stringify(guestChats));
+        
+        // Navigate to guest chat
+        navigate(`/labs/agents-meetup/chat/${guestChatId}`);
+      } else {
+        // Logged-in users: Create in database
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        const { data: chatData, error: chatError } = await supabase
+          .from('agent_chats')
+          .insert({
+            user_id: user!.id,
+            title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
+            scenario_id: state.activeScenario,
+            prompt: currentPrompt,
+            settings: {
+              numberOfAgents: state.numberOfAgents,
+              rounds: state.rounds,
+              responseLength: state.responseLength,
+              models: {
+                agentA: state.agentAModel,
+                agentB: state.agentBModel,
+                agentC: state.agentCModel
+              },
+              personas: {
+                agentA: state.agentAPersona,
+                agentB: state.agentBPersona,
+                agentC: state.agentCPersona
+              }
+            }
+          })
+          .select()
+          .single();
 
-      if (chatError || !chatData) {
-        throw chatError || new Error('Failed to create chat');
+        if (chatError || !chatData) {
+          throw chatError || new Error('Failed to create chat');
+        }
+
+        // Navigate to chat view
+        navigate(`/labs/agents-meetup/chat/${chatData.id}`);
       }
-
-      // Navigate immediately to chat view
-      navigate(`/labs/agents-meetup/chat/${chatData.id}`);
     } catch (error: any) {
       console.error('Error creating chat:', error);
       toast.error('Failed to create conversation', {
@@ -214,9 +282,16 @@ export const NewChatView = () => {
 
         {!user && (
           <div className="text-center text-sm text-muted-foreground">
-            💡 Sign in to save your conversations and continue them later
+            💡 Sign in to save your conversations and analyze results
           </div>
         )}
+
+        <CreditsExhaustedModal
+          open={showCreditsModal}
+          onOpenChange={setShowCreditsModal}
+          isGuest={isGuest}
+          onApiKeySubmit={handleApiKeySubmit}
+        />
       </div>
     </div>
   );
