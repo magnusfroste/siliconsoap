@@ -24,7 +24,7 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   responseLengthOptions,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <div>
         <h3 className="text-xs font-medium mb-1">Number of Agents</h3>
         <Select value={numberOfAgents.toString()} onValueChange={(value) => setNumberOfAgents(parseInt(value))}>
