@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, Settings as SettingsIcon, Users } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
-import { scenarioTypes } from '../constants';
+import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
+import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
@@ -17,6 +20,17 @@ export const NewChatView = () => {
   const { saveChat } = useChat(undefined, user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [conversationSettingsOpen, setConversationSettingsOpen] = useState(false);
+  const [agentConfigOpen, setAgentConfigOpen] = useState(false);
+
+  // Group models by provider
+  const modelsByProvider = state.availableModels.reduce((acc, model) => {
+    if (!acc[model.provider]) {
+      acc[model.provider] = [];
+    }
+    acc[model.provider].push(model);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
@@ -151,7 +165,7 @@ export const NewChatView = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <ScenarioSelector
             scenarioTypes={scenarioTypes}
             activeScenario={state.activeScenario}
@@ -159,6 +173,72 @@ export const NewChatView = () => {
             promptInputs={state.promptInputs}
             handleInputChange={actions.handleInputChange}
           />
+
+          {/* Conversation Settings */}
+          <Collapsible open={conversationSettingsOpen} onOpenChange={setConversationSettingsOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
+              <div className="flex items-center gap-3">
+                <SettingsIcon className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <h3 className="font-semibold text-sm">Conversation Settings</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {state.numberOfAgents} {state.numberOfAgents === 1 ? 'agent' : 'agents'} • {state.rounds} {state.rounds === 1 ? 'round' : 'rounds'} • {responseLengthOptions.find(opt => opt.value === state.responseLength)?.label.split(' ')[0]}
+                  </p>
+                </div>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${conversationSettingsOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              <ConversationSettings
+                numberOfAgents={state.numberOfAgents}
+                setNumberOfAgents={actions.setNumberOfAgents}
+                rounds={state.rounds}
+                setRounds={actions.setRounds}
+                responseLength={state.responseLength}
+                setResponseLength={actions.setResponseLength}
+                responseLengthOptions={responseLengthOptions}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Agent Configuration */}
+          <Collapsible open={agentConfigOpen} onOpenChange={setAgentConfigOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <h3 className="font-semibold text-sm">Agent Configuration</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Configure models and personas for each agent
+                  </p>
+                </div>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${agentConfigOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-4">
+              <AgentGridSection
+                numberOfAgents={state.numberOfAgents}
+                agentAModel={state.agentAModel}
+                setAgentAModel={actions.setAgentAModel}
+                agentBModel={state.agentBModel}
+                setAgentBModel={actions.setAgentBModel}
+                agentCModel={state.agentCModel}
+                setAgentCModel={actions.setAgentCModel}
+                agentAPersona={state.agentAPersona}
+                agentBPersona={state.agentBPersona}
+                agentCPersona={state.agentCPersona}
+                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
+                profiles={profiles}
+                formA={state.formA}
+                formB={state.formB}
+                formC={state.formC}
+                modelsByProvider={modelsByProvider}
+                loadingModels={state.loadingModels}
+              />
+            </CollapsibleContent>
+          </Collapsible>
           
           <div className="flex justify-end">
             <Button
