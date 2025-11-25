@@ -39,18 +39,12 @@ export const useLabsState = (): [LabsState, LabsActions] => {
 
   // Create a wrapper around the saveApiKey function to trigger model loading
   const saveApiKey = async (key: string) => {
-    // Call the original saveApiKey function
     originalSaveApiKey(key);
-    
-    // Force a refresh of the models
-    console.log("Forcing model refresh after saving API key");
     setLoadingModels(true);
     
-    // Add a small delay to ensure the API key is saved before fetching models
     setTimeout(async () => {
       try {
         const models = await fetchOpenRouterModels(key);
-        console.log(`Loaded ${models.length} models after saving API key`);
         setAvailableModels(models);
       } catch (error) {
         console.error("Error loading models after saving API key:", error);
@@ -231,12 +225,9 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       promptForBYOK,
       enableSharedKeyMode,
       refreshModels: async (apiKey: string) => {
-        console.log("Refreshing models with API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
         setLoadingModels(true);
         try {
           const models = await fetchOpenRouterModels(apiKey);
-          console.log("Refreshed models count:", models.length);
-          console.log("First few models:", models.slice(0, 3));
           
           if (models.length === 0) {
             toast({
@@ -249,18 +240,6 @@ export const useLabsState = (): [LabsState, LabsActions] => {
               title: "Models Refreshed",
               description: `Successfully loaded ${models.length} models from OpenRouter.`,
             });
-            
-            // Create modelsByProvider for debugging
-            const modelsByProvider = models.reduce((acc, model) => {
-              if (!acc[model.provider]) {
-                acc[model.provider] = [];
-              }
-              acc[model.provider].push(model);
-              return acc;
-            }, {} as Record<string, any[]>);
-            
-            console.log("Models by provider:", Object.keys(modelsByProvider));
-            console.log("Total providers:", Object.keys(modelsByProvider).length);
           }
           
           setAvailableModels(models);
