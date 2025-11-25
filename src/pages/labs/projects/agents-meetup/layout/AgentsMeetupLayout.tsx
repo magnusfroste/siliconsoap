@@ -75,9 +75,9 @@ export const AgentsMeetupLayout = () => {
         handleAgentBPersonaChange={(value: string) => actions.setAgentBPersona(value)}
         handleAgentCPersonaChange={(value: string) => actions.setAgentCPersona(value)}
         profiles={profiles}
-        formA={{} as any}
-        formB={{} as any}
-        formC={{} as any}
+        formA={state.formA}
+        formB={state.formB}
+        formC={state.formC}
         modelsByProvider={modelsByProvider}
         loadingModels={state.loadingModels}
         isUsingSharedKey={state.isUsingSharedKey}
