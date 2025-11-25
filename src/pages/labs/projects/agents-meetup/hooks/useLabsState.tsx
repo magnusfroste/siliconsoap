@@ -151,21 +151,10 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     getCurrentPromptFn
   );
 
-  // Create wrapper functions to handle the event type mismatch
-  const handleAgentAPersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    originalHandleAgentAPersonaChange(value);
-  };
-
-  const handleAgentBPersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    originalHandleAgentBPersonaChange(value);
-  };
-
-  const handleAgentCPersonaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    originalHandleAgentCPersonaChange(value);
-  };
+  // Pass through the original handlers directly (no wrapping needed)
+  const handleAgentAPersonaChange = originalHandleAgentAPersonaChange;
+  const handleAgentBPersonaChange = originalHandleAgentBPersonaChange;
+  const handleAgentCPersonaChange = originalHandleAgentCPersonaChange;
 
   return [
     {

@@ -184,18 +184,9 @@ const AgentsMeetup: React.FC = () => {
         agentAPersona={state.agentAPersona}
         agentBPersona={state.agentBPersona}
         agentCPersona={state.agentCPersona}
-        handleAgentAPersonaChange={(value: string) => {
-          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
-          actions.handleAgentAPersonaChange(e);
-        }}
-        handleAgentBPersonaChange={(value: string) => {
-          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
-          actions.handleAgentBPersonaChange(e);
-        }}
-        handleAgentCPersonaChange={(value: string) => {
-          const e = { target: { value } } as React.ChangeEvent<HTMLSelectElement>;
-          actions.handleAgentCPersonaChange(e);
-        }}
+        handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+        handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+        handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
         profiles={profiles}
         formA={formA}
         formB={formB}

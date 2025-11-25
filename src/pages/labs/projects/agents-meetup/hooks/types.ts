@@ -71,9 +71,9 @@ export interface LabsActions {
   getActiveApiKey: (modelIsFree?: boolean) => string | null;
   handleStartConversation: () => Promise<void>;
   handleAnalyzeConversation: (model?: string) => Promise<void>;
-  handleAgentAPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleAgentBPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleAgentCPersonaChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleAgentAPersonaChange: (value: string) => void;
+  handleAgentBPersonaChange: (value: string) => void;
+  handleAgentCPersonaChange: (value: string) => void;
   getCurrentScenario: () => ScenarioType;
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
