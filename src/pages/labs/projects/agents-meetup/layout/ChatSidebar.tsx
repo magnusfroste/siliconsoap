@@ -72,17 +72,10 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
     <div className="flex flex-col h-full bg-muted/30 border-r">
       {/* Branding */}
       <div className="p-4 border-b">
-        <Link to="/labs/agents-meetup" className="flex items-center gap-2 mb-4" onClick={onClose}>
-          <Atom className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-lg">AI Agents Meetup</span>
-        </Link>
-        
-        <div className="flex items-center justify-between gap-2">
-          <Link to="/labs/agents-meetup" className="flex-1">
-            <Button className="w-full justify-start gap-2" onClick={onClose}>
-              <Plus className="h-4 w-4" />
-              New Chat
-            </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/labs/agents-meetup" className="flex items-center gap-2" onClick={onClose}>
+            <Atom className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-lg">Agents Meetup</span>
           </Link>
           
           <Button
@@ -95,6 +88,13 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
             <PanelLeftClose className="h-4 w-4" />
           </Button>
         </div>
+        
+        <Link to="/labs/agents-meetup" className="block">
+          <Button className="w-full justify-start gap-2" onClick={onClose}>
+            <Plus className="h-4 w-4" />
+            New Chat
+          </Button>
+        </Link>
       </div>
 
       {/* Chat History */}
