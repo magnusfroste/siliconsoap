@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
 
@@ -10,10 +10,10 @@ interface ChatSidebarProps {
   onClose?: () => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  user: User | null;
 }
 
-export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse }: ChatSidebarProps) => {
-  const { user } = useAuth();
+export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
 
   // Group chats by date
