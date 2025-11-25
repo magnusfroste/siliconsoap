@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut, User, Atom } from 'lucide-react';
+import { PanelLeft, LogOut, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import {
   DropdownMenu,
@@ -19,17 +19,11 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="border-b bg-background">
+    <header className="bg-transparent">
       <div className="flex items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onMenuClick}>
-            <Menu className="h-5 w-5" />
-          </Button>
-          <Link to="/labs/agents-meetup" className="flex items-center gap-2">
-            <Atom className="h-5 w-5 text-primary" />
-            <span className="font-semibold">{title || 'AI Agents Meetup'}</span>
-          </Link>
-        </div>
+        <Button variant="ghost" size="icon" onClick={onMenuClick}>
+          <PanelLeft className="h-5 w-5" />
+        </Button>
 
         <div className="flex items-center gap-2">
           {user ? (

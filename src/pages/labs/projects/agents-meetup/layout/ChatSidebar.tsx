@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Plus, LogIn, ChevronLeft, ChevronRight, User as UserIcon, Bot, Key, Settings } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Atom } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
@@ -56,7 +56,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
           className="mb-4"
           title="Expand sidebar"
         >
-          <ChevronRight className="h-4 w-4" />
+          <PanelLeft className="h-4 w-4" />
         </Button>
         
         <Link to="/labs/agents-meetup">
@@ -70,9 +70,21 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
   return (
     <div className="flex flex-col h-full bg-muted/30 border-r">
-      {/* Header */}
-      <div className="p-4 border-b space-y-2">
-        <div className="flex items-center justify-between">
+      {/* Branding */}
+      <div className="p-4 border-b">
+        <Link to="/labs/agents-meetup" className="flex items-center gap-2 mb-4" onClick={onClose}>
+          <Atom className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-lg">AI Agents Meetup</span>
+        </Link>
+        
+        <div className="flex items-center justify-between gap-2">
+          <Link to="/labs/agents-meetup" className="flex-1">
+            <Button className="w-full justify-start gap-2" onClick={onClose}>
+              <Plus className="h-4 w-4" />
+              New Chat
+            </Button>
+          </Link>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -80,16 +92,9 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
             className="shrink-0"
             title="Collapse sidebar"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <PanelLeftClose className="h-4 w-4" />
           </Button>
         </div>
-        
-        <Link to="/labs/agents-meetup">
-          <Button className="w-full justify-start gap-2" onClick={onClose}>
-            <Plus className="h-4 w-4" />
-            New Chat
-          </Button>
-        </Link>
       </div>
 
       {/* Chat History */}
