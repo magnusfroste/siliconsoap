@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, Settings, LogOut, User, Atom } from 'lucide-react';
+import { Menu, LogOut, User, Atom } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import {
   DropdownMenu,
@@ -12,11 +12,10 @@ import {
 
 interface ChatHeaderProps {
   onMenuClick: () => void;
-  onSettingsClick: () => void;
   title?: string;
 }
 
-export const ChatHeader = ({ onMenuClick, onSettingsClick, title }: ChatHeaderProps) => {
+export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
   const { user, signOut } = useAuth();
 
   return (
@@ -33,10 +32,6 @@ export const ChatHeader = ({ onMenuClick, onSettingsClick, title }: ChatHeaderPr
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onSettingsClick}>
-            <Settings className="h-5 w-5" />
-          </Button>
-
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

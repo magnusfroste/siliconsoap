@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, LogIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Plus, LogIn, ChevronLeft, ChevronRight, User as UserIcon, Bot, Key, Settings } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
+import { cn } from '@/lib/utils';
 
 interface ChatSidebarProps {
   onClose?: () => void;
@@ -15,6 +17,14 @@ interface ChatSidebarProps {
 
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
+  const location = useLocation();
+
+  const navItems = [
+    { icon: UserIcon, label: 'Profile', path: '/labs/agents-meetup/profile' },
+    { icon: Bot, label: 'Agent Profiles', path: '/labs/agents-meetup/agent-profiles' },
+    { icon: Key, label: 'API Settings', path: '/labs/agents-meetup/api-settings' },
+    { icon: Settings, label: 'Settings', path: '/labs/agents-meetup/settings' },
+  ];
 
   // Group chats by date
   const today = new Date();
@@ -138,17 +148,42 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         )}
       </ScrollArea>
 
-      {/* Footer */}
-      {!user && (
-        <div className="p-4 border-t">
-          <Link to="/auth">
-            <Button variant="outline" className="w-full justify-start gap-2">
-              <LogIn className="h-4 w-4" />
-              Sign In to Save Chats
-            </Button>
-          </Link>
+      {/* Footer Navigation */}
+      <div className="border-t">
+        <Separator />
+        <div className="p-2 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link key={item.path} to={item.path} onClick={onClose}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-2",
+                    isActive && "bg-muted text-primary font-medium"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
         </div>
-      )}
+
+        {!user && (
+          <div className="p-2 pt-0">
+            <Separator className="mb-2" />
+            <Link to="/auth">
+              <Button variant="outline" className="w-full justify-start gap-2">
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

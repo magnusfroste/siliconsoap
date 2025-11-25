@@ -2,16 +2,12 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatHeader } from './ChatHeader';
-import { SettingsDrawer } from '@/components/labs/SettingsDrawer';
-import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
-import { profiles, responseLengthOptions } from '../constants';
 import { Loader2 } from 'lucide-react';
 
 export const AgentsMeetupLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [state, actions] = useLabsState();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,15 +23,6 @@ export const AgentsMeetupLayout = () => {
       navigate('/auth', { state: { from: location } });
     }
   }, [user, loading, navigate, location]);
-
-  // Group models by provider for the drawer
-  const modelsByProvider = state.availableModels.reduce((acc, model) => {
-    if (!acc[model.provider]) {
-      acc[model.provider] = [];
-    }
-    acc[model.provider].push(model);
-    return acc;
-  }, {} as Record<string, any[]>);
 
   // Show loading state while checking authentication
   if (loading) {
@@ -78,46 +65,12 @@ export const AgentsMeetupLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <ChatHeader 
           onMenuClick={() => setSidebarOpen(true)}
-          onSettingsClick={() => actions.setSettingsOpen(true)}
         />
         
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>
-
-      {/* Settings Drawer */}
-      <SettingsDrawer
-        open={state.settingsOpen}
-        onOpenChange={actions.setSettingsOpen}
-        numberOfAgents={state.numberOfAgents}
-        setNumberOfAgents={actions.setNumberOfAgents}
-        rounds={state.rounds}
-        setRounds={actions.setRounds}
-        responseLength={state.responseLength}
-        setResponseLength={actions.setResponseLength}
-        responseLengthOptions={responseLengthOptions}
-        agentAModel={state.agentAModel}
-        setAgentAModel={actions.setAgentAModel}
-        agentBModel={state.agentBModel}
-        setAgentBModel={actions.setAgentBModel}
-        agentCModel={state.agentCModel}
-        setAgentCModel={actions.setAgentCModel}
-        agentAPersona={state.agentAPersona}
-        agentBPersona={state.agentBPersona}
-        agentCPersona={state.agentCPersona}
-        handleAgentAPersonaChange={(value: string) => actions.setAgentAPersona(value)}
-        handleAgentBPersonaChange={(value: string) => actions.setAgentBPersona(value)}
-        handleAgentCPersonaChange={(value: string) => actions.setAgentCPersona(value)}
-        profiles={profiles}
-        formA={state.formA}
-        formB={state.formB}
-        formC={state.formC}
-        modelsByProvider={modelsByProvider}
-        loadingModels={state.loadingModels}
-        isUsingSharedKey={state.isUsingSharedKey}
-        promptForBYOK={actions.promptForBYOK}
-      />
     </div>
   );
 };
