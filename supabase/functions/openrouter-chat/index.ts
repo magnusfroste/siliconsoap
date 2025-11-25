@@ -13,8 +13,29 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    console.log('Received request for model:', body.model);
+    // Log the raw request details
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    // Clone the request so we can read the body multiple times if needed
+    const reqClone = req.clone();
+    
+    // Try to get the body
+    let body;
+    try {
+      body = await req.json();
+      console.log('Successfully parsed body:', JSON.stringify(body));
+    } catch (jsonError) {
+      console.error('Failed to parse JSON:', jsonError);
+      // Try to read as text to see what we got
+      try {
+        const textBody = await reqClone.text();
+        console.error('Body as text:', textBody.substring(0, 500)); // First 500 chars
+      } catch (textError) {
+        console.error('Failed to read as text too:', textError);
+      }
+      throw new Error(`Invalid JSON: ${jsonError.message}`);
+    }
     
     const { model, messages, max_tokens, temperature, top_p } = body;
     
