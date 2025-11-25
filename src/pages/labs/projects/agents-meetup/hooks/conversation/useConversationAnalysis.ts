@@ -4,7 +4,7 @@ import { useAnalysisState } from './analysis/useAnalysisState';
 import { analyzeConversation } from './analysis/analyzerService';
 
 export const useConversationAnalysis = (
-  savedApiKey: string, 
+  savedApiKey: string | null, 
   conversation: ConversationMessage[]
 ) => {
   // Use the analysis state hook
@@ -20,23 +20,15 @@ export const useConversationAnalysis = (
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
     // Check for API key in localStorage as fallback
     const storedApiKey = localStorage.getItem('userOpenRouterApiKey');
-    const effectiveApiKey = savedApiKey || storedApiKey || '';
+    const effectiveApiKey = savedApiKey || storedApiKey || null;
     
     console.log("Analysis API Key Debug:", {
       savedApiKey: savedApiKey ? `${savedApiKey.substring(0, 8)}...` : null,
       storedApiKey: storedApiKey ? `${storedApiKey.substring(0, 8)}...` : null,
-      effectiveApiKey: effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : null
+      effectiveApiKey: effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : 'shared key'
     });
 
-    // Only show toast if we truly have no API key available
-    if (!effectiveApiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please provide an OpenRouter API key to analyze the conversation.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // API key is optional now (shared key mode via edge function)
 
     const selectedModel = model || analyzerModel;
     

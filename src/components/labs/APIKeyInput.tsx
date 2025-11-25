@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, X, Clipboard, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { AlertCircle, CheckCircle2, X, Clipboard, Eye, EyeOff, RefreshCw, Info } from 'lucide-react';
 import { useApiKey } from '@/pages/labs/projects/agents-meetup/hooks/useApiKey';
 import { toast } from '@/hooks/use-toast';
 import { fetchOpenRouterModels } from '@/utils/openRouter';
@@ -19,7 +19,14 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({ goToStep, refreshModel
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const { saveApiKey, deleteApiKey, validateApiKey, userApiKey } = useApiKey();
+  const { 
+    saveApiKey, 
+    deleteApiKey, 
+    validateApiKey, 
+    userApiKey,
+    enableSharedKeyMode,
+    isUsingSharedKey
+  } = useApiKey();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Load user API key from localStorage on component mount
@@ -81,20 +88,21 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({ goToStep, refreshModel
   };
 
   const handleContinue = () => {
-    if (!userApiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenRouter API key to continue.",
-        variant: "destructive",
-      });
-      return;
+    if (userApiKey || isUsingSharedKey) {
+      // Refresh models before proceeding to the next step
+      if (refreshModels) {
+        refreshModels();
+      }
+      goToStep(2);
     }
-    
-    // Refresh models before proceeding to the next step
-    if (refreshModels) {
-      refreshModels();
-    }
-    
+  };
+
+  const handleTryWithoutKey = () => {
+    enableSharedKeyMode();
+    toast({
+      title: "Using Shared API Key",
+      description: "You can test the feature with our shared API key. Add your own key for unlimited usage.",
+    });
     goToStep(2);
   };
 
@@ -264,25 +272,41 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({ goToStep, refreshModel
         </div>
         
         {userApiKey && (
-          <div className="mt-4 flex items-center text-sm text-green-600">
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-            API key is saved in your browser
-          </div>
+          <Alert>
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>
+              API Key saved successfully! You can now continue to agent configuration.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isUsingSharedKey && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You're using a shared API key for testing. For unlimited usage, add your own OpenRouter API key above.
+            </AlertDescription>
+          </Alert>
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-between">
-        <div className="text-xs text-gray-500">
+      <CardFooter className="flex flex-col gap-4">
+        <div className="text-xs text-gray-500 text-center w-full">
           Your key is stored locally and never leaves your device
         </div>
-        <div>
-          {userApiKey ? (
-            <Button onClick={handleContinue}>
-              Continue
-            </Button>
+        <div className="flex flex-col gap-2 w-full">
+          {!userApiKey && !isUsingSharedKey ? (
+            <>
+              <Button onClick={handleSaveApiKey} disabled={isLoading} className="w-full">
+                {isLoading ? "Validating..." : "Save API Key"}
+              </Button>
+              <Button onClick={handleTryWithoutKey} variant="outline" className="w-full">
+                Try Without API Key
+              </Button>
+            </>
           ) : (
-            <Button onClick={handleSaveApiKey} disabled={isLoading}>
-              {isLoading ? "Validating..." : "Save API Key"}
+            <Button onClick={handleContinue} className="w-full">
+              Continue
             </Button>
           )}
         </div>

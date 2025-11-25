@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { 
-  callOpenRouter, 
   isModelFree, 
   checkApiAvailability 
 } from '@/utils/openRouter';
+import { callOpenRouterViaEdge } from '@/utils/openRouter/api/completions';
 import { ConversationMessage, ResponseLength, ScenarioType } from '../../../types';
 import {
   createAgentAInitialPrompt,
@@ -16,19 +16,15 @@ import {
 } from './agentPrompts';
 
 /**
- * Checks API availability before starting a conversation
+ * Checks API availability before starting a conversation (optional for shared key mode)
  */
 export const checkBeforeStarting = async (
-  apiKey: string
+  apiKey: string | null
 ): Promise<boolean> => {
-  // If we have no API key, fail immediately
+  // If we have no API key, allow it (shared key mode via edge function)
   if (!apiKey) {
-    toast({
-      title: "API Key Required",
-      description: "No API key available. Please add your OpenRouter API key.",
-      variant: "destructive",
-    });
-    return false;
+    console.log("No user API key - will use shared key via edge function");
+    return true;
   }
 
   console.log("Checking API availability before starting conversation");
@@ -70,7 +66,7 @@ export const checkBeforeStarting = async (
  */
 export const validateConversationRequirements = (
   currentPrompt: string,
-  apiKey: string,
+  apiKey: string | null,
   agentAModel: string,
   agentBModel: string,
   agentCModel: string,
@@ -85,17 +81,8 @@ export const validateConversationRequirements = (
     return false;
   }
   
-  if (!apiKey) {
-    toast({
-      title: "API Key Required",
-      description: "Please enter your OpenRouter API key.",
-      variant: "destructive",
-    });
-    return false;
-  }
-  
-  // With BYOK approach, we don't need to check if models are free or not
-  // since the user is always providing their own API key
+  // API key is optional now (shared key mode via edge function)
+  // No need to validate API key presence
   
   return true;
 };
@@ -125,11 +112,11 @@ export const handleInitialRound = async (
   // Agent A always starts the conversation
   const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario);
   
-  const agentAResponse = await callOpenRouter(
+  const agentAResponse = await callOpenRouterViaEdge(
     agentAPrompt,
     agentAModel,
     agentAPersona,
-    apiKey,
+    apiKey || null,
     responseLength
   );
   
@@ -152,11 +139,11 @@ export const handleInitialRound = async (
   // Agent B response
   const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario);
   
-  const agentBResponse = await callOpenRouter(
+  const agentBResponse = await callOpenRouterViaEdge(
     agentBPrompt,
     agentBModel,
     agentBPersona,
-    apiKey,
+    apiKey || null,
     responseLength
   );
   
@@ -180,11 +167,11 @@ export const handleInitialRound = async (
   if (numberOfAgents === 3) {
     const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario);
     
-    const agentCResponse = await callOpenRouter(
+    const agentCResponse = await callOpenRouterViaEdge(
       agentCPrompt,
       agentCModel,
       agentCPersona,
-      apiKey,
+      apiKey || null,
       responseLength
     );
     
@@ -240,11 +227,11 @@ export const handleAdditionalRounds = async (
     currentScenario
   );
   
-  const agentAFollowup = await callOpenRouter(
+  const agentAFollowup = await callOpenRouterViaEdge(
     agentAFollowupPrompt,
     agentAModel,
     agentAPersona,
-    apiKey,
+    apiKey || null,
     responseLength
   );
   
@@ -265,11 +252,11 @@ export const handleAdditionalRounds = async (
       currentScenario
     );
     
-    const agentBFinal = await callOpenRouter(
+    const agentBFinal = await callOpenRouterViaEdge(
       agentBFinalPrompt,
       agentBModel,
       agentBPersona,
-      apiKey,
+      apiKey || null,
       responseLength
     );
     
@@ -289,11 +276,11 @@ export const handleAdditionalRounds = async (
         currentScenario
       );
       
-      const agentCFinal = await callOpenRouter(
+      const agentCFinal = await callOpenRouterViaEdge(
         agentCFinalPrompt,
         agentCModel,
         agentCPersona,
-        apiKey,
+        apiKey || null,
         responseLength
       );
       
