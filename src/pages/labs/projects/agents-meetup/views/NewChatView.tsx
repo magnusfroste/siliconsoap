@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, ChevronDown, Settings as SettingsIcon } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/AgentGridSection';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAuth } from '../hooks/useAuth';
@@ -20,7 +19,6 @@ export const NewChatView = () => {
   const { saveChat } = useChat(undefined, user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [conversationSettingsOpen, setConversationSettingsOpen] = useState(false);
 
   // Group models by provider
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
@@ -174,31 +172,18 @@ export const NewChatView = () => {
           />
 
           {/* Conversation Settings */}
-          <Collapsible open={conversationSettingsOpen} onOpenChange={setConversationSettingsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/30 hover:bg-muted/50 rounded-lg transition-colors">
-              <div className="flex items-center gap-3">
-                <SettingsIcon className="h-5 w-5 text-muted-foreground" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-sm">Conversation Settings</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {state.numberOfAgents} {state.numberOfAgents === 1 ? 'agent' : 'agents'} • {state.rounds} {state.rounds === 1 ? 'round' : 'rounds'} • {responseLengthOptions.find(opt => opt.value === state.responseLength)?.label.split(' ')[0]}
-                  </p>
-                </div>
-              </div>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${conversationSettingsOpen ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4">
-              <ConversationSettings
-                numberOfAgents={state.numberOfAgents}
-                setNumberOfAgents={actions.setNumberOfAgents}
-                rounds={state.rounds}
-                setRounds={actions.setRounds}
-                responseLength={state.responseLength}
-                setResponseLength={actions.setResponseLength}
-                responseLengthOptions={responseLengthOptions}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-sm">Conversation Settings</h3>
+            <ConversationSettings
+              numberOfAgents={state.numberOfAgents}
+              setNumberOfAgents={actions.setNumberOfAgents}
+              rounds={state.rounds}
+              setRounds={actions.setRounds}
+              responseLength={state.responseLength}
+              setResponseLength={actions.setResponseLength}
+              responseLengthOptions={responseLengthOptions}
+            />
+          </div>
 
           {/* Agent Configuration */}
           <div className="space-y-4">
