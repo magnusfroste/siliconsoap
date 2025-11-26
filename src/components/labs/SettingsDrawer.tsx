@@ -25,6 +25,8 @@ interface SettingsDrawerProps {
   setResponseLength: (length: string) => void;
   participationMode: string;
   setParticipationMode: (mode: string) => void;
+  turnOrder: string;
+  setTurnOrder: (order: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
   agentAModel: string;
   setAgentAModel: (model: string) => void;
@@ -59,6 +61,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   setResponseLength,
   participationMode,
   setParticipationMode,
+  turnOrder,
+  setTurnOrder,
   responseLengthOptions,
   agentAModel,
   setAgentAModel,
@@ -137,6 +141,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               setResponseLength={setResponseLength}
               participationMode={participationMode}
               setParticipationMode={setParticipationMode}
+              turnOrder={turnOrder}
+              setTurnOrder={setTurnOrder}
               responseLengthOptions={responseLengthOptions}
             />
           </div>

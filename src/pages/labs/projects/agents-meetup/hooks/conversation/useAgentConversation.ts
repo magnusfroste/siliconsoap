@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { ConversationMessage, ResponseLength, ScenarioType } from '../../types';
+import { ConversationMessage, ResponseLength, ScenarioType, TurnOrder } from '../../types';
 import { 
   validateConversationRequirements,
   handleInitialRound,
@@ -20,7 +20,8 @@ export const useAgentConversation = (
   rounds: number,
   responseLength: ResponseLength,
   getCurrentScenario: () => ScenarioType,
-  getCurrentPrompt: () => string
+  getCurrentPrompt: () => string,
+  turnOrder: TurnOrder = 'sequential'
 ) => {
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +83,9 @@ export const useAgentConversation = (
         agentCPersona,
         effectiveApiKey,
         responseLength,
-        undefined
+        undefined,
+        undefined,
+        turnOrder
       );
       
       // Update conversation with initial messages
@@ -108,7 +111,9 @@ export const useAgentConversation = (
           conversationMessages,
           effectiveApiKey,
           responseLength,
-          undefined
+          undefined,
+          undefined,
+          turnOrder
         );
         
         // Update conversation with all messages

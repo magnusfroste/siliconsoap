@@ -3,7 +3,7 @@ import {
   useConversationAnalysis,
   useConversationNavigation
 } from './conversation';
-import { ConversationMessage, ResponseLength, ScenarioType } from '../types';
+import { ConversationMessage, ResponseLength, ScenarioType, TurnOrder } from '../types';
 import { checkApiAvailability } from '@/utils/openRouter';
 import { toast } from '@/hooks/use-toast';
 
@@ -19,7 +19,8 @@ export const useConversationFlow = (
   rounds: number,
   responseLength: ResponseLength,
   getCurrentScenario: () => ScenarioType,
-  getCurrentPrompt: () => string
+  getCurrentPrompt: () => string,
+  turnOrder: TurnOrder = 'sequential'
 ) => {
   // Use the navigation hook for view management
   const {
@@ -48,7 +49,8 @@ export const useConversationFlow = (
     rounds,
     responseLength,
     getCurrentScenario,
-    getCurrentPrompt
+    getCurrentPrompt,
+    turnOrder
   );
 
   // Use the analysis hook for conversation analysis

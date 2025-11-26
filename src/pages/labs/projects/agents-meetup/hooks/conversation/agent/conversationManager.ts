@@ -5,7 +5,7 @@ import {
   checkApiAvailability 
 } from '@/utils/openRouter';
 import { callOpenRouterViaEdge } from '@/utils/openRouter/api/completions';
-import { ConversationMessage, ResponseLength, ScenarioType } from '../../../types';
+import { ConversationMessage, ResponseLength, ScenarioType, TurnOrder } from '../../../types';
 import {
   createAgentAInitialPrompt,
   createAgentBPrompt,
@@ -63,6 +63,96 @@ export const checkBeforeStarting = async (
 };
 
 /**
+ * Shuffles an array using Fisher-Yates algorithm
+ */
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+/**
+ * Selects the next agent to speak using AI (Popcorn mode)
+ */
+const selectNextAgent = async (
+  conversationHistory: ConversationMessage[],
+  availableAgents: Array<{ id: string; name: string; persona: string }>,
+  apiKey: string,
+  currentPrompt: string
+): Promise<string> => {
+  const recentMessages = conversationHistory.slice(-4);
+  const conversationContext = recentMessages
+    .map(msg => `${msg.agent} (${msg.persona}): "${msg.message.substring(0, 200)}..."`)
+    .join('\n\n');
+
+  const agentDescriptions = availableAgents
+    .map(a => `- ${a.name}: ${a.persona}`)
+    .join('\n');
+
+  const prompt = `You are managing turn order in a multi-agent discussion about: "${currentPrompt}"
+
+Recent conversation:
+${conversationContext}
+
+Available agents to speak next:
+${agentDescriptions}
+
+Who should speak next and why? Consider:
+- Who was directly mentioned or addressed?
+- Whose expertise is most relevant to the current topic?
+- Who would provide a contrasting or complementary perspective?
+- Natural conversation flow
+
+Respond with ONLY the agent ID (A, B, or C) followed by a brief reason.
+Format: "AGENT_ID: reason"
+
+Example: "B: Their analytical expertise would help evaluate the ethical framework just proposed."`;
+
+  try {
+    const response = await callOpenRouterViaEdge(
+      prompt,
+      'anthropic/claude-3.5-sonnet', // Use a capable model for turn selection
+      'You are a conversation coordinator who selects the most relevant speaker.',
+      apiKey || null,
+      'short'
+    );
+
+    // Parse response to extract agent ID
+    const match = response.match(/^([ABC]):/i);
+    if (match) {
+      return `Agent ${match[1].toUpperCase()}`;
+    }
+
+    // Fallback: return first available agent
+    return availableAgents[0].name;
+  } catch (error) {
+    console.error('Error selecting next agent:', error);
+    // Fallback to random selection
+    return availableAgents[Math.floor(Math.random() * availableAgents.length)].name;
+  }
+};
+
+/**
+ * Gets agent order for current round based on turn order mode
+ */
+const getAgentOrder = (
+  turnOrder: TurnOrder,
+  numberOfAgents: number,
+  roundNumber: number
+): string[] => {
+  const agents = ['Agent A', 'Agent B', 'Agent C'].slice(0, numberOfAgents);
+  
+  if (turnOrder === 'random') {
+    return shuffleArray(agents);
+  }
+  
+  return agents; // Sequential order
+};
+
+/**
  * Validates conversation requirements before starting
  */
 export const validateConversationRequirements = (
@@ -104,7 +194,8 @@ export const handleInitialRound = async (
   apiKey: string,
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
-  temperature?: number
+  temperature?: number,
+  turnOrder: TurnOrder = 'sequential'
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -112,8 +203,13 @@ export const handleInitialRound = async (
 }> => {
   const messages: ConversationMessage[] = [];
   
-  // Agent A always starts the conversation
-  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario);
+  // Get agent order for this round
+  const agentOrder = turnOrder === 'popcorn' 
+    ? ['Agent A', 'Agent B', 'Agent C'].slice(0, numberOfAgents) // Popcorn starts with all, then dynamically selects
+    : getAgentOrder(turnOrder, numberOfAgents, 1);
+  
+  // Agent A always starts the conversation (or first in order)
+  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder);
   
   const agentAResponse = await callOpenRouterViaEdge(
     agentAPrompt,
@@ -143,8 +239,18 @@ export const handleInitialRound = async (
     };
   }
   
-  // Agent B response
-  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario);
+  // Determine next speaker (Agent B or AI-selected in Popcorn mode)
+  let nextAgent = 'Agent B';
+  if (turnOrder === 'popcorn' && numberOfAgents > 1) {
+    const availableAgents = [
+      { id: 'B', name: 'Agent B', persona: agentBPersona },
+      ...(numberOfAgents === 3 ? [{ id: 'C', name: 'Agent C', persona: agentCPersona }] : [])
+    ];
+    nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt);
+  }
+  
+  // Agent B response (or dynamically selected agent)
+  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario, turnOrder);
   
   const agentBResponse = await callOpenRouterViaEdge(
     agentBPrompt,
@@ -176,7 +282,20 @@ export const handleInitialRound = async (
   
   // Agent C response (if three agents are selected)
   if (numberOfAgents === 3) {
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario);
+    // Determine final speaker (Agent C or AI-selected in Popcorn mode)
+    let finalAgent = 'Agent C';
+    if (turnOrder === 'popcorn') {
+      const availableAgents = [
+        { id: 'A', name: 'Agent A', persona: agentAPersona },
+        { id: 'C', name: 'Agent C', persona: agentCPersona }
+      ].filter(a => !messages.slice(-1).some(m => m.agent === a.name)); // Exclude last speaker
+      
+      if (availableAgents.length > 0) {
+        finalAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt);
+      }
+    }
+    
+    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario, turnOrder);
     
     const agentCResponse = await callOpenRouterViaEdge(
       agentCPrompt,
@@ -225,7 +344,8 @@ export const handleAdditionalRounds = async (
   apiKey: string,
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
-  temperature?: number
+  temperature?: number,
+  turnOrder: TurnOrder = 'sequential'
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -234,7 +354,10 @@ export const handleAdditionalRounds = async (
   // Get the latest Agent C response if it exists
   const latestAgentCResponse = conversation.find(c => c.agent === 'Agent C')?.message;
   
-  // Second round - Agent A responds to previous responses
+  // Get agent order for round 2
+  const round2Order = getAgentOrder(turnOrder, numberOfAgents, 2);
+  
+  // Second round - First agent in order responds to previous responses
   const agentAFollowupPrompt = createAgentAFollowupPrompt(
     currentPrompt,
     agentAResponse,

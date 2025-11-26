@@ -14,6 +14,8 @@ interface ConversationSettingsProps {
   setResponseLength: (length: string) => void;
   participationMode: string;
   setParticipationMode: (mode: string) => void;
+  turnOrder: string;
+  setTurnOrder: (order: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
 }
 
@@ -26,6 +28,8 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   setResponseLength,
   participationMode,
   setParticipationMode,
+  turnOrder,
+  setTurnOrder,
   responseLengthOptions,
 }) => {
   const agentLabels: Record<string, { short: string; full: string }> = {
@@ -52,9 +56,15 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
     'long': 'Long'
   };
 
+  const turnOrderLabels: Record<string, { short: string; full: string }> = {
+    'sequential': { short: 'Sequential', full: 'Sequential (A→B→C)' },
+    'random': { short: 'Random', full: 'Random (Shuffled)' },
+    'popcorn': { short: 'Popcorn', full: 'Popcorn (AI-driven)' }
+  };
+
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
@@ -144,6 +154,33 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <p>Choose your interaction level: watch agents discuss without interruption, comment after all rounds complete, or participate between each round of discussion.</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <Select 
+                value={turnOrder} 
+                onValueChange={(value) => setTurnOrder(value)}
+                disabled={numberOfAgents === 1}
+              >
+                <SelectTrigger className="h-10 text-sm">
+                  <span>{turnOrderLabels[turnOrder]?.short || 'Turn Order'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sequential">{turnOrderLabels['sequential'].full}</SelectItem>
+                  <SelectItem value="random">{turnOrderLabels['random'].full}</SelectItem>
+                  <SelectItem value="popcorn">{turnOrderLabels['popcorn'].full}</SelectItem>
+                </SelectContent>
+              </Select>
+              {numberOfAgents === 1 && (
+                <p className="text-xs text-muted-foreground mt-1">Turn order only applies with multiple agents</p>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p>Control agent speaking order: Sequential follows A→B→C pattern, Random shuffles each round, and Popcorn uses AI to select the most relevant speaker based on context.</p>
           </TooltipContent>
         </Tooltip>
       </div>

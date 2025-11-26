@@ -97,6 +97,7 @@ export const NewChatView = () => {
             rounds: state.rounds,
             responseLength: state.responseLength,
             participationMode: state.participationMode,
+            turnOrder: state.turnOrder,
             models: {
               agentA: state.agentAModel,
               agentB: state.agentBModel,
@@ -132,6 +133,7 @@ export const NewChatView = () => {
               rounds: state.rounds,
               responseLength: state.responseLength,
               participationMode: state.participationMode,
+              turnOrder: state.turnOrder,
               models: {
                 agentA: state.agentAModel,
                 agentB: state.agentBModel,
@@ -214,6 +216,8 @@ export const NewChatView = () => {
               setResponseLength={actions.setResponseLength}
               participationMode={state.participationMode}
               setParticipationMode={actions.setParticipationMode}
+              turnOrder={state.turnOrder}
+              setTurnOrder={actions.setTurnOrder}
               responseLengthOptions={responseLengthOptions}
             />
             

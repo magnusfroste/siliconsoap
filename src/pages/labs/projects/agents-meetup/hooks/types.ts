@@ -23,6 +23,7 @@ export interface LabsState {
   numberOfAgents: number;
   responseLength: ResponseLength;
   participationMode: 'spectator' | 'jump-in' | 'round-by-round';
+  turnOrder: 'sequential' | 'random' | 'popcorn';
   conversation: ConversationMessage[];
   isLoading: boolean;
   availableModels: OpenRouterModel[];
@@ -60,6 +61,7 @@ export interface LabsActions {
   setNumberOfAgents: (number: number) => void;
   setResponseLength: (length: ResponseLength) => void;
   setParticipationMode: (mode: 'spectator' | 'jump-in' | 'round-by-round') => void;
+  setTurnOrder: (order: 'sequential' | 'random' | 'popcorn') => void;
   setConversation: (conversation: ConversationMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
   setAvailableModels: (models: OpenRouterModel[]) => void;

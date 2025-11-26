@@ -13,6 +13,7 @@ export const useScenarios = () => {
   const [rounds, setRounds] = useState(2);
   const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [participationMode, setParticipationMode] = useState<'spectator' | 'jump-in' | 'round-by-round'>('jump-in');
+  const [turnOrder, setTurnOrder] = useState<'sequential' | 'random' | 'popcorn'>('sequential');
   
   // Expert settings
   const [conversationTone, setConversationTone] = useState<'formal' | 'casual' | 'heated' | 'collaborative'>('collaborative');
@@ -40,6 +41,8 @@ export const useScenarios = () => {
     setResponseLength,
     participationMode,
     setParticipationMode,
+    turnOrder,
+    setTurnOrder,
     handleInputChange,
     // Expert settings
     conversationTone,
