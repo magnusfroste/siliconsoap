@@ -230,5 +230,57 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     }
   }, []);
 
-  return { chat, messages, loading, saveChat, updateChatTitle, refreshChat: loadChat, saveMessage, setMessages };
+  const shareChat = async (chatId: string): Promise<string | null> => {
+    if (!userId) {
+      toast.error('You must be logged in to share chats');
+      return null;
+    }
+
+    try {
+      // Check if chat already has a share_id
+      const { data: existingChat, error: fetchError } = await supabase
+        .from('agent_chats')
+        .select('share_id')
+        .eq('id', chatId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (existingChat.share_id) {
+        // Already shared, just return the share_id
+        return existingChat.share_id;
+      }
+
+      // Generate a unique share_id (8 characters, alphanumeric)
+      const generateShareId = () => {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      };
+
+      const shareId = generateShareId();
+
+      // Update chat with share_id and set is_public to true
+      const { error: updateError } = await supabase
+        .from('agent_chats')
+        .update({ 
+          share_id: shareId,
+          is_public: true 
+        })
+        .eq('id', chatId);
+
+      if (updateError) throw updateError;
+
+      return shareId;
+    } catch (error) {
+      console.error('Error sharing chat:', error);
+      toast.error('Failed to share chat');
+      return null;
+    }
+  };
+
+  return { chat, messages, loading, saveChat, updateChatTitle, refreshChat: loadChat, saveMessage, setMessages, shareChat };
 };

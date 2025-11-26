@@ -10,6 +10,7 @@ import Labs from "./pages/Labs";
 import { AgentsMeetupLayout } from "./pages/labs/projects/agents-meetup/layout/AgentsMeetupLayout";
 import { NewChatView } from "./pages/labs/projects/agents-meetup/views/NewChatView";
 import { ChatView } from "./pages/labs/projects/agents-meetup/views/ChatView";
+import { SharedChatView } from "./pages/labs/projects/agents-meetup/views/SharedChatView";
 import { ProfileView } from "./pages/labs/projects/agents-meetup/views/ProfileView";
 import { AgentProfilesView } from "./pages/labs/projects/agents-meetup/views/AgentProfilesView";
 import { APISettingsView } from "./pages/labs/projects/agents-meetup/views/APISettingsView";
@@ -62,6 +63,7 @@ const App = () => {
               <Route path="api-settings" element={<APISettingsView />} />
               <Route path="settings" element={<SettingsView />} />
             </Route>
+            <Route path="/labs/agents-meetup/shared/:shareId" element={<SharedChatView />} />
             <Route path="/labs/workflow-builder" element={<WorkflowBuilder />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
