@@ -32,4 +32,8 @@ export interface AgentCardProps {
   minAgents: number;
   borderColorClass: string;
   iconBgClass: string;
+  conversationTone?: 'formal' | 'casual' | 'heated' | 'collaborative';
+  agreementBias?: number;
+  temperature?: number;
+  personalityIntensity?: 'mild' | 'moderate' | 'extreme';
 }

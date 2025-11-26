@@ -24,6 +24,10 @@ interface AgentGridSectionProps {
   formC: UseFormReturn<{ persona: string }>;
   modelsByProvider: Record<string, any[]>;
   loadingModels: boolean;
+  conversationTone?: 'formal' | 'casual' | 'heated' | 'collaborative';
+  agreementBias?: number;
+  temperature?: number;
+  personalityIntensity?: 'mild' | 'moderate' | 'extreme';
 }
 
 export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
@@ -46,6 +50,10 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   formC,
   modelsByProvider,
   loadingModels,
+  conversationTone,
+  agreementBias,
+  temperature,
+  personalityIntensity
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -63,6 +71,10 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
         minAgents={1}
         borderColorClass="border-purple-200"
         iconBgClass="bg-purple-100 text-purple-600"
+        conversationTone={conversationTone}
+        agreementBias={agreementBias}
+        temperature={temperature}
+        personalityIntensity={personalityIntensity}
       />
 
       <AgentCard
@@ -79,6 +91,10 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
         minAgents={2}
         borderColorClass="border-blue-200"
         iconBgClass="bg-blue-100 text-blue-600"
+        conversationTone={conversationTone}
+        agreementBias={agreementBias}
+        temperature={temperature}
+        personalityIntensity={personalityIntensity}
       />
       
       <AgentCard
@@ -95,6 +111,10 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
         minAgents={3}
         borderColorClass="border-green-200"
         iconBgClass="bg-green-100 text-green-600"
+        conversationTone={conversationTone}
+        agreementBias={agreementBias}
+        temperature={temperature}
+        personalityIntensity={personalityIntensity}
       />
     </div>
   );
