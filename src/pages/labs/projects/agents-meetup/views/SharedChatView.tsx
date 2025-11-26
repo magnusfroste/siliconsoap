@@ -3,7 +3,7 @@ import { useSharedChat } from '../hooks/useSharedChat';
 import { ChatMessage } from '../components/ChatMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Trash2, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const SharedChatView = () => {
@@ -23,14 +23,33 @@ export const SharedChatView = () => {
   }
 
   if (error || !chat) {
+    const errorConfig = {
+      deleted: {
+        icon: Trash2,
+        title: 'Chat Removed',
+        description: 'This conversation has been deleted by the owner.'
+      },
+      not_public: {
+        icon: Lock,
+        title: 'Private Chat',
+        description: "This chat hasn't been shared publicly."
+      },
+      not_found: {
+        icon: Sparkles,
+        title: 'Chat Not Found',
+        description: 'This link appears to be invalid.'
+      }
+    };
+
+    const config = error ? errorConfig[error] : errorConfig.not_found;
+    const Icon = config.icon;
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4 max-w-md">
-          <Sparkles className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h2 className="text-2xl font-bold">Chat Not Found</h2>
-          <p className="text-muted-foreground">
-            This chat doesn't exist or hasn't been shared publicly.
-          </p>
+          <Icon className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h2 className="text-2xl font-bold">{config.title}</h2>
+          <p className="text-muted-foreground">{config.description}</p>
           <Button onClick={() => navigate('/labs/agents-meetup')}>
             Start Your Own Conversation
           </Button>

@@ -14,7 +14,7 @@ export const useSharedChat = (shareId: string | undefined) => {
   const [chat, setChat] = useState<ChatData | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<'not_found' | 'deleted' | 'not_public' | null>(null);
 
   useEffect(() => {
     if (!shareId) {
@@ -37,13 +37,26 @@ export const useSharedChat = (shareId: string | undefined) => {
         .from('agent_chats')
         .select('*')
         .eq('share_id', shareId)
-        .eq('is_public', true)
         .maybeSingle();
 
       if (chatError) throw chatError;
       
       if (!chatData) {
-        setError('Chat not found or not shared');
+        setError('not_found');
+        setLoading(false);
+        return;
+      }
+
+      // Check if chat is deleted
+      if (chatData.deleted_at) {
+        setError('deleted');
+        setLoading(false);
+        return;
+      }
+
+      // Check if chat is public
+      if (!chatData.is_public) {
+        setError('not_public');
         setLoading(false);
         return;
       }
@@ -68,7 +81,7 @@ export const useSharedChat = (shareId: string | undefined) => {
       setMessages(messagesData || []);
     } catch (err) {
       console.error('Error loading shared chat:', err);
-      setError('Failed to load chat');
+      setError('not_found');
     } finally {
       setLoading(false);
     }
