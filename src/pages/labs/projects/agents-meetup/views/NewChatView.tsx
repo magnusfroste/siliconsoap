@@ -6,8 +6,9 @@ import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
 import { Badge } from '@/components/ui/badge';
-import { scenarioTypes, profiles, responseLengthOptions } from '../constants';
+import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
+import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useCredits } from '../hooks/useCredits';
@@ -17,6 +18,7 @@ import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from 
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 
 export const NewChatView = () => {
+  const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
   const { saveChat } = useChat(undefined, user?.id);

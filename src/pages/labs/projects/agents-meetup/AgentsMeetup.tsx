@@ -12,9 +12,11 @@ import {
   SettingsDrawer
 } from '@/components/labs';
 import { useLabsState } from './hooks/useLabsState';
-import { profiles, responseLengthOptions, scenarioTypes } from './constants';
+import { responseLengthOptions, scenarioTypes } from './constants';
+import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 
 const AgentsMeetup: React.FC = () => {
+  const { profiles } = useAgentProfiles();
   const formA = useForm({
     defaultValues: { persona: 'analytical' }
   });

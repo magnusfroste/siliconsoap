@@ -85,6 +85,48 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_profiles: {
+        Row: {
+          created_at: string | null
+          description: string
+          icon_name: string
+          id: string
+          instructions: string
+          is_premium: boolean | null
+          is_system: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          icon_name: string
+          id?: string
+          instructions: string
+          is_premium?: boolean | null
+          is_system?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          icon_name?: string
+          id?: string
+          instructions?: string
+          is_premium?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           created_at: string | null
