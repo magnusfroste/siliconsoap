@@ -23,6 +23,16 @@ export const useCredits = (userId: string | null | undefined) => {
     loadCredits();
   }, [userId]);
 
+  // Listen for credit changes from other components
+  useEffect(() => {
+    const handleCreditsChanged = () => {
+      loadCredits();
+    };
+
+    window.addEventListener('creditsChanged', handleCreditsChanged);
+    return () => window.removeEventListener('creditsChanged', handleCreditsChanged);
+  }, [userId]);
+
   const loadCredits = async () => {
     setCreditData(prev => ({ ...prev, loading: true }));
 
@@ -92,6 +102,9 @@ export const useCredits = (userId: string | null | undefined) => {
         creditsRemaining: prev.creditsRemaining - 1,
         creditsUsed: prev.creditsUsed + 1,
       }));
+      
+      // Notify other components of credit change
+      window.dispatchEvent(new CustomEvent('creditsChanged'));
       return true;
     } else {
       // Guest user: update localStorage
@@ -103,6 +116,9 @@ export const useCredits = (userId: string | null | undefined) => {
         creditsRemaining: prev.creditsRemaining - 1,
         creditsUsed: prev.creditsUsed + 1,
       }));
+      
+      // Notify other components of credit change
+      window.dispatchEvent(new CustomEvent('creditsChanged'));
       return true;
     }
   };
