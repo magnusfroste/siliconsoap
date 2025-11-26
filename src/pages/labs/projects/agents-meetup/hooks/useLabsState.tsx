@@ -127,7 +127,15 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setResponseLength,
     participationMode,
     setParticipationMode,
-    handleInputChange
+    handleInputChange,
+    conversationTone,
+    setConversationTone,
+    agreementBias,
+    setAgreementBias,
+    temperature,
+    setTemperature,
+    personalityIntensity,
+    setPersonalityIntensity,
   } = useScenarios();
 
   // Functions that need to be passed to useConversationFlow
@@ -208,7 +216,11 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       analyzerModel,
       formA,
       formB,
-      formC
+      formC,
+      conversationTone,
+      agreementBias,
+      temperature,
+      personalityIntensity,
     },
     {
       setApiKey,
@@ -252,6 +264,10 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       formatMessage,
       promptForBYOK,
       enableSharedKeyMode,
+      setConversationTone,
+      setAgreementBias,
+      setTemperature,
+      setPersonalityIntensity,
       refreshModels: async (apiKey: string) => {
         setLoadingModels(true);
         try {

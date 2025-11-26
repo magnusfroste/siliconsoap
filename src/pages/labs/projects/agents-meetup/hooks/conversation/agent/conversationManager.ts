@@ -103,7 +103,8 @@ export const handleInitialRound = async (
   agentCPersona: string,
   apiKey: string,
   responseLength: ResponseLength,
-  onMessageReceived?: (message: ConversationMessage) => Promise<void>
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>,
+  temperature?: number
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -119,7 +120,8 @@ export const handleInitialRound = async (
     agentAModel,
     agentAPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentAMessage: ConversationMessage = {
@@ -149,7 +151,8 @@ export const handleInitialRound = async (
     agentBModel,
     agentBPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentBMessage: ConversationMessage = {
@@ -180,7 +183,8 @@ export const handleInitialRound = async (
       agentCModel,
       agentCPersona,
       apiKey || null,
-      responseLength
+      responseLength,
+      temperature
     );
     
     const agentCMessage: ConversationMessage = {
@@ -220,7 +224,8 @@ export const handleAdditionalRounds = async (
   conversation: ConversationMessage[],
   apiKey: string,
   responseLength: ResponseLength,
-  onMessageReceived?: (message: ConversationMessage) => Promise<void>
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>,
+  temperature?: number
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -244,7 +249,8 @@ export const handleAdditionalRounds = async (
     agentAModel,
     agentAPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentAFollowupMessage: ConversationMessage = {
@@ -272,7 +278,8 @@ export const handleAdditionalRounds = async (
       agentBModel,
       agentBPersona,
       apiKey || null,
-      responseLength
+      responseLength,
+      temperature
     );
     
     const agentBFinalMessage: ConversationMessage = {
@@ -299,7 +306,8 @@ export const handleAdditionalRounds = async (
         agentCModel,
         agentCPersona,
         apiKey || null,
-        responseLength
+        responseLength,
+        temperature
       );
       
       const agentCFinalMessage: ConversationMessage = {
@@ -334,7 +342,8 @@ export const handleUserFollowUp = async (
   agentCPersona: string,
   apiKey: string,
   responseLength: ResponseLength,
-  onMessageReceived?: (message: ConversationMessage) => Promise<void>
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>,
+  temperature?: number
 ): Promise<void> => {
   // Agent A responds to user
   const agentAPrompt = createResponseToUserPrompt(
@@ -350,7 +359,8 @@ export const handleUserFollowUp = async (
     agentAModel,
     agentAPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentAMessage: ConversationMessage = {
@@ -379,7 +389,8 @@ export const handleUserFollowUp = async (
     agentBModel,
     agentBPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentBMessage: ConversationMessage = {
@@ -408,7 +419,8 @@ export const handleUserFollowUp = async (
     agentCModel,
     agentCPersona,
     apiKey || null,
-    responseLength
+    responseLength,
+    temperature
   );
   
   const agentCMessage: ConversationMessage = {
