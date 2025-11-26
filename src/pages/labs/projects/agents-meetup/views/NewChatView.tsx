@@ -252,6 +252,10 @@ export const NewChatView = () => {
               formC={state.formC}
               modelsByProvider={modelsByProvider}
               loadingModels={state.loadingModels}
+              conversationTone={state.conversationTone}
+              agreementBias={state.agreementBias}
+              temperature={state.temperature}
+              personalityIntensity={state.personalityIntensity}
             />
           </div>
           
