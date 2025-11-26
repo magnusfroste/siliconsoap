@@ -492,6 +492,7 @@ graph TD
 - [ ] Conversation branching (edit message, regenerate from point)
 - [ ] Export conversations (PDF, Markdown, JSON)
 - [ ] Random agent turn-taking mode (alternative to sequential A→B→C)
+- [x] User Participation Mode (join multi-agent conversations as active participant)
 - [ ] Workflow templates and sharing
 - [ ] Team workspaces and collaboration
 - [ ] Analytics dashboard

@@ -136,3 +136,34 @@ export const createAgentCFinalPrompt = (
     Remember that you are Agent C - refer to the other agents as Agent A and Agent B.
   `;
 };
+
+/**
+ * Generates a prompt for an agent to respond to a user's message
+ */
+export const createResponseToUserPrompt = (
+  originalPrompt: string,
+  userMessage: string,
+  conversationHistory: any[],
+  agentName: string,
+  currentScenario: ScenarioType
+): string => {
+  // Get the last few messages for context (limit to avoid token bloat)
+  const recentMessages = conversationHistory.slice(-6);
+  const conversationContext = recentMessages
+    .map(msg => `${msg.agent}: "${msg.message}"`)
+    .join('\n\n');
+
+  return `
+    We're having a discussion about: "${originalPrompt}"
+    
+    Here's the recent conversation:
+    ${conversationContext}
+    
+    The user (a human participant in this conversation) just said: "${userMessage}"
+    
+    As ${agentName}, respond directly to the user's message. Acknowledge their input, share your perspective, and engage with their point.
+    Stay true to your persona while being conversational and respectful of the human participant.
+    
+    Remember: You are ${agentName} speaking to a human who has joined the conversation.
+  `;
+};

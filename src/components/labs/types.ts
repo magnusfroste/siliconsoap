@@ -4,4 +4,5 @@ export interface ConversationEntry {
   message: string;
   model: string;
   persona: string;
+  isHuman?: boolean;
 }
