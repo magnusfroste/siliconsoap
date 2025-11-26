@@ -12,6 +12,7 @@ export const useScenarios = () => {
   const [numberOfAgents, setNumberOfAgents] = useState(3);
   const [rounds, setRounds] = useState(2);
   const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
+  const [participationMode, setParticipationMode] = useState<'spectator' | 'jump-in' | 'round-by-round'>('jump-in');
 
   const handleInputChange = (scenarioId: string, value: string) => {
     setPromptInputs(prev => ({
@@ -31,6 +32,8 @@ export const useScenarios = () => {
     setRounds,
     responseLength,
     setResponseLength,
+    participationMode,
+    setParticipationMode,
     handleInputChange,
   };
 };

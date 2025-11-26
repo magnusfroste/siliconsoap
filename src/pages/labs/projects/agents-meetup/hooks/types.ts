@@ -22,6 +22,7 @@ export interface LabsState {
   rounds: number;
   numberOfAgents: number;
   responseLength: ResponseLength;
+  participationMode: 'spectator' | 'jump-in' | 'round-by-round';
   conversation: ConversationMessage[];
   isLoading: boolean;
   availableModels: OpenRouterModel[];
@@ -53,6 +54,7 @@ export interface LabsActions {
   setRounds: (rounds: number) => void;
   setNumberOfAgents: (number: number) => void;
   setResponseLength: (length: ResponseLength) => void;
+  setParticipationMode: (mode: 'spectator' | 'jump-in' | 'round-by-round') => void;
   setConversation: (conversation: ConversationMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
   setAvailableModels: (models: OpenRouterModel[]) => void;

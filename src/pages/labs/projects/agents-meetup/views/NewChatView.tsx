@@ -95,6 +95,7 @@ export const NewChatView = () => {
             numberOfAgents: state.numberOfAgents,
             rounds: state.rounds,
             responseLength: state.responseLength,
+            participationMode: state.participationMode,
             models: {
               agentA: state.agentAModel,
               agentB: state.agentBModel,
@@ -129,6 +130,7 @@ export const NewChatView = () => {
               numberOfAgents: state.numberOfAgents,
               rounds: state.rounds,
               responseLength: state.responseLength,
+              participationMode: state.participationMode,
               models: {
                 agentA: state.agentAModel,
                 agentB: state.agentBModel,
@@ -209,6 +211,8 @@ export const NewChatView = () => {
               setRounds={actions.setRounds}
               responseLength={state.responseLength}
               setResponseLength={actions.setResponseLength}
+              participationMode={state.participationMode}
+              setParticipationMode={actions.setParticipationMode}
               responseLengthOptions={responseLengthOptions}
             />
           </div>

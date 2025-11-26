@@ -4,6 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { OpenRouterModel } from '@/utils/openRouter';
 
 export type ResponseLength = 'short' | 'medium' | 'long';
+export type ParticipationMode = 'spectator' | 'jump-in' | 'round-by-round';
 
 export type Profile = {
   id: string;
