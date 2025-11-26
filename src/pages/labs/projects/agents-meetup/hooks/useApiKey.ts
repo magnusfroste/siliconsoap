@@ -76,13 +76,14 @@ export const useApiKey = () => {
       setSavedApiKey('');
       setIsSaved(false);
       setIsUsingEnvKey(false);
+      setIsUsingSharedKey(true); // Enable shared key mode after deletion
 
       // Also clear any stored rate limit status
       localStorage.removeItem('openRouterRateLimitStatus');
 
       toast({
         title: "API Key Deleted",
-        description: "Your API key has been removed.",
+        description: "Your API key has been removed. Now using shared API.",
       });
     } catch (error) {
       console.error("Error deleting API key from localStorage:", error);
