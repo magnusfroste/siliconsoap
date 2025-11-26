@@ -12,19 +12,19 @@ interface ChatMessageProps {
 
 const agentStyles = {
   'Agent A': { 
-    borderClass: 'border-purple-200', 
-    iconBgClass: 'bg-purple-100 text-purple-700',
-    timelineDotClass: 'bg-purple-400'
+    borderClass: 'border-purple-200 dark:border-purple-700', 
+    iconBgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+    timelineDotClass: 'bg-purple-400 dark:bg-purple-600'
   },
   'Agent B': { 
-    borderClass: 'border-blue-200', 
-    iconBgClass: 'bg-blue-100 text-blue-700',
-    timelineDotClass: 'bg-blue-400'
+    borderClass: 'border-blue-200 dark:border-blue-700', 
+    iconBgClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    timelineDotClass: 'bg-blue-400 dark:bg-blue-600'
   },
   'Agent C': { 
-    borderClass: 'border-green-200', 
-    iconBgClass: 'bg-green-100 text-green-700',
-    timelineDotClass: 'bg-green-400'
+    borderClass: 'border-green-200 dark:border-green-700', 
+    iconBgClass: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+    timelineDotClass: 'bg-green-400 dark:bg-green-600'
   }
 };
 
