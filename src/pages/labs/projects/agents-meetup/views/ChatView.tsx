@@ -171,7 +171,7 @@ export const ChatView = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Chat Title with Share Button */}
-      <div className="border-b px-4 py-3 flex items-center justify-between gap-4">
+      <div className="border-b px-4 py-3 pr-16 flex items-center justify-between gap-4">
         <h2 className="font-semibold truncate flex-1">{chat.prompt}</h2>
         {!isGuest && messages.length > 0 && (
           <Button
