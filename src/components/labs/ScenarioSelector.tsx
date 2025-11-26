@@ -2,6 +2,7 @@
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export type ScenarioType = {
   id: string;
@@ -20,6 +21,7 @@ interface ScenarioSelectorProps {
   setActiveScenario: (value: string) => void;
   promptInputs: {[key: string]: string};
   handleInputChange: (scenarioId: string, value: string) => void;
+  suggestedTopics?: string[];
 }
 
 export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
@@ -27,7 +29,8 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   activeScenario,
   setActiveScenario,
   promptInputs,
-  handleInputChange
+  handleInputChange,
+  suggestedTopics
 }) => {
   const currentScenario = scenarioTypes.find(s => s.id === activeScenario);
 
@@ -64,6 +67,22 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
           target.style.height = `${target.scrollHeight}px`;
         }}
       />
+
+      {/* Suggested Topics */}
+      {suggestedTopics && suggestedTopics.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
+          {suggestedTopics.map((topic, idx) => (
+            <Badge
+              key={idx}
+              variant="outline"
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-xs"
+              onClick={() => handleInputChange(activeScenario, topic)}
+            >
+              💡 {topic}
+            </Badge>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

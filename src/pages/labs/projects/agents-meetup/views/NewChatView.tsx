@@ -193,21 +193,8 @@ export const NewChatView = () => {
             setActiveScenario={actions.setActiveScenario}
             promptInputs={state.promptInputs}
             handleInputChange={actions.handleInputChange}
+            suggestedTopics={suggestedTopics}
           />
-
-          {/* Suggested Topics */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {suggestedTopics.map((topic, idx) => (
-              <Badge
-                key={idx}
-                variant="secondary"
-                className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-xs"
-                onClick={() => actions.handleInputChange(state.activeScenario, topic)}
-              >
-                💡 {topic}
-              </Badge>
-            ))}
-          </div>
 
           {/* Conversation Settings */}
           <div className="space-y-4">
