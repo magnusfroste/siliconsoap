@@ -491,6 +491,7 @@ graph TD
 - [ ] AI Research Assistant (new project)
 - [ ] Conversation branching (edit message, regenerate from point)
 - [ ] Export conversations (PDF, Markdown, JSON)
+- [ ] Random agent turn-taking mode (alternative to sequential A→B→C)
 - [ ] Workflow templates and sharing
 - [ ] Team workspaces and collaboration
 - [ ] Analytics dashboard
