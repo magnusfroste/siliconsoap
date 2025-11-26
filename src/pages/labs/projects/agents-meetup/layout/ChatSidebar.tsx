@@ -23,11 +23,14 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const location = useLocation();
 
   const navItems = [
-    { icon: UserIcon, label: 'Profile', path: '/labs/agents-meetup/profile' },
-    { icon: Bot, label: 'Agent Profiles', path: '/labs/agents-meetup/agent-profiles' },
-    { icon: Key, label: 'API Settings', path: '/labs/agents-meetup/api-settings' },
-    { icon: Settings, label: 'Settings', path: '/labs/agents-meetup/settings' },
+    { icon: UserIcon, label: 'Profile', path: '/labs/agents-meetup/profile', requiresAuth: true },
+    { icon: Bot, label: 'Agent Profiles', path: '/labs/agents-meetup/agent-profiles', requiresAuth: true },
+    { icon: Key, label: 'API Settings', path: '/labs/agents-meetup/api-settings', requiresAuth: true },
+    { icon: Settings, label: 'Settings', path: '/labs/agents-meetup/settings', requiresAuth: true },
   ];
+
+  // Filter nav items based on authentication status
+  const filteredNavItems = navItems.filter(item => !item.requiresAuth || user);
 
   // Group chats by date
   const today = new Date();
@@ -78,7 +81,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         <div className="flex-1" />
         
         <div className="space-y-1">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.path} to={item.path} onClick={onClose}>
@@ -197,7 +200,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
         <Separator />
         <div className="p-2 space-y-1">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
