@@ -83,7 +83,39 @@ export const useCredits = (userId: string | null | undefined) => {
     if (!hasCredits()) return false;
 
     if (userId) {
-      // Logged-in user: update database
+      // First, check if credit record exists
+      const { data: existingCredits } = await supabase
+        .from('user_credits')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!existingCredits) {
+        // Create initial credit record if it doesn't exist
+        const { error: insertError } = await supabase
+          .from('user_credits')
+          .insert({
+            user_id: userId,
+            credits_remaining: LOGGED_IN_INITIAL_CREDITS - 1,
+            credits_used: 1,
+          });
+
+        if (insertError) {
+          console.error('Error creating credit record:', insertError);
+          return false;
+        }
+
+        setCreditData({
+          creditsRemaining: LOGGED_IN_INITIAL_CREDITS - 1,
+          creditsUsed: 1,
+          loading: false,
+        });
+        
+        window.dispatchEvent(new CustomEvent('creditsChanged'));
+        return true;
+      }
+
+      // Logged-in user: update existing database record
       const { error } = await supabase
         .from('user_credits')
         .update({
