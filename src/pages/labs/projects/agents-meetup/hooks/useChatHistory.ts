@@ -77,6 +77,7 @@ export const useChatHistory = (userId: string | undefined) => {
       .from('agent_chats')
       .select('id, title, created_at, updated_at')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .order('updated_at', { ascending: false });
 
     if (error) {
@@ -107,10 +108,10 @@ export const useChatHistory = (userId: string | undefined) => {
       return;
     }
 
-    // Handle logged-in user chat deletion
+    // Handle logged-in user chat deletion (soft delete)
     const { error } = await supabase
       .from('agent_chats')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', chatId);
 
     if (error) {
