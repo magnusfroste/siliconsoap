@@ -50,14 +50,8 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({
                   {profiles.map((profile) => {
                     const isSelected = agentPersona === profile.id;
                     return (
-                      <div 
+                      <label 
                         key={profile.id}
-                        onClick={() => {
-                          if (!isDisabled) {
-                            field.onChange(profile.id);
-                            handleAgentPersonaChange(profile.id);
-                          }
-                        }}
                         className={`
                           relative cursor-pointer p-2.5 rounded-md border-2 transition-all
                           ${isSelected 
@@ -83,7 +77,7 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({
                           disabled={isDisabled}
                           className="sr-only"
                         />
-                      </div>
+                      </label>
                     );
                   })}
                 </RadioGroup>
