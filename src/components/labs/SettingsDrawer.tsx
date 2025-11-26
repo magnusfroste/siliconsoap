@@ -23,6 +23,8 @@ interface SettingsDrawerProps {
   setRounds: (num: number) => void;
   responseLength: string;
   setResponseLength: (length: string) => void;
+  participationMode: string;
+  setParticipationMode: (mode: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
   agentAModel: string;
   setAgentAModel: (model: string) => void;
@@ -55,6 +57,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   setRounds,
   responseLength,
   setResponseLength,
+  participationMode,
+  setParticipationMode,
   responseLengthOptions,
   agentAModel,
   setAgentAModel,
@@ -131,6 +135,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               setRounds={setRounds}
               responseLength={responseLength}
               setResponseLength={setResponseLength}
+              participationMode={participationMode}
+              setParticipationMode={setParticipationMode}
               responseLengthOptions={responseLengthOptions}
             />
           </div>

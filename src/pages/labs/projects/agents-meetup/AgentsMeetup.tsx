@@ -176,6 +176,8 @@ const AgentsMeetup: React.FC = () => {
         setRounds={actions.setRounds}
         responseLength={state.responseLength}
         setResponseLength={(length: string) => actions.setResponseLength(length as any)}
+        participationMode={state.participationMode}
+        setParticipationMode={(mode: string) => actions.setParticipationMode(mode as any)}
         responseLengthOptions={responseLengthOptions}
         agentAModel={state.agentAModel}
         setAgentAModel={actions.setAgentAModel}

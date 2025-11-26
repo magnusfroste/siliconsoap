@@ -11,6 +11,8 @@ interface ConversationSettingsProps {
   setRounds: (num: number) => void;
   responseLength: string;
   setResponseLength: (length: string) => void;
+  participationMode: string;
+  setParticipationMode: (mode: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
 }
 
@@ -21,10 +23,12 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   setRounds,
   responseLength,
   setResponseLength,
+  participationMode,
+  setParticipationMode,
   responseLengthOptions,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>
         <Select value={numberOfAgents.toString()} onValueChange={(value) => setNumberOfAgents(parseInt(value))}>
           <SelectTrigger className="h-10 text-sm">
@@ -72,6 +76,19 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
                 </div>
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Select value={participationMode} onValueChange={(value) => setParticipationMode(value)}>
+          <SelectTrigger className="h-10 text-sm">
+            <SelectValue placeholder="Participation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="spectator">Spectator (Watch Only)</SelectItem>
+            <SelectItem value="jump-in">Jump In (Comment After)</SelectItem>
+            <SelectItem value="round-by-round">Round-by-Round (Interactive)</SelectItem>
           </SelectContent>
         </Select>
       </div>

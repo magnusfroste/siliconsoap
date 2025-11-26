@@ -125,6 +125,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setRounds,
     responseLength,
     setResponseLength,
+    participationMode,
+    setParticipationMode,
     handleInputChange
   } = useScenarios();
 
@@ -192,6 +194,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       rounds,
       numberOfAgents,
       responseLength,
+      participationMode,
       conversation,
       isLoading,
       availableModels,
@@ -222,6 +225,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setRounds,
       setNumberOfAgents,
       setResponseLength,
+      setParticipationMode,
       setConversation,
       setIsLoading,
       setAvailableModels,
