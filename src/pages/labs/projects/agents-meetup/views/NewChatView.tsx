@@ -83,8 +83,8 @@ export const NewChatView = () => {
       if (isGuest) {
         // Guests: Store chat in localStorage temporarily
         const guestChatId = `guest_${Date.now()}`;
-        const guestChats = JSON.parse(localStorage.getItem('guest_chats') || '[]');
-        guestChats.push({
+        const guestChats = JSON.parse(localStorage.getItem('guest_chats') || '{}');
+        guestChats[guestChatId] = {
           id: guestChatId,
           title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
           scenario_id: state.activeScenario,
@@ -104,8 +104,10 @@ export const NewChatView = () => {
               agentC: state.agentCPersona
             }
           },
+          messages: [],
           created_at: new Date().toISOString(),
-        });
+          updated_at: new Date().toISOString()
+        };
         localStorage.setItem('guest_chats', JSON.stringify(guestChats));
         
         // Navigate to guest chat
