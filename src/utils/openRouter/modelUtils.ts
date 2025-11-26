@@ -3,29 +3,66 @@ import { OpenRouterModel, ApiError } from "./types";
 import { OPENROUTER_MODELS_URL } from "./constants";
 
 /**
- * Fetches available models from OpenRouter API
+ * Fetches available models from OpenRouter API via edge function (shared key mode)
  */
-export const fetchOpenRouterModels = async (apiKey: string): Promise<OpenRouterModel[]> => {
-  if (!apiKey) {
-    console.error("No API key provided to fetchOpenRouterModels");
-    toast({
-      title: "API Key Missing",
-      description: "Please provide an OpenRouter API key to fetch available models",
-      variant: "destructive",
-    });
-    return [];
-  }
-
+const fetchModelsViaEdgeFunction = async (): Promise<OpenRouterModel[]> => {
   try {
-    console.log("Fetching models from OpenRouter API...");
+    console.log("Fetching models using shared key via edge function...");
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openrouter-models`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Edge function error:", response.status, errorText);
+      throw new Error(`Failed to fetch models via edge function (${response.status})`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.data || !Array.isArray(data.data)) {
+      console.error("Unexpected response format from edge function:", data);
+      throw new Error("Unexpected response format from edge function");
+    }
+
+    console.log(`Successfully fetched ${data.data.length} models via edge function`);
+    
+    const models: OpenRouterModel[] = data.data.map((model: any) => ({
+      id: model.id,
+      name: model.name || model.id.split('/').pop(),
+      provider: model.id.split('/')[0],
+      description: model.description || "",
+      isFree: model.id.includes(":free") || (model.pricing?.prompt === "0" && model.pricing?.completion === "0")
+    }));
+
+    return models.sort((a, b) => {
+      if (a.provider === b.provider) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.provider.localeCompare(b.provider);
+    });
+  } catch (error) {
+    console.error("Error fetching models via edge function:", error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches available models from OpenRouter API directly (user API key mode)
+ */
+const fetchModelsDirectly = async (apiKey: string): Promise<OpenRouterModel[]> => {
+  try {
+    console.log("Fetching models from OpenRouter API with user key...");
     console.log("API URL:", OPENROUTER_MODELS_URL);
     console.log("API Key (first 8 chars):", apiKey.substring(0, 8));
-    
-    // Make a simple fetch request to test the API
-    const testResponse = await fetch(OPENROUTER_MODELS_URL, {
-      method: "HEAD",
-    });
-    console.log("Test API response status (HEAD request):", testResponse.status);
+
     
     const response = await fetch(OPENROUTER_MODELS_URL, {
       method: "GET",
@@ -107,6 +144,27 @@ export const fetchOpenRouterModels = async (apiKey: string): Promise<OpenRouterM
       }
       return a.provider.localeCompare(b.provider);
     });
+  } catch (error) {
+    console.error("Error fetching models directly:", error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches available models from OpenRouter API
+ * Uses edge function for shared key mode, direct API call for user keys
+ */
+export const fetchOpenRouterModels = async (apiKey: string): Promise<OpenRouterModel[]> => {
+  try {
+    // Shared key mode - use edge function
+    if (!apiKey) {
+      console.log("Using shared key mode via edge function");
+      return await fetchModelsViaEdgeFunction();
+    }
+    
+    // User API key mode - direct call
+    console.log("Using user API key for direct API call");
+    return await fetchModelsDirectly(apiKey);
   } catch (error) {
     console.error("Error fetching OpenRouter models:", error);
     toast({

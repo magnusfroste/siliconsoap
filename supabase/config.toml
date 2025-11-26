@@ -3,5 +3,8 @@ project_id = "apfrjuomozdvdeondzaz"
 [functions.openrouter-chat]
 verify_jwt = false
 
+[functions.openrouter-models]
+verify_jwt = false
+
 [functions.ai-chat]
 verify_jwt = false
