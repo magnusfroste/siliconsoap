@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '../components/ChatMessage';
+import { RoundSeparator } from '../components/RoundSeparator';
+import { AgentTypingIndicator } from '../components/AgentTypingIndicator';
 import { ChatInput } from '../components/ChatInput';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
@@ -141,15 +143,34 @@ export const ChatView = () => {
       {/* Messages */}
       <ScrollArea className="flex-1 px-4">
         <div className="max-w-4xl mx-auto py-6 space-y-4">
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
-          ))}
+          {messages.map((message, index) => {
+            const settings = chat.settings as any;
+            const numberOfAgents = settings?.numberOfAgents || 2;
+            const currentRound = Math.floor(index / numberOfAgents) + 1;
+            const previousRound = index > 0 ? Math.floor((index - 1) / numberOfAgents) + 1 : 0;
+            const isNewRound = currentRound > previousRound;
 
+            return (
+              <div key={index}>
+                {/* Round Separator */}
+                {isNewRound && (
+                  <RoundSeparator roundNumber={currentRound} />
+                )}
+                
+                {/* Message */}
+                <ChatMessage 
+                  message={message} 
+                  messageIndex={index}
+                  totalMessages={messages.length}
+                  showTimeline={true}
+                />
+              </div>
+            );
+          })}
+
+          {/* Enhanced Typing Indicator */}
           {isGenerating && currentAgent && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">{currentAgent} is thinking...</span>
-            </div>
+            <AgentTypingIndicator agentName={currentAgent} />
           )}
         </div>
       </ScrollArea>
