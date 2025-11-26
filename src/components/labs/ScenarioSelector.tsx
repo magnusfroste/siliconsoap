@@ -32,9 +32,9 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   const currentScenario = scenarioTypes.find(s => s.id === activeScenario);
 
   return (
-    <div className="space-y-4">
+    <div className="border rounded-xl bg-card p-5 space-y-3 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
       {/* Pill-style scenario buttons */}
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-2 pb-3 border-b border-border/40">
         {scenarioTypes.map(scenario => (
           <Button
             key={scenario.id}
@@ -56,7 +56,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
         placeholder={currentScenario?.placeholder || "Enter your topic..."}
         value={promptInputs[activeScenario] || ''}
         onChange={(e) => handleInputChange(activeScenario, e.target.value)}
-        className="w-full min-h-[100px] resize-none text-base"
+        className="w-full min-h-[100px] resize-none text-base border-0 focus-visible:ring-0 bg-transparent px-0"
         rows={4}
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement;
