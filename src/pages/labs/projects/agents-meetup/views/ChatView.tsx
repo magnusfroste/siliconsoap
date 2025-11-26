@@ -9,7 +9,7 @@ import { RoundPausePrompt } from '../components/RoundPausePrompt';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
@@ -19,11 +19,12 @@ import { scenarioTypes } from '../constants';
 import { AnalysisFloatingButton } from '../components/AnalysisFloatingButton';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
+import { Button } from '@/components/ui/button';
 
 export const ChatView = () => {
   const { chatId } = useParams();
   const { user } = useAuth();
-  const { chat, messages, loading, saveMessage, setMessages } = useChat(chatId, user?.id);
+  const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
@@ -38,6 +39,21 @@ export const ChatView = () => {
   } = useConversationAnalysis(state.apiKey, messages);
 
   const isGuest = !user;
+
+  // Handle share button click
+  const handleShareClick = async () => {
+    if (!chatId || isGuest) {
+      toast.error('You must be logged in to share chats');
+      return;
+    }
+
+    const shareId = await shareChat(chatId);
+    if (shareId) {
+      const shareUrl = `${window.location.origin}/labs/agents-meetup/shared/${shareId}`;
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied! Anyone with the link can view this chat.');
+    }
+  };
 
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
@@ -154,9 +170,20 @@ export const ChatView = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Chat Title */}
-      <div className="border-b px-4 py-3">
-        <h2 className="font-semibold truncate">{chat.prompt}</h2>
+      {/* Chat Title with Share Button */}
+      <div className="border-b px-4 py-3 flex items-center justify-between gap-4">
+        <h2 className="font-semibold truncate flex-1">{chat.prompt}</h2>
+        {!isGuest && messages.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareClick}
+            className="gap-2 shrink-0"
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+        )}
       </div>
 
       {/* Messages */}

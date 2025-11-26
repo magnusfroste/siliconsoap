@@ -56,9 +56,11 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_public: boolean | null
           prompt: string
           scenario_id: string
           settings: Json | null
+          share_id: string | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -66,9 +68,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          is_public?: boolean | null
           prompt: string
           scenario_id: string
           settings?: Json | null
+          share_id?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
@@ -76,9 +80,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          is_public?: boolean | null
           prompt?: string
           scenario_id?: string
           settings?: Json | null
+          share_id?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
