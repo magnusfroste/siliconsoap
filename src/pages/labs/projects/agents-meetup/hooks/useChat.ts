@@ -12,13 +12,28 @@ export interface ChatData {
   settings: any;
 }
 
+const isGuestChat = (chatId: string) => chatId?.startsWith('guest_');
+
 export const useChat = (chatId: string | undefined, userId: string | undefined) => {
   const [chat, setChat] = useState<ChatData | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!chatId || !userId) {
+    if (!chatId) {
+      setLoading(false);
+      return;
+    }
+
+    // Handle guest chats
+    if (isGuestChat(chatId)) {
+      loadGuestChat();
+      setLoading(false);
+      return;
+    }
+
+    // Handle logged-in user chats
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -47,6 +62,34 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
       supabase.removeChannel(channel);
     };
   }, [chatId, userId]);
+
+  const loadGuestChat = () => {
+    if (!chatId) return;
+
+    const guestChatsStr = localStorage.getItem('guest_chats');
+    if (!guestChatsStr) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const guestChats = JSON.parse(guestChatsStr);
+      const guestChat = guestChats[chatId];
+      
+      if (guestChat) {
+        setChat({
+          id: guestChat.id,
+          title: guestChat.title,
+          scenario_id: guestChat.scenario_id,
+          prompt: guestChat.prompt,
+          settings: guestChat.settings
+        });
+        setMessages(guestChat.messages || []);
+      }
+    } catch (error) {
+      console.error('Error loading guest chat:', error);
+    }
+  };
 
   const loadChat = async () => {
     if (!chatId || !userId) return;
@@ -151,6 +194,26 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
   };
 
   const saveMessage = useCallback(async (chatId: string, message: ConversationMessage) => {
+    // Handle guest chat messages
+    if (isGuestChat(chatId)) {
+      try {
+        const guestChatsStr = localStorage.getItem('guest_chats');
+        const guestChats = guestChatsStr ? JSON.parse(guestChatsStr) : {};
+        
+        if (guestChats[chatId]) {
+          guestChats[chatId].messages = guestChats[chatId].messages || [];
+          guestChats[chatId].messages.push(message);
+          localStorage.setItem('guest_chats', JSON.stringify(guestChats));
+          setMessages(prev => [...prev, message]);
+        }
+      } catch (error) {
+        console.error('Error saving guest message:', error);
+        throw error;
+      }
+      return;
+    }
+
+    // Handle logged-in user messages
     const { error } = await supabase
       .from('agent_chat_messages')
       .insert({
