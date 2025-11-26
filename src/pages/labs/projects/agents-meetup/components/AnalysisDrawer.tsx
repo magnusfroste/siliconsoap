@@ -39,7 +39,7 @@ export const AnalysisDrawer = ({
   onAnalyze,
   isGuest = false
 }: AnalysisDrawerProps) => {
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
 
   // Extract verdict (first paragraph) from analysis
   const getVerdict = (analysis: string) => {
@@ -72,7 +72,7 @@ export const AnalysisDrawer = ({
           </div>
 
           {!isAnalyzing && analysisResults && (
-            <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="mt-4 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg">
               <div className="flex items-start gap-2">
                 <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
@@ -131,6 +131,25 @@ export const AnalysisDrawer = ({
               )
             ) : (
               <div className="space-y-4">
+                {/* Full Analysis - Always Visible */}
+                <div className="p-4 bg-muted/30 dark:bg-muted/20 rounded-lg border border-border/50">
+                  <div 
+                    className="prose prose-sm max-w-none text-foreground dark:text-foreground"
+                    dangerouslySetInnerHTML={{ 
+                      __html: analysisResults
+                        .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2 text-foreground">$1</h3>')
+                        .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3 text-foreground">$1</h2>')
+                        .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4 text-foreground">$1</h1>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/^- (.+)$/gim, '<li class="ml-4">$1</li>')
+                        .replace(/^\* (.+)$/gim, '<li class="ml-4">$1</li>')
+                        .replace(/\n/g, '<br/>')
+                    }}
+                  />
+                </div>
+
+                {/* Nerd Stats - Collapsible at Bottom */}
                 <Collapsible open={showStats} onOpenChange={setShowStats}>
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" className="w-full justify-between">
@@ -145,23 +164,6 @@ export const AnalysisDrawer = ({
                     />
                   </CollapsibleContent>
                 </Collapsible>
-
-                {!showStats && (
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <div 
-                      className="prose prose-sm max-w-none text-foreground"
-                      dangerouslySetInnerHTML={{ 
-                        __html: analysisResults
-                          .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-                          .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3">$1</h2>')
-                          .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4">$1</h1>')
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          .replace(/\n/g, '<br/>')
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>
