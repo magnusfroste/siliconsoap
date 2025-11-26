@@ -184,7 +184,7 @@ export const NewChatView = () => {
 
   return (
     <div className="h-full flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl space-y-8">
+      <div className="w-full max-w-4xl space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">What would you like to discuss?</h1>
           <p className="text-muted-foreground">
