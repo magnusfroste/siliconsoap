@@ -47,8 +47,8 @@ export const QuickTopicInput: React.FC<QuickTopicInputProps> = ({
           />
 
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Quick picks:</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-sm text-muted-foreground text-center">Quick picks:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
               {scenarioTypes.map((scenario) => (
                 <Button
                   key={scenario.id}
