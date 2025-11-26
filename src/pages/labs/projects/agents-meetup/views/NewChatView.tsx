@@ -5,6 +5,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
+import { ExpertSettings } from '@/components/labs/agent-config/ExpertSettings';
 import { Badge } from '@/components/ui/badge';
 import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
@@ -214,6 +215,18 @@ export const NewChatView = () => {
               participationMode={state.participationMode}
               setParticipationMode={actions.setParticipationMode}
               responseLengthOptions={responseLengthOptions}
+            />
+            
+            {/* Expert Settings */}
+            <ExpertSettings
+              conversationTone={state.conversationTone}
+              setConversationTone={actions.setConversationTone}
+              agreementBias={state.agreementBias}
+              setAgreementBias={actions.setAgreementBias}
+              temperature={state.temperature}
+              setTemperature={actions.setTemperature}
+              personalityIntensity={state.personalityIntensity}
+              setPersonalityIntensity={actions.setPersonalityIntensity}
             />
           </div>
 

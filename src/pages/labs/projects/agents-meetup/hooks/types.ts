@@ -37,6 +37,11 @@ export interface LabsState {
   formA: UseFormReturn<{ persona: string }>;
   formB: UseFormReturn<{ persona: string }>;
   formC: UseFormReturn<{ persona: string }>;
+  // Expert settings state
+  conversationTone: 'formal' | 'casual' | 'heated' | 'collaborative';
+  agreementBias: number;
+  temperature: number;
+  personalityIntensity: 'mild' | 'moderate' | 'extreme';
 }
 
 export interface LabsActions {
@@ -82,4 +87,9 @@ export interface LabsActions {
   refreshModels: (apiKey: string) => void;
   promptForBYOK: () => void;
   enableSharedKeyMode: () => void;
+  // Expert settings actions
+  setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
+  setAgreementBias: (bias: number) => void;
+  setTemperature: (temp: number) => void;
+  setPersonalityIntensity: (intensity: 'mild' | 'moderate' | 'extreme') => void;
 }

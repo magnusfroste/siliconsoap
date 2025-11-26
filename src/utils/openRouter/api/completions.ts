@@ -12,7 +12,8 @@ export const callOpenRouter = async (
   model: string,
   persona: string,
   apiKey: string,
-  responseLength: ResponseLength = "medium"
+  responseLength: ResponseLength = "medium",
+  temperature: number = 0.7
 ): Promise<string> => {
   if (!apiKey) {
     console.error("No API key provided for model:", model);
@@ -43,7 +44,7 @@ export const callOpenRouter = async (
         model,
         messages,
         max_tokens: maxTokens,
-        temperature: 0.7,
+        temperature,
         top_p: 0.9,
         stream: false,
       }),
@@ -83,13 +84,14 @@ export const callOpenRouterViaEdge = async (
   model: string,
   persona: string,
   userApiKey: string | null,
-  responseLength: ResponseLength = "medium"
+  responseLength: ResponseLength = "medium",
+  temperature: number = 0.7
 ): Promise<string> => {
   // If user has their own API key, call OpenRouter directly
   // This avoids edge function DNS issues and is more efficient
   if (userApiKey) {
     console.log("User has API key, calling OpenRouter directly");
-    return await callOpenRouter(prompt, model, persona, userApiKey, responseLength);
+    return await callOpenRouter(prompt, model, persona, userApiKey, responseLength, temperature);
   }
 
   // No user API key - use edge function with shared key
@@ -109,7 +111,7 @@ export const callOpenRouterViaEdge = async (
       model,
       messages,
       max_tokens: maxTokens,
-      temperature: 0.7,
+      temperature,
       top_p: 0.9,
     };
 

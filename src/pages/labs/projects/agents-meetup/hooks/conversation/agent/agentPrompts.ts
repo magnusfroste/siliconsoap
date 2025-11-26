@@ -1,6 +1,28 @@
 
 import { ScenarioType } from '../../../types';
 
+// Tone instructions for expert settings
+const toneInstructions = {
+  formal: "Engage formally and professionally, citing evidence and maintaining academic rigor.",
+  casual: "Be conversational and friendly, use everyday language and examples.",
+  heated: "Be passionate and assertive about your position, challenge other viewpoints directly.",
+  collaborative: "Focus on building on others' ideas, find common ground, and synthesize perspectives."
+};
+
+// Agreement bias instructions for expert settings
+const getAgreementInstruction = (bias: number) => {
+  if (bias < 30) return "Challenge and critically examine other perspectives. Play devil's advocate.";
+  if (bias > 70) return "Look for areas of agreement. Build on and expand other agents' ideas.";
+  return "Balance agreement and disagreement naturally based on the merits of arguments.";
+};
+
+// Personality intensity modifiers for expert settings
+const intensityModifiers = {
+  mild: "Express your persona subtly, focusing primarily on the content.",
+  moderate: "Let your persona characteristics come through clearly in your responses.",
+  extreme: "Strongly embody your persona with distinctive voice, opinions, and style."
+};
+
 /**
  * Generates the prompt for Agent A to start the conversation
  */
