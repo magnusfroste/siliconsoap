@@ -29,6 +29,7 @@ export type ConversationMessage = {
   message: string;
   model: string;
   persona: string;
+  isHuman?: boolean;
 };
 
 export type AnalysisResults = {

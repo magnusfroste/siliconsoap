@@ -12,7 +12,8 @@ import {
   createAgentCPrompt,
   createAgentAFollowupPrompt,
   createAgentBFinalPrompt,
-  createAgentCFinalPrompt
+  createAgentCFinalPrompt,
+  createResponseToUserPrompt
 } from './agentPrompts';
 
 /**
@@ -314,4 +315,108 @@ export const handleAdditionalRounds = async (
   }
   
   return [...conversation, ...additionalMessages];
+};
+
+/**
+ * Handles agents responding to a user's follow-up message
+ */
+export const handleUserFollowUp = async (
+  originalPrompt: string,
+  userMessage: string,
+  currentConversation: ConversationMessage[],
+  currentScenario: ScenarioType,
+  numberOfAgents: number,
+  agentAModel: string,
+  agentBModel: string,
+  agentCModel: string,
+  agentAPersona: string,
+  agentBPersona: string,
+  agentCPersona: string,
+  apiKey: string,
+  responseLength: ResponseLength,
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>
+): Promise<void> => {
+  // Agent A responds to user
+  const agentAPrompt = createResponseToUserPrompt(
+    originalPrompt,
+    userMessage,
+    currentConversation,
+    'Agent A',
+    currentScenario
+  );
+  
+  const agentAResponse = await callOpenRouterViaEdge(
+    agentAPrompt,
+    agentAModel,
+    agentAPersona,
+    apiKey || null,
+    responseLength
+  );
+  
+  const agentAMessage: ConversationMessage = {
+    agent: 'Agent A',
+    message: agentAResponse,
+    model: agentAModel,
+    persona: agentAPersona
+  };
+  
+  if (onMessageReceived) await onMessageReceived(agentAMessage);
+  
+  // If only one agent, we're done
+  if (numberOfAgents === 1) return;
+  
+  // Agent B responds to user
+  const agentBPrompt = createResponseToUserPrompt(
+    originalPrompt,
+    userMessage,
+    [...currentConversation, agentAMessage],
+    'Agent B',
+    currentScenario
+  );
+  
+  const agentBResponse = await callOpenRouterViaEdge(
+    agentBPrompt,
+    agentBModel,
+    agentBPersona,
+    apiKey || null,
+    responseLength
+  );
+  
+  const agentBMessage: ConversationMessage = {
+    agent: 'Agent B',
+    message: agentBResponse,
+    model: agentBModel,
+    persona: agentBPersona
+  };
+  
+  if (onMessageReceived) await onMessageReceived(agentBMessage);
+  
+  // If only two agents, we're done
+  if (numberOfAgents === 2) return;
+  
+  // Agent C responds to user
+  const agentCPrompt = createResponseToUserPrompt(
+    originalPrompt,
+    userMessage,
+    [...currentConversation, agentAMessage, agentBMessage],
+    'Agent C',
+    currentScenario
+  );
+  
+  const agentCResponse = await callOpenRouterViaEdge(
+    agentCPrompt,
+    agentCModel,
+    agentCPersona,
+    apiKey || null,
+    responseLength
+  );
+  
+  const agentCMessage: ConversationMessage = {
+    agent: 'Agent C',
+    message: agentCResponse,
+    model: agentCModel,
+    persona: agentCPersona
+  };
+  
+  if (onMessageReceived) await onMessageReceived(agentCMessage);
 };

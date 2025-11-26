@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatMessage } from '../components/ChatMessage';
+import { UserMessage } from '../components/UserMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
 import { AgentTypingIndicator } from '../components/AgentTypingIndicator';
 import { ChatInput } from '../components/ChatInput';
@@ -10,8 +11,9 @@ import { useLabsState } from '../hooks/useLabsState';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
+import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
+import { ConversationMessage } from '../types';
 import { scenarioTypes } from '../constants';
 import { AnalysisFloatingButton } from '../components/AnalysisFloatingButton';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
@@ -158,12 +160,21 @@ export const ChatView = () => {
                 )}
                 
                 {/* Message */}
-                <ChatMessage 
-                  message={message} 
-                  messageIndex={index}
-                  totalMessages={messages.length}
-                  showTimeline={true}
-                />
+                {message.isHuman ? (
+                  <UserMessage 
+                    message={message} 
+                    messageIndex={index}
+                    totalMessages={messages.length}
+                    showTimeline={true}
+                  />
+                ) : (
+                  <ChatMessage 
+                    message={message} 
+                    messageIndex={index}
+                    totalMessages={messages.length}
+                    showTimeline={true}
+                  />
+                )}
               </div>
             );
           })}
@@ -177,9 +188,58 @@ export const ChatView = () => {
 
       {/* Input */}
       <ChatInput 
-        onSend={(message) => {
-          // TODO: Implement follow-up conversation logic
-          console.log('Follow-up:', message);
+        onSend={async (userMessage) => {
+          if (!chatId || !chat) return;
+          
+          setIsGenerating(true);
+          const settings = chat.settings as any;
+          
+          try {
+            // Add user message to conversation
+            const userMessageObj: ConversationMessage = {
+              agent: 'You',
+              message: userMessage,
+              model: 'human',
+              persona: 'Human Participant',
+              isHuman: true
+            };
+            
+            await saveMessage(chatId, userMessageObj);
+            
+            // Get current conversation including the user's new message
+            const currentConversation = [...messages, userMessageObj];
+            
+            // Trigger agents to respond to user's message
+            await handleUserFollowUp(
+              chat.prompt,
+              userMessage,
+              currentConversation,
+              scenarioTypes.find(s => s.id === chat.scenario_id)!,
+              settings.numberOfAgents,
+              settings.models.agentA,
+              settings.models.agentB,
+              settings.models.agentC,
+              settings.personas.agentA,
+              settings.personas.agentB,
+              settings.personas.agentC,
+              state.apiKey || '',
+              settings.responseLength,
+              async (message) => {
+                if (!chatId) return;
+                setCurrentAgent(message.agent);
+                await saveMessage(chatId, message);
+              }
+            );
+            
+            setCurrentAgent(null);
+            toast.success('Agents have responded to your message!');
+          } catch (error) {
+            console.error('Error handling user message:', error);
+            toast.error('Failed to process your message');
+            setCurrentAgent(null);
+          } finally {
+            setIsGenerating(false);
+          }
         }}
         disabled={isGenerating}
         placeholder="Continue the conversation..."
