@@ -1,36 +1,85 @@
 import { ConversationMessage } from '../types';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
+import { Badge } from '@/components/ui/badge';
 
 interface ChatMessageProps {
   message: ConversationMessage;
+  messageIndex: number;
+  totalMessages: number;
+  showTimeline?: boolean;
 }
 
-const agentColors = {
-  'Agent A': 'bg-purple-100 border-purple-200 text-purple-900',
-  'Agent B': 'bg-blue-100 border-blue-200 text-blue-900',
-  'Agent C': 'bg-green-100 border-green-200 text-green-900'
+const agentStyles = {
+  'Agent A': { 
+    borderClass: 'border-purple-200', 
+    iconBgClass: 'bg-purple-100 text-purple-700',
+    timelineDotClass: 'bg-purple-400'
+  },
+  'Agent B': { 
+    borderClass: 'border-blue-200', 
+    iconBgClass: 'bg-blue-100 text-blue-700',
+    timelineDotClass: 'bg-blue-400'
+  },
+  'Agent C': { 
+    borderClass: 'border-green-200', 
+    iconBgClass: 'bg-green-100 text-green-700',
+    timelineDotClass: 'bg-green-400'
+  }
 };
 
-const agentIcons = {
-  'Agent A': '🟣',
-  'Agent B': '🔵',
-  'Agent C': '🟢'
-};
+export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline = true }: ChatMessageProps) => {
+  const style = agentStyles[message.agent as keyof typeof agentStyles] || {
+    borderClass: 'border-border',
+    iconBgClass: 'bg-muted text-foreground',
+    timelineDotClass: 'bg-muted-foreground'
+  };
 
-export const ChatMessage = ({ message }: ChatMessageProps) => {
-  const colorClass = agentColors[message.agent as keyof typeof agentColors] || 'bg-muted border-border text-foreground';
-  const icon = agentIcons[message.agent as keyof typeof agentIcons] || '🤖';
+  const agentLetter = message.agent.replace('Agent ', '') as 'A' | 'B' | 'C';
+  const isLastMessage = messageIndex === totalMessages - 1;
 
   return (
-    <div className={`rounded-lg border p-4 ${colorClass}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{icon}</span>
-        <span className="font-semibold">{message.agent}</span>
-        <span className="text-xs opacity-70">· {message.model}</span>
-        <span className="text-xs opacity-70">· {message.persona}</span>
-      </div>
-      <div className="text-sm leading-relaxed whitespace-pre-wrap">
-        {message.message}
-      </div>
+    <div className="relative pl-8 animate-fade-in" style={{ animationDelay: `${messageIndex * 0.1}s` }}>
+      {/* Timeline Connector */}
+      {showTimeline && (
+        <>
+          {/* Vertical Line */}
+          {!isLastMessage && (
+            <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-border -translate-x-1/2" />
+          )}
+          
+          {/* Colored Dot */}
+          <div className={`absolute left-4 top-4 w-2 h-2 rounded-full ${style.timelineDotClass} -translate-x-1/2 z-10`} />
+        </>
+      )}
+
+      {/* Message Card */}
+      <Card className={`border-2 ${style.borderClass} shadow-sm hover:shadow-md transition-shadow`}>
+        <CardHeader className="pb-2 px-4 pt-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <AgentAvatar agentLetter={agentLetter} iconBgClass={style.iconBgClass} />
+            <span className="font-semibold">{message.agent}</span>
+            
+            {/* Turn Order Badge */}
+            <Badge variant="outline" className="text-xs">
+              #{messageIndex + 1}
+            </Badge>
+            
+            <span className="text-xs text-muted-foreground">· {message.model}</span>
+            
+            {/* Persona Badge */}
+            <Badge variant="secondary" className="text-xs">
+              {message.persona}
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="px-4 pb-4 pt-0">
+          <div className="text-sm leading-relaxed whitespace-pre-wrap">
+            {message.message}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
