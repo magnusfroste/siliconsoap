@@ -26,10 +26,9 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <h3 className="text-xs font-medium mb-1">Number of Agents</h3>
         <Select value={numberOfAgents.toString()} onValueChange={(value) => setNumberOfAgents(parseInt(value))}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Select number of agents" />
+            <SelectValue placeholder="Number of agents" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="1">1 Agent (Solo Analysis)</SelectItem>
@@ -40,14 +39,13 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
       </div>
       
       <div>
-        <h3 className="text-xs font-medium mb-1">Number of Exchange Rounds</h3>
         <Select 
           value={rounds.toString()} 
           onValueChange={(value) => setRounds(parseInt(value))}
           disabled={numberOfAgents === 1}
         >
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Select rounds" />
+            <SelectValue placeholder="Exchange rounds" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="1">1 Round (Initial responses)</SelectItem>
@@ -56,15 +54,14 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
           </SelectContent>
         </Select>
         {numberOfAgents === 1 && (
-          <p className="text-xs text-gray-500 mt-1">Only one round available with one agent</p>
+          <p className="text-xs text-muted-foreground mt-1">Only one round available with one agent</p>
         )}
       </div>
       
       <div>
-        <h3 className="text-xs font-medium mb-1">Response Length</h3>
         <Select value={responseLength} onValueChange={(value) => setResponseLength(value)}>
           <SelectTrigger className="h-10 text-sm">
-            <SelectValue placeholder="Select length" />
+            <SelectValue placeholder="Response length" />
           </SelectTrigger>
           <SelectContent>
             {responseLengthOptions.map(option => (
