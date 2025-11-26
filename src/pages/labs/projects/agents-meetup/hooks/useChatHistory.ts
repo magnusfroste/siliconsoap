@@ -15,7 +15,8 @@ export const useChatHistory = (userId: string | undefined) => {
 
   useEffect(() => {
     if (!userId) {
-      setChats([]);
+      // Load guest chats from localStorage
+      loadGuestChats();
       setLoading(false);
       return;
     }
@@ -44,6 +45,31 @@ export const useChatHistory = (userId: string | undefined) => {
     };
   }, [userId]);
 
+  const loadGuestChats = () => {
+    try {
+      const guestChatsStr = localStorage.getItem('guest_chats');
+      if (!guestChatsStr) {
+        setChats([]);
+        return;
+      }
+
+      const guestChats = JSON.parse(guestChatsStr);
+      const chatList: ChatHistoryItem[] = Object.values(guestChats).map((chat: any) => ({
+        id: chat.id,
+        title: chat.title,
+        created_at: chat.created_at,
+        updated_at: chat.updated_at
+      }));
+
+      // Sort by updated_at descending
+      chatList.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      setChats(chatList);
+    } catch (error) {
+      console.error('Error loading guest chats:', error);
+      setChats([]);
+    }
+  };
+
   const loadChats = async () => {
     if (!userId) return;
 
@@ -63,6 +89,25 @@ export const useChatHistory = (userId: string | undefined) => {
   };
 
   const deleteChat = async (chatId: string) => {
+    // Handle guest chat deletion
+    if (chatId.startsWith('guest_')) {
+      try {
+        const guestChatsStr = localStorage.getItem('guest_chats');
+        if (guestChatsStr) {
+          const guestChats = JSON.parse(guestChatsStr);
+          delete guestChats[chatId];
+          localStorage.setItem('guest_chats', JSON.stringify(guestChats));
+          toast.success('Chat deleted');
+          loadGuestChats();
+        }
+      } catch (error) {
+        console.error('Error deleting guest chat:', error);
+        toast.error('Failed to delete chat');
+      }
+      return;
+    }
+
+    // Handle logged-in user chat deletion
     const { error } = await supabase
       .from('agent_chats')
       .delete()
@@ -77,5 +122,5 @@ export const useChatHistory = (userId: string | undefined) => {
     }
   };
 
-  return { chats, loading, deleteChat, refreshChats: loadChats };
+  return { chats, loading, deleteChat, refreshChats: userId ? loadChats : loadGuestChats };
 };
