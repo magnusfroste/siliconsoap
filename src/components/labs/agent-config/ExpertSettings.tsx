@@ -80,7 +80,7 @@ export function ExpertSettings({
           </span>
         </CollapsibleTrigger>
         
-        <CollapsibleContent className="pt-4 space-y-6">
+        <CollapsibleContent className="pt-4 grid grid-cols-2 gap-4">
           {/* Conversation Tone */}
           <div className="space-y-2">
             <Tooltip>
@@ -97,6 +97,33 @@ export function ExpertSettings({
               </SelectTrigger>
               <SelectContent>
                 {toneOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex flex-col items-start">
+                      <span>{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Personality Intensity */}
+          <div className="space-y-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Label className="text-sm font-medium cursor-help">Personality Intensity</Label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">How strongly agents embody their persona characteristics</p>
+              </TooltipContent>
+            </Tooltip>
+            <Select value={personalityIntensity} onValueChange={setPersonalityIntensity}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {intensityOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex flex-col items-start">
                       <span>{option.label}</span>
@@ -160,33 +187,6 @@ export function ExpertSettings({
               <span>By the Book</span>
               <span>Wild Card</span>
             </div>
-          </div>
-
-          {/* Personality Intensity */}
-          <div className="space-y-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Label className="text-sm font-medium cursor-help">Personality Intensity</Label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">How strongly agents embody their persona characteristics</p>
-              </TooltipContent>
-            </Tooltip>
-            <Select value={personalityIntensity} onValueChange={setPersonalityIntensity}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {intensityOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex flex-col items-start">
-                      <span>{option.label}</span>
-                      <span className="text-xs text-muted-foreground">{option.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </CollapsibleContent>
       </Collapsible>
