@@ -16,13 +16,17 @@ export const getMaxTokens = (responseLength: string): number => {
   }
 };
 
-// Import persona instructions from constants
-import { profiles } from '@/pages/labs/projects/agents-meetup/constants';
+import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to create system prompt based on persona
-export const createSystemPrompt = (persona: string, responseLength: string): string => {
-  // Find the persona profile with detailed instructions
-  const profile = profiles.find(p => p.id === persona);
+export const createSystemPrompt = async (persona: string, responseLength: string): Promise<string> => {
+  // Fetch the persona profile from database
+  const { data: profile } = await supabase
+    .from('agent_profiles')
+    .select('instructions')
+    .eq('slug', persona)
+    .maybeSingle();
+  
   let systemPrompt = profile?.instructions || "You are an AI assistant analyzing text.";
 
   // Add response length instruction to the system prompt

@@ -19,7 +19,7 @@ export const callOpenRouter = async (
     throw new Error("API key is required to use this model.");
   }
 
-  const systemPrompt = createSystemPrompt(persona, responseLength);
+  const systemPrompt = await createSystemPrompt(persona, responseLength);
   const maxTokens = getMaxTokens(responseLength);
 
   const messages: OpenRouterMessage[] = [
@@ -93,7 +93,7 @@ export const callOpenRouterViaEdge = async (
   }
 
   // No user API key - use edge function with shared key
-  const systemPrompt = createSystemPrompt(persona, responseLength);
+  const systemPrompt = await createSystemPrompt(persona, responseLength);
   const maxTokens = getMaxTokens(responseLength);
 
   const messages: OpenRouterMessage[] = [
