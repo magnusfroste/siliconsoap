@@ -56,10 +56,34 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     return true;
   };
 
-  // Create a wrapper around the deleteApiKey function to clear models
-  const deleteApiKey = () => {
+  // Create a wrapper around the deleteApiKey function to reload models with shared key
+  const deleteApiKey = async () => {
     originalDeleteApiKey();
-    setAvailableModels([]);
+    
+    // Reload models using shared key (empty string)
+    setLoadingModels(true);
+    setTimeout(async () => {
+      try {
+        console.log("Reloading models with shared key after deleting user key");
+        const models = await fetchOpenRouterModels(''); // Empty string = shared key
+        setAvailableModels(models);
+        
+        if (models.length > 0) {
+          // Reset to default models
+          const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
+          const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
+          const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+          
+          if (defaultAgentA) setAgentAModel(defaultAgentA);
+          if (defaultAgentB) setAgentBModel(defaultAgentB);
+          if (defaultAgentC) setAgentCModel(defaultAgentC);
+        }
+      } catch (error) {
+        console.error("Error loading models after deleting API key:", error);
+      } finally {
+        setLoadingModels(false);
+      }
+    }, 500);
   };
 
   const {
