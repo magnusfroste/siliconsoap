@@ -55,18 +55,6 @@ export const scenarioTypes: ScenarioType[] = [
     placeholder: "Enter a problem to solve (e.g., 'How can we reduce traffic congestion in major cities?' or 'What's the best way to learn a new language?')"
   },
   {
-    id: 'text-analysis',
-    name: 'Text Analysis',
-    description: 'Analyze writing style to determine authorship',
-    icon: <FileText className="h-5 w-5" />,
-    promptTemplate: (text: string) => `Analyze this text: "${text}". Who might have written it? Consider style, vocabulary, tone, and other characteristics.`,
-    followupTemplate: (text: string, prevResponse: string, otherResponse: string) => 
-      `We're analyzing this original text: "${text}"\n\nMy initial analysis was: "${prevResponse}"\n\nAgent B responded with: "${otherResponse}"\n\nWhat do you think about Agent B's analysis? Do you agree or disagree? Provide additional insights or questions about the text's authorship.`,
-    finalTemplate: (text: string, prevResponse: string, otherResponse: string) => 
-      `We're analyzing this original text: "${text}"\n\nMy previous analysis was: "${prevResponse}"\n\nAgent A has responded with: "${otherResponse}"\n\nLet's conclude this discussion. What's your final assessment of who might have written this text? Add any additional insights about stylistic elements, potential background of the author, or other observations.`,
-    placeholder: "Enter text to analyze (e.g., a paragraph from an article, book, or speech)"
-  },
-  {
     id: 'ethical-dilemma',
     name: 'Ethical Dilemma',
     description: 'Debate different perspectives on an ethical question',

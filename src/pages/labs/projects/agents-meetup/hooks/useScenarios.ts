@@ -5,10 +5,9 @@ import { scenarioTypes } from '../constants';
 export const useScenarios = () => {
   const [activeScenario, setActiveScenario] = useState('general-problem');
   const [promptInputs, setPromptInputs] = useState<{[key: string]: string}>({
-    'text-analysis': '',
+    'general-problem': '',
     'ethical-dilemma': '',
-    'future-prediction': '',
-    'general-problem': ''
+    'future-prediction': ''
   });
   const [numberOfAgents, setNumberOfAgents] = useState(3);
   const [rounds, setRounds] = useState(2);

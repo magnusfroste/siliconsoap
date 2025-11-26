@@ -158,27 +158,18 @@ export const NewChatView = () => {
 
   const suggestedTopicsByScenario: Record<string, string[]> = {
     'general-problem': [
-      "How can we reduce traffic congestion?",
-      "Solutions for affordable housing crisis",
-      "Improving public education systems",
-      "Sustainable food production methods"
-    ],
-    'text-analysis': [
-      "Analyze Shakespeare's writing style",
-      "Compare two news articles on same topic",
-      "Identify author of anonymous text",
-      "Examine rhetoric in political speeches"
+      "Reducing traffic congestion in cities",
+      "Affordable housing solutions",
+      "Sustainable food production"
     ],
     'ethical-dilemma': [
       "Should AI have legal rights?",
       "Ethics of human genetic enhancement",
-      "Moral obligations to future generations",
       "Privacy vs security in surveillance"
     ],
     'future-prediction': [
-      "Future of remote work in 2030",
+      "Future of remote work by 2030",
       "Impact of quantum computing",
-      "Evolution of social media platforms",
       "Climate adaptation technologies"
     ]
   };
@@ -187,7 +178,7 @@ export const NewChatView = () => {
 
   return (
     <div className="h-full flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl space-y-6">
+      <div className="w-full max-w-3xl space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">What would you like to discuss?</h1>
           <p className="text-muted-foreground">
@@ -195,7 +186,7 @@ export const NewChatView = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           <ScenarioSelector
             scenarioTypes={scenarioTypes}
             activeScenario={state.activeScenario}
@@ -205,22 +196,21 @@ export const NewChatView = () => {
           />
 
           {/* Suggested Topics */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {suggestedTopics.map((topic, idx) => (
               <Badge
                 key={idx}
-                variant="outline"
-                className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                variant="secondary"
+                className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-xs"
                 onClick={() => actions.handleInputChange(state.activeScenario, topic)}
               >
-                {topic}
+                💡 {topic}
               </Badge>
             ))}
           </div>
 
           {/* Conversation Settings */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Conversation Settings</h3>
             <ConversationSettings
               numberOfAgents={state.numberOfAgents}
               setNumberOfAgents={actions.setNumberOfAgents}
@@ -234,7 +224,6 @@ export const NewChatView = () => {
 
           {/* Agent Configuration */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm">Agent Configuration</h3>
             <AgentGridSection
               numberOfAgents={state.numberOfAgents}
               agentAModel={state.agentAModel}
@@ -258,7 +247,7 @@ export const NewChatView = () => {
             />
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-center">
             <Button
               type="submit"
               size="lg"
