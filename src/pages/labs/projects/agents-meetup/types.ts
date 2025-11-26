@@ -5,6 +5,7 @@ import { OpenRouterModel } from '@/utils/openRouter';
 
 export type ResponseLength = 'short' | 'medium' | 'long';
 export type ParticipationMode = 'spectator' | 'jump-in' | 'round-by-round';
+export type TurnOrder = 'sequential' | 'random' | 'popcorn';
 
 export type Profile = {
   id: string;

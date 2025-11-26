@@ -28,9 +28,16 @@ const intensityModifiers = {
  */
 export const createAgentAInitialPrompt = (
   currentPrompt: string,
-  currentScenario: ScenarioType
+  currentScenario: ScenarioType,
+  turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential'
 ): string => {
-  return currentScenario.promptTemplate(currentPrompt);
+  const basePrompt = currentScenario.promptTemplate(currentPrompt);
+  
+  if (turnOrder === 'popcorn') {
+    return `${basePrompt}\n\nNote: This is a dynamic conversation. You can address other agents directly by name to invite their perspectives.`;
+  }
+  
+  return basePrompt;
 };
 
 /**
@@ -39,7 +46,8 @@ export const createAgentAInitialPrompt = (
 export const createAgentBPrompt = (
   currentPrompt: string,
   agentAResponse: string,
-  currentScenario: ScenarioType
+  currentScenario: ScenarioType,
+  turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential'
 ): string => {
   return `
     ${currentScenario.id === 'text-analysis' ? `Agent A analyzed this original text: "${currentPrompt}"` : `We're discussing: "${currentPrompt}"`}
@@ -60,7 +68,8 @@ export const createAgentCPrompt = (
   currentPrompt: string,
   agentAResponse: string,
   agentBResponse: string,
-  currentScenario: ScenarioType
+  currentScenario: ScenarioType,
+  turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential'
 ): string => {
   return `
     ${currentScenario.id === 'text-analysis' ? `We're analyzing this original text: "${currentPrompt}"` : `We're discussing: "${currentPrompt}"`}

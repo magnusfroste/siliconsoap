@@ -178,6 +178,8 @@ const AgentsMeetup: React.FC = () => {
         setResponseLength={(length: string) => actions.setResponseLength(length as any)}
         participationMode={state.participationMode}
         setParticipationMode={(mode: string) => actions.setParticipationMode(mode as any)}
+        turnOrder={state.turnOrder}
+        setTurnOrder={(order: string) => actions.setTurnOrder(order as any)}
         responseLengthOptions={responseLengthOptions}
         agentAModel={state.agentAModel}
         setAgentAModel={actions.setAgentAModel}

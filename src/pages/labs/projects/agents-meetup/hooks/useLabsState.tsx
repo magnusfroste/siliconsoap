@@ -127,6 +127,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setResponseLength,
     participationMode,
     setParticipationMode,
+    turnOrder,
+    setTurnOrder,
     handleInputChange,
     conversationTone,
     setConversationTone,
@@ -176,7 +178,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     rounds,
     responseLength,
     getCurrentScenarioFn,
-    getCurrentPromptFn
+    getCurrentPromptFn,
+    turnOrder
   );
 
   // Pass through the original handlers directly (no wrapping needed)
@@ -203,6 +206,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       numberOfAgents,
       responseLength,
       participationMode,
+      turnOrder,
       conversation,
       isLoading,
       availableModels,
@@ -238,6 +242,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setNumberOfAgents,
       setResponseLength,
       setParticipationMode,
+      setTurnOrder,
       setConversation,
       setIsLoading,
       setAvailableModels,
