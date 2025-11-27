@@ -13,8 +13,16 @@ import {
   createAgentAFollowupPrompt,
   createAgentBFinalPrompt,
   createAgentCFinalPrompt,
-  createResponseToUserPrompt
+  createResponseToUserPrompt,
+  LANGUAGE_INSTRUCTION
 } from './agentPrompts';
+
+/**
+ * Wraps persona with language instruction
+ */
+const withLanguageInstruction = (persona: string): string => {
+  return persona + LANGUAGE_INSTRUCTION;
+};
 
 /**
  * Checks API availability before starting a conversation (optional for shared key mode)
@@ -214,7 +222,7 @@ export const handleInitialRound = async (
   const agentAResponse = await callOpenRouterViaEdge(
     agentAPrompt,
     agentAModel,
-    agentAPersona,
+    withLanguageInstruction(agentAPersona),
     apiKey || null,
     responseLength,
     temperature
@@ -255,7 +263,7 @@ export const handleInitialRound = async (
   const agentBResponse = await callOpenRouterViaEdge(
     agentBPrompt,
     agentBModel,
-    agentBPersona,
+    withLanguageInstruction(agentBPersona),
     apiKey || null,
     responseLength,
     temperature
@@ -300,7 +308,7 @@ export const handleInitialRound = async (
     const agentCResponse = await callOpenRouterViaEdge(
       agentCPrompt,
       agentCModel,
-      agentCPersona,
+      withLanguageInstruction(agentCPersona),
       apiKey || null,
       responseLength,
       temperature
@@ -370,7 +378,7 @@ export const handleAdditionalRounds = async (
   const agentAFollowup = await callOpenRouterViaEdge(
     agentAFollowupPrompt,
     agentAModel,
-    agentAPersona,
+    withLanguageInstruction(agentAPersona),
     apiKey || null,
     responseLength,
     temperature
@@ -399,7 +407,7 @@ export const handleAdditionalRounds = async (
     const agentBFinal = await callOpenRouterViaEdge(
       agentBFinalPrompt,
       agentBModel,
-      agentBPersona,
+      withLanguageInstruction(agentBPersona),
       apiKey || null,
       responseLength,
       temperature
@@ -427,7 +435,7 @@ export const handleAdditionalRounds = async (
       const agentCFinal = await callOpenRouterViaEdge(
         agentCFinalPrompt,
         agentCModel,
-        agentCPersona,
+        withLanguageInstruction(agentCPersona),
         apiKey || null,
         responseLength,
         temperature
@@ -480,7 +488,7 @@ export const handleUserFollowUp = async (
   const agentAResponse = await callOpenRouterViaEdge(
     agentAPrompt,
     agentAModel,
-    agentAPersona,
+    withLanguageInstruction(agentAPersona),
     apiKey || null,
     responseLength,
     temperature
@@ -510,7 +518,7 @@ export const handleUserFollowUp = async (
   const agentBResponse = await callOpenRouterViaEdge(
     agentBPrompt,
     agentBModel,
-    agentBPersona,
+    withLanguageInstruction(agentBPersona),
     apiKey || null,
     responseLength,
     temperature
@@ -540,7 +548,7 @@ export const handleUserFollowUp = async (
   const agentCResponse = await callOpenRouterViaEdge(
     agentCPrompt,
     agentCModel,
-    agentCPersona,
+    withLanguageInstruction(agentCPersona),
     apiKey || null,
     responseLength,
     temperature
