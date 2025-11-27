@@ -76,7 +76,7 @@ export const ChatView = () => {
 
     const shareId = await shareChat(chatId);
     if (shareId) {
-      const shareUrl = `${window.location.origin}/labs/agents-meetup/shared/${shareId}`;
+      const shareUrl = `${window.location.origin}/shared/${shareId}`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied! Anyone with the link can view this chat.');
     }
