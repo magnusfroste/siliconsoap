@@ -177,9 +177,9 @@ export const NewChatView = () => {
       "Privacy vs security trade-offs?"
     ],
     'future-prediction': [
-      "AGI timeline and impact?",
-      "Brain-computer interface adoption?",
-      "Future of human employment?"
+      "AGI by 2030",
+      "Brain-computer interfaces",
+      "Future of work automation"
     ]
   };
 
