@@ -6,6 +6,7 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { AgentTypingIndicator } from '../components/AgentTypingIndicator';
 import { ChatInput } from '../components/ChatInput';
 import { RoundPausePrompt } from '../components/RoundPausePrompt';
+import { ConversationComplete } from '../components/ConversationComplete';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
@@ -33,6 +34,8 @@ export const ChatView = () => {
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
   const [currentRoundInProgress, setCurrentRoundInProgress] = useState(1);
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
+  const [conversationComplete, setConversationComplete] = useState(false);
+  const [wantsToContinue, setWantsToContinue] = useState(false);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
   
@@ -81,6 +84,27 @@ export const ChatView = () => {
       toast.success('Link copied! Anyone with the link can view this chat.');
     }
   };
+
+  // Detect if chat is already complete when loading
+  useEffect(() => {
+    if (!chat || loading || messages.length === 0) return;
+    
+    const settings = chat.settings as any;
+    const numberOfAgents = settings?.numberOfAgents || 2;
+    const configuredRounds = settings?.rounds || 1;
+    const participationMode = settings?.participationMode || 'jump-in';
+    
+    // Calculate actual rounds from messages (excluding human messages for agent round counting)
+    const agentMessages = messages.filter(m => !m.isHuman);
+    const actualRounds = Math.ceil(agentMessages.length / numberOfAgents);
+    
+    // Chat is complete if we have at least the configured number of rounds
+    if (actualRounds >= configuredRounds && participationMode !== 'round-by-round') {
+      setConversationComplete(true);
+    } else if (participationMode === 'round-by-round' && actualRounds >= configuredRounds) {
+      setConversationComplete(true);
+    }
+  }, [chat, loading, messages.length]);
 
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
@@ -156,10 +180,12 @@ export const ChatView = () => {
               onMessageReceived
             );
             setCurrentAgent(null);
+            setConversationComplete(true);
             toast.success('Conversation complete!');
           }
         } else {
           setCurrentAgent(null);
+          setConversationComplete(true);
           toast.success('Conversation complete!');
         }
       } catch (error) {
@@ -227,7 +253,11 @@ export const ChatView = () => {
               <div key={index}>
                 {/* Round Separator */}
                 {isNewRound && (
-                  <RoundSeparator roundNumber={currentRound} />
+                  <RoundSeparator 
+                    roundNumber={currentRound} 
+                    totalConfiguredRounds={(chat.settings as any)?.rounds || 1}
+                    isFinalRound={currentRound === ((chat.settings as any)?.rounds || 1)}
+                  />
                 )}
                 
                 {/* Message */}
@@ -307,6 +337,7 @@ export const ChatView = () => {
                   
                   setCurrentAgent(null);
                   setCurrentRoundInProgress(settings.rounds + 1);
+                  setConversationComplete(true);
                   toast.success('Conversation complete!');
                 } catch (error) {
                   console.error('Error continuing rounds:', error);
@@ -318,14 +349,37 @@ export const ChatView = () => {
               }}
             />
           )}
+          
+          {/* Conversation Complete */}
+          {conversationComplete && !isGenerating && !wantsToContinue && (
+            <ConversationComplete
+              totalRounds={(chat.settings as any)?.rounds || 1}
+              participationMode={(chat.settings as any)?.participationMode || 'jump-in'}
+              canContinue={true}
+              onContinue={() => setWantsToContinue(true)}
+            />
+          )}
         </div>
       </ScrollArea>
 
-      {/* Input - hide in spectator mode or when waiting for user in round-by-round */}
+      {/* Input - hide based on participation mode and completion state */}
       {(() => {
         const settings = chat?.settings as any;
         const participationMode = settings?.participationMode || 'jump-in';
-        const shouldShowInput = participationMode !== 'spectator';
+        
+        // Determine if input should be shown
+        let shouldShowInput = false;
+        
+        if (participationMode === 'spectator') {
+          // Never show input for spectator mode
+          shouldShowInput = false;
+        } else if (participationMode === 'round-by-round') {
+          // Show input when waiting for user OR when user explicitly wants to continue after completion
+          shouldShowInput = waitingForUserInput || wantsToContinue;
+        } else {
+          // Jump-in mode: show input after completion OR when not complete yet
+          shouldShowInput = conversationComplete || wantsToContinue || !isGenerating;
+        }
         
         return shouldShowInput && (
           <ChatInput
@@ -388,9 +442,11 @@ export const ChatView = () => {
                   
                   setCurrentRoundInProgress(settings.rounds + 1);
                   setCurrentAgent(null);
+                  setConversationComplete(true);
+                  setWantsToContinue(false);
                   toast.success('Conversation complete!');
                 } else {
-                  // Jump-in mode: trigger agents to respond to user's message
+                  // Jump-in mode or continuing after completion: trigger agents to respond to user's message
                   await handleUserFollowUp(
                     chat.prompt,
                     userMessage,
@@ -413,7 +469,6 @@ export const ChatView = () => {
                   );
                   
                   setCurrentAgent(null);
-                  toast.success('Agents have responded to your message!');
                 }
               } catch (error) {
                 console.error('Error handling user message:', error);
