@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -85,6 +85,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   isUsingSharedKey,
   promptForBYOK
 }) => {
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
@@ -144,6 +145,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               turnOrder={turnOrder}
               setTurnOrder={setTurnOrder}
               responseLengthOptions={responseLengthOptions}
+              isExpanded={settingsExpanded}
+              onToggleExpanded={() => setSettingsExpanded(!settingsExpanded)}
             />
           </div>
 
