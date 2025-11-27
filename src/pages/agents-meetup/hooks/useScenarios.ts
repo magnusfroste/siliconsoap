@@ -6,6 +6,7 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 export const useScenarios = () => {
   const { getNumericValue, getTextValue, loading } = useFeatureFlags();
   
+  const [isInitialized, setIsInitialized] = useState(false);
   const [activeScenario, setActiveScenario] = useState('general-problem');
   const [promptInputs, setPromptInputs] = useState<{[key: string]: string}>({
     'general-problem': '',
@@ -24,9 +25,9 @@ export const useScenarios = () => {
   const [temperature, setTemperature] = useState(0.7);
   const [personalityIntensity, setPersonalityIntensity] = useState<'mild' | 'moderate' | 'extreme'>('moderate');
 
-  // Load defaults from feature flags
+  // Load defaults from feature flags only once
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isInitialized) {
       const defaultAgents = getNumericValue('default_number_of_agents');
       const defaultRounds = getNumericValue('default_rounds');
       const defaultBias = getNumericValue('default_agreement_bias');
@@ -47,8 +48,10 @@ export const useScenarios = () => {
       if (defaultTurnOrder) setTurnOrder(defaultTurnOrder);
       if (defaultTone) setConversationTone(defaultTone);
       if (defaultIntensity) setPersonalityIntensity(defaultIntensity);
+      
+      setIsInitialized(true);
     }
-  }, [loading, getNumericValue, getTextValue]);
+  }, [loading, isInitialized]);
 
   const handleInputChange = (scenarioId: string, value: string) => {
     setPromptInputs(prev => ({
