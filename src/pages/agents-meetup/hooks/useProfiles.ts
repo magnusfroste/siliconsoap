@@ -1,22 +1,38 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useProfiles = () => {
-  const [agentAPersona, setAgentAPersona] = useState('analytical');
-  const [agentBPersona, setAgentBPersona] = useState('creative');
-  const [agentCPersona, setAgentCPersona] = useState('strategic');
+  const { getTextValue, loading } = useFeatureFlags();
+  
+  const [agentAPersona, setAgentAPersona] = useState('analytical-expert');
+  const [agentBPersona, setAgentBPersona] = useState('creative-thinker');
+  const [agentCPersona, setAgentCPersona] = useState('strategic-planner');
+
+  // Load defaults from feature flags
+  useEffect(() => {
+    if (!loading) {
+      const defaultAgents = getTextValue('default_agents');
+      if (defaultAgents) {
+        const slugs = defaultAgents.split(',').map(s => s.trim());
+        if (slugs[0]) setAgentAPersona(slugs[0]);
+        if (slugs[1]) setAgentBPersona(slugs[1]);
+        if (slugs[2]) setAgentCPersona(slugs[2]);
+      }
+    }
+  }, [loading, getTextValue]);
 
   const formA = useForm({
-    defaultValues: { persona: 'analytical' }
+    defaultValues: { persona: 'analytical-expert' }
   });
 
   const formB = useForm({
-    defaultValues: { persona: 'creative' }
+    defaultValues: { persona: 'creative-thinker' }
   });
 
   const formC = useForm({
-    defaultValues: { persona: 'strategic' }
+    defaultValues: { persona: 'strategic-planner' }
   });
 
   const handleAgentAPersonaChange = (value: string) => {
