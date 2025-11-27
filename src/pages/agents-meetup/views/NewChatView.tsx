@@ -7,6 +7,8 @@ import { ConversationSettings } from '@/components/labs/agent-config/Conversatio
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
 import { ExpertSettings } from '@/components/labs/agent-config/ExpertSettings';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
@@ -205,63 +207,68 @@ export const NewChatView = () => {
             suggestedTopics={suggestedTopics}
           />
 
-          {/* Conversation Settings */}
-          <div className="space-y-4">
-            <ConversationSettings
-              numberOfAgents={state.numberOfAgents}
-              setNumberOfAgents={actions.setNumberOfAgents}
-              rounds={state.rounds}
-              setRounds={actions.setRounds}
-              responseLength={state.responseLength}
-              setResponseLength={actions.setResponseLength}
-              participationMode={state.participationMode}
-              setParticipationMode={actions.setParticipationMode}
-              turnOrder={state.turnOrder}
-              setTurnOrder={actions.setTurnOrder}
-              responseLengthOptions={responseLengthOptions}
-            />
-            
-            {/* Expert Settings */}
-            <ExpertSettings
-              conversationTone={state.conversationTone}
-              setConversationTone={actions.setConversationTone}
-              agreementBias={state.agreementBias}
-              setAgreementBias={actions.setAgreementBias}
-              temperature={state.temperature}
-              setTemperature={actions.setTemperature}
-              personalityIntensity={state.personalityIntensity}
-              setPersonalityIntensity={actions.setPersonalityIntensity}
-            />
-          </div>
+          {/* Configuration Card */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              {/* Conversation Settings */}
+              <ConversationSettings
+                numberOfAgents={state.numberOfAgents}
+                setNumberOfAgents={actions.setNumberOfAgents}
+                rounds={state.rounds}
+                setRounds={actions.setRounds}
+                responseLength={state.responseLength}
+                setResponseLength={actions.setResponseLength}
+                participationMode={state.participationMode}
+                setParticipationMode={actions.setParticipationMode}
+                turnOrder={state.turnOrder}
+                setTurnOrder={actions.setTurnOrder}
+                responseLengthOptions={responseLengthOptions}
+              />
+              
+              <Separator className="my-4" />
+              
+              {/* Expert Settings */}
+              <ExpertSettings
+                conversationTone={state.conversationTone}
+                setConversationTone={actions.setConversationTone}
+                agreementBias={state.agreementBias}
+                setAgreementBias={actions.setAgreementBias}
+                temperature={state.temperature}
+                setTemperature={actions.setTemperature}
+                personalityIntensity={state.personalityIntensity}
+                setPersonalityIntensity={actions.setPersonalityIntensity}
+              />
 
-          {/* Agent Configuration */}
-          <div className="space-y-4">
-            <AgentGridSection
-              numberOfAgents={state.numberOfAgents}
-              agentAModel={state.agentAModel}
-              setAgentAModel={actions.setAgentAModel}
-              agentBModel={state.agentBModel}
-              setAgentBModel={actions.setAgentBModel}
-              agentCModel={state.agentCModel}
-              setAgentCModel={actions.setAgentCModel}
-              agentAPersona={state.agentAPersona}
-              agentBPersona={state.agentBPersona}
-              agentCPersona={state.agentCPersona}
-              handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
-              handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
-              handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
-              profiles={profiles}
-              formA={state.formA}
-              formB={state.formB}
-              formC={state.formC}
-              modelsByProvider={modelsByProvider}
-              loadingModels={state.loadingModels}
-              conversationTone={state.conversationTone}
-              agreementBias={state.agreementBias}
-              temperature={state.temperature}
-              personalityIntensity={state.personalityIntensity}
-            />
-          </div>
+              <Separator className="my-4" />
+
+              {/* Agent Configuration */}
+              <AgentGridSection
+                numberOfAgents={state.numberOfAgents}
+                agentAModel={state.agentAModel}
+                setAgentAModel={actions.setAgentAModel}
+                agentBModel={state.agentBModel}
+                setAgentBModel={actions.setAgentBModel}
+                agentCModel={state.agentCModel}
+                setAgentCModel={actions.setAgentCModel}
+                agentAPersona={state.agentAPersona}
+                agentBPersona={state.agentBPersona}
+                agentCPersona={state.agentCPersona}
+                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
+                profiles={profiles}
+                formA={state.formA}
+                formB={state.formB}
+                formC={state.formC}
+                modelsByProvider={modelsByProvider}
+                loadingModels={state.loadingModels}
+                conversationTone={state.conversationTone}
+                agreementBias={state.agreementBias}
+                temperature={state.temperature}
+                personalityIntensity={state.personalityIntensity}
+              />
+            </CardContent>
+          </Card>
           
           <div className="flex justify-center">
             <Button
