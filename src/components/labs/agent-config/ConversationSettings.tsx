@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Zap } from 'lucide-react';
-import { ResponseLength } from '@/pages/labs/projects/agents-meetup/types';
+import { ResponseLength } from '@/pages/agents-meetup/types';
 
 interface ConversationSettingsProps {
   numberOfAgents: number;

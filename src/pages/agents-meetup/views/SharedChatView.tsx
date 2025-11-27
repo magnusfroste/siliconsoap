@@ -50,7 +50,7 @@ export const SharedChatView = () => {
           <Icon className="h-12 w-12 mx-auto text-muted-foreground" />
           <h2 className="text-2xl font-bold">{config.title}</h2>
           <p className="text-muted-foreground">{config.description}</p>
-          <Button onClick={() => navigate('/labs/agents-meetup')}>
+          <Button onClick={() => navigate('/')}>
             Start Your Own Conversation
           </Button>
         </div>
@@ -80,7 +80,7 @@ export const SharedChatView = () => {
               <p className="text-xs text-muted-foreground">Shared via Agents Meetup</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/labs/agents-meetup')} className="gap-2">
+          <Button onClick={() => navigate('/')} className="gap-2">
             Start Your Own
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -124,7 +124,7 @@ export const SharedChatView = () => {
           <p className="text-muted-foreground mb-3">
             Want to create your own multi-agent conversations?
           </p>
-          <Button onClick={() => navigate('/labs/agents-meetup')} size="lg" className="gap-2">
+          <Button onClick={() => navigate('/')} size="lg" className="gap-2">
             <Sparkles className="h-4 w-4" />
             Start Free Conversation
           </Button>

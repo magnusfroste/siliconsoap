@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const location = useLocation();
-  const isHomePage = location.pathname === '/labs';
 
   // Toggle mobile menu
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -48,52 +46,11 @@ const Header = () => {
         <div className="flex justify-between items-center py-2">
           {/* Logo */}
           <div>
-            <Link to="/labs" className="text-xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
-              froste.eu
+            <Link to="/" className="text-xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
+              AI Agents Meetup
             </Link>
           </div>
-          
-          <nav className="hidden md:flex space-x-10 items-center">
-            {!isHomePage && (
-              <Link 
-                to="/labs" 
-                className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium transition-all hover:bg-purple-200"
-                onClick={stopSpeech}
-              >
-                <Home size={16} />
-                Labs Home
-              </Link>
-            )}
-          </nav>
-          
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden text-gray-700 focus:outline-none" 
-            onClick={toggleMenu}
-            aria-label="Toggle mobile menu"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
-        
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <nav className="md:hidden py-3 pb-4 space-y-4 flex flex-col items-center">
-            {!isHomePage && (
-              <Link 
-                to="/labs" 
-                className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
-                onClick={() => {
-                  stopSpeech();
-                  toggleMenu();
-                }}
-              >
-                <Home size={16} />
-                Labs Home
-              </Link>
-            )}
-          </nav>
-        )}
       </div>
     </header>
   );
