@@ -55,7 +55,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   if (collapsed) {
     return (
       <div className="flex flex-col h-full bg-muted/30 border-r items-center py-4 gap-2">
-        <Link to="/" className="mb-2" onClick={onClose}>
+        <Link to="/new" className="mb-2" onClick={onClose}>
           <Button variant="ghost" size="icon" title="Agents Meetup">
             <Atom className="h-5 w-5 text-primary" />
           </Button>
@@ -72,7 +72,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         
         <div className="h-px w-8 bg-border my-2" />
         
-        <Link to="/" onClick={onClose}>
+        <Link to="/new" onClick={onClose}>
           <Button variant="ghost" size="icon" title="New Chat">
             <Plus className="h-4 w-4" />
           </Button>
@@ -101,7 +101,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
       {/* Branding */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2" onClick={onClose}>
+          <Link to="/new" className="flex items-center gap-2" onClick={onClose}>
             <Atom className="h-5 w-5 text-primary" />
             <span className="font-semibold text-lg">Agents Meetup</span>
           </Link>
@@ -120,7 +120,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
       {/* Chat History */}
       <ScrollArea className="flex-1 p-2">
-        <Link to="/" className="block mb-3">
+        <Link to="/new" className="block mb-3">
           <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground" onClick={onClose}>
             <Plus className="h-4 w-4" />
             <span className="text-sm">New Chat</span>
