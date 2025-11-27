@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Atom, Ticket } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
@@ -56,8 +56,8 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
     return (
       <div className="flex flex-col h-full bg-muted/30 border-r items-center py-4 gap-2">
         <Link to="/new" className="mb-2" onClick={onClose}>
-          <Button variant="ghost" size="icon" title="Agents Meetup">
-            <Atom className="h-5 w-5 text-primary" />
+          <Button variant="ghost" size="icon" title="SiliconSoap">
+            <Droplets className="h-5 w-5 text-primary" />
           </Button>
         </Link>
         
@@ -102,8 +102,10 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <Link to="/new" className="flex items-center gap-2" onClick={onClose}>
-            <Atom className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg">Agents Meetup</span>
+            <Droplets className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-lg bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              SiliconSoap
+            </span>
           </Link>
           
           <Button
