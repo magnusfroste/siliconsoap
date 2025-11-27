@@ -1,6 +1,11 @@
 
 import { ScenarioType } from '../../../types';
 
+// Language instruction for all agents
+export const LANGUAGE_INSTRUCTION = `
+
+IMPORTANT: Respond in the same language as the user's question/prompt. If the language cannot be detected, default to English.`;
+
 // Tone instructions for expert settings
 const toneInstructions = {
   formal: "Engage formally and professionally, citing evidence and maintaining academic rigor.",
