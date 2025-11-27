@@ -70,16 +70,15 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 
       {/* Suggested Topics */}
       {suggestedTopics && suggestedTopics.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-border/20">
           {suggestedTopics.map((topic, idx) => (
-            <Badge
+            <span
               key={idx}
-              variant="outline"
-              className="cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors text-xs"
+              className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
               onClick={() => handleInputChange(activeScenario, topic)}
             >
-              💡 {topic}
-            </Badge>
+              {topic}
+            </span>
           ))}
         </div>
       )}
