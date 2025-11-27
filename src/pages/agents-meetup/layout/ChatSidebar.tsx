@@ -80,6 +80,16 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         
         <div className="flex-1" />
         
+        {/* Credits Display */}
+        <div className="flex flex-col items-center gap-1 mb-2" title={`${creditsRemaining} credits remaining`}>
+          <Ticket className="h-4 w-4 text-muted-foreground" />
+          <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"} className="text-xs px-1.5 py-0">
+            {creditsRemaining}
+          </Badge>
+        </div>
+        
+        <div className="h-px w-8 bg-border mb-2" />
+        
         <div className="space-y-1">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
@@ -92,6 +102,14 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
             );
           })}
         </div>
+        
+        {!user && (
+          <Link to="/auth" className="mt-2">
+            <Button variant="outline" size="icon" title="Sign In">
+              <LogIn className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
       </div>
     );
   }
