@@ -72,27 +72,32 @@ export function ExpertSettings({
   return (
     <TooltipProvider>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group w-full py-2">
-          <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
-          <span>🧪 Advanced Settings</span>
-          <span className="ml-auto text-xs">
-            {isOpen ? '▲' : '▼'}
+        <CollapsibleTrigger className="flex items-center gap-3 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors w-full py-3 group">
+          <Settings className="h-4 w-4 transition-transform duration-200" />
+          <span>Advanced</span>
+          <span className="ml-auto text-xs opacity-50 group-hover:opacity-100 transition-opacity">
+            {isOpen ? '−' : '+'}
           </span>
         </CollapsibleTrigger>
         
-        <CollapsibleContent className="pt-4 grid grid-cols-2 gap-4">
+        <CollapsibleContent className="pt-6 space-y-6">
           {/* Conversation Tone */}
-          <div className="space-y-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Label className="text-sm font-medium cursor-help">Conversation Tone</Label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">Sets the overall style and energy of the conversation</p>
-              </TooltipContent>
-            </Tooltip>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Conversation Tone</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                    <Settings className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p className="max-w-xs text-xs">Sets the overall style and energy of the conversation</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Select value={conversationTone} onValueChange={setConversationTone}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -109,17 +114,22 @@ export function ExpertSettings({
           </div>
 
           {/* Personality Intensity */}
-          <div className="space-y-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Label className="text-sm font-medium cursor-help">Personality Intensity</Label>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">How strongly agents embody their persona characteristics</p>
-              </TooltipContent>
-            </Tooltip>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Personality Intensity</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                    <Settings className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p className="max-w-xs text-xs">How strongly agents embody their persona characteristics</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Select value={personalityIntensity} onValueChange={setPersonalityIntensity}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -138,15 +148,8 @@ export function ExpertSettings({
           {/* Agreement Bias */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label className="text-sm font-medium cursor-help">Agreement Bias</Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">Controls how much agents agree or disagree with each other</p>
-                </TooltipContent>
-              </Tooltip>
-              <span className="text-sm text-muted-foreground">{getAgreementLabel(agreementBias)}</span>
+              <Label className="text-sm font-medium">Agreement Bias</Label>
+              <span className="text-xs font-medium text-muted-foreground">{getAgreementLabel(agreementBias)}</span>
             </div>
             <Slider
               value={[agreementBias]}
@@ -156,24 +159,17 @@ export function ExpertSettings({
               step={5}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Devil's Advocate</span>
-              <span>Yes, And!</span>
+            <div className="flex justify-between text-xs text-muted-foreground/60">
+              <span>Disagree</span>
+              <span>Agree</span>
             </div>
           </div>
 
           {/* Temperature/Creativity */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Label className="text-sm font-medium cursor-help">Creativity</Label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">Higher values make responses more creative and unpredictable</p>
-                </TooltipContent>
-              </Tooltip>
-              <span className="text-sm text-muted-foreground">{getTemperatureLabel(temperature)}</span>
+              <Label className="text-sm font-medium">Creativity</Label>
+              <span className="text-xs font-medium text-muted-foreground">{getTemperatureLabel(temperature)}</span>
             </div>
             <Slider
               value={[temperature]}
@@ -183,9 +179,9 @@ export function ExpertSettings({
               step={0.1}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>By the Book</span>
-              <span>Wild Card</span>
+            <div className="flex justify-between text-xs text-muted-foreground/60">
+              <span>Precise</span>
+              <span>Creative</span>
             </div>
           </div>
         </CollapsibleContent>
