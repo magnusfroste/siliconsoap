@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
+import { Landing } from "./pages/Landing";
 import { AgentsMeetupLayout } from "./pages/agents-meetup/layout/AgentsMeetupLayout";
 import { NewChatView } from "./pages/agents-meetup/views/NewChatView";
 import { ChatView } from "./pages/agents-meetup/views/ChatView";
@@ -51,8 +52,9 @@ const App = () => {
         <BrowserRouter>
           <PageTracker />
           <Routes>
-            <Route path="/" element={<AgentsMeetupLayout />}>
-              <Route index element={<NewChatView />} />
+            <Route path="/" element={<Landing />} />
+            <Route element={<AgentsMeetupLayout />}>
+              <Route path="new" element={<NewChatView />} />
               <Route path="chat/:chatId" element={<ChatView />} />
               <Route path="profile" element={<ProfileView />} />
               <Route path="agent-profiles" element={<AgentProfilesView />} />
