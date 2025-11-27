@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const GUEST_CREDITS_KEY = 'guest_credits_used';
-const GUEST_MAX_CREDITS = 3;
-const LOGGED_IN_INITIAL_CREDITS = 10;
 
 interface CreditData {
   creditsRemaining: number;
@@ -17,11 +15,30 @@ export const useCredits = (userId: string | null | undefined) => {
     creditsUsed: 0,
     loading: true,
   });
+  const [guestMaxCredits, setGuestMaxCredits] = useState<number>(3);
+
+  // Fetch guest credits config from feature flags
+  useEffect(() => {
+    const fetchGuestCreditsConfig = async () => {
+      const { data } = await supabase
+        .from('feature_flags')
+        .select('numeric_value')
+        .eq('key', 'guest_credits_amount')
+        .eq('enabled', true)
+        .maybeSingle();
+      
+      if (data?.numeric_value) {
+        setGuestMaxCredits(data.numeric_value);
+      }
+    };
+    
+    fetchGuestCreditsConfig();
+  }, []);
 
   // Load credits on mount and when user changes
   useEffect(() => {
     loadCredits();
-  }, [userId]);
+  }, [userId, guestMaxCredits]);
 
   // Listen for credit changes from other components
   useEffect(() => {
@@ -31,7 +48,7 @@ export const useCredits = (userId: string | null | undefined) => {
 
     window.addEventListener('creditsChanged', handleCreditsChanged);
     return () => window.removeEventListener('creditsChanged', handleCreditsChanged);
-  }, [userId]);
+  }, [userId, guestMaxCredits]);
 
   const loadCredits = async () => {
     setCreditData(prev => ({ ...prev, loading: true }));
@@ -58,8 +75,18 @@ export const useCredits = (userId: string | null | undefined) => {
         });
       } else {
         // User doesn't have credits record yet, will be created by trigger
+        // Fetch initial credits from feature flag
+        const { data: flagData } = await supabase
+          .from('feature_flags')
+          .select('numeric_value')
+          .eq('key', 'free_credits_amount')
+          .eq('enabled', true)
+          .maybeSingle();
+        
+        const initialCredits = flagData?.numeric_value || 10;
+        
         setCreditData({
-          creditsRemaining: LOGGED_IN_INITIAL_CREDITS,
+          creditsRemaining: initialCredits,
           creditsUsed: 0,
           loading: false,
         });
@@ -68,7 +95,7 @@ export const useCredits = (userId: string | null | undefined) => {
       // Guest user: load from localStorage
       const usedCredits = parseInt(localStorage.getItem(GUEST_CREDITS_KEY) || '0', 10);
       setCreditData({
-        creditsRemaining: Math.max(0, GUEST_MAX_CREDITS - usedCredits),
+        creditsRemaining: Math.max(0, guestMaxCredits - usedCredits),
         creditsUsed: usedCredits,
         loading: false,
       });
@@ -92,11 +119,21 @@ export const useCredits = (userId: string | null | undefined) => {
 
       if (!existingCredits) {
         // Create initial credit record if it doesn't exist
+        // Fetch initial credits from feature flag
+        const { data: flagData } = await supabase
+          .from('feature_flags')
+          .select('numeric_value')
+          .eq('key', 'free_credits_amount')
+          .eq('enabled', true)
+          .maybeSingle();
+        
+        const initialCredits = flagData?.numeric_value || 10;
+        
         const { error: insertError } = await supabase
           .from('user_credits')
           .insert({
             user_id: userId,
-            credits_remaining: LOGGED_IN_INITIAL_CREDITS - 1,
+            credits_remaining: initialCredits - 1,
             credits_used: 1,
           });
 
@@ -106,7 +143,7 @@ export const useCredits = (userId: string | null | undefined) => {
         }
 
         setCreditData({
-          creditsRemaining: LOGGED_IN_INITIAL_CREDITS - 1,
+          creditsRemaining: initialCredits - 1,
           creditsUsed: 1,
           loading: false,
         });
