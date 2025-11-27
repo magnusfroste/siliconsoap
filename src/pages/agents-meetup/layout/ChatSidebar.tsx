@@ -55,12 +55,6 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   if (collapsed) {
     return (
       <div className="flex flex-col h-full bg-muted/30 border-r items-center py-4 gap-2">
-        <Link to="/new" className="mb-2" onClick={onClose}>
-          <Button variant="ghost" size="icon" title="SiliconSoap">
-            <Droplets className="h-5 w-5 text-primary" />
-          </Button>
-        </Link>
-        
         <Button
           variant="ghost"
           size="icon"
