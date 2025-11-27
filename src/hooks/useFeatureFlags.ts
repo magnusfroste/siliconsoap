@@ -8,6 +8,7 @@ interface FeatureFlag {
   description: string | null;
   enabled: boolean;
   numeric_value: number | null;
+  text_value: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,5 +67,10 @@ export const useFeatureFlags = () => {
     return flag?.numeric_value ?? null;
   };
 
-  return { flags, isEnabled, getNumericValue, loading, refetch: fetchFlags };
+  const getTextValue = (key: string): string | null => {
+    const flag = flags.find(f => f.key === key);
+    return flag?.text_value ?? null;
+  };
+
+  return { flags, isEnabled, getNumericValue, getTextValue, loading, refetch: fetchFlags };
 };
