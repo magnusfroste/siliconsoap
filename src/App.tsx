@@ -15,6 +15,7 @@ import { ProfileView } from "./pages/agents-meetup/views/ProfileView";
 import { AgentProfilesView } from "./pages/agents-meetup/views/AgentProfilesView";
 import { APISettingsView } from "./pages/agents-meetup/views/APISettingsView";
 import { SettingsView } from "./pages/agents-meetup/views/SettingsView";
+import { AdminView } from "./pages/agents-meetup/views/AdminView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +61,7 @@ const App = () => {
               <Route path="agent-profiles" element={<AgentProfilesView />} />
               <Route path="api-settings" element={<APISettingsView />} />
               <Route path="settings" element={<SettingsView />} />
+              <Route path="admin" element={<AdminView />} />
             </Route>
             <Route path="/shared/:shareId" element={<SharedChatView />} />
             <Route path="/auth" element={<Auth />} />

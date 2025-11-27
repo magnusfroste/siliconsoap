@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket, Shield } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
 import { cn } from '@/lib/utils';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 interface ChatSidebarProps {
   onClose?: () => void;
@@ -20,17 +22,25 @@ interface ChatSidebarProps {
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
   const { creditsRemaining, isGuest } = useCredits(user?.id);
+  const { isAdmin } = useIsAdmin();
+  const { isEnabled } = useFeatureFlags();
   const location = useLocation();
 
   const navItems = [
     { icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
     { icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
-    { icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true },
+    { icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true, featureFlag: 'show_openrouter_api_settings' },
     { icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
+    { icon: Shield, label: 'Admin', path: '/admin', requiresAuth: true, adminOnly: true },
   ];
 
-  // Filter nav items based on authentication status
-  const filteredNavItems = navItems.filter(item => !item.requiresAuth || user);
+  // Filter nav items based on authentication, admin status, and feature flags
+  const filteredNavItems = navItems.filter(item => {
+    if (item.requiresAuth && !user) return false;
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.featureFlag && !isEnabled(item.featureFlag)) return false;
+    return true;
+  });
 
   // Group chats by date
   const today = new Date();
