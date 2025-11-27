@@ -72,45 +72,38 @@ export const useModels = (apiKey: string) => {
         setAvailableModels(models);
         
         if (models.length > 0) {
-          // Find default models for each agent based on their preferred models list
-          // Each agent gets selected independently
-          const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
-          const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
+          // Get defaults from feature flags first, then use preferred models as fallback
+          const flagDefaultA = getTextValue('default_model_agent_a');
+          const flagDefaultB = getTextValue('default_model_agent_b');
+          const flagDefaultC = getTextValue('default_model_agent_c');
           
-          // For Agent C, log more details to debug the issue
-          console.log("Agent C preferred models:", AGENT_C_PREFERRED_MODELS);
-          console.log("Available models for matching:", models.map(m => m.id));
+          // Check if feature flag models exist in available models
+          const modelExists = (modelId: string) => models.some(m => m.id === modelId);
           
-          // Check if Gemma models exist in the available models
-          const gemmaModels = models.filter(m => m.id.toLowerCase().includes('gemma'));
-          console.log("Available Gemma models:", gemmaModels.map(m => m.id));
+          // Use feature flag value if valid, otherwise fall back to preferred models
+          const defaultAgentA = flagDefaultA && modelExists(flagDefaultA) 
+            ? flagDefaultA 
+            : findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
+          const defaultAgentB = flagDefaultB && modelExists(flagDefaultB) 
+            ? flagDefaultB 
+            : findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
+          const defaultAgentC = flagDefaultC && modelExists(flagDefaultC) 
+            ? flagDefaultC 
+            : findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
           
-          const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+          console.log("Default models from flags:", { flagDefaultA, flagDefaultB, flagDefaultC });
+          console.log("Final default models:", { A: defaultAgentA, B: defaultAgentB, C: defaultAgentC });
           
-          console.log("Default model candidates:", {
-            A: defaultAgentA,
-            B: defaultAgentB,
-            C: defaultAgentC,
-            preferredA: AGENT_A_PREFERRED_MODELS[0],
-            preferredB: AGENT_B_PREFERRED_MODELS[0],
-            preferredC: AGENT_C_PREFERRED_MODELS[0]
-          });
-          
-          // Set models independently - no fallbacks to Agent A's model
+          // Set models independently
           if (defaultAgentA) setAgentAModel(defaultAgentA);
           if (defaultAgentB) setAgentBModel(defaultAgentB);
           if (defaultAgentC) setAgentCModel(defaultAgentC);
           
-          // If any agent doesn't have a model selected, find the best available
-          // without defaulting to another agent's model
+          // If any agent doesn't have a model, find best alternative
           if (!defaultAgentA || !defaultAgentB || !defaultAgentC) {
             const findBestAlternative = (models: OpenRouterModel[]) => {
-              // First try to find a free model
               const freeModel = models.find(m => m.isFree);
-              if (freeModel) return freeModel.id;
-              
-              // Otherwise return first available model
-              return models.length > 0 ? models[0].id : '';
+              return freeModel?.id || (models.length > 0 ? models[0].id : '');
             };
             
             if (!defaultAgentA) setAgentAModel(findBestAlternative(models));
