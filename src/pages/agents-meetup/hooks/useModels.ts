@@ -3,13 +3,47 @@ import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
 import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS, DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { toast } from '@/hooks/use-toast';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useModels = (apiKey: string) => {
-  const [agentAModel, setAgentAModel] = useState(DEFAULT_MODEL_IDS.agentA);
-  const [agentBModel, setAgentBModel] = useState(DEFAULT_MODEL_IDS.agentB);
-  const [agentCModel, setAgentCModel] = useState(DEFAULT_MODEL_IDS.agentC);
+  const { getTextValue, loading: flagsLoading } = useFeatureFlags();
+  
+  // Get default models from feature flags, fallback to hardcoded values
+  const getDefaultModelId = (agent: 'A' | 'B' | 'C'): string => {
+    if (flagsLoading) {
+      // Return hardcoded defaults while loading
+      return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
+             agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
+             DEFAULT_MODEL_IDS.agentC;
+    }
+    
+    const flagKey = agent === 'A' ? 'default_model_agent_a' :
+                    agent === 'B' ? 'default_model_agent_b' :
+                    'default_model_agent_c';
+    
+    const flagValue = getTextValue(flagKey);
+    if (flagValue) return flagValue;
+    
+    // Fallback to hardcoded defaults
+    return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
+           agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
+           DEFAULT_MODEL_IDS.agentC;
+  };
+  
+  const [agentAModel, setAgentAModel] = useState(() => getDefaultModelId('A'));
+  const [agentBModel, setAgentBModel] = useState(() => getDefaultModelId('B'));
+  const [agentCModel, setAgentCModel] = useState(() => getDefaultModelId('C'));
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
+
+  // Update models when feature flags load
+  useEffect(() => {
+    if (!flagsLoading) {
+      setAgentAModel(getDefaultModelId('A'));
+      setAgentBModel(getDefaultModelId('B'));
+      setAgentCModel(getDefaultModelId('C'));
+    }
+  }, [flagsLoading, getTextValue]);
 
   useEffect(() => {
     const getModels = async () => {

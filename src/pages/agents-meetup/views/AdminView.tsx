@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
 import { AgentDefaultSelector } from './components/AgentDefaultSelector';
+import { ModelSelector } from './components/ModelSelector';
 
 export const AdminView = () => {
   const navigate = useNavigate();
@@ -180,7 +181,17 @@ export const AdminView = () => {
                     </div>
                   )}
                   
-                  {flag.text_value !== null && flag.key !== 'default_agents' && getSelectOptions(flag.key).length > 0 && (
+                  {flag.text_value !== null && (flag.key === 'default_model_agent_a' || flag.key === 'default_model_agent_b' || flag.key === 'default_model_agent_c') && (
+                    <div className="pt-2">
+                      <ModelSelector
+                        label=""
+                        value={flag.text_value}
+                        onChange={(value) => handleTextValueChange(flag.id, value)}
+                      />
+                    </div>
+                  )}
+                  
+                  {flag.text_value !== null && flag.key !== 'default_agents' && !['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c'].includes(flag.key) && getSelectOptions(flag.key).length > 0 && (
                     <div className="pt-2">
                       <Select
                         value={flag.text_value}
