@@ -169,7 +169,7 @@ export const NewChatView = () => {
     'general-problem': [
       "How to regulate AI development?",
       "Universal Basic Income viability?",
-      "Lab-grown meat adoption strategy?"
+      "Tariffs between countries?"
     ],
     'ethical-dilemma': [
       "Should AI have legal rights?",
