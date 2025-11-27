@@ -9,6 +9,7 @@ import { RoundPausePrompt } from '../components/RoundPausePrompt';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2, Headphones, Pause, Square } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,11 +28,14 @@ export const ChatView = () => {
   const { user } = useAuth();
   const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
+  const { isEnabled } = useFeatureFlags();
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
   const [currentRoundInProgress, setCurrentRoundInProgress] = useState(1);
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
+  
+  const audioPlaybackEnabled = isEnabled('enable_audio_playback');
   
   const {
     isAnalyzing,
@@ -431,7 +435,7 @@ export const ChatView = () => {
       })()}
 
       {/* Floating Playback Button */}
-      {!isGenerating && messages.length > 0 && !isPlaying && !isPaused && (
+      {audioPlaybackEnabled && !isGenerating && messages.length > 0 && !isPlaying && !isPaused && (
         <Button
           onClick={play}
           className="fixed bottom-20 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all"
@@ -442,7 +446,7 @@ export const ChatView = () => {
       )}
 
       {/* Playback Controls (when playing or paused) */}
-      {(isPlaying || isPaused) && (
+      {audioPlaybackEnabled && (isPlaying || isPaused) && (
         <div className="fixed bottom-20 right-6 bg-background border rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
           {isGeneratingAudio && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
