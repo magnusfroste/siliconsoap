@@ -167,9 +167,9 @@ export const NewChatView = () => {
 
   const suggestedTopicsByScenario: Record<string, string[]> = {
     'general-problem': [
-      "Reducing traffic congestion in cities",
-      "Affordable housing solutions",
-      "Sustainable food production"
+      "How can we reduce traffic congestion in cities?",
+      "What are the best affordable housing solutions?",
+      "How can we achieve sustainable food production?"
     ],
     'ethical-dilemma': [
       "Should AI have legal rights?",
