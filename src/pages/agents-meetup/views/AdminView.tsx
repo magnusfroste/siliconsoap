@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
@@ -58,6 +59,55 @@ export const AdminView = () => {
       console.error('Error updating numeric value:', error);
       toast.error('Failed to update value');
     }
+  };
+
+  const handleTextValueChange = async (flagId: string, value: string) => {
+    try {
+      const { error } = await supabase
+        .from('feature_flags')
+        .update({ text_value: value })
+        .eq('id', flagId);
+
+      if (error) throw error;
+
+      toast.success('Value updated successfully');
+      refetch();
+    } catch (error) {
+      console.error('Error updating text value:', error);
+      toast.error('Failed to update value');
+    }
+  };
+
+  const getSelectOptions = (key: string): { value: string; label: string }[] => {
+    const optionsMap: Record<string, { value: string; label: string }[]> = {
+      'default_response_length': [
+        { value: 'short', label: 'Short' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'long', label: 'Long' }
+      ],
+      'default_participation_mode': [
+        { value: 'spectator', label: 'Spectator (Watch Only)' },
+        { value: 'jump-in', label: 'Jump In (Comment After)' },
+        { value: 'round-by-round', label: 'Round-by-Round (Interactive)' }
+      ],
+      'default_turn_order': [
+        { value: 'sequential', label: 'Sequential' },
+        { value: 'random', label: 'Random' },
+        { value: 'popcorn', label: 'Popcorn' }
+      ],
+      'default_conversation_tone': [
+        { value: 'formal', label: 'Formal Debate' },
+        { value: 'casual', label: 'Casual Chat' },
+        { value: 'heated', label: 'Heated Discussion' },
+        { value: 'collaborative', label: 'Collaborative' }
+      ],
+      'default_personality_intensity': [
+        { value: 'mild', label: 'Mild' },
+        { value: 'moderate', label: 'Moderate' },
+        { value: 'extreme', label: 'Extreme' }
+      ]
+    };
+    return optionsMap[key] || [];
   };
 
   if (adminLoading || flagsLoading) {
@@ -117,6 +167,26 @@ export const AdminView = () => {
                         onChange={(e) => handleNumericValueChange(flag.id, e.target.value)}
                         className="w-32"
                       />
+                    </div>
+                  )}
+                  
+                  {flag.text_value !== null && getSelectOptions(flag.key).length > 0 && (
+                    <div className="pt-2">
+                      <Select
+                        value={flag.text_value}
+                        onValueChange={(value) => handleTextValueChange(flag.id, value)}
+                      >
+                        <SelectTrigger className="w-64">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getSelectOptions(flag.key).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                 </div>
