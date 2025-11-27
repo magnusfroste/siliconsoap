@@ -177,6 +177,7 @@ export const AdminView = () => {
                       <AgentDefaultSelector
                         value={flag.text_value}
                         onChange={(value) => handleTextValueChange(flag.id, value)}
+                        showLabel={false}
                       />
                     </div>
                   )}

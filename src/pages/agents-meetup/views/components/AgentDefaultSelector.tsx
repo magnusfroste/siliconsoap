@@ -13,9 +13,10 @@ import {
 interface AgentDefaultSelectorProps {
   value: string;
   onChange: (value: string) => void;
+  showLabel?: boolean;
 }
 
-export const AgentDefaultSelector = ({ value, onChange }: AgentDefaultSelectorProps) => {
+export const AgentDefaultSelector = ({ value, onChange, showLabel = true }: AgentDefaultSelectorProps) => {
   const { profiles, isLoading } = useAgentProfiles();
   const selectedSlugs = value.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -39,7 +40,7 @@ export const AgentDefaultSelector = ({ value, onChange }: AgentDefaultSelectorPr
 
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-medium">Select Default Agents (in order)</Label>
+      {showLabel && <Label className="text-sm font-medium">Select Default Agents (in order)</Label>}
       
       <div className="flex flex-wrap gap-2 mb-2">
         {selectedSlugs.map((slug, index) => {
