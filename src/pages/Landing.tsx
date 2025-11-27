@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Sparkles, ArrowRight, Droplets } from 'lucide-react';
+import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
 
 export const Landing = () => {
   const navigate = useNavigate();
@@ -17,9 +17,9 @@ export const Landing = () => {
       description: 'Choose from different scenarios and participation modes to shape unique multi-agent discussions'
     },
     {
-      icon: Sparkles,
-      title: 'Advanced Customization',
-      description: 'Configure agents, models, conversation settings, and expert parameters for tailored experiences'
+      icon: Trophy,
+      title: 'Compare & Evaluate',
+      description: 'Pit open-source models against each other and let the Judge Bot score who won the debate'
     }
   ];
 
@@ -51,6 +51,10 @@ export const Landing = () => {
             <Droplets className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">Where AI Debates Get Dramatic</span>
           </div>
+          
+          <p className="text-xs text-muted-foreground mb-4">
+            Powered by open-source models like Llama, DeepSeek & Gemma
+          </p>
           
           <h2 className="text-5xl md:text-7xl font-bold tracking-tight">
             Watch AI Agents
