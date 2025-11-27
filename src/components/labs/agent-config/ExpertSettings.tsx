@@ -30,6 +30,7 @@ interface ExpertSettingsProps {
   setTemperature: (temp: number) => void;
   personalityIntensity: 'mild' | 'moderate' | 'extreme';
   setPersonalityIntensity: (intensity: 'mild' | 'moderate' | 'extreme') => void;
+  isExpanded?: boolean;
 }
 
 export function ExpertSettings({
@@ -41,8 +42,8 @@ export function ExpertSettings({
   setTemperature,
   personalityIntensity,
   setPersonalityIntensity,
+  isExpanded = true,
 }: ExpertSettingsProps) {
-  const [isOpen, setIsOpen] = useState(false);
 
   const toneOptions = [
     { value: 'formal', label: '🎓 Formal Debate', description: 'Academic rigor and professional discourse' },
@@ -69,19 +70,12 @@ export function ExpertSettings({
     return "Creative";
   };
 
+  if (!isExpanded) return null;
+
   return (
     <TooltipProvider>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group w-full py-2">
-          <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
-          <span>🧪 Advanced Settings</span>
-          <span className="ml-auto text-xs">
-            {isOpen ? '▲' : '▼'}
-          </span>
-        </CollapsibleTrigger>
-        
-        <CollapsibleContent className="pt-4 grid grid-cols-2 gap-4">
-          {/* Conversation Tone */}
+      <div className="grid grid-cols-2 gap-4 pt-2">
+        {/* Conversation Tone */}
           <div className="space-y-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -186,10 +180,9 @@ export function ExpertSettings({
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>By the Book</span>
               <span>Wild Card</span>
-            </div>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </div>
     </TooltipProvider>
   );
 }
