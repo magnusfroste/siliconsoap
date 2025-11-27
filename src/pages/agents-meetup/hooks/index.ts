@@ -11,3 +11,4 @@ export * from './useSharedChat';
 export * from './conversation';
 export * from './types';
 export * from './utils';
+export * from './useConversationPlayback';

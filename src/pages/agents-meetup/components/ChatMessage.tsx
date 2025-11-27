@@ -8,6 +8,7 @@ interface ChatMessageProps {
   messageIndex: number;
   totalMessages: number;
   showTimeline?: boolean;
+  isPlaying?: boolean;
 }
 
 const agentStyles = {
@@ -28,7 +29,7 @@ const agentStyles = {
   }
 };
 
-export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline = true }: ChatMessageProps) => {
+export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline = true, isPlaying = false }: ChatMessageProps) => {
   const style = agentStyles[message.agent as keyof typeof agentStyles] || {
     borderClass: 'border-border',
     iconBgClass: 'bg-muted text-foreground',
@@ -54,7 +55,7 @@ export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline
       )}
 
       {/* Message Card */}
-      <Card className={`border-2 ${style.borderClass} shadow-sm hover:shadow-md transition-shadow`}>
+      <Card className={`border-2 ${style.borderClass} shadow-sm hover:shadow-md transition-all duration-300 ${isPlaying ? 'ring-2 ring-primary shadow-xl scale-[1.02]' : ''}`}>
         <CardHeader className="pb-2 px-4 pt-3">
           <div className="flex items-center gap-2 flex-wrap">
             <AgentAvatar agentLetter={agentLetter} iconBgClass={style.iconBgClass} />

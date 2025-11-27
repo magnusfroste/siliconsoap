@@ -9,8 +9,8 @@ import { RoundPausePrompt } from '../components/RoundPausePrompt';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
-import { Loader2, Share2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Loader2, Share2, Headphones, Pause, Square } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ import { AnalysisFloatingButton } from '../components/AnalysisFloatingButton';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
+import { useConversationPlayback } from '../hooks/useConversationPlayback';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -38,7 +39,30 @@ export const ChatView = () => {
     handleAnalyzeConversation
   } = useConversationAnalysis(state.apiKey, messages);
 
+  const {
+    isPlaying,
+    isPaused,
+    currentMessageIndex,
+    isGenerating: isGeneratingAudio,
+    play,
+    pause,
+    stop
+  } = useConversationPlayback(messages);
+
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
   const isGuest = !user;
+
+  // Auto-scroll to current playing message
+  useEffect(() => {
+    if (isPlaying && currentMessageIndex >= 0 && scrollAreaRef.current) {
+      const messageElements = scrollAreaRef.current.querySelectorAll('[data-message-index]');
+      const currentElement = messageElements[currentMessageIndex];
+      if (currentElement) {
+        currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentMessageIndex, isPlaying]);
 
   // Handle share button click
   const handleShareClick = async () => {
@@ -187,7 +211,7 @@ export const ChatView = () => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
         <div className="max-w-4xl mx-auto py-6 space-y-4">
           {messages.map((message, index) => {
             const settings = chat.settings as any;
@@ -204,21 +228,24 @@ export const ChatView = () => {
                 )}
                 
                 {/* Message */}
-                {message.isHuman ? (
-                  <UserMessage 
-                    message={message} 
-                    messageIndex={index}
-                    totalMessages={messages.length}
-                    showTimeline={true}
-                  />
-                ) : (
-                  <ChatMessage 
-                    message={message} 
-                    messageIndex={index}
-                    totalMessages={messages.length}
-                    showTimeline={true}
-                  />
-                )}
+                <div data-message-index={index}>
+                  {message.isHuman ? (
+                    <UserMessage 
+                      message={message} 
+                      messageIndex={index}
+                      totalMessages={messages.length}
+                      showTimeline={true}
+                    />
+                  ) : (
+                    <ChatMessage 
+                      message={message} 
+                      messageIndex={index}
+                      totalMessages={messages.length}
+                      showTimeline={true}
+                      isPlaying={isPlaying && currentMessageIndex === index}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}
@@ -402,6 +429,45 @@ export const ChatView = () => {
           />
         );
       })()}
+
+      {/* Floating Playback Button */}
+      {!isGenerating && messages.length > 0 && !isPlaying && !isPaused && (
+        <Button
+          onClick={play}
+          className="fixed bottom-20 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all"
+          size="icon"
+        >
+          <Headphones className="h-5 w-5" />
+        </Button>
+      )}
+
+      {/* Playback Controls (when playing or paused) */}
+      {(isPlaying || isPaused) && (
+        <div className="fixed bottom-20 right-6 bg-background border rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
+          {isGeneratingAudio && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+          <span className="text-sm font-medium">
+            {currentMessageIndex + 1} / {messages.length}
+          </span>
+          <Button
+            onClick={isPlaying ? pause : play}
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+          >
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
+          </Button>
+          <Button
+            onClick={stop}
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+          >
+            <Square className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Floating Analysis Button */}
       {!isGenerating && messages.length > 0 && (
