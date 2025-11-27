@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { profiles as fallbackProfiles } from '@/pages/labs/projects/agents-meetup/constants';
+import { profiles as fallbackProfiles } from '@/pages/agents-meetup/constants';
 import { getIconComponent } from '@/utils/iconMap';
 import { Profile } from '@/components/labs/agent-card/types';
 

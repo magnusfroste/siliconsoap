@@ -15,7 +15,7 @@ export const ChatHistoryItem = ({ chat, onDelete }: ChatHistoryItemProps) => {
   return (
     <div className={`group relative rounded-md ${isActive ? 'bg-muted' : 'hover:bg-muted/50'}`}>
       <Link
-        to={`/labs/agents-meetup/chat/${chat.id}`}
+        to={`/chat/${chat.id}`}
         className="flex items-center gap-2 p-2 pr-8"
       >
         <MessageSquare className="h-4 w-4 flex-shrink-0" />

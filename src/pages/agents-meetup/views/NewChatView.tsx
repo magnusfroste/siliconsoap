@@ -116,7 +116,7 @@ export const NewChatView = () => {
         localStorage.setItem('guest_chats', JSON.stringify(guestChats));
         
         // Navigate to guest chat
-        navigate(`/labs/agents-meetup/chat/${guestChatId}`);
+        navigate(`/chat/${guestChatId}`);
       } else {
         // Logged-in users: Create in database
         const { supabase } = await import('@/integrations/supabase/client');
@@ -154,7 +154,7 @@ export const NewChatView = () => {
         }
 
         // Navigate to chat view
-        navigate(`/labs/agents-meetup/chat/${chatData.id}`);
+        navigate(`/chat/${chatData.id}`);
       }
     } catch (error: any) {
       console.error('Error creating chat:', error);
