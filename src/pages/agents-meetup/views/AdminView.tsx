@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
@@ -36,6 +37,26 @@ export const AdminView = () => {
     } catch (error) {
       console.error('Error updating feature flag:', error);
       toast.error('Failed to update feature flag');
+    }
+  };
+
+  const handleNumericValueChange = async (flagId: string, value: string) => {
+    const numericValue = parseInt(value, 10);
+    if (isNaN(numericValue) || numericValue < 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('feature_flags')
+        .update({ numeric_value: numericValue })
+        .eq('id', flagId);
+
+      if (error) throw error;
+
+      toast.success('Value updated successfully');
+      refetch();
+    } catch (error) {
+      console.error('Error updating numeric value:', error);
+      toast.error('Failed to update value');
     }
   };
 
@@ -86,6 +107,18 @@ export const AdminView = () => {
                     <p className="text-sm text-muted-foreground">{flag.description}</p>
                   )}
                   <p className="text-xs text-muted-foreground font-mono">{flag.key}</p>
+                  
+                  {flag.numeric_value !== null && (
+                    <div className="pt-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={flag.numeric_value}
+                        onChange={(e) => handleNumericValueChange(flag.id, e.target.value)}
+                        className="w-32"
+                      />
+                    </div>
+                  )}
                 </div>
                 <Switch
                   id={flag.id}
