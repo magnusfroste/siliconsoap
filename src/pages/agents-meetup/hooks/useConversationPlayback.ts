@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { generateSpeech, playBase64Audio } from '@/utils/elevenlabs/ttsService';
 import { ConversationMessage } from '../types';
+import { toast } from 'sonner';
 
 export const useConversationPlayback = (messages: ConversationMessage[]) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,14 +38,22 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
         const message = messages[i];
 
         setIsGenerating(true);
-        const base64Audio = await generateSpeech(message.message, message.agent);
-        setIsGenerating(false);
+        try {
+          const base64Audio = await generateSpeech(message.message, message.agent);
+          setIsGenerating(false);
 
-        if (abortControllerRef.current?.signal.aborted) {
+          if (abortControllerRef.current?.signal.aborted) {
+            break;
+          }
+
+          await playBase64Audio(base64Audio);
+        } catch (err) {
+          setIsGenerating(false);
+          toast.error('Audio playback is currently unavailable. The text-to-speech service may be temporarily down.');
+          console.error('TTS error:', err);
+          stop();
           break;
         }
-
-        await playBase64Audio(base64Audio);
 
         if (abortControllerRef.current?.signal.aborted) {
           break;
@@ -52,6 +61,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
       }
     } catch (error) {
       console.error('Playback error:', error);
+      toast.error('Failed to play audio');
     } finally {
       stop();
     }
