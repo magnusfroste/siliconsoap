@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
-import { AgentDefaultSelector } from './components/AgentDefaultSelector';
 import { ModelSelector } from './components/ModelSelector';
+import { ProfileSelector } from './components/ProfileSelector';
 
 export const AdminView = () => {
   const navigate = useNavigate();
@@ -172,16 +172,6 @@ export const AdminView = () => {
                     </div>
                   )}
                   
-                  {flag.text_value !== null && flag.key === 'default_agents' && (
-                    <div className="pt-2">
-                      <AgentDefaultSelector
-                        value={flag.text_value}
-                        onChange={(value) => handleTextValueChange(flag.id, value)}
-                        showLabel={false}
-                      />
-                    </div>
-                  )}
-                  
                   {flag.text_value !== null && (flag.key === 'default_model_agent_a' || flag.key === 'default_model_agent_b' || flag.key === 'default_model_agent_c') && (
                     <div className="pt-2">
                       <ModelSelector
@@ -192,7 +182,16 @@ export const AdminView = () => {
                     </div>
                   )}
                   
-                  {flag.text_value !== null && flag.key !== 'default_agents' && !['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c'].includes(flag.key) && getSelectOptions(flag.key).length > 0 && (
+                  {flag.text_value !== null && (flag.key === 'default_profile_agent_a' || flag.key === 'default_profile_agent_b' || flag.key === 'default_profile_agent_c') && (
+                    <div className="pt-2">
+                      <ProfileSelector
+                        value={flag.text_value}
+                        onChange={(value) => handleTextValueChange(flag.id, value)}
+                      />
+                    </div>
+                  )}
+                  
+                  {flag.text_value !== null && !['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c', 'default_profile_agent_a', 'default_profile_agent_b', 'default_profile_agent_c'].includes(flag.key) && getSelectOptions(flag.key).length > 0 && (
                     <div className="pt-2">
                       <Select
                         value={flag.text_value}
