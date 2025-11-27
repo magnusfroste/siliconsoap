@@ -167,19 +167,19 @@ export const NewChatView = () => {
 
   const suggestedTopicsByScenario: Record<string, string[]> = {
     'general-problem': [
-      "How can we reduce traffic congestion in cities?",
-      "What are the best affordable housing solutions?",
-      "How can we achieve sustainable food production?"
+      "How to regulate AI development?",
+      "Universal Basic Income viability?",
+      "Lab-grown meat adoption strategy?"
     ],
     'ethical-dilemma': [
       "Should AI have legal rights?",
-      "Ethics of human genetic enhancement",
-      "Privacy vs security in surveillance"
+      "Is gene editing babies ethical?",
+      "Privacy vs security trade-offs?"
     ],
     'future-prediction': [
-      "Future of remote work by 2030",
-      "Impact of quantum computing",
-      "Climate adaptation technologies"
+      "AGI timeline and impact?",
+      "Brain-computer interface adoption?",
+      "Future of human employment?"
     ]
   };
 
