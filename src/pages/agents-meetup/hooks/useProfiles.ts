@@ -10,19 +10,6 @@ export const useProfiles = () => {
   const [agentBPersona, setAgentBPersona] = useState('creative');
   const [agentCPersona, setAgentCPersona] = useState('strategic');
 
-  // Load defaults from feature flags
-  useEffect(() => {
-    if (!loading) {
-      const defaultAgents = getTextValue('default_agents');
-      if (defaultAgents) {
-        const slugs = defaultAgents.split(',').map(s => s.trim());
-        if (slugs[0]) setAgentAPersona(slugs[0]);
-        if (slugs[1]) setAgentBPersona(slugs[1]);
-        if (slugs[2]) setAgentCPersona(slugs[2]);
-      }
-    }
-  }, [loading, getTextValue]);
-
   const formA = useForm({
     defaultValues: { persona: 'analytical' }
   });
@@ -34,6 +21,28 @@ export const useProfiles = () => {
   const formC = useForm({
     defaultValues: { persona: 'strategic' }
   });
+
+  // Load defaults from feature flags
+  useEffect(() => {
+    if (!loading) {
+      const defaultAgents = getTextValue('default_agents');
+      if (defaultAgents) {
+        const slugs = defaultAgents.split(',').map(s => s.trim());
+        if (slugs[0]) {
+          setAgentAPersona(slugs[0]);
+          formA.setValue('persona', slugs[0]);
+        }
+        if (slugs[1]) {
+          setAgentBPersona(slugs[1]);
+          formB.setValue('persona', slugs[1]);
+        }
+        if (slugs[2]) {
+          setAgentCPersona(slugs[2]);
+          formC.setValue('persona', slugs[2]);
+        }
+      }
+    }
+  }, [loading, getTextValue]);
 
   const handleAgentAPersonaChange = (value: string) => {
     setAgentAPersona(value);
