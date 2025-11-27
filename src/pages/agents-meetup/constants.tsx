@@ -52,7 +52,7 @@ export const scenarioTypes: ScenarioType[] = [
       `We're discussing this problem: "${text}"\n\nMy initial approach was: "${prevResponse}"\n\nAgent B responded with: "${otherResponse}"\n\nWhat do you think of Agent B's proposed solution? How might we integrate our approaches or improve upon them? Are there any weaknesses in either solution that should be addressed?`,
     finalTemplate: (text: string, prevResponse: string, otherResponse: string) => 
       `We're discussing this problem: "${text}"\n\nMy previous solution was: "${prevResponse}"\n\nAgent A has responded with: "${otherResponse}"\n\nLet's conclude this discussion. Based on our exchange, what is the most comprehensive solution to this problem? What implementation challenges might arise, and how could they be addressed?`,
-    placeholder: "Enter a problem to solve (e.g., 'How can we reduce traffic congestion in major cities?' or 'What's the best way to learn a new language?')"
+    placeholder: "Enter a problem to solve (e.g., 'How can we reduce traffic congestion?')"
   },
   {
     id: 'ethical-dilemma',
@@ -64,7 +64,7 @@ export const scenarioTypes: ScenarioType[] = [
       `We're discussing this ethical dilemma: "${text}"\n\nMy initial analysis was: "${prevResponse}"\n\nAgent B responded with: "${otherResponse}"\n\nHow would you respond to Agent B's perspective? What additional ethical frameworks or considerations might be relevant?`,
     finalTemplate: (text: string, prevResponse: string, otherResponse: string) => 
       `We're discussing this ethical dilemma: "${text}"\n\nMy previous analysis was: "${prevResponse}"\n\nAgent A has responded with: "${otherResponse}"\n\nLet's conclude this discussion. What final insights can you offer about this ethical dilemma? Are there compromise positions or additional perspectives that might help resolve the tension?`,
-    placeholder: "Enter an ethical dilemma (e.g., 'Should AI systems be programmed to prioritize human safety above human autonomy?')"
+    placeholder: "Enter an ethical dilemma (e.g., 'Should AI have legal rights?')"
   },
   {
     id: 'future-prediction',
@@ -76,6 +76,6 @@ export const scenarioTypes: ScenarioType[] = [
       `We're discussing future developments related to: "${text}"\n\nMy initial prediction was: "${prevResponse}"\n\nAgent B responded with: "${otherResponse}"\n\nWhat do you think of Agent B's predictions? Do you see any additional possibilities, challenges, or opportunities they might have missed?`,
     finalTemplate: (text: string, prevResponse: string, otherResponse: string) => 
       `We're discussing future developments related to: "${text}"\n\nMy previous prediction was: "${prevResponse}"\n\nAgent A has responded with: "${otherResponse}"\n\nLet's conclude this discussion. What are the most likely outcomes or impacts of this trend? What should individuals, businesses, or policymakers be preparing for?`,
-    placeholder: "Enter a technology or trend to predict (e.g., 'Mixed reality glasses' or 'Autonomous vehicles')"
+    placeholder: "Enter a technology or trend (e.g., 'Mixed reality glasses')"
   }
 ];
