@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ai-chat]
 verify_jwt = false
+
+[functions.text-to-speech]
+verify_jwt = false
