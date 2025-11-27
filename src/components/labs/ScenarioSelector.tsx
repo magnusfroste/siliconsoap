@@ -70,7 +70,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 
       {/* Suggested Topics */}
       {suggestedTopics && suggestedTopics.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-3 border-t border-border/20">
+        <div className="flex flex-wrap justify-center gap-2 pt-3 border-t border-border/20">
           {suggestedTopics.map((topic, idx) => (
             <span
               key={idx}
