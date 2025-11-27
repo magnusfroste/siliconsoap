@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { ConversationMessage } from '../types';
+import { chatService } from '@/services';
+import { Chat, ChatMessage, ChatSettings } from '@/models/chat';
 
 interface ChatData {
   id: string;
   title: string;
   scenario_id: string;
   prompt: string;
-  settings: any;
+  settings: ChatSettings;
 }
 
 export const useSharedChat = (shareId: string | undefined) => {
   const [chat, setChat] = useState<ChatData | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<'not_found' | 'deleted' | 'not_public' | null>(null);
 
@@ -32,29 +32,20 @@ export const useSharedChat = (shareId: string | undefined) => {
       setLoading(true);
       setError(null);
 
-      // Fetch chat by share_id (no auth required due to RLS policy)
-      const { data: chatData, error: chatError } = await supabase
-        .from('agent_chats')
-        .select('*')
-        .eq('share_id', shareId)
-        .maybeSingle();
+      const { chat: chatData, messages: messagesData } = await chatService.getSharedChat(shareId);
 
-      if (chatError) throw chatError;
-      
       if (!chatData) {
         setError('not_found');
         setLoading(false);
         return;
       }
 
-      // Check if chat is deleted
       if (chatData.deleted_at) {
         setError('deleted');
         setLoading(false);
         return;
       }
 
-      // Check if chat is public
       if (!chatData.is_public) {
         setError('not_public');
         setLoading(false);
@@ -69,16 +60,7 @@ export const useSharedChat = (shareId: string | undefined) => {
         settings: chatData.settings,
       });
 
-      // Fetch messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('agent_chat_messages')
-        .select('*')
-        .eq('chat_id', chatData.id)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) throw messagesError;
-
-      setMessages(messagesData || []);
+      setMessages(messagesData);
     } catch (err) {
       console.error('Error loading shared chat:', err);
       setError('not_found');

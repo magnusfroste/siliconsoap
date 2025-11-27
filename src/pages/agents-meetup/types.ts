@@ -1,7 +1,13 @@
+// Domain types for Agents Meetup
+// Note: Chat-related types are in @/models/chat
 
 import { ReactNode } from 'react';
-import { UseFormReturn } from 'react-hook-form';
 import { OpenRouterModel } from '@/utils/openRouter';
+import { ViewState } from './hooks/conversation/useConversationNavigation';
+import { UseFormReturn } from 'react-hook-form';
+
+// Re-export from models for convenience
+export type { ChatSettings, ChatMessage } from '@/models/chat';
 
 export type ResponseLength = 'short' | 'medium' | 'long';
 export type ParticipationMode = 'spectator' | 'jump-in' | 'round-by-round';
@@ -42,13 +48,15 @@ export type AnalysisResults = {
   summary: string;
 };
 
-export type LabsState = {
+// Consolidated LabsState - single source of truth
+export interface LabsState {
   apiKey: string;
   savedApiKey: string;
   userApiKey: string;
   isSaving: boolean;
   isSaved: boolean;
   isUsingEnvKey: boolean;
+  isUsingSharedKey: boolean;
   agentAModel: string;
   agentBModel: string;
   agentCModel: string;
@@ -58,19 +66,31 @@ export type LabsState = {
   rounds: number;
   numberOfAgents: number;
   responseLength: ResponseLength;
+  participationMode: ParticipationMode;
+  turnOrder: TurnOrder;
   conversation: ConversationMessage[];
   isLoading: boolean;
   availableModels: OpenRouterModel[];
   loadingModels: boolean;
-  currentStep: number;
+  currentView: ViewState;
+  settingsOpen: boolean;
   activeScenario: string;
-  promptInputs: {[key: string]: string};
+  promptInputs: Record<string, string>;
   isAnalyzing: boolean;
-  analysisResults: string;
+  analysisResults: any | null;
   analyzerModel: string;
-};
+  formA: UseFormReturn<{ persona: string }>;
+  formB: UseFormReturn<{ persona: string }>;
+  formC: UseFormReturn<{ persona: string }>;
+  // Expert settings
+  conversationTone: 'formal' | 'casual' | 'heated' | 'collaborative';
+  agreementBias: number;
+  temperature: number;
+  personalityIntensity: 'mild' | 'moderate' | 'extreme';
+}
 
-export type LabsActions = {
+// Consolidated LabsActions - single source of truth
+export interface LabsActions {
   setApiKey: (key: string) => void;
   setSavedApiKey: (key: string) => void;
   setUserApiKey: (key: string) => void;
@@ -83,28 +103,40 @@ export type LabsActions = {
   setAgentBPersona: (persona: string) => void;
   setAgentCPersona: (persona: string) => void;
   setRounds: (rounds: number) => void;
-  setNumberOfAgents: (agents: number) => void;
+  setNumberOfAgents: (number: number) => void;
   setResponseLength: (length: ResponseLength) => void;
-  setConversation: React.Dispatch<React.SetStateAction<ConversationMessage[]>>;
+  setParticipationMode: (mode: ParticipationMode) => void;
+  setTurnOrder: (order: TurnOrder) => void;
+  setConversation: (conversation: ConversationMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
   setAvailableModels: (models: OpenRouterModel[]) => void;
   setLoadingModels: (loading: boolean) => void;
-  setCurrentStep: (step: number) => void;
+  setCurrentView: (view: ViewState) => void;
+  setSettingsOpen: (open: boolean) => void;
   setActiveScenario: (scenario: string) => void;
-  setPromptInputs: React.Dispatch<React.SetStateAction<{[key: string]: string}>>;
+  setPromptInputs: (inputs: Record<string, string>) => void;
   setIsAnalyzing: (analyzing: boolean) => void;
-  setAnalysisResults: React.Dispatch<React.SetStateAction<string>>;
+  setAnalysisResults: (results: any | null) => void;
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
-  saveApiKey: () => boolean;
-  getActiveApiKey: (modelIsFree?: boolean) => string;
-  goToStep: (step: number) => void;
-  handleStartConversation: () => void;
-  handleAnalyzeConversation: (model?: string) => void;
+  saveApiKey: (key: string) => Promise<boolean>;
+  deleteApiKey: () => void;
+  validateApiKey: (key: string) => Promise<boolean>;
+  getActiveApiKey: (modelIsFree?: boolean) => string | null;
+  handleStartConversation: () => Promise<void>;
+  handleAnalyzeConversation: (model?: string) => Promise<void>;
   handleAgentAPersonaChange: (value: string) => void;
   handleAgentBPersonaChange: (value: string) => void;
   handleAgentCPersonaChange: (value: string) => void;
   getCurrentScenario: () => ScenarioType;
   getCurrentPrompt: () => string;
-  formatMessage: (text: string) => string;
-};
+  formatMessage: (message: string) => string;
+  refreshModels: (apiKey: string) => void;
+  promptForBYOK: () => void;
+  enableSharedKeyMode: () => void;
+  // Expert settings actions
+  setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
+  setAgreementBias: (bias: number) => void;
+  setTemperature: (temp: number) => void;
+  setPersonalityIntensity: (intensity: 'mild' | 'moderate' | 'extreme') => void;
+}
