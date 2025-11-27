@@ -6,9 +6,9 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 export const useProfiles = () => {
   const { getTextValue, loading } = useFeatureFlags();
   
-  const [agentAPersona, setAgentAPersona] = useState('analytical-expert');
-  const [agentBPersona, setAgentBPersona] = useState('creative-thinker');
-  const [agentCPersona, setAgentCPersona] = useState('strategic-planner');
+  const [agentAPersona, setAgentAPersona] = useState('analytical');
+  const [agentBPersona, setAgentBPersona] = useState('creative');
+  const [agentCPersona, setAgentCPersona] = useState('strategic');
 
   // Load defaults from feature flags
   useEffect(() => {
@@ -24,15 +24,15 @@ export const useProfiles = () => {
   }, [loading, getTextValue]);
 
   const formA = useForm({
-    defaultValues: { persona: 'analytical-expert' }
+    defaultValues: { persona: 'analytical' }
   });
 
   const formB = useForm({
-    defaultValues: { persona: 'creative-thinker' }
+    defaultValues: { persona: 'creative' }
   });
 
   const formC = useForm({
-    defaultValues: { persona: 'strategic-planner' }
+    defaultValues: { persona: 'strategic' }
   });
 
   const handleAgentAPersonaChange = (value: string) => {
