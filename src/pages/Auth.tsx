@@ -22,7 +22,7 @@ const Auth = () => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        const from = (location.state as any)?.from?.pathname || '/labs/agents-meetup';
+        const from = (location.state as any)?.from?.pathname || '/new';
         navigate(from, { replace: true });
       } else {
         setChecking(false);
@@ -38,7 +38,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/labs/agents-meetup`
+        emailRedirectTo: `${window.location.origin}/new`
       }
     });
 
@@ -64,7 +64,7 @@ const Auth = () => {
       setLoading(false);
     } else {
       toast.success('Logged in successfully!');
-      const from = (location.state as any)?.from?.pathname || '/labs/agents-meetup';
+      const from = (location.state as any)?.from?.pathname || '/new';
       navigate(from, { replace: true });
     }
   };
