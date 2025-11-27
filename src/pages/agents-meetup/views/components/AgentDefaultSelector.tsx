@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -18,12 +19,14 @@ interface AgentDefaultSelectorProps {
 
 export const AgentDefaultSelector = ({ value, onChange, showLabel = true }: AgentDefaultSelectorProps) => {
   const { profiles, isLoading } = useAgentProfiles();
+  const [selectValue, setSelectValue] = useState<string>('');
   const selectedSlugs = value.split(',').map(s => s.trim()).filter(Boolean);
 
   const handleAddAgent = (slug: string) => {
     if (!selectedSlugs.includes(slug)) {
       const newSlugs = [...selectedSlugs, slug];
       onChange(newSlugs.join(','));
+      setSelectValue(''); // Reset the select after adding
     }
   };
 
@@ -67,7 +70,7 @@ export const AgentDefaultSelector = ({ value, onChange, showLabel = true }: Agen
       </div>
 
       {availableProfiles.length > 0 && (
-        <Select onValueChange={handleAddAgent}>
+        <Select value={selectValue} onValueChange={handleAddAgent}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Add agent..." />
           </SelectTrigger>
