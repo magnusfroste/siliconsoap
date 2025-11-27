@@ -6,6 +6,7 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 export const useProfiles = () => {
   const { getTextValue, loading } = useFeatureFlags();
   
+  const [isInitialized, setIsInitialized] = useState(false);
   const [agentAPersona, setAgentAPersona] = useState('analytical');
   const [agentBPersona, setAgentBPersona] = useState('creative');
   const [agentCPersona, setAgentCPersona] = useState('strategic');
@@ -22,9 +23,9 @@ export const useProfiles = () => {
     defaultValues: { persona: 'strategic' }
   });
 
-  // Load defaults from feature flags
+  // Load defaults from feature flags only once
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isInitialized) {
       const defaultAgentA = getTextValue('default_profile_agent_a');
       const defaultAgentB = getTextValue('default_profile_agent_b');
       const defaultAgentC = getTextValue('default_profile_agent_c');
@@ -41,8 +42,10 @@ export const useProfiles = () => {
         setAgentCPersona(defaultAgentC);
         formC.setValue('persona', defaultAgentC);
       }
+      
+      setIsInitialized(true);
     }
-  }, [loading, getTextValue]);
+  }, [loading, isInitialized]);
 
   const handleAgentAPersonaChange = (value: string) => {
     setAgentAPersona(value);

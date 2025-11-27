@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeatureFlag {
@@ -57,20 +57,20 @@ export const useFeatureFlags = () => {
     };
   }, []);
 
-  const isEnabled = (key: string): boolean => {
+  const isEnabled = useCallback((key: string): boolean => {
     const flag = flags.find(f => f.key === key);
     return flag?.enabled ?? false;
-  };
+  }, [flags]);
 
-  const getNumericValue = (key: string): number | null => {
+  const getNumericValue = useCallback((key: string): number | null => {
     const flag = flags.find(f => f.key === key);
     return flag?.numeric_value ?? null;
-  };
+  }, [flags]);
 
-  const getTextValue = (key: string): string | null => {
+  const getTextValue = useCallback((key: string): string | null => {
     const flag = flags.find(f => f.key === key);
     return flag?.text_value ?? null;
-  };
+  }, [flags]);
 
   return { flags, isEnabled, getNumericValue, getTextValue, loading, refetch: fetchFlags };
 };
