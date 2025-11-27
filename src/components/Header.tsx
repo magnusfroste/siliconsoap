@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Home } from 'lucide-react';
+import { Menu, X, Home, Droplets } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -46,8 +46,11 @@ const Header = () => {
         <div className="flex justify-between items-center py-2">
           {/* Logo */}
           <div>
-            <Link to="/" className="text-xl font-semibold bg-gradient-to-r from-apple-purple to-apple-blue bg-clip-text text-transparent">
-              AI Agents Meetup
+            <Link to="/" className="flex items-center gap-2">
+              <Droplets className="h-5 w-5 text-primary" />
+              <span className="text-xl font-semibold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                SiliconSoap
+              </span>
             </Link>
           </div>
         </div>

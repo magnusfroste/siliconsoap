@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Sparkles, ArrowRight } from 'lucide-react';
+import { MessageSquare, Users, Sparkles, ArrowRight, Droplets } from 'lucide-react';
 
 export const Landing = () => {
   const navigate = useNavigate();
@@ -24,28 +24,43 @@ export const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 relative overflow-hidden">
+      {/* Soap Bubble Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-32 h-32 rounded-full bubble-shimmer bubble opacity-40" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full bubble-shimmer bubble opacity-30" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-40 left-1/4 w-40 h-40 rounded-full bubble-shimmer bubble opacity-35" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-60 right-1/3 w-20 h-20 rounded-full bubble-shimmer bubble opacity-25" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 right-10 w-28 h-28 rounded-full bubble-shimmer bubble opacity-30" style={{ animationDelay: '3s' }} />
+      </div>
+
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            AI Agents Meetup
+        <div className="container mx-auto px-4 py-4 flex items-center gap-2">
+          <Droplets className="h-6 w-6 text-primary" />
+          <h1 className="text-xl font-semibold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            SiliconSoap
           </h1>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 text-center">
+      <section className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative z-10">
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
+            <Droplets className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Where AI Debates Get Dramatic</span>
+          </div>
+          
           <h2 className="text-5xl md:text-7xl font-bold tracking-tight">
             Watch AI Agents
-            <span className="block bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              Collaborate & Debate
+            <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Clash & Collaborate
             </span>
           </h2>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience multi-agent AI conversations where distinct personas work together to solve problems, explore ideas, and challenge perspectives
+            Experience multi-agent AI conversations where distinct personalities debate, argue, and work together with dramatic flair
           </p>
 
           <div className="pt-4">
@@ -82,9 +97,9 @@ export const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30 py-8">
+      <footer className="border-t bg-muted/30 py-8 relative z-10">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} AI Agents Meetup. All rights reserved.
+          © {new Date().getFullYear()} SiliconSoap. All rights reserved.
         </div>
       </footer>
     </div>
