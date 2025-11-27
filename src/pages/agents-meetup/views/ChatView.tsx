@@ -10,14 +10,14 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { Loader2, Share2, Headphones, Pause, Square } from 'lucide-react';
+import { Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
 import { ConversationMessage } from '../types';
 import { scenarioTypes } from '../constants';
-import { AnalysisFloatingButton } from '../components/AnalysisFloatingButton';
+import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
@@ -434,50 +434,21 @@ export const ChatView = () => {
         );
       })()}
 
-      {/* Floating Playback Button */}
-      {audioPlaybackEnabled && !isGenerating && messages.length > 0 && !isPlaying && !isPaused && (
-        <Button
-          onClick={play}
-          className="fixed bottom-20 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all"
-          size="icon"
-        >
-          <Headphones className="h-5 w-5" />
-        </Button>
-      )}
-
-      {/* Playback Controls (when playing or paused) */}
-      {audioPlaybackEnabled && (isPlaying || isPaused) && (
-        <div className="fixed bottom-20 right-6 bg-background border rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
-          {isGeneratingAudio && (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          )}
-          <span className="text-sm font-medium">
-            {currentMessageIndex + 1} / {messages.length}
-          </span>
-          <Button
-            onClick={isPlaying ? pause : play}
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-          >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
-          </Button>
-          <Button
-            onClick={stop}
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8"
-          >
-            <Square className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Floating Analysis Button */}
+      {/* Floating Action Bar - Combined Audio + Analysis */}
       {!isGenerating && messages.length > 0 && (
-        <AnalysisFloatingButton 
-          onClick={() => setShowAnalysisDrawer(true)}
+        <FloatingActionBar
+          audioEnabled={audioPlaybackEnabled}
+          isPlaying={isPlaying}
+          isPaused={isPaused}
+          isGeneratingAudio={isGeneratingAudio}
+          currentMessageIndex={currentMessageIndex}
+          totalMessages={messages.length}
+          onPlay={play}
+          onPause={pause}
+          onStop={stop}
+          canAnalyze={!isGuest}
           isAnalyzing={isAnalyzing}
+          onAnalyze={() => setShowAnalysisDrawer(true)}
         />
       )}
 
