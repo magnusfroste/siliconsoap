@@ -1,97 +1,18 @@
-import { ConversationMessage, ResponseLength } from '../types';
-import { OpenRouterModel } from '@/utils/openRouter/types';
-import { ScenarioType } from '../types';
-import React from 'react';
+// Re-export all types from the main types file
+// This file exists for backward compatibility with existing imports
+
+export type { 
+  LabsState, 
+  LabsActions,
+  ResponseLength,
+  ParticipationMode,
+  TurnOrder,
+  Profile,
+  ScenarioType,
+  ConversationMessage,
+  AnalysisResults
+} from '../types';
+
+// Additional hook-specific types
 import { ViewState } from './conversation/useConversationNavigation';
-import { UseFormReturn } from 'react-hook-form';
-
-export interface LabsState {
-  apiKey: string;
-  savedApiKey: string;
-  userApiKey: string;
-  isSaving: boolean;
-  isSaved: boolean;
-  isUsingEnvKey: boolean;
-  isUsingSharedKey: boolean;
-  agentAModel: string;
-  agentBModel: string;
-  agentCModel: string;
-  agentAPersona: string;
-  agentBPersona: string;
-  agentCPersona: string;
-  rounds: number;
-  numberOfAgents: number;
-  responseLength: ResponseLength;
-  participationMode: 'spectator' | 'jump-in' | 'round-by-round';
-  turnOrder: 'sequential' | 'random' | 'popcorn';
-  conversation: ConversationMessage[];
-  isLoading: boolean;
-  availableModels: OpenRouterModel[];
-  loadingModels: boolean;
-  currentView: ViewState;
-  settingsOpen: boolean;
-  activeScenario: string;
-  promptInputs: Record<string, string>;
-  isAnalyzing: boolean;
-  analysisResults: any | null;
-  analyzerModel: string;
-  formA: UseFormReturn<{ persona: string }>;
-  formB: UseFormReturn<{ persona: string }>;
-  formC: UseFormReturn<{ persona: string }>;
-  // Expert settings state
-  conversationTone: 'formal' | 'casual' | 'heated' | 'collaborative';
-  agreementBias: number;
-  temperature: number;
-  personalityIntensity: 'mild' | 'moderate' | 'extreme';
-}
-
-export interface LabsActions {
-  setApiKey: (key: string) => void;
-  setSavedApiKey: (key: string) => void;
-  setUserApiKey: (key: string) => void;
-  setIsSaving: (saving: boolean) => void;
-  setIsSaved: (saved: boolean) => void;
-  setAgentAModel: (model: string) => void;
-  setAgentBModel: (model: string) => void;
-  setAgentCModel: (model: string) => void;
-  setAgentAPersona: (persona: string) => void;
-  setAgentBPersona: (persona: string) => void;
-  setAgentCPersona: (persona: string) => void;
-  setRounds: (rounds: number) => void;
-  setNumberOfAgents: (number: number) => void;
-  setResponseLength: (length: ResponseLength) => void;
-  setParticipationMode: (mode: 'spectator' | 'jump-in' | 'round-by-round') => void;
-  setTurnOrder: (order: 'sequential' | 'random' | 'popcorn') => void;
-  setConversation: (conversation: ConversationMessage[]) => void;
-  setIsLoading: (loading: boolean) => void;
-  setAvailableModels: (models: OpenRouterModel[]) => void;
-  setLoadingModels: (loading: boolean) => void;
-  setCurrentView: (view: ViewState) => void;
-  setSettingsOpen: (open: boolean) => void;
-  setActiveScenario: (scenario: string) => void;
-  setPromptInputs: (inputs: Record<string, string>) => void;
-  setIsAnalyzing: (analyzing: boolean) => void;
-  setAnalysisResults: (results: any | null) => void;
-  setAnalyzerModel: (model: string) => void;
-  handleInputChange: (scenarioId: string, value: string) => void;
-  saveApiKey: (key: string) => Promise<boolean>;
-  deleteApiKey: () => void;
-  validateApiKey: (key: string) => Promise<boolean>;
-  getActiveApiKey: (modelIsFree?: boolean) => string | null;
-  handleStartConversation: () => Promise<void>;
-  handleAnalyzeConversation: (model?: string) => Promise<void>;
-  handleAgentAPersonaChange: (value: string) => void;
-  handleAgentBPersonaChange: (value: string) => void;
-  handleAgentCPersonaChange: (value: string) => void;
-  getCurrentScenario: () => ScenarioType;
-  getCurrentPrompt: () => string;
-  formatMessage: (message: string) => string;
-  refreshModels: (apiKey: string) => void;
-  promptForBYOK: () => void;
-  enableSharedKeyMode: () => void;
-  // Expert settings actions
-  setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
-  setAgreementBias: (bias: number) => void;
-  setTemperature: (temp: number) => void;
-  setPersonalityIntensity: (intensity: 'mild' | 'moderate' | 'extreme') => void;
-}
+export type { ViewState };

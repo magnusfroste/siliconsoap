@@ -6,25 +6,23 @@ import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
 import { ExpertSettings } from '@/components/labs/agent-config/ExpertSettings';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 import { useAuth } from '../hooks/useAuth';
-import { useChat } from '../hooks/useChat';
 import { useCredits } from '../hooks/useCredits';
 import { toast } from 'sonner';
-import type { ConversationMessage } from '../types';
-import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting } from '../hooks/conversation/agent/conversationManager';
+import { chatService } from '@/services';
+import { creditsService } from '@/services';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
+import type { ChatSettings } from '@/models/chat';
 
 export const NewChatView = () => {
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
-  const { saveChat } = useChat(undefined, user?.id);
   const { creditsRemaining, hasCredits, useCredit, isGuest } = useCredits(user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,24 +40,41 @@ export const NewChatView = () => {
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
   const handleApiKeySubmit = (apiKey: string) => {
-    // Store API key in localStorage for BYOK
-    localStorage.setItem('userOpenRouterApiKey', apiKey);
+    creditsService.saveByokApiKey(apiKey);
     toast.success('API key saved! You can now continue with unlimited usage.');
   };
+
+  // Build chat settings from current state
+  const buildChatSettings = (): ChatSettings => ({
+    numberOfAgents: state.numberOfAgents,
+    rounds: state.rounds,
+    responseLength: state.responseLength,
+    participationMode: state.participationMode,
+    turnOrder: state.turnOrder,
+    models: {
+      agentA: state.agentAModel,
+      agentB: state.agentBModel,
+      agentC: state.agentCModel
+    },
+    personas: {
+      agentA: state.agentAPersona,
+      agentB: state.agentBPersona,
+      agentC: state.agentCPersona
+    },
+    conversationTone: state.conversationTone,
+    agreementBias: state.agreementBias,
+    temperature: state.temperature,
+    personalityIntensity: state.personalityIntensity
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPrompt.trim() || isGenerating) return;
 
     // Check credits before proceeding
-    if (!hasCredits()) {
-      // Check if user has BYOK API key
-      const userApiKey = localStorage.getItem('userOpenRouterApiKey');
-      if (!userApiKey) {
-        setShowCreditsModal(true);
-        return;
-      }
-      // If user has API key, proceed without credit check
+    if (!creditsService.canStartConversation(creditsRemaining)) {
+      setShowCreditsModal(true);
+      return;
     }
 
     // For guests without credits, don't allow starting chat
@@ -79,84 +94,33 @@ export const NewChatView = () => {
     try {
       // Use a credit before starting
       const creditUsed = await useCredit();
-      if (!creditUsed && !localStorage.getItem('userOpenRouterApiKey')) {
+      if (!creditUsed && !creditsService.hasByokApiKey()) {
         setShowCreditsModal(true);
         setIsGenerating(false);
         return;
       }
 
+      const settings = buildChatSettings();
+      const title = chatService.generateTitle(currentPrompt);
+
       if (isGuest) {
-        // Guests: Store chat in localStorage temporarily
-        const guestChatId = `guest_${Date.now()}`;
-        const guestChats = JSON.parse(localStorage.getItem('guest_chats') || '{}');
-        guestChats[guestChatId] = {
-          id: guestChatId,
-          title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
-          scenario_id: state.activeScenario,
-          prompt: currentPrompt,
-          settings: {
-            numberOfAgents: state.numberOfAgents,
-            rounds: state.rounds,
-            responseLength: state.responseLength,
-            participationMode: state.participationMode,
-            turnOrder: state.turnOrder,
-            models: {
-              agentA: state.agentAModel,
-              agentB: state.agentBModel,
-              agentC: state.agentCModel
-            },
-            personas: {
-              agentA: state.agentAPersona,
-              agentB: state.agentBPersona,
-              agentC: state.agentCPersona
-            }
-          },
-          messages: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        localStorage.setItem('guest_chats', JSON.stringify(guestChats));
-        
-        // Navigate to guest chat
-        navigate(`/chat/${guestChatId}`);
+        // Guests: Create chat in localStorage
+        const guestChat = chatService.createGuestChat(
+          currentPrompt,
+          state.activeScenario,
+          settings
+        );
+        navigate(`/chat/${guestChat.id}`);
       } else {
         // Logged-in users: Create in database
-        const { supabase } = await import('@/integrations/supabase/client');
-        
-        const { data: chatData, error: chatError } = await supabase
-          .from('agent_chats')
-          .insert({
-            user_id: user!.id,
-            title: currentPrompt.substring(0, 50) + (currentPrompt.length > 50 ? '...' : ''),
-            scenario_id: state.activeScenario,
-            prompt: currentPrompt,
-            settings: {
-              numberOfAgents: state.numberOfAgents,
-              rounds: state.rounds,
-              responseLength: state.responseLength,
-              participationMode: state.participationMode,
-              turnOrder: state.turnOrder,
-              models: {
-                agentA: state.agentAModel,
-                agentB: state.agentBModel,
-                agentC: state.agentCModel
-              },
-              personas: {
-                agentA: state.agentAPersona,
-                agentB: state.agentBPersona,
-                agentC: state.agentCPersona
-              }
-            }
-          })
-          .select()
-          .single();
-
-        if (chatError || !chatData) {
-          throw chatError || new Error('Failed to create chat');
-        }
-
-        // Navigate to chat view
-        navigate(`/chat/${chatData.id}`);
+        const chat = await chatService.createChat({
+          user_id: user!.id,
+          title,
+          scenario_id: state.activeScenario,
+          prompt: currentPrompt,
+          settings
+        });
+        navigate(`/chat/${chat.id}`);
       }
     } catch (error: any) {
       console.error('Error creating chat:', error);

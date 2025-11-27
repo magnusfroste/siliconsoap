@@ -12,7 +12,6 @@ import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
 import { ConversationMessage } from '../types';
