@@ -16,8 +16,6 @@ interface ConversationSettingsProps {
   turnOrder: string;
   setTurnOrder: (order: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
-  isExpanded: boolean;
-  onToggleExpanded: () => void;
 }
 
 export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
@@ -32,8 +30,6 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   turnOrder,
   setTurnOrder,
   responseLengthOptions,
-  isExpanded,
-  onToggleExpanded,
 }) => {
   const agentLabels: Record<string, { short: string; full: string }> = {
     '1': { short: '1 Agent', full: '1 Agent (Solo Analysis)' },
@@ -67,8 +63,7 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="space-y-3">
-        {/* Always visible: Number of Agents */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
@@ -88,20 +83,6 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
             <p>Choose how many AI agents will participate in the conversation. More agents provide diverse perspectives but take longer to complete.</p>
           </TooltipContent>
         </Tooltip>
-
-        {/* Advanced toggle */}
-        <button
-          type="button"
-          onClick={onToggleExpanded}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          <span>⚙️ Advanced</span>
-          <span className="text-[10px]">{isExpanded ? '▲' : '▼'}</span>
-        </button>
-
-        {/* Expanded: Remaining 4 dropdowns */}
-        {isExpanded && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
         
         <Tooltip>
           <TooltipTrigger asChild>
@@ -175,34 +156,32 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
           </TooltipContent>
         </Tooltip>
         
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Select 
-                    value={turnOrder} 
-                    onValueChange={(value) => setTurnOrder(value)}
-                    disabled={numberOfAgents === 1}
-                  >
-                    <SelectTrigger className="h-10 text-sm">
-                      <span>{turnOrderLabels[turnOrder]?.short || 'Turn Order'}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sequential">{turnOrderLabels['sequential'].full}</SelectItem>
-                      <SelectItem value="random">{turnOrderLabels['random'].full}</SelectItem>
-                      <SelectItem value="popcorn">{turnOrderLabels['popcorn'].full}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {numberOfAgents === 1 && (
-                    <p className="text-xs text-muted-foreground mt-1">Turn order only applies with multiple agents</p>
-                  )}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>Control agent speaking order: Sequential follows A→B→C pattern, Random shuffles each round, and Popcorn uses AI to select the most relevant speaker based on context.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <Select 
+                value={turnOrder} 
+                onValueChange={(value) => setTurnOrder(value)}
+                disabled={numberOfAgents === 1}
+              >
+                <SelectTrigger className="h-10 text-sm">
+                  <span>{turnOrderLabels[turnOrder]?.short || 'Turn Order'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sequential">{turnOrderLabels['sequential'].full}</SelectItem>
+                  <SelectItem value="random">{turnOrderLabels['random'].full}</SelectItem>
+                  <SelectItem value="popcorn">{turnOrderLabels['popcorn'].full}</SelectItem>
+                </SelectContent>
+              </Select>
+              {numberOfAgents === 1 && (
+                <p className="text-xs text-muted-foreground mt-1">Turn order only applies with multiple agents</p>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p>Control agent speaking order: Sequential follows A→B→C pattern, Random shuffles each round, and Popcorn uses AI to select the most relevant speaker based on context.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </TooltipProvider>
   );

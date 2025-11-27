@@ -29,7 +29,6 @@ export const NewChatView = () => {
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   // Group models by provider
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
@@ -224,15 +223,12 @@ export const NewChatView = () => {
                 turnOrder={state.turnOrder}
                 setTurnOrder={actions.setTurnOrder}
                 responseLengthOptions={responseLengthOptions}
-                isExpanded={settingsExpanded}
-                onToggleExpanded={() => setSettingsExpanded(!settingsExpanded)}
               />
               
-              {settingsExpanded && <Separator className="my-4" />}
+              <Separator className="my-4" />
               
               {/* Expert Settings */}
               <ExpertSettings
-                isExpanded={settingsExpanded}
                 conversationTone={state.conversationTone}
                 setConversationTone={actions.setConversationTone}
                 agreementBias={state.agreementBias}
