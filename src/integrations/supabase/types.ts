@@ -145,6 +145,7 @@ export type Database = {
           key: string
           name: string
           numeric_value: number | null
+          text_value: string | null
           updated_at: string | null
         }
         Insert: {
@@ -155,6 +156,7 @@ export type Database = {
           key: string
           name: string
           numeric_value?: number | null
+          text_value?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -165,6 +167,7 @@ export type Database = {
           key?: string
           name?: string
           numeric_value?: number | null
+          text_value?: string | null
           updated_at?: string | null
         }
         Relationships: []
