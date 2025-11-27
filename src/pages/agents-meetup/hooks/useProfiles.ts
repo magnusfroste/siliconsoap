@@ -25,21 +25,21 @@ export const useProfiles = () => {
   // Load defaults from feature flags
   useEffect(() => {
     if (!loading) {
-      const defaultAgents = getTextValue('default_agents');
-      if (defaultAgents) {
-        const slugs = defaultAgents.split(',').map(s => s.trim());
-        if (slugs[0]) {
-          setAgentAPersona(slugs[0]);
-          formA.setValue('persona', slugs[0]);
-        }
-        if (slugs[1]) {
-          setAgentBPersona(slugs[1]);
-          formB.setValue('persona', slugs[1]);
-        }
-        if (slugs[2]) {
-          setAgentCPersona(slugs[2]);
-          formC.setValue('persona', slugs[2]);
-        }
+      const defaultAgentA = getTextValue('default_profile_agent_a');
+      const defaultAgentB = getTextValue('default_profile_agent_b');
+      const defaultAgentC = getTextValue('default_profile_agent_c');
+      
+      if (defaultAgentA) {
+        setAgentAPersona(defaultAgentA);
+        formA.setValue('persona', defaultAgentA);
+      }
+      if (defaultAgentB) {
+        setAgentBPersona(defaultAgentB);
+        formB.setValue('persona', defaultAgentB);
+      }
+      if (defaultAgentC) {
+        setAgentCPersona(defaultAgentC);
+        formC.setValue('persona', defaultAgentC);
       }
     }
   }, [loading, getTextValue]);
