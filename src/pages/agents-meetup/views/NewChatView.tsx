@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -20,6 +20,15 @@ import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import type { ChatSettings } from '@/models/chat';
 
 export const NewChatView = () => {
+  const isMounted = useRef(true);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
@@ -95,8 +104,10 @@ export const NewChatView = () => {
       // Use a credit before starting
       const creditUsed = await useCredit();
       if (!creditUsed && !creditsService.hasByokApiKey()) {
-        setShowCreditsModal(true);
-        setIsGenerating(false);
+        if (isMounted.current) {
+          setShowCreditsModal(true);
+          setIsGenerating(false);
+        }
         return;
       }
 
@@ -110,7 +121,9 @@ export const NewChatView = () => {
           state.activeScenario,
           settings
         );
-        navigate(`/chat/${guestChat.id}`);
+        if (isMounted.current) {
+          navigate(`/chat/${guestChat.id}`);
+        }
       } else {
         // Logged-in users: Create in database
         const chat = await chatService.createChat({
@@ -120,14 +133,18 @@ export const NewChatView = () => {
           prompt: currentPrompt,
           settings
         });
-        navigate(`/chat/${chat.id}`);
+        if (isMounted.current) {
+          navigate(`/chat/${chat.id}`);
+        }
       }
     } catch (error: any) {
       console.error('Error creating chat:', error);
-      toast.error('Failed to create conversation', {
-        description: error.message || 'Please try again'
-      });
-      setIsGenerating(false);
+      if (isMounted.current) {
+        toast.error('Failed to create conversation', {
+          description: error.message || 'Please try again'
+        });
+        setIsGenerating(false);
+      }
     }
   };
 

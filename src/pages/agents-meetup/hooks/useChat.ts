@@ -41,10 +41,26 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     loadChat();
 
     // Set up real-time subscription for new messages
+    // Use a Set to track message IDs to prevent duplicates
+    const seenMessageIds = new Set<string>();
+    
     const channel: RealtimeChannel = messageRepository.subscribeToMessages(
       chatId,
       (newMessage) => {
-        setMessages(prev => [...prev, newMessage]);
+        // Prevent duplicate messages from realtime subscription
+        const messageKey = newMessage.id || `${newMessage.agent}-${newMessage.message?.substring(0, 50)}`;
+        if (seenMessageIds.has(messageKey)) return;
+        seenMessageIds.add(messageKey);
+        
+        setMessages(prev => {
+          // Additional check: don't add if message already exists in state
+          const exists = prev.some(m => 
+            m.id === newMessage.id || 
+            (m.agent === newMessage.agent && m.message === newMessage.message && m.created_at === newMessage.created_at)
+          );
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
       }
     );
 
@@ -141,10 +157,20 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
   const saveMessage = useCallback(async (chatId: string, message: ChatMessage) => {
     if (chatRepository.isGuestChat(chatId)) {
       messageRepository.saveGuestMessage(chatId, message);
-      setMessages(prev => [...prev, message]);
+      // For guest chats, we update local state immediately since there's no realtime
+      setMessages(prev => {
+        // Prevent duplicates
+        const exists = prev.some(m => 
+          m.agent === message.agent && m.message === message.message
+        );
+        if (exists) return prev;
+        return [...prev, message];
+      });
       return;
     }
 
+    // For logged-in users, the realtime subscription will update state
+    // so we don't update state here to avoid duplicates
     await chatService.saveMessage(chatId, message);
   }, []);
 
