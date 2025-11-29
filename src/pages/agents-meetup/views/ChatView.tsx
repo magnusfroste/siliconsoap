@@ -12,7 +12,7 @@ import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { toast } from 'sonner';
 import { ConversationMessage } from '../types';
@@ -36,6 +36,11 @@ export const ChatView = () => {
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
+  
+  // Refs to prevent race conditions
+  const hasStartedGeneration = useRef(false);
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
   
@@ -106,18 +111,41 @@ export const ChatView = () => {
     }
   }, [chat, loading, messages.length]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Reset generation flag when chatId changes
+  useEffect(() => {
+    hasStartedGeneration.current = false;
+  }, [chatId]);
+
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
-    if (!chat || !chatId || loading || messages.length > 0 || isGenerating) return;
+    // Guard against multiple generations and race conditions
+    if (!chat || !chatId || loading || messages.length > 0 || isGenerating || hasStartedGeneration.current) return;
+    
+    // Mark that we've started generation to prevent duplicate calls
+    hasStartedGeneration.current = true;
 
     const startGeneration = async () => {
+      if (!isMounted.current) return;
+      
       setIsGenerating(true);
+      abortControllerRef.current = new AbortController();
       const settings = chat.settings as any;
 
       try {
         const apiAvailable = await checkBeforeStarting(state.apiKey);
-        if (!apiAvailable) {
-          setIsGenerating(false);
+        if (!apiAvailable || !isMounted.current) {
+          if (isMounted.current) setIsGenerating(false);
           return;
         }
 
@@ -128,12 +156,12 @@ export const ChatView = () => {
         }
 
         const onMessageReceived = async (message: any) => {
-          if (!chatId) return;
+          if (!chatId || !isMounted.current) return;
           setCurrentAgent(message.agent);
           await saveMessage(chatId, message);
         };
 
-        setCurrentAgent('Agent A');
+        if (isMounted.current) setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
           scenario,
@@ -148,6 +176,8 @@ export const ChatView = () => {
           settings.responseLength,
           onMessageReceived
         );
+
+        if (!isMounted.current) return;
 
         // Check participation mode for round-by-round
         const participationMode = settings.participationMode || 'jump-in';
@@ -179,26 +209,33 @@ export const ChatView = () => {
               settings.responseLength,
               onMessageReceived
             );
+            if (isMounted.current) {
+              setCurrentAgent(null);
+              setConversationComplete(true);
+              toast.success('Conversation complete!');
+            }
+          }
+        } else {
+          if (isMounted.current) {
             setCurrentAgent(null);
             setConversationComplete(true);
             toast.success('Conversation complete!');
           }
-        } else {
-          setCurrentAgent(null);
-          setConversationComplete(true);
-          toast.success('Conversation complete!');
         }
       } catch (error) {
+        if (!isMounted.current) return;
         console.error('Error generating conversation:', error);
         toast.error('Failed to generate conversation');
         setCurrentAgent(null);
       } finally {
-        setIsGenerating(false);
+        if (isMounted.current) {
+          setIsGenerating(false);
+        }
       }
     };
 
     startGeneration();
-  }, [chat, chatId, loading, messages.length, isGenerating, state.apiKey, saveMessage]);
+  }, [chat, chatId, loading, messages.length, state.apiKey, saveMessage]);
 
   if (loading) {
     return (
