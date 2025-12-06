@@ -2,14 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Plus, Trash2, Search } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   getAllCuratedModels,
   toggleModelEnabled,
   addCuratedModel,
   removeCuratedModel,
+  updateModelContent,
   CuratedModel,
 } from '@/repositories/curatedModelsRepository';
 import { fetchOpenRouterModels } from '@/utils/openRouter';
@@ -22,6 +24,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 export const CuratedModelsManager = () => {
   const [curatedModels, setCuratedModels] = useState<CuratedModel[]>([]);
@@ -30,6 +34,8 @@ export const CuratedModelsManager = () => {
   const [fetchingModels, setFetchingModels] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [generatingForModel, setGeneratingForModel] = useState<string | null>(null);
+  const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
 
   const loadCuratedModels = useCallback(async () => {
     try {
@@ -103,6 +109,73 @@ export const CuratedModelsManager = () => {
     }
   };
 
+  const handleGenerateModelInfo = async (model: CuratedModel) => {
+    setGeneratingForModel(model.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-model-info', {
+        body: {
+          model_id: model.model_id,
+          display_name: model.display_name,
+          provider: model.provider,
+        },
+      });
+
+      if (error) throw error;
+
+      // Update the model with generated content
+      await updateModelContent(model.id, {
+        description: data.description,
+        pros: data.pros,
+        cons: data.cons,
+        use_cases: data.use_cases,
+        avoid_cases: data.avoid_cases,
+        category: data.category,
+        speed_rating: data.speed_rating,
+        context_window: parseInt(data.context_window) || null,
+      });
+
+      // Update local state
+      setCuratedModels(prev =>
+        prev.map(m =>
+          m.id === model.id
+            ? {
+                ...m,
+                description: data.description,
+                pros: data.pros,
+                cons: data.cons,
+                use_cases: data.use_cases,
+                avoid_cases: data.avoid_cases,
+                category: data.category,
+                speed_rating: data.speed_rating,
+                context_window: parseInt(data.context_window) || null,
+              }
+            : m
+        )
+      );
+
+      // Auto-expand the model to show generated content
+      setExpandedModels(prev => new Set([...prev, model.id]));
+      toast.success(`Generated info for ${model.display_name}`);
+    } catch (error: any) {
+      console.error('Error generating model info:', error);
+      toast.error(error.message || 'Failed to generate model info');
+    } finally {
+      setGeneratingForModel(null);
+    }
+  };
+
+  const toggleModelExpanded = (modelId: string) => {
+    setExpandedModels(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(modelId)) {
+        newSet.delete(modelId);
+      } else {
+        newSet.add(modelId);
+      }
+      return newSet;
+    });
+  };
+
   // Filter OpenRouter models that aren't already curated
   const curatedModelIds = new Set(curatedModels.map(m => m.model_id));
   const availableToAdd = allOpenRouterModels.filter(m => !curatedModelIds.has(m.id));
@@ -120,6 +193,9 @@ export const CuratedModelsManager = () => {
     acc[provider].push(model);
     return acc;
   }, {} as Record<string, OpenRouterModel[]>);
+
+  const hasEducationalContent = (model: CuratedModel) =>
+    model.description || model.pros?.length || model.cons?.length || model.use_cases?.length;
 
   if (loading) {
     return (
@@ -218,41 +294,199 @@ export const CuratedModelsManager = () => {
       </div>
 
       <div className="space-y-2">
-        {curatedModels.map(model => (
-          <div
-            key={model.id}
-            className="flex items-center justify-between p-3 rounded-lg border bg-card"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium">{model.display_name}</p>
-                <Badge variant="outline" className="text-xs">
-                  {model.provider}
-                </Badge>
-                {model.is_free && (
-                  <Badge variant="secondary" className="text-xs">
-                    FREE
-                  </Badge>
-                )}
+        {curatedModels.map(model => {
+          const isExpanded = expandedModels.has(model.id);
+          const hasContent = hasEducationalContent(model);
+
+          return (
+            <Collapsible
+              key={model.id}
+              open={isExpanded}
+              onOpenChange={() => toggleModelExpanded(model.id)}
+            >
+              <div className="rounded-lg border bg-card overflow-hidden">
+                <div className="flex items-center justify-between p-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{model.display_name}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {model.provider}
+                      </Badge>
+                      {model.is_free && (
+                        <Badge variant="secondary" className="text-xs">
+                          FREE
+                        </Badge>
+                      )}
+                      {hasContent && (
+                        <Badge variant="default" className="text-xs bg-primary/20 text-primary">
+                          Has Info
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGenerateModelInfo(model)}
+                      disabled={generatingForModel === model.id}
+                      className="gap-1.5"
+                    >
+                      {generatingForModel === model.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                      {hasContent ? 'Regenerate' : 'Generate'} Info
+                    </Button>
+                    <Switch
+                      checked={model.is_enabled}
+                      onCheckedChange={() => handleToggleEnabled(model)}
+                    />
+                    <CollapsibleTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        <ChevronDown
+                          className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleRemoveModel(model)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <CollapsibleContent>
+                  <div className="border-t p-4 space-y-4 bg-muted/30">
+                    {hasContent ? (
+                      <>
+                        {model.description && (
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Description
+                            </label>
+                            <p className="text-sm mt-1">{model.description}</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {model.pros && model.pros.length > 0 && (
+                            <div>
+                              <label className="text-xs font-medium text-green-600 flex items-center gap-1">
+                                <Check className="h-3 w-3" /> Strengths
+                              </label>
+                              <ul className="mt-1 space-y-1">
+                                {model.pros.map((pro, i) => (
+                                  <li key={i} className="text-xs text-muted-foreground">
+                                    • {pro}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {model.cons && model.cons.length > 0 && (
+                            <div>
+                              <label className="text-xs font-medium text-amber-600 flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" /> Limitations
+                              </label>
+                              <ul className="mt-1 space-y-1">
+                                {model.cons.map((con, i) => (
+                                  <li key={i} className="text-xs text-muted-foreground">
+                                    • {con}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {model.use_cases && model.use_cases.length > 0 && (
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Best For
+                              </label>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {model.use_cases.map((uc, i) => (
+                                  <Badge key={i} variant="secondary" className="text-xs">
+                                    {uc}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {model.avoid_cases && model.avoid_cases.length > 0 && (
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">
+                                Avoid For
+                              </label>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {model.avoid_cases.map((ac, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">
+                                    {ac}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-4 text-xs text-muted-foreground">
+                          {model.category && (
+                            <span>
+                              Category: <strong className="capitalize">{model.category}</strong>
+                            </span>
+                          )}
+                          {model.speed_rating && (
+                            <span>
+                              Speed: <strong className="capitalize">{model.speed_rating}</strong>
+                            </span>
+                          )}
+                          {model.context_window && (
+                            <span>
+                              Context:{' '}
+                              <strong>
+                                {model.context_window >= 1000
+                                  ? `${Math.round(model.context_window / 1000)}K`
+                                  : model.context_window}
+                              </strong>
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          No educational content yet
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleGenerateModelInfo(model)}
+                          disabled={generatingForModel === model.id}
+                          className="gap-1.5"
+                        >
+                          {generatingForModel === model.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3.5 w-3.5" />
+                          )}
+                          Generate with AI
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
               </div>
-              <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={model.is_enabled}
-                onCheckedChange={() => handleToggleEnabled(model)}
-              />
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive hover:text-destructive"
-                onClick={() => handleRemoveModel(model)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
+            </Collapsible>
+          );
+        })}
         {curatedModels.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
             No curated models yet. Click "Add Models" to get started.
