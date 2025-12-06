@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { creditsService } from '@/services';
 import { CreditState } from '@/models/credits';
 
@@ -8,11 +8,41 @@ export const useCredits = (userId: string | null | undefined) => {
     creditsUsed: 0,
     loading: true,
   });
+  
+  const isMounted = useRef(true);
+  const isLoading = useRef(false);
+
+  const loadCredits = useCallback(async () => {
+    // Prevent duplicate loads
+    if (isLoading.current) return;
+    isLoading.current = true;
+    
+    setCreditData(prev => ({ ...prev, loading: true }));
+
+    try {
+      const state = await creditsService.loadCredits(userId || null);
+      if (isMounted.current) {
+        setCreditData(state);
+      }
+    } catch (error) {
+      console.error('Error loading credits:', error);
+      if (isMounted.current) {
+        setCreditData({ creditsRemaining: 0, creditsUsed: 0, loading: false });
+      }
+    } finally {
+      isLoading.current = false;
+    }
+  }, [userId]);
 
   // Load credits on mount and when user changes
   useEffect(() => {
+    isMounted.current = true;
     loadCredits();
-  }, [userId]);
+    
+    return () => {
+      isMounted.current = false;
+    };
+  }, [loadCredits]);
 
   // Listen for credit changes from other components
   useEffect(() => {
@@ -22,25 +52,13 @@ export const useCredits = (userId: string | null | undefined) => {
 
     window.addEventListener('creditsChanged', handleCreditsChanged);
     return () => window.removeEventListener('creditsChanged', handleCreditsChanged);
-  }, [userId]);
+  }, [loadCredits]);
 
-  const loadCredits = async () => {
-    setCreditData(prev => ({ ...prev, loading: true }));
-
-    try {
-      const state = await creditsService.loadCredits(userId || null);
-      setCreditData(state);
-    } catch (error) {
-      console.error('Error loading credits:', error);
-      setCreditData({ creditsRemaining: 0, creditsUsed: 0, loading: false });
-    }
-  };
-
-  const hasCredits = (): boolean => {
+  const hasCredits = useCallback((): boolean => {
     return creditsService.canStartConversation(creditData.creditsRemaining);
-  };
+  }, [creditData.creditsRemaining]);
 
-  const useCredit = async (): Promise<boolean> => {
+  const useCredit = useCallback(async (): Promise<boolean> => {
     if (!hasCredits()) return false;
 
     const result = await creditsService.useCredit(
@@ -49,7 +67,7 @@ export const useCredits = (userId: string | null | undefined) => {
       creditData.creditsUsed
     );
 
-    if (result.success) {
+    if (result.success && isMounted.current) {
       setCreditData(prev => ({
         ...prev,
         creditsRemaining: result.newRemaining,
@@ -58,11 +76,11 @@ export const useCredits = (userId: string | null | undefined) => {
     }
 
     return result.success;
-  };
+  }, [hasCredits, userId, creditData.creditsRemaining, creditData.creditsUsed]);
 
-  const refreshCredits = () => {
+  const refreshCredits = useCallback(() => {
     loadCredits();
-  };
+  }, [loadCredits]);
 
   return {
     creditsRemaining: creditData.creditsRemaining,

@@ -1,12 +1,11 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useProfiles = () => {
   const { getTextValue, loading } = useFeatureFlags();
   
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isInitialized = useRef(false);
   const [agentAPersona, setAgentAPersona] = useState('analytical');
   const [agentBPersona, setAgentBPersona] = useState('creative');
   const [agentCPersona, setAgentCPersona] = useState('strategic');
@@ -25,42 +24,42 @@ export const useProfiles = () => {
 
   // Load defaults from feature flags only once
   useEffect(() => {
-    if (!loading && !isInitialized) {
-      const defaultAgentA = getTextValue('default_profile_agent_a');
-      const defaultAgentB = getTextValue('default_profile_agent_b');
-      const defaultAgentC = getTextValue('default_profile_agent_c');
-      
-      if (defaultAgentA) {
-        setAgentAPersona(defaultAgentA);
-        formA.setValue('persona', defaultAgentA);
-      }
-      if (defaultAgentB) {
-        setAgentBPersona(defaultAgentB);
-        formB.setValue('persona', defaultAgentB);
-      }
-      if (defaultAgentC) {
-        setAgentCPersona(defaultAgentC);
-        formC.setValue('persona', defaultAgentC);
-      }
-      
-      setIsInitialized(true);
+    if (loading || isInitialized.current) return;
+    
+    const defaultAgentA = getTextValue('default_profile_agent_a');
+    const defaultAgentB = getTextValue('default_profile_agent_b');
+    const defaultAgentC = getTextValue('default_profile_agent_c');
+    
+    if (defaultAgentA) {
+      setAgentAPersona(defaultAgentA);
+      formA.setValue('persona', defaultAgentA);
     }
-  }, [loading, isInitialized]);
+    if (defaultAgentB) {
+      setAgentBPersona(defaultAgentB);
+      formB.setValue('persona', defaultAgentB);
+    }
+    if (defaultAgentC) {
+      setAgentCPersona(defaultAgentC);
+      formC.setValue('persona', defaultAgentC);
+    }
+    
+    isInitialized.current = true;
+  }, [loading, getTextValue, formA, formB, formC]);
 
-  const handleAgentAPersonaChange = (value: string) => {
+  const handleAgentAPersonaChange = useCallback((value: string) => {
     setAgentAPersona(value);
     formA.setValue('persona', value);
-  };
+  }, [formA]);
 
-  const handleAgentBPersonaChange = (value: string) => {
+  const handleAgentBPersonaChange = useCallback((value: string) => {
     setAgentBPersona(value);
     formB.setValue('persona', value);
-  };
+  }, [formB]);
   
-  const handleAgentCPersonaChange = (value: string) => {
+  const handleAgentCPersonaChange = useCallback((value: string) => {
     setAgentCPersona(value);
     formC.setValue('persona', value);
-  };
+  }, [formC]);
 
   return {
     agentAPersona,

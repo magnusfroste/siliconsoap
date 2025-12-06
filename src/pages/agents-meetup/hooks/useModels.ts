@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
 import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS, DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import { toast } from '@/hooks/use-toast';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-
 export const useModels = (apiKey: string) => {
   const { getTextValue, loading: flagsLoading } = useFeatureFlags();
   
@@ -36,16 +35,25 @@ export const useModels = (apiKey: string) => {
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
+  // Ref to prevent duplicate fetches
+  const isFetching = useRef(false);
+  const hasFetched = useRef(false);
+
   useEffect(() => {
     const getModels = async () => {
       // Wait for feature flags to load before setting defaults
       if (flagsLoading) {
-        console.log("useModels: Waiting for feature flags to load...");
         return;
       }
       
-      console.log("useModels: Fetching models (shared key mode)");
+      // Prevent duplicate fetches
+      if (isFetching.current || hasFetched.current) {
+        return;
+      }
+      
+      isFetching.current = true;
       setLoadingModels(true);
+      
       try {
         const models = await fetchOpenRouterModels(apiKey);
         console.log("Fetched models count:", models.length);
@@ -59,6 +67,7 @@ export const useModels = (apiKey: string) => {
         }
         
         setAvailableModels(models);
+        hasFetched.current = true;
         
         if (models.length > 0) {
           const flagDefaultA = getTextValue('default_model_agent_a');
@@ -97,9 +106,6 @@ export const useModels = (apiKey: string) => {
             ? flagDefaultC 
             : findDefaultModel(models, AGENT_C_PREFERRED_MODELS) || findBestAlternative(models);
           
-          console.log("Default models from flags:", { flagDefaultA, flagDefaultB, flagDefaultC });
-          console.log("Final default models:", { A: defaultAgentA, B: defaultAgentB, C: defaultAgentC });
-          
           // ALWAYS set models - never leave empty
           setAgentAModel(defaultAgentA);
           setAgentBModel(defaultAgentB);
@@ -113,6 +119,7 @@ export const useModels = (apiKey: string) => {
           variant: "destructive",
         });
       } finally {
+        isFetching.current = false;
         setLoadingModels(false);
       }
     };
