@@ -47,6 +47,12 @@ export const useModels = (apiKey: string) => {
 
   useEffect(() => {
     const getModels = async () => {
+      // Wait for feature flags to load before setting defaults
+      if (flagsLoading) {
+        console.log("useModels: Waiting for feature flags to load...");
+        return;
+      }
+      
       console.log("useModels: API key:", apiKey === '' ? 'shared key mode' : 'user key mode');
       // Always fetch models - empty string means shared key mode
       setLoadingModels(true);
@@ -119,12 +125,12 @@ export const useModels = (apiKey: string) => {
           variant: "destructive",
         });
       } finally {
-        setLoadingModels(false);
-      }
-    };
-    
-    getModels();
-  }, [apiKey]);
+      setLoadingModels(false);
+    }
+  };
+  
+  getModels();
+}, [apiKey, flagsLoading, getTextValue]);
 
   // Force refresh models function
   const refreshModels = async () => {
@@ -138,10 +144,22 @@ export const useModels = (apiKey: string) => {
       setAvailableModels(models);
       
       if (models.length > 0) {
-        // Find default models for each agent
-        const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
-        const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
-        const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+        // Use feature flag values, fallback to preferred models
+        const flagDefaultA = getTextValue('default_model_agent_a');
+        const flagDefaultB = getTextValue('default_model_agent_b');
+        const flagDefaultC = getTextValue('default_model_agent_c');
+        
+        const modelExists = (modelId: string) => models.some(m => m.id === modelId);
+        
+        const defaultAgentA = flagDefaultA && modelExists(flagDefaultA) 
+          ? flagDefaultA 
+          : findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
+        const defaultAgentB = flagDefaultB && modelExists(flagDefaultB) 
+          ? flagDefaultB 
+          : findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
+        const defaultAgentC = flagDefaultC && modelExists(flagDefaultC) 
+          ? flagDefaultC 
+          : findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
         
         // Set models independently
         if (defaultAgentA) setAgentAModel(defaultAgentA);
