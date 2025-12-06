@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeatureFlag {
@@ -13,28 +13,62 @@ interface FeatureFlag {
   updated_at: string;
 }
 
+// Module-level cache to prevent redundant fetches across hook instances
+let flagsCache: FeatureFlag[] | null = null;
+let fetchPromise: Promise<FeatureFlag[]> | null = null;
+
 export const useFeatureFlags = () => {
-  const [flags, setFlags] = useState<FeatureFlag[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [flags, setFlags] = useState<FeatureFlag[]>(flagsCache || []);
+  const [loading, setLoading] = useState(flagsCache === null);
+  const isMounted = useRef(true);
 
-  const fetchFlags = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('feature_flags')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setFlags(data || []);
-    } catch (error) {
-      console.error('Error fetching feature flags:', error);
-    } finally {
-      setLoading(false);
+  const fetchFlags = useCallback(async (): Promise<FeatureFlag[]> => {
+    // If already fetching, return the existing promise
+    if (fetchPromise) {
+      return fetchPromise;
     }
-  };
+
+    fetchPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('feature_flags')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        const newFlags = data || [];
+        flagsCache = newFlags;
+        return newFlags;
+      } catch (error) {
+        console.error('Error fetching feature flags:', error);
+        return flagsCache || [];
+      } finally {
+        fetchPromise = null;
+      }
+    })();
+
+    return fetchPromise;
+  }, []);
 
   useEffect(() => {
-    fetchFlags();
+    isMounted.current = true;
+    
+    const loadFlags = async () => {
+      // Use cache if available
+      if (flagsCache) {
+        setFlags(flagsCache);
+        setLoading(false);
+        return;
+      }
+
+      const newFlags = await fetchFlags();
+      if (isMounted.current) {
+        setFlags(newFlags);
+        setLoading(false);
+      }
+    };
+
+    loadFlags();
 
     // Subscribe to realtime updates
     const channel = supabase
@@ -46,16 +80,22 @@ export const useFeatureFlags = () => {
           schema: 'public',
           table: 'feature_flags'
         },
-        () => {
-          fetchFlags();
+        async () => {
+          // Invalidate cache and refetch
+          flagsCache = null;
+          const newFlags = await fetchFlags();
+          if (isMounted.current) {
+            setFlags(newFlags);
+          }
         }
       )
       .subscribe();
 
     return () => {
+      isMounted.current = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchFlags]);
 
   const isEnabled = useCallback((key: string): boolean => {
     const flag = flags.find(f => f.key === key);
@@ -72,5 +112,13 @@ export const useFeatureFlags = () => {
     return flag?.text_value ?? null;
   }, [flags]);
 
-  return { flags, isEnabled, getNumericValue, getTextValue, loading, refetch: fetchFlags };
+  const refetch = useCallback(async () => {
+    flagsCache = null;
+    const newFlags = await fetchFlags();
+    if (isMounted.current) {
+      setFlags(newFlags);
+    }
+  }, [fetchFlags]);
+
+  return { flags, isEnabled, getNumericValue, getTextValue, loading, refetch };
 };
