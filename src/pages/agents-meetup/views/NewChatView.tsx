@@ -37,14 +37,14 @@ export const NewChatView = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
 
-  // Group models by provider
+  // Group models by provider for CuratedModel type
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
     if (!acc[model.provider]) {
       acc[model.provider] = [];
     }
     acc[model.provider].push(model);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, typeof state.availableModels>);
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 

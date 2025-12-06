@@ -40,7 +40,7 @@ export const ConversationAnalysis: React.FC<ConversationAnalysisProps> = ({
     }
     acc[model.provider].push(model);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, typeof availableModels>);
   
   if (conversation.length === 0) {
     return <EmptyAnalysis goToStep={goToStep} />;
