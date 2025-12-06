@@ -35,12 +35,14 @@ export const useModels = (apiKey: string) => {
 
   // Ref to prevent duplicate fetches
   const isFetching = useRef(false);
-  const hasFetched = useRef(false);
+  const hasSetDefaults = useRef(false);
 
   useEffect(() => {
     const loadCuratedModels = async () => {
+      // Wait for feature flags to load first
       if (flagsLoading) return;
-      if (isFetching.current || hasFetched.current) return;
+      // Prevent duplicate fetches
+      if (isFetching.current) return;
       
       isFetching.current = true;
       setLoadingModels(true);
@@ -56,15 +58,18 @@ export const useModels = (apiKey: string) => {
             description: "No curated models configured. Contact admin.",
             variant: "destructive",
           });
+          return;
         }
         
         setAvailableModels(models);
-        hasFetched.current = true;
         
-        if (models.length > 0) {
+        // Only set defaults once
+        if (!hasSetDefaults.current) {
           const flagDefaultA = getTextValue('default_model_agent_a');
           const flagDefaultB = getTextValue('default_model_agent_b');
           const flagDefaultC = getTextValue('default_model_agent_c');
+          
+          console.log("Feature flag defaults:", { flagDefaultA, flagDefaultB, flagDefaultC });
           
           const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
           
@@ -73,17 +78,6 @@ export const useModels = (apiKey: string) => {
             const freeModel = models.find(m => m.is_free);
             return freeModel?.model_id || models[0]?.model_id || '';
           };
-          
-          // Log warnings for invalid admin defaults
-          if (flagDefaultA && !modelExists(flagDefaultA)) {
-            console.warn(`Admin default model for Agent A not in curated list: ${flagDefaultA}`);
-          }
-          if (flagDefaultB && !modelExists(flagDefaultB)) {
-            console.warn(`Admin default model for Agent B not in curated list: ${flagDefaultB}`);
-          }
-          if (flagDefaultC && !modelExists(flagDefaultC)) {
-            console.warn(`Admin default model for Agent C not in curated list: ${flagDefaultC}`);
-          }
           
           // Determine defaults with guaranteed fallback to curated models
           const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA))
@@ -98,9 +92,12 @@ export const useModels = (apiKey: string) => {
             ? flagDefaultC 
             : findBestAlternative(models);
           
+          console.log("Setting agent models:", { defaultAgentA, defaultAgentB, defaultAgentC });
+          
           setAgentAModel(defaultAgentA);
           setAgentBModel(defaultAgentB);
           setAgentCModel(defaultAgentC);
+          hasSetDefaults.current = true;
         }
       } catch (error) {
         console.error("Failed to fetch curated models:", error);
@@ -116,7 +113,7 @@ export const useModels = (apiKey: string) => {
     };
     
     loadCuratedModels();
-  }, [flagsLoading, getTextValue]);
+  }, [flagsLoading]);
 
   // Force refresh curated models
   const refreshModels = async () => {
