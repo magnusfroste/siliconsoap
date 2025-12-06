@@ -8,8 +8,6 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info, Key } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { ConversationSettings, AgentGridSection } from './agent-config';
 import { Profile } from './agent-card/types';
@@ -47,7 +45,6 @@ interface SettingsDrawerProps {
   modelsByProvider: Record<string, any[]>;
   loadingModels: boolean;
   isUsingSharedKey: boolean;
-  promptForBYOK: () => void;
 }
 
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
@@ -82,8 +79,7 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   formC,
   modelsByProvider,
   loadingModels,
-  isUsingSharedKey,
-  promptForBYOK
+  isUsingSharedKey
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -96,35 +92,14 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* API Key Status */}
+          {/* API Access Status */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium flex items-center gap-2">
-                <Key className="h-4 w-4" />
-                API Access
-              </h3>
-              {isUsingSharedKey && (
-                <Badge variant="secondary" className="text-xs">
-                  Using Shared API
-                </Badge>
-              )}
+              <h3 className="text-sm font-medium">API Access</h3>
+              <Badge variant="secondary" className="text-xs">
+                Shared API
+              </Badge>
             </div>
-            
-            {isUsingSharedKey && (
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-sm">
-                  You're using our shared API key. If you hit rate limits, you can{' '}
-                  <button 
-                    onClick={promptForBYOK}
-                    className="underline font-medium hover:no-underline"
-                  >
-                    add your own API key
-                  </button>
-                  {' '}for unlimited usage.
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
 
           <Separator />

@@ -140,23 +140,8 @@ const AgentsMeetup: React.FC = () => {
                   <div>
                     <h3 className="font-semibold mb-2">Powered by OpenRouter</h3>
                     <p className="text-muted-foreground mb-3">
-                      This demo uses OpenRouter to access multiple AI models. You can start using it right away with our shared API, or{' '}
-                      <button 
-                        onClick={actions.promptForBYOK}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        add your own API key
-                      </button>
-                      {' '}for unlimited usage.
+                      This demo uses OpenRouter to access multiple AI models. Start creating AI conversations right away!
                     </p>
-                    <a 
-                      href="https://openrouter.ai/keys" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-primary hover:underline text-sm font-medium"
-                    >
-                      Get your free OpenRouter API key →
-                    </a>
                   </div>
                 </div>
               </div>
@@ -209,7 +194,6 @@ const AgentsMeetup: React.FC = () => {
         }
         loadingModels={state.loadingModels}
         isUsingSharedKey={state.isUsingSharedKey}
-        promptForBYOK={actions.promptForBYOK}
       />
     </div>
   );

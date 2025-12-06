@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useApiKey } from './useApiKey';
 import { useModels } from './useModels';
 import { useConversationFlow } from './useConversationFlow';
 import { LabsState, LabsActions } from './types';
-import { ConversationMessage, ResponseLength, ScenarioType } from '../types';
+import { ScenarioType } from '../types';
 import { scenarioTypes } from '../constants';
 import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
 import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
@@ -12,79 +12,22 @@ import { toast } from '@/hooks/use-toast';
 import { useProfiles } from './useProfiles';
 import { useScenarios } from './useScenarios';
 import { getCurrentScenario, getCurrentPrompt, formatMessage } from './utils';
-import React, { ChangeEvent } from 'react';
 
 export const useLabsState = (): [LabsState, LabsActions] => {
-  // Combine all the sub-hooks
+  // Simplified API key hook - always uses shared key
   const {
     apiKey,
     setApiKey,
     savedApiKey,
     setSavedApiKey,
-    userApiKey,
-    setUserApiKey,
     isSaving,
     setIsSaving,
     isSaved,
     setIsSaved,
-    isUsingEnvKey,
     isUsingSharedKey,
-    saveApiKey: originalSaveApiKey,
-    deleteApiKey: originalDeleteApiKey,
-    validateApiKey,
     getActiveApiKey,
-    promptForBYOK,
     enableSharedKeyMode
   } = useApiKey();
-
-  // Create a wrapper around the saveApiKey function to trigger model loading
-  const saveApiKey = async (key: string) => {
-    originalSaveApiKey(key);
-    setLoadingModels(true);
-    
-    setTimeout(async () => {
-      try {
-        const models = await fetchOpenRouterModels(key);
-        setAvailableModels(models);
-      } catch (error) {
-        console.error("Error loading models after saving API key:", error);
-      } finally {
-        setLoadingModels(false);
-      }
-    }, 500);
-    
-    return true;
-  };
-
-  // Create a wrapper around the deleteApiKey function to reload models with shared key
-  const deleteApiKey = async () => {
-    originalDeleteApiKey();
-    
-    // Reload models using shared key (empty string)
-    setLoadingModels(true);
-    setTimeout(async () => {
-      try {
-        console.log("Reloading models with shared key after deleting user key");
-        const models = await fetchOpenRouterModels(''); // Empty string = shared key
-        setAvailableModels(models);
-        
-        if (models.length > 0) {
-          // Reset to default models
-          const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
-          const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
-          const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
-          
-          if (defaultAgentA) setAgentAModel(defaultAgentA);
-          if (defaultAgentB) setAgentBModel(defaultAgentB);
-          if (defaultAgentC) setAgentCModel(defaultAgentC);
-        }
-      } catch (error) {
-        console.error("Error loading models after deleting API key:", error);
-      } finally {
-        setLoadingModels(false);
-      }
-    }, 500);
-  };
 
   const {
     agentAModel,
@@ -97,7 +40,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     setAvailableModels,
     loadingModels,
     setLoadingModels
-  } = useModels(getActiveApiKey()); // Use the active API key for fetching models
+  } = useModels(getActiveApiKey());
 
   const {
     agentAPersona,
@@ -109,9 +52,9 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     formA,
     formB,
     formC,
-    handleAgentAPersonaChange: originalHandleAgentAPersonaChange,
-    handleAgentBPersonaChange: originalHandleAgentBPersonaChange,
-    handleAgentCPersonaChange: originalHandleAgentCPersonaChange
+    handleAgentAPersonaChange,
+    handleAgentBPersonaChange,
+    handleAgentCPersonaChange
   } = useProfiles();
 
   const {
@@ -167,7 +110,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     handleStartConversation,
     handleAnalyzeConversation
   } = useConversationFlow(
-    savedApiKey,  // Use the saved API key directly
+    savedApiKey,
     agentAModel,
     agentBModel,
     agentCModel,
@@ -182,19 +125,12 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     turnOrder
   );
 
-  // Pass through the original handlers directly (no wrapping needed)
-  const handleAgentAPersonaChange = originalHandleAgentAPersonaChange;
-  const handleAgentBPersonaChange = originalHandleAgentBPersonaChange;
-  const handleAgentCPersonaChange = originalHandleAgentCPersonaChange;
-
   return [
     {
       apiKey,
       savedApiKey,
-      userApiKey, 
       isSaving,
       isSaved,
-      isUsingEnvKey,
       isUsingSharedKey,
       agentAModel,
       agentBModel,
@@ -229,7 +165,6 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     {
       setApiKey,
       setSavedApiKey,
-      setUserApiKey,
       setIsSaving,
       setIsSaved,
       setAgentAModel,
@@ -255,9 +190,6 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setAnalysisResults,
       setAnalyzerModel,
       handleInputChange,
-      saveApiKey,
-      deleteApiKey,
-      validateApiKey,
       getActiveApiKey,
       handleStartConversation,
       handleAnalyzeConversation,
@@ -267,7 +199,6 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       getCurrentScenario: getCurrentScenarioFn,
       getCurrentPrompt: getCurrentPromptFn,
       formatMessage,
-      promptForBYOK,
       enableSharedKeyMode,
       setConversationTone,
       setAgreementBias,
@@ -281,37 +212,31 @@ export const useLabsState = (): [LabsState, LabsActions] => {
           if (models.length === 0) {
             toast({
               title: "No Models Available",
-              description: "Could not fetch models from OpenRouter. Please check your API key.",
+              description: "Could not fetch models from OpenRouter.",
               variant: "destructive",
             });
           } else {
             toast({
               title: "Models Refreshed",
-              description: `Successfully loaded ${models.length} models from OpenRouter.`,
+              description: `Successfully loaded ${models.length} models.`,
             });
           }
           
           setAvailableModels(models);
           
           if (models.length > 0) {
-            // Find default models for each agent based on their preferred models list
             const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
             const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
             const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
             
-            // Set models independently
             if (defaultAgentA) setAgentAModel(defaultAgentA);
             if (defaultAgentB) setAgentBModel(defaultAgentB);
             if (defaultAgentC) setAgentCModel(defaultAgentC);
             
-            // If any agent doesn't have a model selected, find the best available
             if (!defaultAgentA || !defaultAgentB || !defaultAgentC) {
               const findBestAlternative = (models: OpenRouterModel[]) => {
-                // First try to find a free model
                 const freeModel = models.find(m => m.isFree);
                 if (freeModel) return freeModel.id;
-                
-                // Otherwise return first available model
                 return models.length > 0 ? models[0].id : '';
               };
               
@@ -324,7 +249,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
           console.error("Failed to refresh models:", error);
           toast({
             title: "Error Refreshing Models",
-            description: "Failed to fetch models from OpenRouter. Please check your API key and try again.",
+            description: "Failed to fetch models. Please try again.",
             variant: "destructive",
           });
         } finally {

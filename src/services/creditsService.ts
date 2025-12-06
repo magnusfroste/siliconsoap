@@ -1,37 +1,11 @@
-// Credits Service - business logic for credit system
+// Credits Service - business logic for credit system (credits-only, no BYOK)
 import { creditsRepository } from '@/repositories';
-import { CreditState, DEFAULT_GUEST_CREDITS, DEFAULT_USER_CREDITS } from '@/models/credits';
-
-const USER_API_KEY_STORAGE = 'userOpenRouterApiKey';
+import { CreditState } from '@/models/credits';
 
 export const creditsService = {
-  // Check if user has credits or BYOK API key
+  // Check if user has credits
   canStartConversation(creditsRemaining: number): boolean {
-    // If user has BYOK API key, they can always start
-    if (this.hasByokApiKey()) {
-      return true;
-    }
     return creditsRemaining > 0;
-  },
-
-  // Check if user has their own API key
-  hasByokApiKey(): boolean {
-    return !!localStorage.getItem(USER_API_KEY_STORAGE);
-  },
-
-  // Get BYOK API key
-  getByokApiKey(): string | null {
-    return localStorage.getItem(USER_API_KEY_STORAGE);
-  },
-
-  // Save BYOK API key
-  saveByokApiKey(apiKey: string): void {
-    localStorage.setItem(USER_API_KEY_STORAGE, apiKey);
-  },
-
-  // Remove BYOK API key
-  removeByokApiKey(): void {
-    localStorage.removeItem(USER_API_KEY_STORAGE);
   },
 
   // Load credits for a user
@@ -130,11 +104,8 @@ export const creditsService = {
     }
   },
 
-  // Check if should prompt for BYOK
-  shouldPromptBYOK(creditsRemaining: number, isGuest: boolean): boolean {
-    if (this.hasByokApiKey()) {
-      return false;
-    }
+  // Check if credits are exhausted
+  isCreditsExhausted(creditsRemaining: number): boolean {
     return creditsRemaining <= 0;
   }
 };
