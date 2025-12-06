@@ -1,54 +1,44 @@
 import { useState, useEffect, useRef } from 'react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
-import { DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
 import { toast } from '@/hooks/use-toast';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useModels = (apiKey: string) => {
   const { getTextValue, loading: flagsLoading } = useFeatureFlags();
   
-  // Get default models from feature flags, fallback to hardcoded values
-  const getDefaultModelId = (agent: 'A' | 'B' | 'C'): string => {
-    if (flagsLoading) {
-      return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
-             agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
-             DEFAULT_MODEL_IDS.agentC;
-    }
-    
-    const flagKey = agent === 'A' ? 'default_model_agent_a' :
-                    agent === 'B' ? 'default_model_agent_b' :
-                    'default_model_agent_c';
-    
-    const flagValue = getTextValue(flagKey);
-    if (flagValue) return flagValue;
-    
-    return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
-           agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
-           DEFAULT_MODEL_IDS.agentC;
-  };
-  
+  // Start with empty, will be set once flags load
   const [agentAModel, setAgentAModel] = useState('');
   const [agentBModel, setAgentBModel] = useState('');
   const [agentCModel, setAgentCModel] = useState('');
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
 
-  // Ref to track initialization
   const isInitialized = useRef(false);
 
+  // Set defaults from feature flags (same pattern as useProfiles)
+  useEffect(() => {
+    if (flagsLoading || isInitialized.current) return;
+    
+    const defaultA = getTextValue('default_model_agent_a');
+    const defaultB = getTextValue('default_model_agent_b');
+    const defaultC = getTextValue('default_model_agent_c');
+    
+    console.log("Setting model defaults from flags:", { defaultA, defaultB, defaultC });
+    
+    if (defaultA) setAgentAModel(defaultA);
+    if (defaultB) setAgentBModel(defaultB);
+    if (defaultC) setAgentCModel(defaultC);
+    
+    isInitialized.current = true;
+  }, [flagsLoading, getTextValue]);
+
+  // Fetch curated models list (separate from setting defaults)
   useEffect(() => {
     const loadCuratedModels = async () => {
-      // Wait for feature flags to load first
-      if (flagsLoading) return;
-      // Only run once
-      if (isInitialized.current) return;
-      
-      setLoadingModels(true);
-      
       try {
-        // Fetch only curated enabled models
         const models = await getEnabledModels();
         console.log("Fetched curated models count:", models.length);
+        setAvailableModels(models);
         
         if (models.length === 0) {
           toast({
@@ -56,47 +46,7 @@ export const useModels = (apiKey: string) => {
             description: "No curated models configured. Contact admin.",
             variant: "destructive",
           });
-          setLoadingModels(false);
-          return;
         }
-        
-        setAvailableModels(models);
-        
-        // Get defaults from feature flags
-        const flagDefaultA = getTextValue('default_model_agent_a');
-        const flagDefaultB = getTextValue('default_model_agent_b');
-        const flagDefaultC = getTextValue('default_model_agent_c');
-        
-        console.log("Feature flag defaults:", { flagDefaultA, flagDefaultB, flagDefaultC });
-        
-        const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
-        
-        // Helper to find best fallback from curated models
-        const findBestAlternative = (modelList: CuratedModel[]) => {
-          const freeModel = modelList.find(m => m.is_free);
-          return freeModel?.model_id || modelList[0]?.model_id || '';
-        };
-        
-        // Determine defaults with guaranteed fallback to curated models
-        const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA))
-          ? flagDefaultA 
-          : findBestAlternative(models);
-          
-        const defaultAgentB = (flagDefaultB && modelExists(flagDefaultB))
-          ? flagDefaultB 
-          : findBestAlternative(models);
-          
-        const defaultAgentC = (flagDefaultC && modelExists(flagDefaultC))
-          ? flagDefaultC 
-          : findBestAlternative(models);
-        
-        console.log("Setting agent models:", { defaultAgentA, defaultAgentB, defaultAgentC });
-        
-        setAgentAModel(defaultAgentA);
-        setAgentBModel(defaultAgentB);
-        setAgentCModel(defaultAgentC);
-        
-        isInitialized.current = true;
       } catch (error) {
         console.error("Failed to fetch curated models:", error);
         toast({
@@ -110,7 +60,7 @@ export const useModels = (apiKey: string) => {
     };
     
     loadCuratedModels();
-  }, [flagsLoading, getTextValue]);
+  }, []);
 
   // Force refresh curated models
   const refreshModels = async () => {
