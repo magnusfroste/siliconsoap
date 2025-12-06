@@ -4,14 +4,15 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Bot, MessageSquare, Settings2, Sparkles } from 'lucide-react';
+import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft } from 'lucide-react';
 import { 
   AdminHeader, 
   useAdminFlags, 
   ModelsTab, 
   AgentsTab, 
   ConversationTab, 
-  FeaturesTab 
+  FeaturesTab,
+  SettingsTab 
 } from './admin';
 
 export const AdminView = () => {
@@ -54,7 +55,7 @@ export const AdminView = () => {
       <AdminHeader />
 
       <Tabs defaultValue="models" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-12">
+        <TabsList className="grid w-full grid-cols-5 h-12">
           <TabsTrigger value="models" className="gap-2 text-sm">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Models</span>
@@ -70,6 +71,10 @@ export const AdminView = () => {
           <TabsTrigger value="features" className="gap-2 text-sm">
             <Settings2 className="h-4 w-4" />
             <span className="hidden sm:inline">Features</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2 text-sm">
+            <PanelLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Sidebar</span>
           </TabsTrigger>
         </TabsList>
 
@@ -104,6 +109,10 @@ export const AdminView = () => {
               onNumericChange={handleNumericChange}
               onTextChange={handleTextChange}
             />
+          </TabsContent>
+
+          <TabsContent value="settings" className="m-0">
+            <SettingsTab />
           </TabsContent>
         </div>
       </Tabs>

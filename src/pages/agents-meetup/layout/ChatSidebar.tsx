@@ -23,21 +23,31 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
   const { creditsRemaining, isGuest } = useCredits(user?.id);
   const { isAdmin } = useIsAdmin();
-  const { isEnabled } = useFeatureFlags();
+  const { isEnabled, getTextValue } = useFeatureFlags();
   const location = useLocation();
 
   const navItems = [
-    { icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
-    { icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },
-    { icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
-    { icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
-    { icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true, featureFlag: 'show_openrouter_api_settings' },
-    { icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
-    { icon: Shield, label: 'Admin', path: '/admin', requiresAuth: true, adminOnly: true },
+    { key: 'models', icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
+    { key: 'learn', icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },
+    { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
+    { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
+    { key: 'api-settings', icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true, featureFlag: 'show_openrouter_api_settings' },
+    { key: 'settings', icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
+    { key: 'admin', icon: Shield, label: 'Admin', path: '/admin', requiresAuth: true, adminOnly: true },
   ];
 
+  // Get custom order from feature flags
+  const customOrder = getTextValue('sidebar_nav_order');
+  const orderedNavItems = customOrder
+    ? customOrder.split(',').map(key => navItems.find(item => item.key === key.trim())).filter(Boolean)
+    : navItems;
+  
+  // Add any missing items at the end
+  const missingItems = navItems.filter(item => !orderedNavItems.some(o => o?.key === item.key));
+  const finalNavItems = [...orderedNavItems, ...missingItems] as typeof navItems;
+
   // Filter nav items based on authentication, admin status, and feature flags
-  const filteredNavItems = navItems.filter(item => {
+  const filteredNavItems = finalNavItems.filter(item => {
     if (item.requiresAuth && !user) return false;
     if (item.adminOnly && !isAdmin) return false;
     if (item.featureFlag && !isEnabled(item.featureFlag)) return false;
