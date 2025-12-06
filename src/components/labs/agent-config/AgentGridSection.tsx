@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AgentCard } from '../agent-card/AgentCard';
-import { Profile } from '../agent-card/types';
+import { Profile, ModelsByProvider } from '../agent-card/types';
 import { UseFormReturn } from 'react-hook-form';
 
 interface AgentGridSectionProps {
@@ -22,7 +22,7 @@ interface AgentGridSectionProps {
   formA: UseFormReturn<{ persona: string }>;
   formB: UseFormReturn<{ persona: string }>;
   formC: UseFormReturn<{ persona: string }>;
-  modelsByProvider: Record<string, any[]>;
+  modelsByProvider: ModelsByProvider;
   loadingModels: boolean;
   conversationTone?: 'formal' | 'casual' | 'heated' | 'collaborative';
   agreementBias?: number;

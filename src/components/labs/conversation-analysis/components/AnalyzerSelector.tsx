@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ModelSelector } from '../../agent-card/ModelSelector';
+import { ModelsByProvider } from '../../agent-card/types';
 
 interface AnalyzerSelectorProps {
   analyzerModel: string;
   setAnalyzerModel: (model: string) => void;
-  modelsByProvider: Record<string, any[]>;
+  modelsByProvider: ModelsByProvider;
   isAnalyzing: boolean;
   handleAnalyzeConversation?: (model?: string) => void;
   isLoading?: boolean;
