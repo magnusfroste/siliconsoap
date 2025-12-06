@@ -55,12 +55,10 @@ export const chatRepository = {
     } : null;
   },
 
-  // Get chat by share ID (public)
+  // Get chat by share ID (public) - uses secure function that excludes user_id
   async getChatByShareId(shareId: string): Promise<Chat | null> {
     const { data, error } = await supabase
-      .from('agent_chats')
-      .select('*')
-      .eq('share_id', shareId)
+      .rpc('get_shared_chat', { p_share_id: shareId })
       .maybeSingle();
 
     if (error) {
@@ -70,6 +68,7 @@ export const chatRepository = {
 
     return data ? {
       ...data,
+      user_id: null, // Explicitly null for shared chats (privacy)
       settings: data.settings as unknown as ChatSettings
     } : null;
   },
