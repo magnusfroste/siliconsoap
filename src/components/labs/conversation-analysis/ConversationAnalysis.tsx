@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BarChart2 } from 'lucide-react';
-import { OpenRouterModel } from '@/utils/openRouter/types';
+import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { EmptyAnalysis } from './components/EmptyAnalysis';
 import { LoadingAnalysis } from './components/LoadingAnalysis';
 import { AnalysisResults } from './components/AnalysisResults';
@@ -19,7 +19,7 @@ interface ConversationAnalysisProps {
   handleAnalyzeConversation: (model?: string) => void;
   goToStep: (step: number) => void;
   analyzerModel?: string;
-  availableModels: OpenRouterModel[];
+  availableModels: CuratedModel[];
   setAnalyzerModel: (model: string) => void;
 }
 

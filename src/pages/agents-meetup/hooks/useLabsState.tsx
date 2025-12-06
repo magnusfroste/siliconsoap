@@ -5,9 +5,7 @@ import { useConversationFlow } from './useConversationFlow';
 import { LabsState, LabsActions } from './types';
 import { ScenarioType } from '../types';
 import { scenarioTypes } from '../constants';
-import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
-import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
-import { OpenRouterModel } from '@/utils/openRouter/types';
+import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { toast } from '@/hooks/use-toast';
 import { useProfiles } from './useProfiles';
 import { useScenarios } from './useScenarios';
@@ -204,49 +202,46 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setAgreementBias,
       setTemperature,
       setPersonalityIntensity,
-      refreshModels: async (apiKey: string) => {
+      refreshModels: async () => {
         setLoadingModels(true);
         try {
-          const models = await fetchOpenRouterModels(apiKey);
+          const models = await getEnabledModels();
           
           if (models.length === 0) {
             toast({
               title: "No Models Available",
-              description: "Could not fetch models from OpenRouter.",
+              description: "No curated models configured.",
               variant: "destructive",
             });
           } else {
             toast({
               title: "Models Refreshed",
-              description: `Successfully loaded ${models.length} models.`,
+              description: `Successfully loaded ${models.length} curated models.`,
             });
           }
           
           setAvailableModels(models);
           
           if (models.length > 0) {
-            const defaultAgentA = findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
-            const defaultAgentB = findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
-            const defaultAgentC = findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+            const findBestAlternative = (models: CuratedModel[]) => {
+              const freeModel = models.find(m => m.is_free);
+              return freeModel?.model_id || models[0]?.model_id || '';
+            };
             
-            if (defaultAgentA) setAgentAModel(defaultAgentA);
-            if (defaultAgentB) setAgentBModel(defaultAgentB);
-            if (defaultAgentC) setAgentCModel(defaultAgentC);
-            
-            if (!defaultAgentA || !defaultAgentB || !defaultAgentC) {
-              const findBestAlternative = (models: OpenRouterModel[]) => {
-                const freeModel = models.find(m => m.isFree);
-                if (freeModel) return freeModel.id;
-                return models.length > 0 ? models[0].id : '';
-              };
-              
-              if (!defaultAgentA) setAgentAModel(findBestAlternative(models));
-              if (!defaultAgentB) setAgentBModel(findBestAlternative(models));
-              if (!defaultAgentC) setAgentCModel(findBestAlternative(models));
+            // Set to first available curated model as fallback
+            const bestModel = findBestAlternative(models);
+            if (!agentAModel || !models.some(m => m.model_id === agentAModel)) {
+              setAgentAModel(bestModel);
+            }
+            if (!agentBModel || !models.some(m => m.model_id === agentBModel)) {
+              setAgentBModel(bestModel);
+            }
+            if (!agentCModel || !models.some(m => m.model_id === agentCModel)) {
+              setAgentCModel(bestModel);
             }
           }
         } catch (error) {
-          console.error("Failed to refresh models:", error);
+          console.error("Failed to refresh curated models:", error);
           toast({
             title: "Error Refreshing Models",
             description: "Failed to fetch models. Please try again.",

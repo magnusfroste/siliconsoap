@@ -12,8 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
-import { ModelSelector } from './components/ModelSelector';
+import { CuratedModelSelector } from './components/CuratedModelSelector';
 import { ProfileSelector } from './components/ProfileSelector';
+import { CuratedModelsManager } from './components/CuratedModelsManager';
 
 export const AdminView = () => {
   const navigate = useNavigate();
@@ -172,8 +173,7 @@ export const AdminView = () => {
         
         {flag.text_value !== null && (flag.key === 'default_model_agent_a' || flag.key === 'default_model_agent_b' || flag.key === 'default_model_agent_c') && (
           <div className="pt-2">
-            <ModelSelector
-              label=""
+            <CuratedModelSelector
               value={flag.text_value}
               onChange={(value) => handleTextValueChange(flag.id, value)}
             />
@@ -234,7 +234,19 @@ export const AdminView = () => {
           </CardContent>
         </Card>
       ) : (
-        <Accordion type="multiple" defaultValue={["agent-defaults", "conversation-settings", "expert-settings", "feature-toggles"]} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["curated-models", "agent-defaults", "conversation-settings", "expert-settings", "feature-toggles"]} className="space-y-4">
+          <AccordionItem value="curated-models" className="border rounded-lg px-6 bg-card">
+            <AccordionTrigger className="hover:no-underline">
+              <div>
+                <h2 className="text-xl font-semibold">Curated Models</h2>
+                <p className="text-sm text-muted-foreground">Manage which OpenRouter models are available to users</p>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 pb-6">
+              <CuratedModelsManager />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="agent-defaults" className="border rounded-lg px-6 bg-card">
             <AccordionTrigger className="hover:no-underline">
               <div>

@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchOpenRouterModels, findDefaultModel } from '@/utils/openRouter';
-import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS, DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
-import { OpenRouterModel } from '@/utils/openRouter/types';
+import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
+import { DEFAULT_MODEL_IDS } from '@/utils/openRouter/models';
 import { toast } from '@/hooks/use-toast';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+
 export const useModels = (apiKey: string) => {
   const { getTextValue, loading: flagsLoading } = useFeatureFlags();
   
   // Get default models from feature flags, fallback to hardcoded values
   const getDefaultModelId = (agent: 'A' | 'B' | 'C'): string => {
     if (flagsLoading) {
-      // Return hardcoded defaults while loading
       return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
              agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
              DEFAULT_MODEL_IDS.agentC;
@@ -23,7 +22,6 @@ export const useModels = (apiKey: string) => {
     const flagValue = getTextValue(flagKey);
     if (flagValue) return flagValue;
     
-    // Fallback to hardcoded defaults
     return agent === 'A' ? DEFAULT_MODEL_IDS.agentA :
            agent === 'B' ? DEFAULT_MODEL_IDS.agentB :
            DEFAULT_MODEL_IDS.agentC;
@@ -32,7 +30,7 @@ export const useModels = (apiKey: string) => {
   const [agentAModel, setAgentAModel] = useState(() => getDefaultModelId('A'));
   const [agentBModel, setAgentBModel] = useState(() => getDefaultModelId('B'));
   const [agentCModel, setAgentCModel] = useState(() => getDefaultModelId('C'));
-  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
   // Ref to prevent duplicate fetches
@@ -40,28 +38,22 @@ export const useModels = (apiKey: string) => {
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    const getModels = async () => {
-      // Wait for feature flags to load before setting defaults
-      if (flagsLoading) {
-        return;
-      }
-      
-      // Prevent duplicate fetches
-      if (isFetching.current || hasFetched.current) {
-        return;
-      }
+    const loadCuratedModels = async () => {
+      if (flagsLoading) return;
+      if (isFetching.current || hasFetched.current) return;
       
       isFetching.current = true;
       setLoadingModels(true);
       
       try {
-        const models = await fetchOpenRouterModels(apiKey);
-        console.log("Fetched models count:", models.length);
+        // Fetch only curated enabled models
+        const models = await getEnabledModels();
+        console.log("Fetched curated models count:", models.length);
         
         if (models.length === 0) {
           toast({
             title: "No Models Available",
-            description: "Could not fetch models from OpenRouter.",
+            description: "No curated models configured. Contact admin.",
             variant: "destructive",
           });
         }
@@ -74,48 +66,47 @@ export const useModels = (apiKey: string) => {
           const flagDefaultB = getTextValue('default_model_agent_b');
           const flagDefaultC = getTextValue('default_model_agent_c');
           
-          const modelExists = (modelId: string) => models.some(m => m.id === modelId);
+          const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
           
-          // Helper to find best fallback
-          const findBestAlternative = (models: OpenRouterModel[]) => {
-            const freeModel = models.find(m => m.isFree);
-            return freeModel?.id || models[0]?.id || '';
+          // Helper to find best fallback from curated models
+          const findBestAlternative = (models: CuratedModel[]) => {
+            const freeModel = models.find(m => m.is_free);
+            return freeModel?.model_id || models[0]?.model_id || '';
           };
           
           // Log warnings for invalid admin defaults
           if (flagDefaultA && !modelExists(flagDefaultA)) {
-            console.warn(`Admin default model for Agent A not found: ${flagDefaultA}`);
+            console.warn(`Admin default model for Agent A not in curated list: ${flagDefaultA}`);
           }
           if (flagDefaultB && !modelExists(flagDefaultB)) {
-            console.warn(`Admin default model for Agent B not found: ${flagDefaultB}`);
+            console.warn(`Admin default model for Agent B not in curated list: ${flagDefaultB}`);
           }
           if (flagDefaultC && !modelExists(flagDefaultC)) {
-            console.warn(`Admin default model for Agent C not found: ${flagDefaultC}`);
+            console.warn(`Admin default model for Agent C not in curated list: ${flagDefaultC}`);
           }
           
-          // Determine defaults with guaranteed fallback
+          // Determine defaults with guaranteed fallback to curated models
           const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA))
             ? flagDefaultA 
-            : findDefaultModel(models, AGENT_A_PREFERRED_MODELS) || findBestAlternative(models);
+            : findBestAlternative(models);
             
           const defaultAgentB = (flagDefaultB && modelExists(flagDefaultB))
             ? flagDefaultB 
-            : findDefaultModel(models, AGENT_B_PREFERRED_MODELS) || findBestAlternative(models);
+            : findBestAlternative(models);
             
           const defaultAgentC = (flagDefaultC && modelExists(flagDefaultC))
             ? flagDefaultC 
-            : findDefaultModel(models, AGENT_C_PREFERRED_MODELS) || findBestAlternative(models);
+            : findBestAlternative(models);
           
-          // ALWAYS set models - never leave empty
           setAgentAModel(defaultAgentA);
           setAgentBModel(defaultAgentB);
           setAgentCModel(defaultAgentC);
         }
       } catch (error) {
-        console.error("Failed to fetch models:", error);
+        console.error("Failed to fetch curated models:", error);
         toast({
           title: "Error Fetching Models",
-          description: "Failed to fetch models from OpenRouter.",
+          description: "Failed to fetch curated models.",
           variant: "destructive",
         });
       } finally {
@@ -124,45 +115,47 @@ export const useModels = (apiKey: string) => {
       }
     };
     
-    getModels();
-  }, [apiKey, flagsLoading, getTextValue]);
+    loadCuratedModels();
+  }, [flagsLoading, getTextValue]);
 
-  // Force refresh models function
+  // Force refresh curated models
   const refreshModels = async () => {
-    // Allow refresh even with empty key (shared key mode)
-    console.log("Manually refreshing models with API key:", apiKey ? apiKey.substring(0, 8) + "..." : "(shared key)");
+    console.log("Manually refreshing curated models");
     setLoadingModels(true);
     
     try {
-      const models = await fetchOpenRouterModels(apiKey);
-      console.log("Manually refreshed models count:", models.length);
+      const models = await getEnabledModels();
+      console.log("Manually refreshed curated models count:", models.length);
       setAvailableModels(models);
       
       if (models.length > 0) {
-        // Use feature flag values, fallback to preferred models
         const flagDefaultA = getTextValue('default_model_agent_a');
         const flagDefaultB = getTextValue('default_model_agent_b');
         const flagDefaultC = getTextValue('default_model_agent_c');
         
-        const modelExists = (modelId: string) => models.some(m => m.id === modelId);
+        const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
         
-        const defaultAgentA = flagDefaultA && modelExists(flagDefaultA) 
+        const findBestAlternative = (models: CuratedModel[]) => {
+          const freeModel = models.find(m => m.is_free);
+          return freeModel?.model_id || models[0]?.model_id || '';
+        };
+        
+        const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA)) 
           ? flagDefaultA 
-          : findDefaultModel(models, AGENT_A_PREFERRED_MODELS);
-        const defaultAgentB = flagDefaultB && modelExists(flagDefaultB) 
+          : findBestAlternative(models);
+        const defaultAgentB = (flagDefaultB && modelExists(flagDefaultB)) 
           ? flagDefaultB 
-          : findDefaultModel(models, AGENT_B_PREFERRED_MODELS);
-        const defaultAgentC = flagDefaultC && modelExists(flagDefaultC) 
+          : findBestAlternative(models);
+        const defaultAgentC = (flagDefaultC && modelExists(flagDefaultC)) 
           ? flagDefaultC 
-          : findDefaultModel(models, AGENT_C_PREFERRED_MODELS);
+          : findBestAlternative(models);
         
-        // Set models independently
         if (defaultAgentA) setAgentAModel(defaultAgentA);
         if (defaultAgentB) setAgentBModel(defaultAgentB);
         if (defaultAgentC) setAgentCModel(defaultAgentC);
       }
     } catch (error) {
-      console.error("Failed to manually refresh models:", error);
+      console.error("Failed to manually refresh curated models:", error);
     } finally {
       setLoadingModels(false);
     }

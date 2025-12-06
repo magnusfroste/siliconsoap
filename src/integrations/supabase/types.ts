@@ -136,6 +136,42 @@ export type Database = {
         }
         Relationships: []
       }
+      curated_models: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_enabled: boolean
+          is_free: boolean
+          model_id: string
+          provider: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_enabled?: boolean
+          is_free?: boolean
+          model_id: string
+          provider: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_enabled?: boolean
+          is_free?: boolean
+          model_id?: string
+          provider?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string | null
