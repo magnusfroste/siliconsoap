@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, Info } from 'lucide-react';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
 
 interface ModelsByProvider {
@@ -25,9 +27,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   const hasModels = modelsByProvider && Object.keys(modelsByProvider).length > 0;
 
   return (
-    <div>
+    <div className="flex items-center gap-1.5">
       <Select value={agentModel} onValueChange={setAgentModel} disabled={isDisabled || (!hasModels && !loadingModels)}>
-        <SelectTrigger className="h-8 text-sm">
+        <SelectTrigger className="h-8 text-sm flex-1">
           <SelectValue placeholder={loadingModels ? "Loading models..." : hasModels ? "Select model" : "No models available"} />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
@@ -56,6 +58,22 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
           )}
         </SelectContent>
       </Select>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link 
+              to="/learn?tab=comparison" 
+              className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info className="h-4 w-4" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Learn about AI models</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Cpu, Scale, Server, BarChart3 } from 'lucide-react';
 import { LearnTabBasics } from './learn/LearnTabBasics';
@@ -6,7 +7,17 @@ import { LearnTabOpenWeight } from './learn/LearnTabOpenWeight';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
 import { LearnTabComparison } from './learn/LearnTabComparison';
 
+const VALID_TABS = ['basics', 'types', 'open-weight', 'self-hosting', 'comparison'];
+
 export const LearnView = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'basics';
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4">
       <div className="text-center mb-8">
@@ -22,7 +33,7 @@ export const LearnView = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="basics" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full flex flex-wrap justify-center gap-1 h-auto p-1 mb-8">
           <TabsTrigger value="basics" className="flex items-center gap-2 px-4 py-2">
             <BookOpen className="h-4 w-4" />
