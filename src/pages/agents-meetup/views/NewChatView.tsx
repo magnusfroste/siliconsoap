@@ -48,10 +48,6 @@ export const NewChatView = () => {
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
-  const handleApiKeySubmit = (apiKey: string) => {
-    creditsService.saveByokApiKey(apiKey);
-    toast.success('API key saved! You can now continue with unlimited usage.');
-  };
 
   // Build chat settings from current state
   const buildChatSettings = (): ChatSettings => ({
@@ -103,7 +99,7 @@ export const NewChatView = () => {
     try {
       // Use a credit before starting
       const creditUsed = await useCredit();
-      if (!creditUsed && !creditsService.hasByokApiKey()) {
+      if (!creditUsed) {
         if (isMounted.current) {
           setShowCreditsModal(true);
           setIsGenerating(false);
@@ -283,7 +279,6 @@ export const NewChatView = () => {
           open={showCreditsModal}
           onOpenChange={setShowCreditsModal}
           isGuest={isGuest}
-          onApiKeySubmit={handleApiKeySubmit}
         />
       </div>
     </div>

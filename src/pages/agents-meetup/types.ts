@@ -48,14 +48,12 @@ export type AnalysisResults = {
   summary: string;
 };
 
-// Consolidated LabsState - single source of truth
+// Consolidated LabsState - single source of truth (simplified without BYOK)
 export interface LabsState {
   apiKey: string;
   savedApiKey: string;
-  userApiKey: string;
   isSaving: boolean;
   isSaved: boolean;
-  isUsingEnvKey: boolean;
   isUsingSharedKey: boolean;
   agentAModel: string;
   agentBModel: string;
@@ -89,11 +87,10 @@ export interface LabsState {
   personalityIntensity: 'mild' | 'moderate' | 'extreme';
 }
 
-// Consolidated LabsActions - single source of truth
+// Consolidated LabsActions - single source of truth (simplified without BYOK)
 export interface LabsActions {
   setApiKey: (key: string) => void;
   setSavedApiKey: (key: string) => void;
-  setUserApiKey: (key: string) => void;
   setIsSaving: (saving: boolean) => void;
   setIsSaved: (saved: boolean) => void;
   setAgentAModel: (model: string) => void;
@@ -119,9 +116,6 @@ export interface LabsActions {
   setAnalysisResults: (results: any | null) => void;
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
-  saveApiKey: (key: string) => Promise<boolean>;
-  deleteApiKey: () => void;
-  validateApiKey: (key: string) => Promise<boolean>;
   getActiveApiKey: (modelIsFree?: boolean) => string | null;
   handleStartConversation: () => Promise<void>;
   handleAnalyzeConversation: (model?: string) => Promise<void>;
@@ -132,7 +126,6 @@ export interface LabsActions {
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
   refreshModels: (apiKey: string) => void;
-  promptForBYOK: () => void;
   enableSharedKeyMode: () => void;
   // Expert settings actions
   setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;

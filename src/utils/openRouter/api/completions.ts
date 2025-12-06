@@ -1,100 +1,19 @@
-import { toast } from "@/hooks/use-toast";
 import { OpenRouterMessage, OpenRouterResponse, ResponseLength } from "../types";
-import { OPENROUTER_API_URL, createSystemPrompt, getMaxTokens } from "../constants";
+import { createSystemPrompt, getMaxTokens } from "../constants";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Direct call to OpenRouter (BYOK). This is the legacy path and is also used
- * as a fallback when the edge function fails for any reason.
- */
-export const callOpenRouter = async (
-  prompt: string,
-  model: string,
-  persona: string,
-  apiKey: string,
-  responseLength: ResponseLength = "medium",
-  temperature: number = 0.7
-): Promise<string> => {
-  if (!apiKey) {
-    console.error("No API key provided for model:", model);
-    throw new Error("API key is required to use this model.");
-  }
-
-  const systemPrompt = await createSystemPrompt(persona, responseLength);
-  const maxTokens = getMaxTokens(responseLength);
-
-  const messages: OpenRouterMessage[] = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: prompt },
-  ];
-
-  try {
-    console.log(`Calling OpenRouter directly with model: ${model}`);
-    console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "none");
-
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Magnus Froste Labs",
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: maxTokens,
-        temperature,
-        top_p: 0.9,
-        stream: false,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenRouter API error (direct):", errorData);
-
-      if (response.status === 429) {
-        throw new Error("Rate limit exceeded. Please try again later.");
-      }
-
-      throw new Error(errorData.error?.message || "Failed to get response from AI model.");
-    }
-
-    const data: OpenRouterResponse = await response.json();
-    return data.choices[0].message.content;
-  } catch (error) {
-    console.error("Error calling OpenRouter directly:", error);
-
-    if (error instanceof Error) {
-      throw error;
-    }
-
-    throw new Error("Failed to get response from AI model.");
-  }
-};
-
-/**
- * Calls OpenRouter API via edge function (supports shared key + BYOK).
- * If user has their own API key, calls OpenRouter directly to avoid edge function overhead.
- * Edge function is only used when there's no user API key (shared key scenario).
+ * Calls OpenRouter API via edge function (shared key only).
+ * All API calls go through the edge function for security.
  */
 export const callOpenRouterViaEdge = async (
   prompt: string,
   model: string,
   persona: string,
-  userApiKey: string | null,
+  userApiKey: string | null, // Kept for backwards compatibility, always null now
   responseLength: ResponseLength = "medium",
   temperature: number = 0.7
 ): Promise<string> => {
-  // If user has their own API key, call OpenRouter directly
-  // This avoids edge function DNS issues and is more efficient
-  if (userApiKey) {
-    console.log("User has API key, calling OpenRouter directly");
-    return await callOpenRouter(prompt, model, persona, userApiKey, responseLength, temperature);
-  }
-
-  // No user API key - use edge function with shared key
   const systemPrompt = await createSystemPrompt(persona, responseLength);
   const maxTokens = getMaxTokens(responseLength);
 
@@ -130,11 +49,9 @@ export const callOpenRouterViaEdge = async (
     if ((data as any)?.error) {
       console.error("OpenRouter API error via edge:", data);
 
-      // Handle rate limit with BYOK prompt (shared key hitting limits)
-      if ((data as any).code === "RATE_LIMIT" && (data as any).shouldPromptBYOK) {
-        const err = new Error((data as any).message) as Error & { shouldPromptBYOK: boolean };
-        err.shouldPromptBYOK = true;
-        throw err;
+      // Handle rate limit
+      if ((data as any).code === "RATE_LIMIT") {
+        throw new Error("Rate limit exceeded. Please try again later.");
       }
 
       throw new Error((data as any).error);
