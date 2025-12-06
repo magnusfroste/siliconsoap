@@ -5,3 +5,4 @@ export { messageRepository } from './messageRepository';
 export { creditsRepository } from './creditsRepository';
 export { featureFlagsRepository } from './featureFlagsRepository';
 export type { FeatureFlag } from './featureFlagsRepository';
+export * from './curatedModelsRepository';

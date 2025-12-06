@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import { ModelsByProvider } from './types';
+import { CuratedModel } from '@/repositories/curatedModelsRepository';
+
+interface ModelsByProvider {
+  [provider: string]: CuratedModel[];
+}
 
 interface ModelSelectorProps {
   agentModel: string;
@@ -18,18 +22,6 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   loadingModels,
   isDisabled,
 }) => {
-  // Debug log when component renders or props change
-  useEffect(() => {
-    console.log("ModelSelector rendered with:", {
-      agentModel,
-      loadingModels,
-      isDisabled,
-      providersCount: Object.keys(modelsByProvider || {}).length,
-      providers: Object.keys(modelsByProvider || {})
-    });
-  }, [agentModel, modelsByProvider, loadingModels, isDisabled]);
-
-  // Check if we have any models to display
   const hasModels = modelsByProvider && Object.keys(modelsByProvider).length > 0;
 
   return (
@@ -46,7 +38,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             </div>
           ) : !hasModels ? (
             <div className="flex items-center justify-center py-2 text-sm text-gray-500">
-              <span>No models available. Please check your API key.</span>
+              <span>No models available.</span>
             </div>
           ) : (
             Object.keys(modelsByProvider).sort().map(provider => (
@@ -55,8 +47,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   {provider}
                 </SelectItem>
                 {modelsByProvider[provider].map(model => (
-                  <SelectItem key={model.id} value={model.id} className="pl-6">
-                    {model.name}
+                  <SelectItem key={model.model_id} value={model.model_id} className="pl-6">
+                    {model.display_name}
                   </SelectItem>
                 ))}
               </div>

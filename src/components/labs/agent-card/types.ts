@@ -1,6 +1,7 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { ReactNode } from 'react';
+import { CuratedModel } from '@/repositories/curatedModelsRepository';
 
 export type Profile = {
   id: string;
@@ -10,13 +11,7 @@ export type Profile = {
   instructions?: string;
 };
 
-export type ModelsByProvider = Record<string, {
-  id: string;
-  name: string;
-  provider: string;
-  description?: string;
-  isFree?: boolean;
-}[]>;
+export type ModelsByProvider = Record<string, CuratedModel[]>;
 
 export interface AgentCardProps {
   agentLetter: 'A' | 'B' | 'C';

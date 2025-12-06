@@ -2,12 +2,13 @@
 // Note: Chat-related types are in @/models/chat
 
 import { ReactNode } from 'react';
-import { OpenRouterModel } from '@/utils/openRouter';
+import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { ViewState } from './hooks/conversation/useConversationNavigation';
 import { UseFormReturn } from 'react-hook-form';
 
 // Re-export from models for convenience
 export type { ChatSettings, ChatMessage } from '@/models/chat';
+export type { CuratedModel } from '@/repositories/curatedModelsRepository';
 
 export type ResponseLength = 'short' | 'medium' | 'long';
 export type ParticipationMode = 'spectator' | 'jump-in' | 'round-by-round';
@@ -68,7 +69,7 @@ export interface LabsState {
   turnOrder: TurnOrder;
   conversation: ConversationMessage[];
   isLoading: boolean;
-  availableModels: OpenRouterModel[];
+  availableModels: CuratedModel[];
   loadingModels: boolean;
   currentView: ViewState;
   settingsOpen: boolean;
@@ -106,7 +107,7 @@ export interface LabsActions {
   setTurnOrder: (order: TurnOrder) => void;
   setConversation: (conversation: ConversationMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
-  setAvailableModels: (models: OpenRouterModel[]) => void;
+  setAvailableModels: (models: CuratedModel[]) => void;
   setLoadingModels: (loading: boolean) => void;
   setCurrentView: (view: ViewState) => void;
   setSettingsOpen: (open: boolean) => void;
