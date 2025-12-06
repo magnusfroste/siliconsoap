@@ -26,7 +26,15 @@ export const generateSpeech = async (text: string, agent: string): Promise<strin
   return data.audioContent;
 };
 
-export const playBase64Audio = (base64Audio: string): Promise<void> => {
+export interface PlaybackControls {
+  audioElement: HTMLAudioElement | null;
+  objectUrl: string | null;
+}
+
+export const playBase64Audio = (
+  base64Audio: string,
+  controlsRef?: React.MutableRefObject<PlaybackControls | null>
+): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
       const binaryString = atob(base64Audio);
@@ -39,13 +47,24 @@ export const playBase64Audio = (base64Audio: string): Promise<void> => {
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
 
+      // Store reference for external control
+      if (controlsRef) {
+        controlsRef.current = { audioElement: audio, objectUrl: url };
+      }
+
       audio.onended = () => {
         URL.revokeObjectURL(url);
+        if (controlsRef) {
+          controlsRef.current = null;
+        }
         resolve();
       };
 
       audio.onerror = (error) => {
         URL.revokeObjectURL(url);
+        if (controlsRef) {
+          controlsRef.current = null;
+        }
         reject(error);
       };
 
@@ -54,4 +73,18 @@ export const playBase64Audio = (base64Audio: string): Promise<void> => {
       reject(error);
     }
   });
+};
+
+export const stopAudio = (controlsRef: React.MutableRefObject<PlaybackControls | null>) => {
+  if (controlsRef.current) {
+    const { audioElement, objectUrl } = controlsRef.current;
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    }
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+    controlsRef.current = null;
+  }
 };
