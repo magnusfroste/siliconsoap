@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket, Shield, BookOpen, Cpu } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket, Shield, BookOpen, Cpu, Info } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
@@ -29,6 +29,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const navItems = [
     { key: 'models', icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
     { key: 'learn', icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },
+    { key: 'about', icon: Info, label: 'About', path: '/about', requiresAuth: false },
     { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
     { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
     { key: 'api-settings', icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true, featureFlag: 'show_openrouter_api_settings' },
