@@ -27,11 +27,11 @@ export const useModels = (apiKey: string) => {
            DEFAULT_MODEL_IDS.agentC;
   };
   
-  const [agentAModel, setAgentAModel] = useState(() => getDefaultModelId('A'));
-  const [agentBModel, setAgentBModel] = useState(() => getDefaultModelId('B'));
-  const [agentCModel, setAgentCModel] = useState(() => getDefaultModelId('C'));
+  const [agentAModel, setAgentAModel] = useState('');
+  const [agentBModel, setAgentBModel] = useState('');
+  const [agentCModel, setAgentCModel] = useState('');
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(true);
 
   // Ref to prevent duplicate fetches
   const isFetching = useRef(false);
