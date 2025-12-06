@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
+import { MessageSquare, Users, Trophy, ArrowRight, Droplets, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Landing = () => {
   const navigate = useNavigate();
@@ -102,8 +103,19 @@ export const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-8 relative z-10">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} SiliconSoap. All rights reserved.
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} SiliconSoap. All rights reserved.
+            </div>
+            <Link 
+              to="/learn" 
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <BookOpen className="h-4 w-4" />
+              Learn about AI models
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
