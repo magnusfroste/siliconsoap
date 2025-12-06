@@ -13,7 +13,7 @@ import { ChatView } from "./pages/agents-meetup/views/ChatView";
 import { SharedChatView } from "./pages/agents-meetup/views/SharedChatView";
 import { ProfileView } from "./pages/agents-meetup/views/ProfileView";
 import { AgentProfilesView } from "./pages/agents-meetup/views/AgentProfilesView";
-
+import { LearnView } from "./pages/agents-meetup/views/LearnView";
 import { SettingsView } from "./pages/agents-meetup/views/SettingsView";
 import { AdminView } from "./pages/agents-meetup/views/AdminView";
 import Auth from "./pages/Auth";
@@ -59,7 +59,7 @@ const App = () => {
               <Route path="chat/:chatId" element={<ChatView />} />
               <Route path="profile" element={<ProfileView />} />
               <Route path="agent-profiles" element={<AgentProfilesView />} />
-              
+              <Route path="learn" element={<LearnView />} />
               <Route path="settings" element={<SettingsView />} />
               <Route path="admin" element={<AdminView />} />
             </Route>
