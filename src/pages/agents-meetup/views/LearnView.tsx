@@ -1,13 +1,14 @@
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Cpu, Scale, Server, BarChart3 } from 'lucide-react';
+import { BookOpen, Cpu, Scale, Server, BarChart3, BookText } from 'lucide-react';
 import { LearnTabBasics } from './learn/LearnTabBasics';
 import { LearnTabTypes } from './learn/LearnTabTypes';
 import { LearnTabOpenWeight } from './learn/LearnTabOpenWeight';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
 import { LearnTabComparison } from './learn/LearnTabComparison';
+import { LearnTabGlossary } from './learn/LearnTabGlossary';
 
-const VALID_TABS = ['basics', 'types', 'open-weight', 'self-hosting', 'comparison'];
+const VALID_TABS = ['basics', 'types', 'open-weight', 'self-hosting', 'comparison', 'glossary'];
 
 export const LearnView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,6 +61,11 @@ export const LearnView = () => {
             <span className="hidden sm:inline">Model Comparison</span>
             <span className="sm:hidden">Compare</span>
           </TabsTrigger>
+          <TabsTrigger value="glossary" className="flex items-center gap-2 px-4 py-2">
+            <BookText className="h-4 w-4" />
+            <span className="hidden sm:inline">Glossary</span>
+            <span className="sm:hidden">Terms</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="basics">
@@ -76,6 +82,9 @@ export const LearnView = () => {
         </TabsContent>
         <TabsContent value="comparison">
           <LearnTabComparison />
+        </TabsContent>
+        <TabsContent value="glossary">
+          <LearnTabGlossary />
         </TabsContent>
       </Tabs>
 
