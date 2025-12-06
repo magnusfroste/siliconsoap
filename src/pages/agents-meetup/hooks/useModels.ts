@@ -33,18 +33,16 @@ export const useModels = (apiKey: string) => {
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
 
-  // Ref to prevent duplicate fetches
-  const isFetching = useRef(false);
-  const hasSetDefaults = useRef(false);
+  // Ref to track initialization
+  const isInitialized = useRef(false);
 
   useEffect(() => {
     const loadCuratedModels = async () => {
       // Wait for feature flags to load first
       if (flagsLoading) return;
-      // Prevent duplicate fetches
-      if (isFetching.current) return;
+      // Only run once
+      if (isInitialized.current) return;
       
-      isFetching.current = true;
       setLoadingModels(true);
       
       try {
@@ -58,47 +56,47 @@ export const useModels = (apiKey: string) => {
             description: "No curated models configured. Contact admin.",
             variant: "destructive",
           });
+          setLoadingModels(false);
           return;
         }
         
         setAvailableModels(models);
         
-        // Only set defaults once
-        if (!hasSetDefaults.current) {
-          const flagDefaultA = getTextValue('default_model_agent_a');
-          const flagDefaultB = getTextValue('default_model_agent_b');
-          const flagDefaultC = getTextValue('default_model_agent_c');
+        // Get defaults from feature flags
+        const flagDefaultA = getTextValue('default_model_agent_a');
+        const flagDefaultB = getTextValue('default_model_agent_b');
+        const flagDefaultC = getTextValue('default_model_agent_c');
+        
+        console.log("Feature flag defaults:", { flagDefaultA, flagDefaultB, flagDefaultC });
+        
+        const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
+        
+        // Helper to find best fallback from curated models
+        const findBestAlternative = (modelList: CuratedModel[]) => {
+          const freeModel = modelList.find(m => m.is_free);
+          return freeModel?.model_id || modelList[0]?.model_id || '';
+        };
+        
+        // Determine defaults with guaranteed fallback to curated models
+        const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA))
+          ? flagDefaultA 
+          : findBestAlternative(models);
           
-          console.log("Feature flag defaults:", { flagDefaultA, flagDefaultB, flagDefaultC });
+        const defaultAgentB = (flagDefaultB && modelExists(flagDefaultB))
+          ? flagDefaultB 
+          : findBestAlternative(models);
           
-          const modelExists = (modelId: string) => models.some(m => m.model_id === modelId);
-          
-          // Helper to find best fallback from curated models
-          const findBestAlternative = (models: CuratedModel[]) => {
-            const freeModel = models.find(m => m.is_free);
-            return freeModel?.model_id || models[0]?.model_id || '';
-          };
-          
-          // Determine defaults with guaranteed fallback to curated models
-          const defaultAgentA = (flagDefaultA && modelExists(flagDefaultA))
-            ? flagDefaultA 
-            : findBestAlternative(models);
-            
-          const defaultAgentB = (flagDefaultB && modelExists(flagDefaultB))
-            ? flagDefaultB 
-            : findBestAlternative(models);
-            
-          const defaultAgentC = (flagDefaultC && modelExists(flagDefaultC))
-            ? flagDefaultC 
-            : findBestAlternative(models);
-          
-          console.log("Setting agent models:", { defaultAgentA, defaultAgentB, defaultAgentC });
-          
-          setAgentAModel(defaultAgentA);
-          setAgentBModel(defaultAgentB);
-          setAgentCModel(defaultAgentC);
-          hasSetDefaults.current = true;
-        }
+        const defaultAgentC = (flagDefaultC && modelExists(flagDefaultC))
+          ? flagDefaultC 
+          : findBestAlternative(models);
+        
+        console.log("Setting agent models:", { defaultAgentA, defaultAgentB, defaultAgentC });
+        
+        setAgentAModel(defaultAgentA);
+        setAgentBModel(defaultAgentB);
+        setAgentCModel(defaultAgentC);
+        
+        isInitialized.current = true;
       } catch (error) {
         console.error("Failed to fetch curated models:", error);
         toast({
@@ -107,13 +105,12 @@ export const useModels = (apiKey: string) => {
           variant: "destructive",
         });
       } finally {
-        isFetching.current = false;
         setLoadingModels(false);
       }
     };
     
     loadCuratedModels();
-  }, [flagsLoading]);
+  }, [flagsLoading, getTextValue]);
 
   // Force refresh curated models
   const refreshModels = async () => {
