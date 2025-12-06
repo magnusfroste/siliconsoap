@@ -36,6 +36,8 @@ export const CuratedModelsManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [generatingForModel, setGeneratingForModel] = useState<string | null>(null);
   const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
+  const [generatingAll, setGeneratingAll] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
 
   const loadCuratedModels = useCallback(async () => {
     try {
@@ -164,6 +166,78 @@ export const CuratedModelsManager = () => {
     }
   };
 
+  const handleGenerateAllInfo = async () => {
+    const modelsWithoutContent = curatedModels.filter(m => !hasEducationalContent(m));
+    
+    if (modelsWithoutContent.length === 0) {
+      toast.info('All models already have educational content');
+      return;
+    }
+
+    setGeneratingAll(true);
+    setGenerationProgress({ current: 0, total: modelsWithoutContent.length });
+
+    for (let i = 0; i < modelsWithoutContent.length; i++) {
+      const model = modelsWithoutContent[i];
+      setGenerationProgress({ current: i + 1, total: modelsWithoutContent.length });
+      setGeneratingForModel(model.id);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-model-info', {
+          body: {
+            model_id: model.model_id,
+            display_name: model.display_name,
+            provider: model.provider,
+          },
+        });
+
+        if (error) throw error;
+
+        await updateModelContent(model.id, {
+          description: data.description,
+          pros: data.pros,
+          cons: data.cons,
+          use_cases: data.use_cases,
+          avoid_cases: data.avoid_cases,
+          category: data.category,
+          speed_rating: data.speed_rating,
+          context_window: parseInt(data.context_window) || null,
+        });
+
+        setCuratedModels(prev =>
+          prev.map(m =>
+            m.id === model.id
+              ? {
+                  ...m,
+                  description: data.description,
+                  pros: data.pros,
+                  cons: data.cons,
+                  use_cases: data.use_cases,
+                  avoid_cases: data.avoid_cases,
+                  category: data.category,
+                  speed_rating: data.speed_rating,
+                  context_window: parseInt(data.context_window) || null,
+                }
+              : m
+          )
+        );
+      } catch (error: any) {
+        console.error(`Error generating info for ${model.display_name}:`, error);
+        // Continue with next model even if one fails
+      }
+
+      // Small delay between requests to avoid rate limiting
+      if (i < modelsWithoutContent.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    setGeneratingForModel(null);
+    setGeneratingAll(false);
+    setGenerationProgress({ current: 0, total: 0 });
+    toast.success(`Generated info for ${modelsWithoutContent.length} models`);
+  };
+
   const toggleModelExpanded = (modelId: string) => {
     setExpandedModels(prev => {
       const newSet = new Set(prev);
@@ -207,10 +281,30 @@ export const CuratedModelsManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
           Manage which models are available for users to select
         </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateAllInfo}
+            disabled={generatingAll || generatingForModel !== null}
+            className="gap-1.5"
+          >
+            {generatingAll ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {generationProgress.current}/{generationProgress.total}
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Generate All Info
+              </>
+            )}
+          </Button>
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
             <Button
@@ -291,6 +385,7 @@ export const CuratedModelsManager = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="space-y-2">
