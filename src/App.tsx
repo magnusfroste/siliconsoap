@@ -15,6 +15,7 @@ import { ProfileView } from "./pages/agents-meetup/views/ProfileView";
 import { AgentProfilesView } from "./pages/agents-meetup/views/AgentProfilesView";
 import { LearnView } from "./pages/agents-meetup/views/LearnView";
 import { ModelsView } from "./pages/agents-meetup/views/ModelsView";
+import { AboutView } from "./pages/agents-meetup/views/AboutView";
 import { SettingsView } from "./pages/agents-meetup/views/SettingsView";
 import { AdminView } from "./pages/agents-meetup/views/AdminView";
 import Auth from "./pages/Auth";
@@ -62,6 +63,7 @@ const App = () => {
               <Route path="agent-profiles" element={<AgentProfilesView />} />
               <Route path="learn" element={<LearnView />} />
               <Route path="models" element={<ModelsView />} />
+              <Route path="about" element={<AboutView />} />
               <Route path="settings" element={<SettingsView />} />
               <Route path="admin" element={<AdminView />} />
             </Route>
