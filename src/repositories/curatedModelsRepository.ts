@@ -10,6 +10,15 @@ export interface CuratedModel {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  // Educational content fields
+  description: string | null;
+  pros: string[] | null;
+  cons: string[] | null;
+  use_cases: string[] | null;
+  avoid_cases: string[] | null;
+  category: string | null;
+  context_window: number | null;
+  speed_rating: string | null;
 }
 
 export interface CuratedModelInsert {
@@ -19,7 +28,43 @@ export interface CuratedModelInsert {
   is_enabled?: boolean;
   is_free?: boolean;
   sort_order?: number;
+  // Educational content fields
+  description?: string | null;
+  pros?: string[] | null;
+  cons?: string[] | null;
+  use_cases?: string[] | null;
+  avoid_cases?: string[] | null;
+  category?: string | null;
+  context_window?: number | null;
+  speed_rating?: string | null;
 }
+
+export interface CuratedModelUpdate {
+  description?: string | null;
+  pros?: string[] | null;
+  cons?: string[] | null;
+  use_cases?: string[] | null;
+  avoid_cases?: string[] | null;
+  category?: string | null;
+  context_window?: number | null;
+  speed_rating?: string | null;
+  is_enabled?: boolean;
+  is_free?: boolean;
+  display_name?: string;
+}
+
+// Update model educational content
+export const updateModelContent = async (id: string, updates: CuratedModelUpdate): Promise<void> => {
+  const { error } = await supabase
+    .from('curated_models')
+    .update(updates)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating model content:', error);
+    throw error;
+  }
+};
 
 // Get all curated models (for admin view)
 export const getAllCuratedModels = async (): Promise<CuratedModel[]> => {

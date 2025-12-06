@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.text-to-speech]
 verify_jwt = false
+
+[functions.generate-model-info]
+verify_jwt = false

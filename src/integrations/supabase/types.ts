@@ -138,37 +138,61 @@ export type Database = {
       }
       curated_models: {
         Row: {
+          avoid_cases: string[] | null
+          category: string | null
+          cons: string[] | null
+          context_window: number | null
           created_at: string
+          description: string | null
           display_name: string
           id: string
           is_enabled: boolean
           is_free: boolean
           model_id: string
+          pros: string[] | null
           provider: string
           sort_order: number
+          speed_rating: string | null
           updated_at: string
+          use_cases: string[] | null
         }
         Insert: {
+          avoid_cases?: string[] | null
+          category?: string | null
+          cons?: string[] | null
+          context_window?: number | null
           created_at?: string
+          description?: string | null
           display_name: string
           id?: string
           is_enabled?: boolean
           is_free?: boolean
           model_id: string
+          pros?: string[] | null
           provider: string
           sort_order?: number
+          speed_rating?: string | null
           updated_at?: string
+          use_cases?: string[] | null
         }
         Update: {
+          avoid_cases?: string[] | null
+          category?: string | null
+          cons?: string[] | null
+          context_window?: number | null
           created_at?: string
+          description?: string | null
           display_name?: string
           id?: string
           is_enabled?: boolean
           is_free?: boolean
           model_id?: string
+          pros?: string[] | null
           provider?: string
           sort_order?: number
+          speed_rating?: string | null
           updated_at?: string
+          use_cases?: string[] | null
         }
         Relationships: []
       }
