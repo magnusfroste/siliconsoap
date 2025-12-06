@@ -101,6 +101,30 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* Meet the Creator Section */}
+      <section className="container mx-auto px-4 pb-20 md:pb-32">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-card border rounded-2xl p-8 text-center animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl font-bold text-primary-foreground mx-auto mb-4">
+              MF
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Meet the Creator</h3>
+            <p className="text-muted-foreground mb-4 italic">
+              "This initiative exists to help evaluate AI models in a practical way – 
+              not through dry benchmarks, but through real conversations where you can see how models think and debate."
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">— Magnus Froste</p>
+            <Link 
+              to="/learn?tab=about" 
+              className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+            >
+              Read the full story
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-8 relative z-10">
         <div className="container mx-auto px-4">
