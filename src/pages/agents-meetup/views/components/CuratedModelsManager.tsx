@@ -12,8 +12,16 @@ import {
   addCuratedModel,
   removeCuratedModel,
   updateModelContent,
+  setDefaultModelForAgent,
   CuratedModel,
 } from '@/repositories/curatedModelsRepository';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { fetchOpenRouterModels } from '@/utils/openRouter';
 import { OpenRouterModel } from '@/utils/openRouter/types';
 import {
@@ -108,6 +116,31 @@ export const CuratedModelsManager = () => {
       toast.success(`Removed ${model.display_name}`);
     } catch (error) {
       toast.error('Failed to remove model');
+    }
+  };
+
+  const handleSetDefaultAgent = async (model: CuratedModel, agent: string | null) => {
+    try {
+      await setDefaultModelForAgent(model.id, agent);
+      // Update local state - clear previous default for this agent, set new one
+      setCuratedModels(prev =>
+        prev.map(m => {
+          if (m.id === model.id) {
+            return { ...m, default_for_agent: agent };
+          }
+          // Clear any other model that had this agent as default
+          if (agent && m.default_for_agent === agent) {
+            return { ...m, default_for_agent: null };
+          }
+          return m;
+        })
+      );
+      toast.success(agent 
+        ? `${model.display_name} set as default for Agent ${agent}` 
+        : `Removed default assignment for ${model.display_name}`
+      );
+    } catch (error) {
+      toast.error('Failed to set default agent');
     }
   };
 
@@ -412,6 +445,11 @@ export const CuratedModelsManager = () => {
                           FREE
                         </Badge>
                       )}
+                      {model.default_for_agent && (
+                        <Badge variant="default" className="text-xs">
+                          Default: Agent {model.default_for_agent}
+                        </Badge>
+                      )}
                       {hasContent && (
                         <Badge variant="default" className="text-xs bg-primary/20 text-primary">
                           Has Info
@@ -421,6 +459,20 @@ export const CuratedModelsManager = () => {
                     <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Select
+                      value={model.default_for_agent || 'none'}
+                      onValueChange={(value) => handleSetDefaultAgent(model, value === 'none' ? null : value)}
+                    >
+                      <SelectTrigger className="w-[100px] h-8 text-xs">
+                        <SelectValue placeholder="Default" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="A">Agent A</SelectItem>
+                        <SelectItem value="B">Agent B</SelectItem>
+                        <SelectItem value="C">Agent C</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       size="sm"
                       variant="outline"

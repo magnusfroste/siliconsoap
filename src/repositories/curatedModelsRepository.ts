@@ -10,6 +10,7 @@ export interface CuratedModel {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  default_for_agent: string | null;
   // Educational content fields
   description: string | null;
   pros: string[] | null;
@@ -51,6 +52,7 @@ export interface CuratedModelUpdate {
   is_enabled?: boolean;
   is_free?: boolean;
   display_name?: string;
+  default_for_agent?: string | null;
 }
 
 // Update model educational content
@@ -160,6 +162,36 @@ export const updateModelSortOrder = async (id: string, sortOrder: number): Promi
 
   if (error) {
     console.error('Error updating sort order:', error);
+    throw error;
+  }
+};
+
+// Set default model for agent (clears previous default for that agent)
+export const setDefaultModelForAgent = async (
+  modelId: string, 
+  agent: string | null
+): Promise<void> => {
+  // First, clear any existing default for this agent
+  if (agent) {
+    const { error: clearError } = await supabase
+      .from('curated_models')
+      .update({ default_for_agent: null })
+      .eq('default_for_agent', agent);
+
+    if (clearError) {
+      console.error('Error clearing previous default:', clearError);
+      throw clearError;
+    }
+  }
+
+  // Then set the new default
+  const { error } = await supabase
+    .from('curated_models')
+    .update({ default_for_agent: agent })
+    .eq('id', modelId);
+
+  if (error) {
+    console.error('Error setting default model:', error);
     throw error;
   }
 };

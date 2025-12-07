@@ -211,6 +211,7 @@ export type Database = {
           cons: string[] | null
           context_window: number | null
           created_at: string
+          default_for_agent: string | null
           description: string | null
           display_name: string
           id: string
@@ -230,6 +231,7 @@ export type Database = {
           cons?: string[] | null
           context_window?: number | null
           created_at?: string
+          default_for_agent?: string | null
           description?: string | null
           display_name: string
           id?: string
@@ -249,6 +251,7 @@ export type Database = {
           cons?: string[] | null
           context_window?: number | null
           created_at?: string
+          default_for_agent?: string | null
           description?: string | null
           display_name?: string
           id?: string
