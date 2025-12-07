@@ -16,8 +16,9 @@ export const useModels = (apiKey: string) => {
 
   // Single effect that waits for flags then fetches models and sets defaults
   useEffect(() => {
-    // Wait for feature flags to load first
+    // Wait for feature flags to load AND have data
     if (flagsLoading) return;
+    if (flags.length === 0) return;
     if (isInitialized.current) return;
 
     // Helper to read directly from flags array (avoids stale closure)
