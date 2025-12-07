@@ -40,7 +40,14 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
   const roundLabels: Record<string, { short: string; full: string }> = {
     '1': { short: '1 Round', full: '1 Round (Initial responses)' },
     '2': { short: '2 Rounds', full: '2 Rounds (With follow-up)' },
-    '3': { short: '3 Rounds', full: '3 Rounds (Extended dialogue)' }
+    '3': { short: '3 Rounds', full: '3 Rounds (Extended dialogue)' },
+    '4': { short: '4 Rounds', full: '4 Rounds (Deep discussion)' },
+    '5': { short: '5 Rounds', full: '5 Rounds (Thorough debate)' },
+    '6': { short: '6 Rounds', full: '6 Rounds (Comprehensive)' },
+    '7': { short: '7 Rounds', full: '7 Rounds (Extensive)' },
+    '8': { short: '8 Rounds', full: '8 Rounds (In-depth)' },
+    '9': { short: '9 Rounds', full: '9 Rounds (Detailed)' },
+    '10': { short: '10 Rounds', full: '10 Rounds (Maximum depth)' }
   };
 
   const participationLabels: Record<string, { short: string; full: string }> = {
@@ -96,9 +103,11 @@ export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
                   <span>{roundLabels[rounds.toString()]?.short || 'Exchange rounds'}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{roundLabels['1'].full}</SelectItem>
-                  <SelectItem value="2">{roundLabels['2'].full}</SelectItem>
-                  <SelectItem value="3">{roundLabels['3'].full}</SelectItem>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {roundLabels[num.toString()]?.full || `${num} Rounds`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {numberOfAgents === 1 && (
