@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useModels = (apiKey: string) => {
-  const { getTextValue, loading: flagsLoading } = useFeatureFlags();
+  const { flags, loading: flagsLoading } = useFeatureFlags();
   
   const [agentAModel, setAgentAModel] = useState('');
   const [agentBModel, setAgentBModel] = useState('');
@@ -19,6 +19,12 @@ export const useModels = (apiKey: string) => {
     // Wait for feature flags to load first
     if (flagsLoading) return;
     if (isInitialized.current) return;
+
+    // Helper to read directly from flags array (avoids stale closure)
+    const getTextFromFlags = (key: string): string | null => {
+      const flag = flags.find(f => f.key === key);
+      return flag?.text_value ?? null;
+    };
 
     const loadModelsAndSetDefaults = async () => {
       try {
@@ -40,9 +46,9 @@ export const useModels = (apiKey: string) => {
         setAvailableModels(models);
         
         // Get defaults from feature flags
-        const defaultA = getTextValue('default_model_agent_a');
-        const defaultB = getTextValue('default_model_agent_b');
-        const defaultC = getTextValue('default_model_agent_c');
+        const defaultA = getTextFromFlags('default_model_agent_a');
+        const defaultB = getTextFromFlags('default_model_agent_b');
+        const defaultC = getTextFromFlags('default_model_agent_c');
         
         console.log("Setting model defaults from flags:", { defaultA, defaultB, defaultC });
         
@@ -72,13 +78,19 @@ export const useModels = (apiKey: string) => {
     };
     
     loadModelsAndSetDefaults();
-  }, [flagsLoading, getTextValue]);
+  }, [flagsLoading, flags]);
 
   // Force refresh curated models
   const refreshModels = async () => {
     console.log("Manually refreshing curated models");
     setLoadingModels(true);
     isInitialized.current = false;
+
+    // Helper to read directly from flags array
+    const getTextFromFlags = (key: string): string | null => {
+      const flag = flags.find(f => f.key === key);
+      return flag?.text_value ?? null;
+    };
     
     try {
       const models = await getEnabledModels();
@@ -86,9 +98,9 @@ export const useModels = (apiKey: string) => {
       setAvailableModels(models);
       
       if (models.length > 0) {
-        const flagDefaultA = getTextValue('default_model_agent_a');
-        const flagDefaultB = getTextValue('default_model_agent_b');
-        const flagDefaultC = getTextValue('default_model_agent_c');
+        const flagDefaultA = getTextFromFlags('default_model_agent_a');
+        const flagDefaultB = getTextFromFlags('default_model_agent_b');
+        const flagDefaultC = getTextFromFlags('default_model_agent_c');
         
         const modelExists = (modelId: string | null) => 
           modelId && models.some(m => m.model_id === modelId);
