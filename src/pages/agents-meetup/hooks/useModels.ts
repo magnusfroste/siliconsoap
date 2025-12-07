@@ -49,15 +49,12 @@ export const useModels = (apiKey: string) => {
         const modelExists = (modelId: string | null) => 
           modelId && models.some(m => m.model_id === modelId);
         
-        const findFallback = () => {
-          const freeModel = models.find(m => m.is_free);
-          return freeModel?.model_id || models[0]?.model_id || '';
-        };
+        const fallback = models[0]?.model_id || '';
         
         // Set defaults - using `models` directly (not state) to avoid race condition
-        setAgentAModel(modelExists(defaultA) ? defaultA! : findFallback());
-        setAgentBModel(modelExists(defaultB) ? defaultB! : findFallback());
-        setAgentCModel(modelExists(defaultC) ? defaultC! : findFallback());
+        setAgentAModel(modelExists(defaultA) ? defaultA! : fallback);
+        setAgentBModel(modelExists(defaultB) ? defaultB! : fallback);
+        setAgentCModel(modelExists(defaultC) ? defaultC! : fallback);
         
         isInitialized.current = true;
         setLoadingModels(false);
@@ -96,20 +93,11 @@ export const useModels = (apiKey: string) => {
         const modelExists = (modelId: string | null) => 
           modelId && models.some(m => m.model_id === modelId);
         
-        const findBestAlternative = (models: CuratedModel[]) => {
-          const freeModel = models.find(m => m.is_free);
-          return freeModel?.model_id || models[0]?.model_id || '';
-        };
+        const fallback = models[0]?.model_id || '';
         
-        const defaultAgentA = modelExists(flagDefaultA) 
-          ? flagDefaultA! 
-          : findBestAlternative(models);
-        const defaultAgentB = modelExists(flagDefaultB) 
-          ? flagDefaultB! 
-          : findBestAlternative(models);
-        const defaultAgentC = modelExists(flagDefaultC) 
-          ? flagDefaultC! 
-          : findBestAlternative(models);
+        const defaultAgentA = modelExists(flagDefaultA) ? flagDefaultA! : fallback;
+        const defaultAgentB = modelExists(flagDefaultB) ? flagDefaultB! : fallback;
+        const defaultAgentC = modelExists(flagDefaultC) ? flagDefaultC! : fallback;
         
         setAgentAModel(defaultAgentA);
         setAgentBModel(defaultAgentB);
