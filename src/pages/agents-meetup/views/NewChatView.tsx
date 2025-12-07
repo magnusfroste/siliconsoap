@@ -16,6 +16,7 @@ import { useCredits } from '../hooks/useCredits';
 import { toast } from 'sonner';
 import { chatService } from '@/services';
 import { creditsService } from '@/services';
+import { analyticsRepository } from '@/repositories';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import type { ChatSettings } from '@/models/chat';
 
@@ -110,6 +111,11 @@ export const NewChatView = () => {
       const settings = buildChatSettings();
       const title = chatService.generateTitle(currentPrompt);
 
+      // Collect models used for analytics
+      const modelsUsed: string[] = [settings.models.agentA];
+      if (settings.numberOfAgents >= 2) modelsUsed.push(settings.models.agentB);
+      if (settings.numberOfAgents >= 3) modelsUsed.push(settings.models.agentC);
+
       if (isGuest) {
         // Guests: Create chat in localStorage
         const guestChat = chatService.createGuestChat(
@@ -117,6 +123,18 @@ export const NewChatView = () => {
           state.activeScenario,
           settings
         );
+        
+        // Log analytics for guest chat
+        analyticsRepository.logChatStart({
+          chatId: guestChat.id,
+          isGuest: true,
+          promptPreview: currentPrompt,
+          scenarioId: state.activeScenario,
+          modelsUsed,
+          numAgents: settings.numberOfAgents,
+          numRounds: settings.rounds
+        });
+        
         if (isMounted.current) {
           navigate(`/chat/${guestChat.id}`);
         }
@@ -129,6 +147,19 @@ export const NewChatView = () => {
           prompt: currentPrompt,
           settings
         });
+        
+        // Log analytics for logged-in user
+        analyticsRepository.logChatStart({
+          chatId: chat.id,
+          userId: user!.id,
+          isGuest: false,
+          promptPreview: currentPrompt,
+          scenarioId: state.activeScenario,
+          modelsUsed,
+          numAgents: settings.numberOfAgents,
+          numRounds: settings.rounds
+        });
+        
         if (isMounted.current) {
           navigate(`/chat/${chat.id}`);
         }
