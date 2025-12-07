@@ -108,7 +108,7 @@ export interface LabsActions {
   setConversation: (conversation: ConversationMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
   setAvailableModels: (models: CuratedModel[]) => void;
-  setLoadingModels: (loading: boolean) => void;
+  
   setCurrentView: (view: ViewState) => void;
   setSettingsOpen: (open: boolean) => void;
   setActiveScenario: (scenario: string) => void;
@@ -126,7 +126,7 @@ export interface LabsActions {
   getCurrentScenario: () => ScenarioType;
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
-  refreshModels: (apiKey: string) => void;
+  refreshModels: () => Promise<void>;
   enableSharedKeyMode: () => void;
   // Expert settings actions
   setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
