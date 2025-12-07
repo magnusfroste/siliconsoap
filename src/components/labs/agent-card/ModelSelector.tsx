@@ -26,16 +26,20 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 }) => {
   const hasModels = modelsByProvider && Object.keys(modelsByProvider).length > 0;
   
-  // Debug: Check if value exists in options
-  const allModelIds = Object.values(modelsByProvider || {}).flat().map(m => m.model_id);
-  const valueInOptions = allModelIds.includes(agentModel);
-  console.log("[ModelSelector] value:", agentModel, "inOptions:", valueInOptions, "allIds:", allModelIds.slice(0, 5));
+  // Find the display name for the current model
+  const allModels = Object.values(modelsByProvider || {}).flat();
+  const selectedModel = allModels.find(m => m.model_id === agentModel);
+  
 
   return (
     <div className="flex items-center gap-1.5">
       <Select value={agentModel} onValueChange={setAgentModel} disabled={isDisabled || (!hasModels && !loadingModels)}>
         <SelectTrigger className="h-8 text-sm flex-1">
-          <SelectValue placeholder={loadingModels ? "Loading models..." : hasModels ? "Select model" : "No models available"} />
+          {selectedModel ? (
+            <span className="truncate">{selectedModel.display_name}</span>
+          ) : (
+            <SelectValue placeholder={loadingModels ? "Loading models..." : hasModels ? "Select model" : "No models available"} />
+          )}
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
           {loadingModels ? (

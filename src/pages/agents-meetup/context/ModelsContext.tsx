@@ -59,17 +59,6 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const modelB = defaultB?.model_id || models[1]?.model_id || DEFAULT_MODEL_B;
         const modelC = defaultC?.model_id || models[2]?.model_id || DEFAULT_MODEL_C;
         
-        // Check if selected models exist in the enabled models list
-        const modelAExists = models.some(m => m.model_id === modelA);
-        const modelBExists = models.some(m => m.model_id === modelB);
-        const modelCExists = models.some(m => m.model_id === modelC);
-        
-        console.log("[ModelsContext] Setting agent models from DB:", { 
-          modelA, modelAExists,
-          modelB, modelBExists,
-          modelC, modelCExists
-        });
-        
         setAgentAModel(modelA);
         setAgentBModel(modelB);
         setAgentCModel(modelC);
