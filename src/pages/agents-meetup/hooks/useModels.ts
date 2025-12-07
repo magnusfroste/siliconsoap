@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useModels = (apiKey: string) => {
-  const { getTextValue, loading: flagsLoading } = useFeatureFlags();
+  const { flags, loading: flagsLoading } = useFeatureFlags();
   
   const [agentAModel, setAgentAModel] = useState('');
   const [agentBModel, setAgentBModel] = useState('');
@@ -14,23 +14,30 @@ export const useModels = (apiKey: string) => {
 
   const isDefaultsInitialized = useRef(false);
 
-  // Effect 1: Set defaults from feature flags (simple, synchronous - matches useProfiles pattern)
+  // Effect 1: Set defaults from feature flags (access flags array directly to avoid stale closure)
   useEffect(() => {
-    if (flagsLoading || isDefaultsInitialized.current) return;
+    if (flagsLoading) return;
+    if (flags.length === 0) return;
+    if (isDefaultsInitialized.current) return;
     
-    const defaultA = getTextValue('default_model_agent_a');
-    const defaultB = getTextValue('default_model_agent_b');
-    const defaultC = getTextValue('default_model_agent_c');
+    // Helper to read from flags array directly (avoids stale closure)
+    const getTextFromFlags = (key: string): string | null => {
+      const flag = flags.find(f => f.key === key);
+      return flag?.text_value ?? null;
+    };
+    
+    const defaultA = getTextFromFlags('default_model_agent_a');
+    const defaultB = getTextFromFlags('default_model_agent_b');
+    const defaultC = getTextFromFlags('default_model_agent_c');
     
     console.log("Setting model defaults from flags:", { defaultA, defaultB, defaultC });
     
-    // Set defaults immediately - no async, no waiting for models list
     if (defaultA) setAgentAModel(defaultA);
     if (defaultB) setAgentBModel(defaultB);
     if (defaultC) setAgentCModel(defaultC);
     
     isDefaultsInitialized.current = true;
-  }, [flagsLoading, getTextValue]);
+  }, [flagsLoading, flags]);
 
   // Effect 2: Fetch available models for dropdowns (separate concern)
   useEffect(() => {
