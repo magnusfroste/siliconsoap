@@ -127,5 +127,21 @@ export const analyticsRepository = {
     if (error) {
       console.error('Error logging chat complete:', error);
     }
+  },
+
+  async logChatCompleteByChartId(chatId: string, totalMessages: number, durationMs: number): Promise<void> {
+    const { error } = await supabase
+      .from('chat_analytics')
+      .update({
+        total_messages: totalMessages,
+        generation_duration_ms: durationMs,
+        completed_at: new Date().toISOString()
+      })
+      .eq('chat_id', chatId)
+      .is('completed_at', null);
+
+    if (error) {
+      console.error('Error logging chat complete by chat_id:', error);
+    }
   }
 };
