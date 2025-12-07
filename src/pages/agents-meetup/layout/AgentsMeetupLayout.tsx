@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatHeader } from './ChatHeader';
 import { useAuth } from '../hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { ModelsProvider } from '../context/ModelsContext';
 
 export const AgentsMeetupLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   // No authentication redirect - allow guest access
 
@@ -24,6 +23,7 @@ export const AgentsMeetupLayout = () => {
   }
 
   return (
+    <ModelsProvider>
     <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar - Desktop */}
       <aside 
@@ -62,5 +62,6 @@ export const AgentsMeetupLayout = () => {
         </main>
       </div>
     </div>
+    </ModelsProvider>
   );
 };

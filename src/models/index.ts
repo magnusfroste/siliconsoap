@@ -2,3 +2,5 @@
 
 export * from './chat';
 export * from './credits';
+export * from './model';
+export * from './conversation';

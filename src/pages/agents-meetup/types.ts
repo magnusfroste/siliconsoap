@@ -1,53 +1,34 @@
 // Domain types for Agents Meetup
-// Note: Chat-related types are in @/models/chat
+// Types are now centralized in @/models
 
-import { ReactNode } from 'react';
-import { CuratedModel } from '@/repositories/curatedModelsRepository';
-import { ViewState } from './hooks/conversation/useConversationNavigation';
 import { UseFormReturn } from 'react-hook-form';
+import { ViewState } from './hooks/conversation/useConversationNavigation';
 
-// Re-export from models for convenience
-export type { ChatSettings, ChatMessage } from '@/models/chat';
-export type { CuratedModel } from '@/repositories/curatedModelsRepository';
+// Re-export all types from models for convenience
+export type { ChatSettings, ChatMessage } from '@/models';
+export type { CuratedModel } from '@/models';
+export type { 
+  ResponseLength, 
+  ParticipationMode, 
+  TurnOrder, 
+  ConversationTone,
+  PersonalityIntensity,
+  Profile, 
+  ScenarioType, 
+  ConversationMessage, 
+  AnalysisResults 
+} from '@/models';
 
-export type ResponseLength = 'short' | 'medium' | 'long';
-export type ParticipationMode = 'spectator' | 'jump-in' | 'round-by-round';
-export type TurnOrder = 'sequential' | 'random' | 'popcorn';
-
-export type Profile = {
-  id: string;
-  name: string;
-  description: string;
-  icon: ReactNode;
-  instructions?: string;
-};
-
-export type ScenarioType = {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  promptTemplate: (text: string) => string;
-  followupTemplate: (text: string, prevResponse: string, otherResponse: string) => string;
-  finalTemplate: (text: string, prevResponse: string, otherResponse: string) => string;
-  placeholder: string;
-};
-
-export type ConversationMessage = {
-  agent: string;
-  message: string;
-  model: string;
-  persona: string;
-  isHuman?: boolean;
-};
-
-export type AnalysisResults = {
-  agentContributions: Record<string, number>;
-  topicCoverage: number;
-  novelInsights: string[];
-  overallScore: number;
-  summary: string;
-};
+// Import for use in this file
+import type { 
+  CuratedModel, 
+  ResponseLength, 
+  ParticipationMode, 
+  TurnOrder, 
+  ConversationMessage,
+  ScenarioType,
+  AnalysisResults
+} from '@/models';
 
 // Consolidated LabsState - single source of truth (simplified without BYOK)
 export interface LabsState {
@@ -76,7 +57,7 @@ export interface LabsState {
   activeScenario: string;
   promptInputs: Record<string, string>;
   isAnalyzing: boolean;
-  analysisResults: any | null;
+  analysisResults: AnalysisResults | null;
   analyzerModel: string;
   formA: UseFormReturn<{ persona: string }>;
   formB: UseFormReturn<{ persona: string }>;
@@ -114,7 +95,7 @@ export interface LabsActions {
   setActiveScenario: (scenario: string) => void;
   setPromptInputs: (inputs: Record<string, string>) => void;
   setIsAnalyzing: (analyzing: boolean) => void;
-  setAnalysisResults: (results: any | null) => void;
+  setAnalysisResults: (results: AnalysisResults | null) => void;
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
   getActiveApiKey: (modelIsFree?: boolean) => string | null;

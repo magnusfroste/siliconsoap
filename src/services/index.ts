@@ -2,3 +2,4 @@
 
 export { chatService } from './chatService';
 export { creditsService } from './creditsService';
+export * from './conversationService';

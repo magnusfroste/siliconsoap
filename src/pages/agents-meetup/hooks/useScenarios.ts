@@ -14,7 +14,7 @@ export const useScenarios = () => {
     'future-prediction': ''
   });
   const [numberOfAgents, setNumberOfAgents] = useState(3);
-  const [rounds, setRounds] = useState(2);
+  const [rounds, setRounds] = useState(5); // Default 5 rounds
   const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [participationMode, setParticipationMode] = useState<'spectator' | 'jump-in' | 'round-by-round'>('jump-in');
   const [turnOrder, setTurnOrder] = useState<'sequential' | 'random' | 'popcorn'>('sequential');

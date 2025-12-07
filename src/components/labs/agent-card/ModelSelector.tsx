@@ -25,6 +25,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   isDisabled,
 }) => {
   const hasModels = modelsByProvider && Object.keys(modelsByProvider).length > 0;
+  
+  // Debug: Check if value exists in options
+  const allModelIds = Object.values(modelsByProvider || {}).flat().map(m => m.model_id);
+  const valueInOptions = allModelIds.includes(agentModel);
+  console.log("[ModelSelector] value:", agentModel, "inOptions:", valueInOptions, "allIds:", allModelIds.slice(0, 5));
 
   return (
     <div className="flex items-center gap-1.5">

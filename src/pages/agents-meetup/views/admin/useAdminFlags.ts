@@ -61,8 +61,9 @@ export const useAdminFlags = () => {
   }, [refetch]);
 
   // Categorize flags
+  // Note: Model defaults (default_model_agent_*) are now set via the Models tab, not feature flags
   const agentDefaultFlags = flags.filter(f => 
-    f.key.startsWith('default_profile_agent_') || f.key.startsWith('default_model_agent_')
+    f.key.startsWith('default_profile_agent_')
   );
   
   const conversationSettingsFlags = flags.filter(f => 

@@ -2,8 +2,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CuratedModelSelector } from '../components/CuratedModelSelector';
 import { ProfileSelector } from '../components/ProfileSelector';
+// Note: Model defaults are now set via the "Default for Agent" column in the Models admin tab
+// The feature flag approach for model defaults has been removed as it was not being used
 
 interface FeatureFlag {
   id: string;
@@ -51,11 +52,17 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ]
 };
 
-const MODEL_KEYS = ['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c'];
+// Model defaults are now set via the "Default for Agent" column in the Models admin tab
+// These feature flag keys are deprecated and hidden from the UI
+const DEPRECATED_MODEL_KEYS = ['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c'];
 const PROFILE_KEYS = ['default_profile_agent_a', 'default_profile_agent_b', 'default_profile_agent_c'];
 
 export const FeatureFlagItem = ({ flag, onToggle, onNumericChange, onTextChange }: FeatureFlagItemProps) => {
-  const isModelSelector = MODEL_KEYS.includes(flag.key);
+  // Skip deprecated model keys - these are now handled in the Models tab
+  if (DEPRECATED_MODEL_KEYS.includes(flag.key)) {
+    return null;
+  }
+  
   const isProfileSelector = PROFILE_KEYS.includes(flag.key);
   const hasSelectOptions = SELECT_OPTIONS[flag.key]?.length > 0;
 
@@ -82,15 +89,6 @@ export const FeatureFlagItem = ({ flag, onToggle, onNumericChange, onTextChange 
           </div>
         )}
         
-        {flag.text_value !== null && isModelSelector && (
-          <div className="pt-2">
-            <CuratedModelSelector
-              value={flag.text_value}
-              onChange={(value) => onTextChange(flag.id, value)}
-            />
-          </div>
-        )}
-        
         {flag.text_value !== null && isProfileSelector && (
           <div className="pt-2">
             <ProfileSelector
@@ -100,7 +98,7 @@ export const FeatureFlagItem = ({ flag, onToggle, onNumericChange, onTextChange 
           </div>
         )}
         
-        {flag.text_value !== null && !isModelSelector && !isProfileSelector && hasSelectOptions && (
+        {flag.text_value !== null && !isProfileSelector && hasSelectOptions && (
           <div className="pt-2">
             <Select
               value={flag.text_value}
