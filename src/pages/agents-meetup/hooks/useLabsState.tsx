@@ -37,7 +37,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     availableModels,
     setAvailableModels,
     loadingModels,
-    setLoadingModels
+    refreshModels
   } = useModels(getActiveApiKey());
 
   const {
@@ -179,7 +179,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setConversation,
       setIsLoading,
       setAvailableModels,
-      setLoadingModels,
+      
       setCurrentView,
       setSettingsOpen,
       setActiveScenario,
@@ -202,55 +202,7 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setAgreementBias,
       setTemperature,
       setPersonalityIntensity,
-      refreshModels: async () => {
-        setLoadingModels(true);
-        try {
-          const models = await getEnabledModels();
-          
-          if (models.length === 0) {
-            toast({
-              title: "No Models Available",
-              description: "No curated models configured.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Models Refreshed",
-              description: `Successfully loaded ${models.length} curated models.`,
-            });
-          }
-          
-          setAvailableModels(models);
-          
-          if (models.length > 0) {
-            const findBestAlternative = (models: CuratedModel[]) => {
-              const freeModel = models.find(m => m.is_free);
-              return freeModel?.model_id || models[0]?.model_id || '';
-            };
-            
-            // Set to first available curated model as fallback
-            const bestModel = findBestAlternative(models);
-            if (!agentAModel || !models.some(m => m.model_id === agentAModel)) {
-              setAgentAModel(bestModel);
-            }
-            if (!agentBModel || !models.some(m => m.model_id === agentBModel)) {
-              setAgentBModel(bestModel);
-            }
-            if (!agentCModel || !models.some(m => m.model_id === agentCModel)) {
-              setAgentCModel(bestModel);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to refresh curated models:", error);
-          toast({
-            title: "Error Refreshing Models",
-            description: "Failed to fetch models. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setLoadingModels(false);
-        }
-      }
+      refreshModels
     }
   ] as const;
 };

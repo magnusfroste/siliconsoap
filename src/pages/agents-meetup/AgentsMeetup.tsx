@@ -32,19 +32,7 @@ const AgentsMeetup: React.FC = () => {
   const [state, actions] = useLabsState();
   
   // Auto-load models on mount with shared API key
-  useEffect(() => {
-    const initializeModels = async () => {
-      if (state.availableModels.length === 0 && !state.loadingModels) {
-        console.log("Auto-loading models with shared API key");
-        // Empty string triggers shared key usage in edge function
-        if (actions.refreshModels) {
-          await actions.refreshModels('');
-        }
-      }
-    };
-    
-    initializeModels();
-  }, []); // Only run on mount
+  // Models are now auto-loaded by useModels hook, no need for manual initialization
 
   const showConversation = state.conversation.length > 0 || state.isLoading;
   const showAnalysis = state.analysisResults && !state.isLoading;
