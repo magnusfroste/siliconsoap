@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { toast } from '@/hooks/use-toast';
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useModels = (apiKey: string) => {
-  const { flags, loading: flagsLoading } = useFeatureFlags();
-  
   const [agentAModel, setAgentAModel] = useState('');
   const [agentBModel, setAgentBModel] = useState('');
   const [agentCModel, setAgentCModel] = useState('');
@@ -14,32 +11,7 @@ export const useModels = (apiKey: string) => {
 
   const isDefaultsInitialized = useRef(false);
 
-  // Effect 1: Set defaults from feature flags (access flags array directly to avoid stale closure)
-  useEffect(() => {
-    if (flagsLoading) return;
-    if (flags.length === 0) return;
-    if (isDefaultsInitialized.current) return;
-    
-    // Helper to read from flags array directly (avoids stale closure)
-    const getTextFromFlags = (key: string): string | null => {
-      const flag = flags.find(f => f.key === key);
-      return flag?.text_value ?? null;
-    };
-    
-    const defaultA = getTextFromFlags('default_model_agent_a');
-    const defaultB = getTextFromFlags('default_model_agent_b');
-    const defaultC = getTextFromFlags('default_model_agent_c');
-    
-    console.log("Setting model defaults from flags:", { defaultA, defaultB, defaultC });
-    
-    if (defaultA) setAgentAModel(defaultA);
-    if (defaultB) setAgentBModel(defaultB);
-    if (defaultC) setAgentCModel(defaultC);
-    
-    isDefaultsInitialized.current = true;
-  }, [flagsLoading, flags]);
-
-  // Effect 2: Fetch available models for dropdowns (separate concern)
+  // Single effect: Fetch models and set defaults from default_for_agent column
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -55,6 +27,25 @@ export const useModels = (apiKey: string) => {
         }
         
         setAvailableModels(models);
+        
+        // Set defaults from the models themselves (no race condition!)
+        if (!isDefaultsInitialized.current) {
+          const defaultA = models.find(m => m.default_for_agent === 'A');
+          const defaultB = models.find(m => m.default_for_agent === 'B');
+          const defaultC = models.find(m => m.default_for_agent === 'C');
+          
+          console.log("Setting model defaults from curated_models:", { 
+            defaultA: defaultA?.model_id, 
+            defaultB: defaultB?.model_id, 
+            defaultC: defaultC?.model_id 
+          });
+          
+          if (defaultA) setAgentAModel(defaultA.model_id);
+          if (defaultB) setAgentBModel(defaultB.model_id);
+          if (defaultC) setAgentCModel(defaultC.model_id);
+          
+          isDefaultsInitialized.current = true;
+        }
       } catch (error) {
         console.error("Failed to fetch curated models:", error);
         toast({
