@@ -62,7 +62,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link 
-              to="/learn?tab=comparison" 
+              to="/models" 
               className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
@@ -70,7 +70,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             </Link>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>Learn about AI models</p>
+            <p>Explore all models</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
