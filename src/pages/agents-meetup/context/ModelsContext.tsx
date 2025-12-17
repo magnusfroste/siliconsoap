@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CuratedModel } from '@/repositories/curatedModelsRepository';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { CuratedModel, getEnabledModels } from '@/repositories/curatedModelsRepository';
 
 // Hardcoded curated models - no database dependency
 const HARDCODED_MODELS: CuratedModel[] = [
@@ -121,14 +121,33 @@ interface ModelsContextType {
 const ModelsContext = createContext<ModelsContextType | null>(null);
 
 export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with hardcoded defaults
+  // Initialize with hardcoded defaults - these never change based on database
   const [agentModels, setAgentModels] = useState({
     agentA: 'meta-llama/llama-3.3-70b-instruct',
     agentB: 'deepseek/deepseek-chat-v3-0324',
     agentC: 'google/gemma-3-27b-it'
   });
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>(HARDCODED_MODELS);
-  const [loadingModels] = useState(false); // No loading needed with hardcoded
+  const [loadingModels, setLoadingModels] = useState(true);
+
+  // Load curated models from database
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const models = await getEnabledModels();
+        if (models.length > 0) {
+          setAvailableModels(models);
+        }
+        // If empty, keep HARDCODED_MODELS as fallback
+      } catch (error) {
+        console.error('Failed to load curated models:', error);
+        // Keep HARDCODED_MODELS as fallback
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+    loadModels();
+  }, []);
 
   // Wrapper setters for backward compatibility
   const setAgentAModel = (model: string) => {
@@ -142,7 +161,17 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const refreshModels = async () => {
-    // No-op with hardcoded models
+    setLoadingModels(true);
+    try {
+      const models = await getEnabledModels();
+      if (models.length > 0) {
+        setAvailableModels(models);
+      }
+    } catch (error) {
+      console.error('Failed to refresh models:', error);
+    } finally {
+      setLoadingModels(false);
+    }
   };
 
   return (
