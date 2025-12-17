@@ -124,7 +124,7 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Initialize with hardcoded defaults - these never change based on database
   const [agentModels, setAgentModels] = useState({
     agentA: "google/gemini-2.5-flash",
-    agentB: "deepseek/deepseek-chat-v3-0324",
+    agentB: "x-ai/grok-4.1-fast",
     agentC: "baidu/ernie-4.5-21b-a3b",
   });
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>(HARDCODED_MODELS);
