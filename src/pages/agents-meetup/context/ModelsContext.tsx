@@ -18,15 +18,28 @@ interface ModelsContextType {
 const ModelsContext = createContext<ModelsContextType | null>(null);
 
 export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with empty strings - will be populated from database
-  const [agentAModel, setAgentAModel] = useState('');
-  const [agentBModel, setAgentBModel] = useState('');
-  const [agentCModel, setAgentCModel] = useState('');
+  // Consolidated state to prevent race conditions with separate useState calls
+  const [agentModels, setAgentModels] = useState({
+    agentA: '',
+    agentB: '',
+    agentC: ''
+  });
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
   
   // Use ref for initialization tracking to prevent race conditions in StrictMode
   const initializedRef = useRef(false);
+
+  // Wrapper setters for backward compatibility
+  const setAgentAModel = (model: string) => {
+    setAgentModels(prev => ({ ...prev, agentA: model }));
+  };
+  const setAgentBModel = (model: string) => {
+    setAgentModels(prev => ({ ...prev, agentB: model }));
+  };
+  const setAgentCModel = (model: string) => {
+    setAgentModels(prev => ({ ...prev, agentC: model }));
+  };
 
   // Fetch models and set defaults on mount
   useEffect(() => {
@@ -50,8 +63,6 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           return;
         }
         
-        setAvailableModels(models);
-        
         // Set defaults from database (using default_for_agent column)
         const defaultA = models.find(m => m.default_for_agent === 'A');
         const defaultB = models.find(m => m.default_for_agent === 'B');
@@ -68,11 +79,15 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const modelB = defaultB?.model_id || models[Math.min(1, models.length - 1)]?.model_id || '';
         const modelC = defaultC?.model_id || models[Math.min(2, models.length - 1)]?.model_id || '';
         
-        console.log('[ModelsContext] Setting models:', { modelA, modelB, modelC });
+        console.log('[ModelsContext] Setting models atomically:', { modelA, modelB, modelC });
         
-        setAgentAModel(modelA);
-        setAgentBModel(modelB);
-        setAgentCModel(modelC);
+        // ATOMIC UPDATE: Set both availableModels and agentModels together
+        setAvailableModels(models);
+        setAgentModels({
+          agentA: modelA,
+          agentB: modelB,
+          agentC: modelC
+        });
       } catch (error) {
         console.error("[ModelsContext] Failed to fetch curated models:", error);
         toast({
@@ -103,11 +118,11 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   return (
     <ModelsContext.Provider value={{
-      agentAModel,
+      agentAModel: agentModels.agentA,
       setAgentAModel,
-      agentBModel,
+      agentBModel: agentModels.agentB,
       setAgentBModel,
-      agentCModel,
+      agentCModel: agentModels.agentC,
       setAgentCModel,
       availableModels,
       setAvailableModels,
