@@ -18,6 +18,7 @@ import { chatService } from '@/services';
 import { creditsService } from '@/services';
 import { analyticsRepository } from '@/repositories';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
+import { suggestedTopicsByScenario, getRandomTopics } from '../constants/suggestedTopics';
 import type { ChatSettings } from '@/models/chat';
 
 export const NewChatView = () => {
@@ -175,25 +176,18 @@ export const NewChatView = () => {
     }
   };
 
-  const suggestedTopicsByScenario: Record<string, string[]> = {
-    'general-problem': [
-      "How to regulate AI development?",
-      "Universal Basic Income viability?",
-      "Tariffs between countries?"
-    ],
-    'ethical-dilemma': [
-      "Should AI have legal rights?",
-      "Is gene editing babies ethical?",
-      "Privacy vs security trade-offs?"
-    ],
-    'future-prediction': [
-      "AGI by 2030",
-      "Brain-computer interfaces",
-      "Future of work automation"
-    ]
-  };
+  // Randomize topics on component mount - new set each page visit
+  const [randomizedTopics, setRandomizedTopics] = useState<Record<string, string[]>>({});
+  
+  useEffect(() => {
+    setRandomizedTopics({
+      'general-problem': getRandomTopics(suggestedTopicsByScenario['general-problem'], 3),
+      'ethical-dilemma': getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 3),
+      'future-prediction': getRandomTopics(suggestedTopicsByScenario['future-prediction'], 3),
+    });
+  }, []);
 
-  const suggestedTopics = suggestedTopicsByScenario[state.activeScenario] || suggestedTopicsByScenario['general-problem'];
+  const suggestedTopics = randomizedTopics[state.activeScenario] || [];
 
   return (
     <div className="min-h-full flex flex-col items-center justify-start p-4 py-8 md:py-12">
