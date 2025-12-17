@@ -16,7 +16,7 @@ import { useCredits } from '../hooks/useCredits';
 import { toast } from 'sonner';
 import { chatService } from '@/services';
 import { creditsService } from '@/services';
-import { analyticsRepository } from '@/repositories';
+import { analyticsService } from '@/services';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import { suggestedTopicsByScenario, getRandomTopics } from '../constants/suggestedTopics';
 import type { ChatSettings } from '@/models/chat';
@@ -126,7 +126,7 @@ export const NewChatView = () => {
         );
         
         // Log analytics for guest chat
-        analyticsRepository.logChatStart({
+        analyticsService.logChatStart({
           chatId: guestChat.id,
           isGuest: true,
           promptPreview: currentPrompt,
@@ -150,7 +150,7 @@ export const NewChatView = () => {
         });
         
         // Log analytics for logged-in user
-        analyticsRepository.logChatStart({
+        analyticsService.logChatStart({
           chatId: chat.id,
           userId: user!.id,
           isGuest: false,

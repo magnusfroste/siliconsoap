@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { GripVertical, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { supabase } from '@/integrations/supabase/client';
+import { settingsService } from '@/services';
 
 interface NavItem {
   key: string;
@@ -59,31 +59,7 @@ export const SettingsTab = () => {
     setSaving(true);
     try {
       const orderString = navOrder.map(item => item.key).join(',');
-      
-      // Check if the flag exists
-      const { data: existing } = await supabase
-        .from('feature_flags')
-        .select('id')
-        .eq('key', 'sidebar_nav_order')
-        .single();
-
-      if (existing) {
-        await supabase
-          .from('feature_flags')
-          .update({ text_value: orderString })
-          .eq('key', 'sidebar_nav_order');
-      } else {
-        await supabase
-          .from('feature_flags')
-          .insert({
-            key: 'sidebar_nav_order',
-            name: 'Sidebar Navigation Order',
-            description: 'Order of navigation items in the sidebar',
-            enabled: true,
-            text_value: orderString,
-          });
-      }
-
+      await settingsService.saveNavOrder(orderString);
       setHasChanges(false);
       toast.success('Sidebar order saved');
     } catch (error) {

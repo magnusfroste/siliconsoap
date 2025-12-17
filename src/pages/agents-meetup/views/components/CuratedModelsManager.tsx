@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { modelInfoService } from '@/services';
 import {
   getAllCuratedModels,
   toggleModelEnabled,
@@ -147,15 +147,11 @@ export const CuratedModelsManager = () => {
   const handleGenerateModelInfo = async (model: CuratedModel) => {
     setGeneratingForModel(model.id);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-model-info', {
-        body: {
-          model_id: model.model_id,
-          display_name: model.display_name,
-          provider: model.provider,
-        },
+      const data = await modelInfoService.generateModelInfo({
+        model_id: model.model_id,
+        display_name: model.display_name,
+        provider: model.provider,
       });
-
-      if (error) throw error;
 
       // Update the model with generated content
       await updateModelContent(model.id, {
@@ -216,15 +212,11 @@ export const CuratedModelsManager = () => {
       setGeneratingForModel(model.id);
 
       try {
-        const { data, error } = await supabase.functions.invoke('generate-model-info', {
-          body: {
-            model_id: model.model_id,
-            display_name: model.display_name,
-            provider: model.provider,
-          },
+        const data = await modelInfoService.generateModelInfo({
+          model_id: model.model_id,
+          display_name: model.display_name,
+          provider: model.provider,
         });
-
-        if (error) throw error;
 
         await updateModelContent(model.id, {
           description: data.description,
