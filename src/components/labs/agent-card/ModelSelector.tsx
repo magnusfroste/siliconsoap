@@ -35,10 +35,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     <div className="flex items-center gap-1.5">
       <Select value={agentModel} onValueChange={setAgentModel} disabled={isDisabled || (!hasModels && !loadingModels)}>
         <SelectTrigger className="h-8 text-sm flex-1">
-          {selectedModel ? (
+          {loadingModels ? (
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Loading...
+            </span>
+          ) : selectedModel ? (
             <span className="truncate">{selectedModel.display_name}</span>
           ) : (
-            <SelectValue placeholder={loadingModels ? "Loading models..." : hasModels ? "Select model" : "No models available"} />
+            <SelectValue placeholder={hasModels ? "Select model" : "No models available"} />
           )}
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
