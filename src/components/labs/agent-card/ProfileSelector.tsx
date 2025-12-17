@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { UseFormReturn } from 'react-hook-form';
 import { ProfileInfoPopover } from './ProfileInfoPopover';
 import { Profile } from './types';
-import { Check } from 'lucide-react';
+
 
 interface ProfileSelectorProps {
   form: UseFormReturn<{ persona: string }>;
@@ -69,9 +69,6 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({
                             {profile.name}
                           </span>
                         </div>
-                        {isSelected && (
-                          <Check className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-primary" />
-                        )}
                         <RadioGroupItem 
                           value={profile.id} 
                           disabled={isDisabled}
