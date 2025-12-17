@@ -21,7 +21,12 @@ const ModelsContext = createContext<ModelsContextType | null>(null);
 // These should match what's configured in the admin panel
 const DEFAULT_MODEL_A = 'google/gemini-2.5-flash';
 const DEFAULT_MODEL_B = 'deepseek/deepseek-chat-v3-0324';
-const DEFAULT_MODEL_C = 'x-ai/grok-4.1-fast';
+const DEFAULT_MODEL_C = 'openai/gpt-4.1-mini';
+
+// Helper to verify a model exists in the available list
+const verifyModelExists = (modelId: string, models: CuratedModel[]): boolean => {
+  return models.some(m => m.model_id === modelId);
+};
 
 export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initialize with hardcoded defaults so dropdowns show values immediately
@@ -55,9 +60,20 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const defaultB = models.find(m => m.default_for_agent === 'B');
         const defaultC = models.find(m => m.default_for_agent === 'C');
         
-        const modelA = defaultA?.model_id || models[0]?.model_id || DEFAULT_MODEL_A;
-        const modelB = defaultB?.model_id || models[1]?.model_id || DEFAULT_MODEL_B;
-        const modelC = defaultC?.model_id || models[2]?.model_id || DEFAULT_MODEL_C;
+        let modelA = defaultA?.model_id || models[0]?.model_id || DEFAULT_MODEL_A;
+        let modelB = defaultB?.model_id || models[1]?.model_id || DEFAULT_MODEL_B;
+        let modelC = defaultC?.model_id || models[2]?.model_id || DEFAULT_MODEL_C;
+        
+        // Verify each model exists in the available list, fallback to first available
+        if (!verifyModelExists(modelA, models) && models.length > 0) {
+          modelA = models[0].model_id;
+        }
+        if (!verifyModelExists(modelB, models) && models.length > 0) {
+          modelB = models[Math.min(1, models.length - 1)].model_id;
+        }
+        if (!verifyModelExists(modelC, models) && models.length > 0) {
+          modelC = models[Math.min(2, models.length - 1)].model_id;
+        }
         
         setAgentAModel(modelA);
         setAgentBModel(modelB);
