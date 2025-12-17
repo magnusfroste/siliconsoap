@@ -22,7 +22,7 @@ import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
-import { analyticsRepository } from '@/repositories';
+import { analyticsService } from '@/services';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -217,7 +217,7 @@ export const ChatView = () => {
               setConversationComplete(true);
               // Log completion analytics
               const duration = generationStartTime.current ? Date.now() - generationStartTime.current : 0;
-              analyticsRepository.logChatCompleteByChartId(chatId, settings.numberOfAgents * settings.rounds, duration);
+              analyticsService.logChatCompleteByChartId(chatId, settings.numberOfAgents * settings.rounds, duration);
               toast.success('Conversation complete!');
             }
           }
@@ -227,7 +227,7 @@ export const ChatView = () => {
             setConversationComplete(true);
             // Log completion analytics
             const duration = generationStartTime.current ? Date.now() - generationStartTime.current : 0;
-            analyticsRepository.logChatCompleteByChartId(chatId, settings.numberOfAgents, duration);
+            analyticsService.logChatCompleteByChartId(chatId, settings.numberOfAgents, duration);
             toast.success('Conversation complete!');
           }
         }
@@ -387,7 +387,7 @@ export const ChatView = () => {
                   // Log completion analytics for round-by-round skip
                   if (chatId) {
                     const duration = generationStartTime.current ? Date.now() - generationStartTime.current : 0;
-                    analyticsRepository.logChatCompleteByChartId(chatId, messages.length + settings.numberOfAgents * remainingRounds, duration);
+                    analyticsService.logChatCompleteByChartId(chatId, messages.length + settings.numberOfAgents * remainingRounds, duration);
                   }
                   toast.success('Conversation complete!');
                 } catch (error) {

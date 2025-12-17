@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BarChart3, Users, Calendar, TrendingUp, Download, RefreshCw } from 'lucide-react';
-import { analyticsRepository, ChatAnalytics, AnalyticsSummary } from '@/repositories/analyticsRepository';
+import { analyticsService, type ChatAnalytics, type AnalyticsSummary } from '@/services';
 import { format } from 'date-fns';
 
 export const AnalyticsTab = () => {
@@ -18,8 +18,8 @@ export const AnalyticsTab = () => {
     setLoading(true);
     try {
       const [analyticsData, summaryData] = await Promise.all([
-        analyticsRepository.getAll(200),
-        analyticsRepository.getSummary()
+        analyticsService.getAll(200),
+        analyticsService.getSummary()
       ]);
       setAnalytics(analyticsData);
       setSummary(summaryData);
