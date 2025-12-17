@@ -57,7 +57,7 @@ export interface LabsState {
   activeScenario: string;
   promptInputs: Record<string, string>;
   isAnalyzing: boolean;
-  analysisResults: AnalysisResults | null;
+  analysisResults: string;
   analyzerModel: string;
   formA: UseFormReturn<{ persona: string }>;
   formB: UseFormReturn<{ persona: string }>;
@@ -95,7 +95,7 @@ export interface LabsActions {
   setActiveScenario: (scenario: string) => void;
   setPromptInputs: (inputs: Record<string, string>) => void;
   setIsAnalyzing: (analyzing: boolean) => void;
-  setAnalysisResults: (results: AnalysisResults | null) => void;
+  setAnalysisResults: (results: string) => void;
   setAnalyzerModel: (model: string) => void;
   handleInputChange: (scenarioId: string, value: string) => void;
   getActiveApiKey: (modelIsFree?: boolean) => string | null;
