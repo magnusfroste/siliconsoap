@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, Plus, ArrowRight } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ConversationCompleteProps {
@@ -19,38 +19,32 @@ export const ConversationComplete = ({
   const navigate = useNavigate();
 
   return (
-    <Card className="mx-auto max-w-md p-6 text-center space-y-4 border-dashed">
-      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-        <MessageCircle className="h-5 w-5" />
-        <span className="text-sm font-medium">Conversation Complete</span>
-      </div>
-      
-      <p className="text-sm text-muted-foreground">
-        {totalRounds} round{totalRounds !== 1 ? 's' : ''} completed
-      </p>
-
-      <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-        {participationMode !== 'spectator' && canContinue && onContinue && (
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={onContinue}
-            className="gap-2"
-          >
-            <ArrowRight className="h-4 w-4" />
-            Continue Chatting
-          </Button>
-        )}
+    <Card className="mx-auto max-w-fit px-4 py-2 border-dashed">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <MessageCircle className="h-4 w-4 shrink-0" />
+        <span className="text-xs">{totalRounds} round{totalRounds !== 1 ? 's' : ''} complete</span>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => navigate('/new')}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Conversation
-        </Button>
+        <div className="flex gap-1.5">
+          {participationMode !== 'spectator' && canContinue && onContinue && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={onContinue}
+              className="h-7 text-xs px-2"
+            >
+              Continue
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/new')}
+            className="h-7 text-xs px-2"
+          >
+            New
+          </Button>
+        </div>
       </div>
     </Card>
   );
