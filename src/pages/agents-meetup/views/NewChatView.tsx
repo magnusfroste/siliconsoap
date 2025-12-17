@@ -47,6 +47,15 @@ export const NewChatView = () => {
     acc[model.provider].push(model);
     return acc;
   }, {} as Record<string, typeof state.availableModels>);
+  
+  console.log('[NewChatView] Models state:', {
+    availableModels: state.availableModels.length,
+    loadingModels: state.loadingModels,
+    modelsByProviderKeys: Object.keys(modelsByProvider),
+    agentAModel: state.agentAModel,
+    agentBModel: state.agentBModel,
+    agentCModel: state.agentCModel
+  });
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
 
