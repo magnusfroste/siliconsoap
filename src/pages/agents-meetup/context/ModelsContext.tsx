@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { toast } from '@/hooks/use-toast';
 
@@ -24,15 +24,21 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [agentCModel, setAgentCModel] = useState('');
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  
+  // Use ref for initialization tracking to prevent race conditions in StrictMode
+  const initializedRef = useRef(false);
 
   // Fetch models and set defaults on mount
   useEffect(() => {
-    if (initialized) return;
+    // Check ref synchronously BEFORE any async work
+    if (initializedRef.current) return;
+    initializedRef.current = true; // Set immediately to block concurrent runs
     
     const loadModels = async () => {
       try {
+        console.log('[ModelsContext] Fetching curated models...');
         const models = await getEnabledModels();
+        console.log('[ModelsContext] Fetched models:', models.length);
         
         if (models.length === 0) {
           toast({
@@ -41,7 +47,6 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             variant: "destructive",
           });
           setLoadingModels(false);
-          setInitialized(true);
           return;
         }
         
@@ -52,15 +57,22 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const defaultB = models.find(m => m.default_for_agent === 'B');
         const defaultC = models.find(m => m.default_for_agent === 'C');
         
+        console.log('[ModelsContext] Database defaults:', {
+          A: defaultA?.model_id,
+          B: defaultB?.model_id,
+          C: defaultC?.model_id
+        });
+        
         // Use database defaults, or fall back to first available models
         const modelA = defaultA?.model_id || models[0]?.model_id || '';
         const modelB = defaultB?.model_id || models[Math.min(1, models.length - 1)]?.model_id || '';
         const modelC = defaultC?.model_id || models[Math.min(2, models.length - 1)]?.model_id || '';
         
+        console.log('[ModelsContext] Setting models:', { modelA, modelB, modelC });
+        
         setAgentAModel(modelA);
         setAgentBModel(modelB);
         setAgentCModel(modelC);
-        setInitialized(true);
       } catch (error) {
         console.error("[ModelsContext] Failed to fetch curated models:", error);
         toast({
@@ -74,7 +86,7 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
     
     loadModels();
-  }, [initialized]);
+  }, []); // Empty deps - run only on mount
 
   const refreshModels = async () => {
     setLoadingModels(true);
