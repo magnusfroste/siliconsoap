@@ -23,6 +23,7 @@ import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
 
@@ -280,17 +281,41 @@ export const ChatView = () => {
             const settings = chat.settings as any;
             const mode = settings?.participationMode || 'jump-in';
             const modeConfig = {
-              'spectator': { label: 'Spectator', icon: Eye, variant: 'secondary' as const },
-              'jump-in': { label: 'Jump In', icon: MessageSquare, variant: 'default' as const },
-              'round-by-round': { label: 'Round by Round', icon: Users, variant: 'outline' as const }
+              'spectator': { 
+                label: 'Spectator', 
+                icon: Eye, 
+                variant: 'secondary' as const,
+                tooltip: 'Watch only mode. Agents will complete all rounds automatically without any input from you.'
+              },
+              'jump-in': { 
+                label: 'Jump In', 
+                icon: MessageSquare, 
+                variant: 'default' as const,
+                tooltip: 'Comment after agents finish. Once all rounds complete, you can add your thoughts and agents will respond.'
+              },
+              'round-by-round': { 
+                label: 'Round by Round', 
+                icon: Users, 
+                variant: 'outline' as const,
+                tooltip: 'Interactive mode. The conversation pauses after each round, letting you contribute or skip to the next round.'
+              }
             };
             const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
             const Icon = config.icon;
             return (
-              <Badge variant={config.variant} className="shrink-0 gap-1.5">
-                <Icon className="h-3 w-3" />
-                {config.label}
-              </Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
+                      <Icon className="h-3 w-3" />
+                      {config.label}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p>{config.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             );
           })()}
         </div>
