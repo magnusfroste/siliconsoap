@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Github, Globe, Sparkles, TrendingUp, Brain, Database, Zap, Linkedin, Twitter } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const contextWindowData = [
   { year: '2020', model: 'GPT-3', tokens: 2048, label: '2K', color: 'hsl(var(--muted-foreground))' },
@@ -35,6 +36,12 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export const AboutView = () => {
+  usePageMeta({
+    title: 'About SiliconSoap - Founded by Magnus Froste',
+    description: 'Learn about SiliconSoap\'s mission to help evaluate AI models through real conversations. Founded by Magnus Froste to explore the AI revolution.',
+    canonicalPath: '/about',
+  });
+
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <div className="space-y-8">

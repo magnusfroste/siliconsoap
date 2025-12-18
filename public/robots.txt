@@ -1,13 +1,21 @@
-
 User-agent: *
 Allow: /
 
-# Important pages
+# Crawlable public pages
+Allow: /
+Allow: /new
+Allow: /explore
+Allow: /learn
+Allow: /models
 Allow: /about
-Allow: /projects
-Allow: /expertise
-Allow: /contact
+Allow: /shared/
 
-# Add your sitemap URL once you have one
-Sitemap: https://magnusfroste.com/sitemap.xml
+# Block private/auth routes
+Disallow: /chat/
+Disallow: /profile
+Disallow: /agent-profiles
+Disallow: /settings
+Disallow: /admin
+Disallow: /auth
 
+Sitemap: https://www.froste.eu/sitemap.xml

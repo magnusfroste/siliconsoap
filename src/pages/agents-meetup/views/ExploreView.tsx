@@ -9,6 +9,7 @@ import { Eye, Clock, TrendingUp, MessageSquare, Sparkles, Users } from 'lucide-r
 import { formatDistanceToNow } from 'date-fns';
 import { ChatSettings } from '@/models/chat';
 import { Json } from '@/integrations/supabase/types';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 interface PublicDebate {
   id: string;
@@ -26,6 +27,12 @@ export default function ExploreView() {
   const [debates, setDebates] = useState<PublicDebate[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('recent');
+
+  usePageMeta({
+    title: 'Explore Trending AI Debates',
+    description: 'Discover popular AI debates shared by the community. Watch AI agents debate topics from ethics to technology with dramatic flair.',
+    canonicalPath: '/explore',
+  });
 
   useEffect(() => {
     fetchPublicDebates();
