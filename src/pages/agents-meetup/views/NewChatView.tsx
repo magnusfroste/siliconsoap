@@ -19,10 +19,17 @@ import { creditsService } from '@/services';
 import { analyticsService } from '@/services';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import { suggestedTopicsByScenario, getRandomTopics } from '../constants/suggestedTopics';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import type { ChatSettings } from '@/models/chat';
 
 export const NewChatView = () => {
   const isMounted = useRef(true);
+
+  usePageMeta({
+    title: 'Start an AI Debate',
+    description: 'Create a new AI debate and watch multiple AI agents discuss your topic from different perspectives. Choose from various models and personas.',
+    canonicalPath: '/new',
+  });
   
   // Cleanup on unmount
   useEffect(() => {

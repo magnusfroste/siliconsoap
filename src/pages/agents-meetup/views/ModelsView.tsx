@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen } from 'lucide-react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { ModelCard } from '@/components/ModelCard';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export const ModelsView = () => {
   const [models, setModels] = useState<CuratedModel[]>([]);
@@ -15,6 +16,12 @@ export const ModelsView = () => {
   const [search, setSearch] = useState('');
   const [providerFilter, setProviderFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'provider'>('provider');
+
+  usePageMeta({
+    title: 'Compare AI Models for Debates',
+    description: 'Explore our curated selection of AI models from Meta, Google, DeepSeek, and more. Learn about each model\'s strengths, speed, and ideal use cases.',
+    canonicalPath: '/models',
+  });
 
   useEffect(() => {
     const loadModels = async () => {

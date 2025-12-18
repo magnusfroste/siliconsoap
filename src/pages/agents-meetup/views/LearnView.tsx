@@ -6,6 +6,7 @@ import { LearnTabTypes } from './learn/LearnTabTypes';
 import { LearnTabOpenWeight } from './learn/LearnTabOpenWeight';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
 import { LearnTabGlossary } from './learn/LearnTabGlossary';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 const VALID_TABS = ['basics', 'types', 'open-weight', 'self-hosting', 'glossary'];
 
@@ -13,6 +14,12 @@ export const LearnView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
   const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'basics';
+
+  usePageMeta({
+    title: 'Learn About AI Models - Llama, DeepSeek, Gemma',
+    description: 'Master AI model fundamentals. Learn about instruct vs reasoning models, open-weight advantages, and how to self-host AI with LM Studio and Ollama.',
+    canonicalPath: '/learn',
+  });
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
