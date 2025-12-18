@@ -2,6 +2,7 @@ import { ConversationMessage } from '../types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { Badge } from '@/components/ui/badge';
+import { QuoteShareButton } from './QuoteShareButton';
 
 interface ChatMessageProps {
   message: ConversationMessage;
@@ -9,6 +10,8 @@ interface ChatMessageProps {
   totalMessages: number;
   showTimeline?: boolean;
   isPlaying?: boolean;
+  chatUrl?: string;
+  showQuoteShare?: boolean;
 }
 
 const agentStyles = {
@@ -29,7 +32,15 @@ const agentStyles = {
   }
 };
 
-export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline = true, isPlaying = false }: ChatMessageProps) => {
+export const ChatMessage = ({ 
+  message, 
+  messageIndex, 
+  totalMessages, 
+  showTimeline = true, 
+  isPlaying = false,
+  chatUrl,
+  showQuoteShare = false
+}: ChatMessageProps) => {
   const style = agentStyles[message.agent as keyof typeof agentStyles] || {
     borderClass: 'border-border',
     iconBgClass: 'bg-muted text-foreground',
@@ -40,7 +51,7 @@ export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline
   const isLastMessage = messageIndex === totalMessages - 1;
 
   return (
-    <div className="relative pl-8 animate-fade-in" style={{ animationDelay: `${messageIndex * 0.1}s` }}>
+    <div className="relative pl-8 animate-fade-in group" style={{ animationDelay: `${messageIndex * 0.1}s` }}>
       {/* Timeline Connector */}
       {showTimeline && (
         <>
@@ -72,6 +83,13 @@ export const ChatMessage = ({ message, messageIndex, totalMessages, showTimeline
             <Badge variant="secondary" className="text-xs">
               {message.persona}
             </Badge>
+
+            {/* Quote Share Button */}
+            {showQuoteShare && (
+              <div className="ml-auto">
+                <QuoteShareButton message={message} chatUrl={chatUrl} />
+              </div>
+            )}
           </div>
         </CardHeader>
         

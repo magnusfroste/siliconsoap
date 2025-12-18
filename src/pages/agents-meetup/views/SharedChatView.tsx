@@ -1,15 +1,46 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useSharedChat } from '../hooks/useSharedChat';
 import { ChatMessage } from '../components/ChatMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
+import { SocialShareButtons } from '../components/SocialShareButtons';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Trash2, Lock } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
+
+  // Dynamic meta tags for OG
+  useEffect(() => {
+    if (chat) {
+      // Update document title
+      document.title = `${chat.title} | SiliconSoap`;
+      
+      // Update meta tags dynamically
+      updateMetaTag('og:title', chat.title);
+      updateMetaTag('og:description', chat.prompt);
+      updateMetaTag('og:url', window.location.href);
+      updateMetaTag('og:image', getOgImageUrl(shareId || ''));
+      updateMetaTag('twitter:title', chat.title);
+      updateMetaTag('twitter:description', chat.prompt);
+      updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
+    }
+
+    return () => {
+      // Reset on unmount
+      document.title = 'SiliconSoap - Where AI Debates Get Dramatic';
+    };
+  }, [chat, shareId]);
+
+  const getOgImageUrl = (shareId: string) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    return `${supabaseUrl}/functions/v1/generate-og-image?shareId=${shareId}`;
+  };
+
+  const shareUrl = window.location.href;
 
   if (loading) {
     return (
@@ -35,7 +66,7 @@ export const SharedChatView = () => {
         description: "This chat hasn't been shared publicly."
       },
       not_found: {
-        icon: Sparkles,
+        icon: Droplets,
         title: 'Chat Not Found',
         description: 'This link appears to be invalid.'
       }
@@ -72,18 +103,30 @@ export const SharedChatView = () => {
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <div>
-              <h1 className="text-lg font-semibold">{chat.title}</h1>
-              <p className="text-xs text-muted-foreground">Shared via Agents Meetup</p>
+        <div className="container max-w-5xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Droplets className="h-5 w-5 text-primary" />
+              <div>
+                <h1 className="text-lg font-semibold">{chat.title}</h1>
+                <p className="text-xs text-muted-foreground">Shared via SiliconSoap</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Social Share Buttons */}
+              <SocialShareButtons 
+                url={shareUrl} 
+                title={chat.title}
+                description={chat.prompt}
+              />
+              
+              <Button onClick={() => navigate('/')} className="gap-2">
+                Start Your Own
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          <Button onClick={() => navigate('/')} className="gap-2">
-            Start Your Own
-            <ArrowRight className="h-4 w-4" />
-          </Button>
         </div>
       </header>
 
@@ -110,6 +153,8 @@ export const SharedChatView = () => {
                       message={message}
                       messageIndex={messages.indexOf(message)}
                       totalMessages={messages.length}
+                      chatUrl={shareUrl}
+                      showQuoteShare={true}
                     />
                   ))}
                 </div>
@@ -125,7 +170,7 @@ export const SharedChatView = () => {
             Want to create your own multi-agent conversations?
           </p>
           <Button onClick={() => navigate('/')} size="lg" className="gap-2">
-            <Sparkles className="h-4 w-4" />
+            <Droplets className="h-4 w-4" />
             Start Free Conversation
           </Button>
         </div>
@@ -133,3 +178,23 @@ export const SharedChatView = () => {
     </div>
   );
 };
+
+// Helper to update meta tags
+function updateMetaTag(property: string, content: string) {
+  let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+  if (!meta) {
+    meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement;
+  }
+  if (meta) {
+    meta.setAttribute('content', content);
+  } else {
+    meta = document.createElement('meta');
+    if (property.startsWith('og:')) {
+      meta.setAttribute('property', property);
+    } else {
+      meta.setAttribute('name', property);
+    }
+    meta.setAttribute('content', content);
+    document.head.appendChild(meta);
+  }
+}
