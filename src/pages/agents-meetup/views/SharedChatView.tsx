@@ -13,6 +13,9 @@ import { useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+const BASE_URL = 'https://www.froste.eu';
+const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
+
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
@@ -27,7 +30,7 @@ export const SharedChatView = () => {
     }
   }, [shareId]);
 
-  // Dynamic meta tags for OG
+  // Dynamic meta tags for OG and DiscussionForumPosting schema
   useEffect(() => {
     if (chat) {
       // Update document title
@@ -41,13 +44,17 @@ export const SharedChatView = () => {
       updateMetaTag('twitter:title', chat.title);
       updateMetaTag('twitter:description', chat.prompt);
       updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
+
+      // Add DiscussionForumPosting schema
+      updateDiscussionSchema(chat, messages, shareId || '');
     }
 
     return () => {
       // Reset on unmount
       document.title = 'SiliconSoap - Where AI Debates Get Dramatic';
+      removeDiscussionSchema();
     };
-  }, [chat, shareId]);
+  }, [chat, messages, shareId]);
 
   const getOgImageUrl = (shareId: string) => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -273,5 +280,80 @@ function updateMetaTag(property: string, content: string) {
     }
     meta.setAttribute('content', content);
     document.head.appendChild(meta);
+  }
+}
+
+// Helper to update DiscussionForumPosting schema
+function updateDiscussionSchema(chat: any, messages: any[], shareId: string) {
+  removeDiscussionSchema();
+
+  // Get unique agents from messages
+  const agents = [...new Set(messages.map((m: any) => m.agent))];
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'DiscussionForumPosting',
+    '@id': `${BASE_URL}/shared/${shareId}`,
+    'headline': chat.title,
+    'articleBody': chat.prompt,
+    'url': `${BASE_URL}/shared/${shareId}`,
+    'datePublished': chat.created_at,
+    'dateModified': chat.updated_at || chat.created_at,
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'SiliconSoap',
+      'url': BASE_URL,
+      'logo': {
+        '@type': 'ImageObject',
+        'url': `${BASE_URL}/og-image.png`
+      }
+    },
+    'about': {
+      '@type': 'Thing',
+      'name': chat.title,
+      'description': chat.prompt
+    },
+    'author': agents.map((agent: string) => ({
+      '@type': 'Person',
+      'name': agent,
+      'description': `AI Agent in SiliconSoap debate`
+    })),
+    'interactionStatistic': [
+      {
+        '@type': 'InteractionCounter',
+        'interactionType': 'https://schema.org/ViewAction',
+        'userInteractionCount': chat.view_count || 0
+      },
+      {
+        '@type': 'InteractionCounter',
+        'interactionType': 'https://schema.org/CommentAction',
+        'userInteractionCount': messages.length
+      }
+    ],
+    'comment': messages.slice(0, 10).map((msg: any, index: number) => ({
+      '@type': 'Comment',
+      'position': index + 1,
+      'author': {
+        '@type': 'Person',
+        'name': msg.agent
+      },
+      'text': msg.message.substring(0, 500) + (msg.message.length > 500 ? '...' : ''),
+      'dateCreated': msg.created_at
+    })),
+    'commentCount': messages.length
+  };
+
+  const script = document.createElement('script');
+  script.id = SCHEMA_SCRIPT_ID;
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
+}
+
+// Helper to remove DiscussionForumPosting schema
+function removeDiscussionSchema() {
+  const existing = document.getElementById(SCHEMA_SCRIPT_ID);
+  if (existing) {
+    existing.remove();
   }
 }
