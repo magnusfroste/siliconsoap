@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Trophy, ArrowRight, Droplets, BookOpen } from 'lucide-react';
+import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { FeaturedDebates } from '@/components/FeaturedDebates';
 
 export const Landing = () => {
   const navigate = useNavigate();
@@ -100,6 +101,9 @@ export const Landing = () => {
           ))}
         </div>
       </section>
+
+      {/* Featured Debates Section */}
+      <FeaturedDebates />
 
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-12 relative z-10">
