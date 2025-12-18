@@ -65,6 +65,7 @@ export type Database = {
           title: string
           updated_at: string | null
           user_id: string | null
+          view_count: number
         }
         Insert: {
           created_at?: string | null
@@ -78,6 +79,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string | null
+          view_count?: number
         }
         Update: {
           created_at?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string | null
+          view_count?: number
         }
         Relationships: []
       }
@@ -425,6 +428,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_chat_view_count: {
+        Args: { p_share_id: string }
+        Returns: undefined
       }
     }
     Enums: {
