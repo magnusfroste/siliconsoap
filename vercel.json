@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/prerender/:shareId", "destination": "/api/prerender/[shareId]" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm run build",
