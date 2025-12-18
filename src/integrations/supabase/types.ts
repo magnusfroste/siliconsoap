@@ -204,6 +204,30 @@ export type Database = {
           },
         ]
       }
+      chat_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          share_id: string
+          visitor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          share_id: string
+          visitor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          share_id?: string
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       curated_models: {
         Row: {
           avoid_cases: string[] | null
