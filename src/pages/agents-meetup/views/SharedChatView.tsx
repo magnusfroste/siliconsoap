@@ -6,10 +6,12 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
@@ -119,9 +121,52 @@ export const SharedChatView = () => {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Droplets className="h-5 w-5 text-primary" />
-              <div>
-                <h1 className="text-lg font-semibold">{chat.title}</h1>
-                <p className="text-xs text-muted-foreground">Shared via SiliconSoap</p>
+              <div className="flex items-center gap-2">
+                <div>
+                  <h1 className="text-lg font-semibold">{chat.title}</h1>
+                  <p className="text-xs text-muted-foreground">Shared via SiliconSoap</p>
+                </div>
+                {(() => {
+                  const settings = chat.settings as any;
+                  const mode = settings?.participationMode || 'jump-in';
+                  const modeConfig = {
+                    'spectator': { 
+                      label: 'Spectator', 
+                      icon: Eye, 
+                      variant: 'secondary' as const,
+                      tooltip: 'Watch only mode. Agents completed all rounds automatically.'
+                    },
+                    'jump-in': { 
+                      label: 'Jump In', 
+                      icon: MessageSquare, 
+                      variant: 'default' as const,
+                      tooltip: 'Comment mode. The creator could add thoughts after agents finished.'
+                    },
+                    'round-by-round': { 
+                      label: 'Round by Round', 
+                      icon: Users, 
+                      variant: 'outline' as const,
+                      tooltip: 'Interactive mode. The creator could participate between rounds.'
+                    }
+                  };
+                  const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
+                  const Icon = config.icon;
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
+                            <Icon className="h-3 w-3" />
+                            {config.label}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs">
+                          <p>{config.tooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                })()}
               </div>
             </div>
             
