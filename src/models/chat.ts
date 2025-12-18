@@ -33,6 +33,7 @@ export interface Chat {
   share_id?: string;
   is_public?: boolean;
   deleted_at?: string | null;
+  view_count?: number;
   created_at?: string;
   updated_at?: string;
 }
