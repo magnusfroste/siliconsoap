@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { Loader2, Share2 } from 'lucide-react';
+import { Loader2, Share2, Eye, MessageSquare, Users } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
 import { useCredits } from '../hooks/useCredits';
@@ -22,6 +22,7 @@ import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
 
@@ -271,9 +272,28 @@ export const ChatView = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Chat Title with Share Button */}
+      {/* Chat Title with Participation Mode Badge and Share Button */}
       <div className="border-b px-4 py-3 pr-16 flex items-center justify-between gap-4">
-        <h2 className="font-semibold truncate flex-1">{chat.prompt}</h2>
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <h2 className="font-semibold truncate">{chat.prompt}</h2>
+          {(() => {
+            const settings = chat.settings as any;
+            const mode = settings?.participationMode || 'jump-in';
+            const modeConfig = {
+              'spectator': { label: 'Spectator', icon: Eye, variant: 'secondary' as const },
+              'jump-in': { label: 'Jump In', icon: MessageSquare, variant: 'default' as const },
+              'round-by-round': { label: 'Round by Round', icon: Users, variant: 'outline' as const }
+            };
+            const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
+            const Icon = config.icon;
+            return (
+              <Badge variant={config.variant} className="shrink-0 gap-1.5">
+                <Icon className="h-3 w-3" />
+                {config.label}
+              </Badge>
+            );
+          })()}
+        </div>
         {!isGuest && messages.length > 0 && (
           <Button
             variant="outline"
