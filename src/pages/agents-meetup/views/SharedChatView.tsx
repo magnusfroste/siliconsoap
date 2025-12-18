@@ -4,10 +4,10 @@ import { useSharedChat } from '../hooks/useSharedChat';
 import { ChatMessage } from '../components/ChatMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
+import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
 import { Droplets, ArrowRight, Trash2, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
@@ -139,6 +139,15 @@ export const SharedChatView = () => {
             <p className="text-foreground">{chat.prompt}</p>
           </div>
 
+          {/* Reaction Buttons */}
+          {shareId && (
+            <div className="flex items-center justify-between flex-wrap gap-4 p-4 rounded-lg border bg-muted/10">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">React to this debate:</span>
+              </div>
+              <ReactionButtons shareId={shareId} />
+            </div>
+          )}
           {/* Messages by Round */}
           {Object.entries(messagesByRound)
             .sort(([a], [b]) => Number(a) - Number(b))
