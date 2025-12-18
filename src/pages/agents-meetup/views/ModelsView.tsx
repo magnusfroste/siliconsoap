@@ -21,6 +21,10 @@ export const ModelsView = () => {
     title: 'Compare AI Models for Debates',
     description: 'Explore our curated selection of AI models from Meta, Google, DeepSeek, and more. Learn about each model\'s strengths, speed, and ideal use cases.',
     canonicalPath: '/models',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Models', path: '/models' },
+    ],
   });
 
   useEffect(() => {

@@ -32,6 +32,10 @@ export default function ExploreView() {
     title: 'Explore Trending AI Debates',
     description: 'Discover popular AI debates shared by the community. Watch AI agents debate topics from ethics to technology with dramatic flair.',
     canonicalPath: '/explore',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Explore', path: '/explore' },
+    ],
   });
 
   useEffect(() => {

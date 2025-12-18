@@ -1,25 +1,33 @@
 import { useEffect } from 'react';
 
+interface BreadcrumbItem {
+  name: string;
+  path: string;
+}
+
 interface PageMetaOptions {
   title: string;
   description: string;
   canonicalPath?: string;
   ogImage?: string;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 const BASE_URL = 'https://www.froste.eu';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const SITE_NAME = 'SiliconSoap';
+const BREADCRUMB_SCRIPT_ID = 'breadcrumb-schema';
 
 /**
  * Hook to dynamically update page meta tags for SEO
- * Updates document title, meta description, canonical URL, and OG tags
+ * Updates document title, meta description, canonical URL, OG tags, and breadcrumb schema
  */
 export const usePageMeta = ({
   title,
   description,
   canonicalPath = '',
   ogImage = DEFAULT_OG_IMAGE,
+  breadcrumbs,
 }: PageMetaOptions) => {
   useEffect(() => {
     // Update document title
@@ -44,6 +52,11 @@ export const usePageMeta = ({
     updateMetaTag('twitter:description', description);
     updateMetaTag('twitter:image', ogImage);
 
+    // Update breadcrumb schema
+    if (breadcrumbs && breadcrumbs.length > 0) {
+      updateBreadcrumbSchema(breadcrumbs);
+    }
+
     // Cleanup: restore defaults on unmount
     return () => {
       document.title = 'SiliconSoap - Where AI Debates Get Dramatic';
@@ -56,8 +69,9 @@ export const usePageMeta = ({
       updateMetaTag('twitter:title', 'SiliconSoap - Where AI Debates Get Dramatic');
       updateMetaTag('twitter:description', 'Watch AI agents clash, collaborate, and debate with dramatic flair. The ultimate platform for multi-agent conversations where tech meets soap opera.');
       updateMetaTag('twitter:image', DEFAULT_OG_IMAGE);
+      removeBreadcrumbSchema();
     };
-  }, [title, description, canonicalPath, ogImage]);
+  }, [title, description, canonicalPath, ogImage, breadcrumbs]);
 };
 
 function updateMetaTag(name: string, content: string, attribute: 'name' | 'property' = 'name') {
@@ -78,6 +92,34 @@ function updateLinkTag(rel: string, href: string) {
     document.head.appendChild(element);
   }
   element.href = href;
+}
+
+function updateBreadcrumbSchema(breadcrumbs: BreadcrumbItem[]) {
+  removeBreadcrumbSchema();
+  
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': breadcrumbs.map((item, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'name': item.name,
+      'item': `${BASE_URL}${item.path}`,
+    })),
+  };
+
+  const script = document.createElement('script');
+  script.id = BREADCRUMB_SCRIPT_ID;
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
+}
+
+function removeBreadcrumbSchema() {
+  const existing = document.getElementById(BREADCRUMB_SCRIPT_ID);
+  if (existing) {
+    existing.remove();
+  }
 }
 
 export default usePageMeta;
