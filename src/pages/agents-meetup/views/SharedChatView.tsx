@@ -6,7 +6,7 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
@@ -124,7 +124,18 @@ export const SharedChatView = () => {
               <div className="flex items-center gap-2">
                 <div>
                   <h1 className="text-lg font-semibold">{chat.title}</h1>
-                  <p className="text-xs text-muted-foreground">Shared via SiliconSoap</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <span>Shared via SiliconSoap</span>
+                    {chat.view_count !== undefined && chat.view_count > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <EyeView className="h-3 w-3" />
+                          {chat.view_count.toLocaleString()} {chat.view_count === 1 ? 'view' : 'views'}
+                        </span>
+                      </>
+                    )}
+                  </p>
                 </div>
                 {(() => {
                   const settings = chat.settings as any;
