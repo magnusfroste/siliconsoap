@@ -8,10 +8,22 @@ import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
 import { Droplets, ArrowRight, Trash2, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
+import { useRef } from 'react';
+
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
+  const viewTrackedRef = useRef(false);
+
+  // Track view count once
+  useEffect(() => {
+    if (shareId && !viewTrackedRef.current) {
+      viewTrackedRef.current = true;
+      supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
+    }
+  }, [shareId]);
 
   // Dynamic meta tags for OG
   useEffect(() => {
