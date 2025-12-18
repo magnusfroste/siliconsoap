@@ -13,7 +13,8 @@ import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2 } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { handleInitialRound, handleAdditionalRounds, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
+import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
+import { useCredits } from '../hooks/useCredits';
 import { toast } from 'sonner';
 import { ConversationMessage } from '../types';
 import { scenarioTypes } from '../constants';
@@ -30,6 +31,7 @@ export const ChatView = () => {
   const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
+  const { hasCredits, useCredit } = useCredits(user?.id);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
@@ -349,17 +351,14 @@ export const ChatView = () => {
                 setIsGenerating(true);
                 
                 try {
-                  // Get the last agent responses from messages
-                  const agentMessages = messages.filter(m => !m.isHuman);
-                  const agentAResponse = agentMessages.find(m => m.agent === 'Agent A')?.message || '';
-                  const agentBResponse = agentMessages.find(m => m.agent === 'Agent B')?.message || '';
+                  // In round-by-round mode, run only one round at a time
+                  const nextRound = currentRoundInProgress;
                   
-                  // Continue from current round to end
-                  const remainingRounds = settings.rounds - currentRoundInProgress + 1;
-                  if (remainingRounds > 0) {
-                    await handleAdditionalRounds(
+                  if (nextRound <= settings.rounds) {
+                    await handleSingleRound(
                       chat.prompt,
                       scenario,
+                      nextRound,
                       settings.rounds,
                       settings.numberOfAgents,
                       settings.models.agentA,
@@ -368,8 +367,6 @@ export const ChatView = () => {
                       settings.personas.agentA,
                       settings.personas.agentB,
                       settings.personas.agentC,
-                      agentAResponse,
-                      agentBResponse,
                       messages,
                       state.apiKey || '',
                       settings.responseLength,
@@ -379,17 +376,23 @@ export const ChatView = () => {
                         await saveMessage(chatId, message);
                       }
                     );
+                    
+                    setCurrentAgent(null);
+                    
+                    // Check if there are more rounds
+                    if (nextRound < settings.rounds) {
+                      // Pause again for next round
+                      setCurrentRoundInProgress(nextRound + 1);
+                      setWaitingForUserInput(true);
+                    } else {
+                      // All rounds complete
+                      setCurrentRoundInProgress(settings.rounds + 1);
+                      setConversationComplete(true);
+                      const duration = generationStartTime.current ? Date.now() - generationStartTime.current : 0;
+                      analyticsService.logChatCompleteByChartId(chatId, messages.length + settings.numberOfAgents, duration);
+                      toast.success('Conversation complete!');
+                    }
                   }
-                  
-                  setCurrentAgent(null);
-                  setCurrentRoundInProgress(settings.rounds + 1);
-                  setConversationComplete(true);
-                  // Log completion analytics for round-by-round skip
-                  if (chatId) {
-                    const duration = generationStartTime.current ? Date.now() - generationStartTime.current : 0;
-                    analyticsService.logChatCompleteByChartId(chatId, messages.length + settings.numberOfAgents * remainingRounds, duration);
-                  }
-                  toast.success('Conversation complete!');
                 } catch (error) {
                   console.error('Error continuing rounds:', error);
                   toast.error('Failed to continue conversation');
@@ -437,6 +440,13 @@ export const ChatView = () => {
             onSend={async (userMessage) => {
               if (!chatId || !chat) return;
               
+              // Deduct credit for user follow-up
+              const creditUsed = await useCredit();
+              if (!creditUsed) {
+                toast.error('No credits remaining. Please purchase more credits to continue.');
+                return;
+              }
+              
               setWaitingForUserInput(false);
               setIsGenerating(true);
               const settings = chat.settings as any;
@@ -457,20 +467,17 @@ export const ChatView = () => {
                 // Get current conversation including the user's new message
                 const currentConversation = [...messages, userMessageObj];
                 
-                // In round-by-round mode, continue remaining rounds after user input
+                // In round-by-round mode, run only ONE round at a time after user input
                 if (participationMode === 'round-by-round' && currentRoundInProgress <= settings.rounds) {
                   const scenario = scenarioTypes.find(s => s.id === chat.scenario_id);
                   if (!scenario) throw new Error('Scenario not found');
                   
-                  // Get the last agent responses
-                  const agentMessages = currentConversation.filter(m => !m.isHuman);
-                  const agentAResponse = agentMessages.find(m => m.agent === 'Agent A')?.message || '';
-                  const agentBResponse = agentMessages.find(m => m.agent === 'Agent B')?.message || '';
+                  const nextRound = currentRoundInProgress;
                   
-                  // Continue from current round
-                  await handleAdditionalRounds(
+                  await handleSingleRound(
                     chat.prompt,
                     scenario,
+                    nextRound,
                     settings.rounds,
                     settings.numberOfAgents,
                     settings.models.agentA,
@@ -479,8 +486,6 @@ export const ChatView = () => {
                     settings.personas.agentA,
                     settings.personas.agentB,
                     settings.personas.agentC,
-                    agentAResponse,
-                    agentBResponse,
                     currentConversation,
                     state.apiKey || '',
                     settings.responseLength,
@@ -491,11 +496,20 @@ export const ChatView = () => {
                     }
                   );
                   
-                  setCurrentRoundInProgress(settings.rounds + 1);
                   setCurrentAgent(null);
-                  setConversationComplete(true);
-                  setWantsToContinue(false);
-                  toast.success('Conversation complete!');
+                  
+                  // Check if there are more rounds
+                  if (nextRound < settings.rounds) {
+                    // Pause again for next round
+                    setCurrentRoundInProgress(nextRound + 1);
+                    setWaitingForUserInput(true);
+                  } else {
+                    // All rounds complete
+                    setCurrentRoundInProgress(settings.rounds + 1);
+                    setConversationComplete(true);
+                    setWantsToContinue(false);
+                    toast.success('Conversation complete!');
+                  }
                 } else {
                   // Jump-in mode or continuing after completion: trigger agents to respond to user's message
                   await handleUserFollowUp(

@@ -6,5 +6,6 @@ export {
   validateConversationRequirements,
   handleInitialRound,
   handleAdditionalRounds,
+  handleSingleRound,
   handleUserFollowUp
 } from '@/services/conversationService';

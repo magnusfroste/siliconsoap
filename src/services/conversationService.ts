@@ -327,6 +327,81 @@ export const handleInitialRound = async (
 };
 
 /**
+ * Handles a single round of conversation between agents (for round-by-round mode)
+ */
+export const handleSingleRound = async (
+  currentPrompt: string,
+  currentScenario: ScenarioType,
+  roundNumber: number,
+  totalRounds: number,
+  numberOfAgents: number,
+  agentAModel: string,
+  agentBModel: string,
+  agentCModel: string,
+  agentAPersona: string,
+  agentBPersona: string,
+  agentCPersona: string,
+  conversation: ConversationMessage[],
+  apiKey: string,
+  responseLength: ResponseLength,
+  onMessageReceived?: (message: ConversationMessage) => Promise<void>,
+  temperature?: number,
+  turnOrder: TurnOrder = 'sequential'
+): Promise<ConversationMessage[]> => {
+  const allMessages: ConversationMessage[] = [...conversation];
+  
+  const agentConfigs = [
+    { name: 'Agent A', model: agentAModel, persona: agentAPersona },
+    { name: 'Agent B', model: agentBModel, persona: agentBPersona },
+    { name: 'Agent C', model: agentCModel, persona: agentCPersona },
+  ].slice(0, numberOfAgents);
+  
+  console.log(`[conversationService] Running single round ${roundNumber} of ${totalRounds}`);
+  
+  const agentOrder = getAgentOrder(turnOrder, numberOfAgents, roundNumber);
+  
+  for (const agentName of agentOrder) {
+    const agentConfig = agentConfigs.find(a => a.name === agentName);
+    if (!agentConfig) continue;
+    
+    const conversationHistory = allMessages
+      .map(m => m.isHuman ? `User: ${m.message}` : `${m.agent}: ${m.message}`)
+      .join('\n\n');
+    
+    const continuationPrompt = createContinuationPrompt(
+      currentPrompt,
+      conversationHistory,
+      agentConfig.name,
+      roundNumber,
+      totalRounds,
+      currentScenario
+    );
+    
+    const response = await callOpenRouterViaEdge(
+      continuationPrompt,
+      agentConfig.model,
+      withLanguageInstruction(agentConfig.persona),
+      apiKey || null,
+      responseLength,
+      temperature
+    );
+    
+    const message: ConversationMessage = {
+      agent: agentConfig.name,
+      message: response,
+      model: agentConfig.model,
+      persona: agentConfig.persona
+    };
+    
+    allMessages.push(message);
+    if (onMessageReceived) await onMessageReceived(message);
+  }
+  
+  console.log(`[conversationService] Completed round ${roundNumber}, total messages: ${allMessages.length}`);
+  return allMessages;
+};
+
+/**
  * Handles additional rounds of conversation between agents
  */
 export const handleAdditionalRounds = async (
@@ -351,13 +426,13 @@ export const handleAdditionalRounds = async (
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
-  const allMessages: ConversationMessage[] = [...conversation];
-  
   const agentConfigs = [
     { name: 'Agent A', model: agentAModel, persona: agentAPersona },
     { name: 'Agent B', model: agentBModel, persona: agentBPersona },
     { name: 'Agent C', model: agentCModel, persona: agentCPersona },
   ].slice(0, numberOfAgents);
+  
+  let allMessages: ConversationMessage[] = [...conversation];
   
   for (let roundNum = 2; roundNum <= rounds; roundNum++) {
     console.log(`[conversationService] Starting round ${roundNum} of ${rounds}`);
@@ -369,7 +444,7 @@ export const handleAdditionalRounds = async (
       if (!agentConfig) continue;
       
       const conversationHistory = allMessages
-        .map(m => `${m.agent}: ${m.message}`)
+        .map(m => m.isHuman ? `User: ${m.message}` : `${m.agent}: ${m.message}`)
         .join('\n\n');
       
       const continuationPrompt = createContinuationPrompt(
