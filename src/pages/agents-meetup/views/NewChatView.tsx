@@ -29,6 +29,10 @@ export const NewChatView = () => {
     title: 'Start an AI Debate',
     description: 'Create a new AI debate and watch multiple AI agents discuss your topic from different perspectives. Choose from various models and personas.',
     canonicalPath: '/new',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'New Debate', path: '/new' },
+    ],
   });
   
   // Cleanup on unmount

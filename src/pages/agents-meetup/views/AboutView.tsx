@@ -40,6 +40,10 @@ export const AboutView = () => {
     title: 'About SiliconSoap - Founded by Magnus Froste',
     description: 'Learn about SiliconSoap\'s mission to help evaluate AI models through real conversations. Founded by Magnus Froste to explore the AI revolution.',
     canonicalPath: '/about',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'About', path: '/about' },
+    ],
   });
 
   return (

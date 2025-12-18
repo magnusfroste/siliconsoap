@@ -19,6 +19,10 @@ export const LearnView = () => {
     title: 'Learn About AI Models - Llama, DeepSeek, Gemma',
     description: 'Master AI model fundamentals. Learn about instruct vs reasoning models, open-weight advantages, and how to self-host AI with LM Studio and Ollama.',
     canonicalPath: '/learn',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Learn', path: '/learn' },
+    ],
   });
 
   const handleTabChange = (value: string) => {
