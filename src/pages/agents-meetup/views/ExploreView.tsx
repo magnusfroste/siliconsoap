@@ -43,6 +43,15 @@ export default function ExploreView() {
     fetchPublicDebates();
   }, [activeTab]);
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchPublicDebates(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
   const fetchPublicDebates = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
