@@ -24,10 +24,19 @@ export const SharedChatView = () => {
 
   // Track view count once
   useEffect(() => {
-    if (shareId && !viewTrackedRef.current) {
-      viewTrackedRef.current = true;
-      supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
-    }
+    const trackView = async () => {
+      if (shareId && !viewTrackedRef.current) {
+        viewTrackedRef.current = true;
+        console.log('[ViewTrack] Incrementing view count for:', shareId);
+        const { error } = await supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
+        if (error) {
+          console.error('[ViewTrack] Failed to increment view count:', error);
+        } else {
+          console.log('[ViewTrack] View count incremented successfully');
+        }
+      }
+    };
+    trackView();
   }, [shareId]);
 
   // Dynamic meta tags for OG and DiscussionForumPosting schema
