@@ -7,6 +7,7 @@ import { AgentAvatar } from './AgentAvatar';
 import { ModelSelector } from './ModelSelector';
 import { ProfileSelector } from './ProfileSelector';
 import { AgentCardProps } from './types';
+import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 
 export const AgentCard: React.FC<AgentCardProps> = ({
   agentLetter,
@@ -48,13 +49,17 @@ export const AgentCard: React.FC<AgentCardProps> = ({
                             isDevilsAdvocate || isYesAnd || 
                             isExtremePersonality || isMildPersonality;
   
+  // Generate the soap opera name based on agent letter and persona
+  const soapName = getAgentSoapName(`Agent ${agentLetter}`, agentPersona);
+  
   return (
     <Card className={`border-2 ${borderColorClass} shadow-md ${isDisabled ? 'opacity-50' : ''}`}>
       <CardHeader className="pb-2 px-3 pt-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <AgentAvatar agentLetter={agentLetter} iconBgClass={iconBgClass} />
-          Agent {agentLetter}
-          {isDisabled && <span className="text-xs text-gray-500 ml-2">(Disabled)</span>}
+          <span>{soapName}</span>
+          <span className="text-xs text-muted-foreground font-normal">({agentLetter})</span>
+          {isDisabled && <span className="text-xs text-muted-foreground ml-2">(Disabled)</span>}
         </CardTitle>
         
         {/* Expert Settings Badges */}
