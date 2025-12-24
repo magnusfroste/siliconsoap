@@ -17,7 +17,7 @@ export const AnalysisFloatingButton = ({
       onClick={onClick}
       size="lg"
       className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all animate-pulse hover:animate-none z-50"
-      title="🎭 Summon Judge Bot - Vem kan man lita på?"
+      title="🎭 Summon Judge Bot - Who can you trust?"
       disabled={isAnalyzing}
     >
       <div className="relative">
