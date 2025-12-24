@@ -8,7 +8,8 @@ import {
   SiliconRankAvatar, 
   ProfileStatsCards, 
   ProfileDebatesList, 
-  NextRankProgress 
+  NextRankProgress,
+  DisplayNameEditor
 } from '../components/profile';
 
 export const ProfileView = () => {
@@ -82,17 +83,17 @@ export const ProfileView = () => {
         <ProfileStatsCards stats={currentStats} />
       )}
 
-      {/* Two column layout for progress and debates */}
+      {/* Two column layout for display name and progress */}
       <div className="grid md:grid-cols-2 gap-6">
+        {/* Display Name Editor */}
+        <DisplayNameEditor userId={user.id} />
+
         {/* Next Rank Progress */}
         {statsLoading ? (
           <Skeleton className="h-48 rounded-lg" />
         ) : (
           <NextRankProgress currentRank={rank} stats={currentStats} />
         )}
-
-        {/* Shared Debates placeholder - will be full width below on mobile */}
-        <div className="md:hidden" />
       </div>
 
       {/* User's Public Debates */}
