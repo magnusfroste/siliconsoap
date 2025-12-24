@@ -8,23 +8,45 @@ import { Label } from '@/components/ui/label';
 import { Pencil, Check, X, Sparkles, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Silicon-themed nickname generator
-const SILICON_PREFIXES = [
-  'Silicon', 'Quantum', 'Neural', 'Cyber', 'Digital', 
-  'Nano', 'Binary', 'Logic', 'Synth', 'Pixel',
-  'Circuit', 'Data', 'Vector', 'Matrix', 'Cloud'
+// Soap Opera-themed nickname generator - "Silicon Soap"
+const SOAP_FIRST_NAMES = [
+  // Dallas
+  'J.R.', 'Sue Ellen', 'Bobby', 'Pamela', 'Miss Ellie', 'Jock', 'Lucy',
+  // Dynasty
+  'Alexis', 'Blake', 'Krystle', 'Fallon', 'Sammy Jo', 'Steven', 'Adam',
+  // Falcon Crest
+  'Angela', 'Melissa', 'Lance', 'Chase', 'Maggie', 'Cole',
+  // Friends
+  'Rachel', 'Monica', 'Ross', 'Chandler', 'Joey', 'Phoebe',
+  // Beverly Hills 90210
+  'Brenda', 'Brandon', 'Dylan', 'Kelly', 'Donna', 'Steve',
+  // Melrose Place
+  'Amanda', 'Sydney', 'Jake', 'Billy', 'Alison', 'Michael',
+  // Bold & Beautiful
+  'Brooke', 'Ridge', 'Stephanie', 'Taylor', 'Eric', 'Thorne',
+  // Desperate Housewives
+  'Bree', 'Gabrielle', 'Lynette', 'Susan', 'Edie'
 ];
 
-const SILICON_SUFFIXES = [
-  'Sage', 'Mind', 'Spark', 'Wave', 'Pulse',
-  'Node', 'Core', 'Flux', 'Bit', 'Byte',
-  'Chip', 'Bot', 'Zen', 'Pro', 'Max'
+const SOAP_LAST_NAMES = [
+  // Dallas
+  'Ewing',
+  // Dynasty
+  'Carrington', 'Colby',
+  // Falcon Crest
+  'Channing', 'Gioberti',
+  // Bold & Beautiful
+  'Forrester', 'Logan', 'Spencer',
+  // Y&R
+  'Abbott', 'Newman', 'Chancellor',
+  // General
+  'Van Der Berg', 'Lockridge', 'Capwell'
 ];
 
-const generateSiliconNick = (): string => {
-  const prefix = SILICON_PREFIXES[Math.floor(Math.random() * SILICON_PREFIXES.length)];
-  const suffix = SILICON_SUFFIXES[Math.floor(Math.random() * SILICON_SUFFIXES.length)];
-  return `${prefix}${suffix}`;
+const generateSoapNick = (): string => {
+  const firstName = SOAP_FIRST_NAMES[Math.floor(Math.random() * SOAP_FIRST_NAMES.length)];
+  const lastName = SOAP_LAST_NAMES[Math.floor(Math.random() * SOAP_LAST_NAMES.length)];
+  return `${firstName} ${lastName}`;
 };
 
 interface DisplayNameEditorProps {
@@ -96,7 +118,7 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
   };
 
   const handleGenerateNick = () => {
-    const newNick = generateSiliconNick();
+    const newNick = generateSoapNick();
     if (isEditing) {
       setEditValue(newNick);
     } else {
@@ -107,7 +129,7 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
   // Auto-generate nickname if user doesn't have one
   useEffect(() => {
     if (!isLoading && profile && !profile.display_name) {
-      const autoNick = generateSiliconNick();
+      const autoNick = generateSoapNick();
       updateMutation.mutate(autoNick);
     }
   }, [isLoading, profile]);
@@ -168,10 +190,10 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
                 size="sm" 
                 variant="ghost" 
                 onClick={handleGenerateNick}
-                title="Generate random Silicon nickname"
+                title="Generate random Soap Star name"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Random
+                🎭 Random
               </Button>
             </div>
           </div>
@@ -192,7 +214,7 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
                 variant="ghost" 
                 onClick={handleGenerateNick}
                 disabled={updateMutation.isPending}
-                title="Generate new Silicon nickname"
+                title="Generate new Soap Star name"
               >
                 <RefreshCw className={`h-4 w-4 ${updateMutation.isPending ? 'animate-spin' : ''}`} />
               </Button>
