@@ -11,6 +11,7 @@ import { ChatSettings } from '@/models/chat';
 import { Json } from '@/integrations/supabase/types';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProfileStats, calculateRank, SiliconRank } from '../hooks/useProfileStats';
+import { HallOfShame } from '../components/HallOfShame';
 
 interface UserRankInfo {
   displayName: string | null;
@@ -219,6 +220,12 @@ export default function ExploreView() {
             Refresh
           </Button>
         </div>
+
+        {/* Hall of Shame */}
+        <div className="mb-8">
+          <HallOfShame />
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList>
             <TabsTrigger value="recent" className="gap-2">

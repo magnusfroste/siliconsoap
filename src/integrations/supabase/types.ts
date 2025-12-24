@@ -330,6 +330,50 @@ export type Database = {
         }
         Relationships: []
       }
+      hall_of_shame: {
+        Row: {
+          agent_name: string
+          chat_id: string | null
+          context: string | null
+          created_at: string
+          id: string
+          quote: string
+          severity: number | null
+          shame_type: string
+          share_id: string | null
+        }
+        Insert: {
+          agent_name: string
+          chat_id?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          quote: string
+          severity?: number | null
+          shame_type?: string
+          share_id?: string | null
+        }
+        Update: {
+          agent_name?: string
+          chat_id?: string | null
+          context?: string | null
+          created_at?: string
+          id?: string
+          quote?: string
+          severity?: number | null
+          shame_type?: string
+          share_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hall_of_shame_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_credits: {
         Row: {
           created_at: string | null
