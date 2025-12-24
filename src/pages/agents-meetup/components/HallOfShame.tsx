@@ -89,9 +89,9 @@ export function HallOfShame() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            <p className="text-lg mb-2">Inga backstabs... ännu.</p>
+            <p className="text-lg mb-2">No backstabs... yet.</p>
             <p className="text-sm italic">
-              Judge Bot samlar på sig de mest dramatiska ögonblicken. Snart avslöjas sanningen! 👀
+              Judge Bot is collecting the most dramatic moments. The truth will be revealed soon! 👀
             </p>
           </div>
         </CardContent>
@@ -108,7 +108,7 @@ export function HallOfShame() {
             Hall of Shame
           </CardTitle>
           <p className="text-xs text-muted-foreground italic">
-            Kan man lita på en AI? Spoiler: nej.
+            Can you trust an AI? Spoiler: no.
           </p>
         </div>
       </CardHeader>
