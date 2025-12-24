@@ -420,6 +420,7 @@ export type Database = {
           share_id: string
           title: string
           updated_at: string
+          view_count: number
         }[]
       }
       has_role: {
