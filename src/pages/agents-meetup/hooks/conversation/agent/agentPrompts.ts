@@ -34,7 +34,14 @@ const intensityModifiers = {
  */
 const getAgentIntro = (agentLetter: string, persona: string): string => {
   const soapName = getAgentSoapName(`Agent ${agentLetter}`, persona);
-  return `You are ${soapName} (known as Agent ${agentLetter}). Speak and act as this character.`;
+  return `You are ${soapName}. 
+
+IMPORTANT NAME RULES:
+- When introducing yourself, use "${soapName}" - NEVER say "Agent ${agentLetter}"
+- Keep self-introductions brief or skip them entirely - the reader already knows who you are from the UI
+- When referencing other participants, use their names (not "Agent A/B/C")
+
+Speak and act as this character.`;
 };
 
 const getOtherAgentName = (agentLetter: string, persona: string): string => {
@@ -254,7 +261,7 @@ export const createResponseToUserPrompt = (
     .join('\n\n');
 
   return `
-    You are ${soapName} (Agent ${agentLetter}). Speak and act as this character.
+    You are ${soapName}. When introducing yourself, use "${soapName}" - never say "Agent ${agentLetter}". Keep self-introductions brief.
     
     We're having a discussion about: "${originalPrompt}"
     
