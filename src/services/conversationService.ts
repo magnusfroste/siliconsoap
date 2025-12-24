@@ -227,7 +227,7 @@ export const handleInitialRound = async (
     : getAgentOrder(turnOrder, numberOfAgents, 1);
   
   // Agent A always starts
-  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder);
+  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona);
   
   const agentAResponse = await callOpenRouterViaEdge(
     agentAPrompt,
@@ -262,7 +262,7 @@ export const handleInitialRound = async (
     nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt);
   }
   
-  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario, turnOrder);
+  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario, turnOrder, agentAPersona, agentBPersona);
   
   const agentBResponse = await callOpenRouterViaEdge(
     agentBPrompt,
@@ -301,7 +301,7 @@ export const handleInitialRound = async (
       }
     }
     
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario, turnOrder);
+    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona);
     
     const agentCResponse = await callOpenRouterViaEdge(
       agentCPrompt,
@@ -507,7 +507,8 @@ export const handleUserFollowUp = async (
     userMessage,
     currentConversation,
     'Agent A',
-    currentScenario
+    currentScenario,
+    agentAPersona
   );
   
   const agentAResponse = await callOpenRouterViaEdge(
@@ -536,7 +537,8 @@ export const handleUserFollowUp = async (
     userMessage,
     [...currentConversation, agentAMessage],
     'Agent B',
-    currentScenario
+    currentScenario,
+    agentBPersona
   );
   
   const agentBResponse = await callOpenRouterViaEdge(
@@ -565,7 +567,8 @@ export const handleUserFollowUp = async (
     userMessage,
     [...currentConversation, agentAMessage, agentBMessage],
     'Agent C',
-    currentScenario
+    currentScenario,
+    agentCPersona
   );
   
   const agentCResponse = await callOpenRouterViaEdge(
