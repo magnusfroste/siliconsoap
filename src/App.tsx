@@ -19,6 +19,7 @@ import { AboutView } from "./pages/agents-meetup/views/AboutView";
 import { SettingsView } from "./pages/agents-meetup/views/SettingsView";
 import { AdminView } from "./pages/agents-meetup/views/AdminView";
 import ExploreView from "./pages/agents-meetup/views/ExploreView";
+import LeaderboardView from "./pages/agents-meetup/views/LeaderboardView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => {
               <Route path="new" element={<NewChatView />} />
               <Route path="chat/:chatId" element={<ChatView />} />
               <Route path="explore" element={<ExploreView />} />
+              <Route path="leaderboard" element={<LeaderboardView />} />
               <Route path="profile" element={<ProfileView />} />
               <Route path="agent-profiles" element={<AgentProfilesView />} />
               <Route path="learn" element={<LearnView />} />
