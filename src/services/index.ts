@@ -8,3 +8,4 @@ export { analyticsService } from './analyticsService';
 export type { ChatAnalytics, AnalyticsSummary } from './analyticsService';
 export { modelInfoService } from './modelInfoService';
 export type { ModelInfoParams, ModelInfoResult } from './modelInfoService';
+export { guestMigrationService } from './guestMigrationService';

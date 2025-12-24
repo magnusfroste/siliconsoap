@@ -6,17 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Droplets, Loader2 } from 'lucide-react';
+import { Droplets, Loader2, MessageSquare } from 'lucide-react';
+import { guestMigrationService } from '@/services/guestMigrationService';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const [checking, setChecking] = useState(true);
+  const guestChatCount = guestMigrationService.getGuestChats().length;
 
   useEffect(() => {
     // Check if user is already logged in
@@ -28,6 +31,39 @@ const Auth = () => {
         setChecking(false);
       }
     });
+  }, [navigate, location]);
+
+  // Listen for auth state changes to trigger migration
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check if there are guest chats to migrate
+          if (guestMigrationService.hasGuestChats()) {
+            setIsMigrating(true);
+            try {
+              const { success, failed } = await guestMigrationService.migrateGuestChats(session.user.id);
+              if (success > 0) {
+                toast.success(`Migrated ${success} conversation${success !== 1 ? 's' : ''} to your account!`);
+              }
+              if (failed > 0) {
+                toast.warning(`${failed} conversation${failed !== 1 ? 's' : ''} could not be migrated.`);
+              }
+            } catch (error) {
+              console.error('Migration error:', error);
+            } finally {
+              setIsMigrating(false);
+            }
+          }
+          
+          // Navigate after migration
+          const from = (location.state as any)?.from?.pathname || '/new';
+          navigate(from, { replace: true });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, [navigate, location]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -62,17 +98,19 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
       setLoading(false);
-    } else {
-      toast.success('Logged in successfully!');
-      const from = (location.state as any)?.from?.pathname || '/new';
-      navigate(from, { replace: true });
     }
+    // Navigation handled by onAuthStateChange after migration
   };
 
-  if (checking) {
+  if (checking || isMigrating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        {isMigrating && (
+          <p className="text-sm text-muted-foreground animate-pulse">
+            Migrating your conversations...
+          </p>
+        )}
       </div>
     );
   }
@@ -90,6 +128,16 @@ const Auth = () => {
           <CardDescription className="text-base">
             Sign in to save and access your conversation history
           </CardDescription>
+          
+          {/* Guest chat migration notice */}
+          {guestChatCount > 0 && (
+            <div className="flex items-center gap-2 justify-center text-sm text-primary bg-primary/10 rounded-lg py-2 px-3">
+              <MessageSquare className="h-4 w-4" />
+              <span>
+                {guestChatCount} conversation{guestChatCount !== 1 ? 's' : ''} will be saved to your account
+              </span>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Toggle Buttons */}
