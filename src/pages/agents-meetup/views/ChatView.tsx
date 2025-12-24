@@ -456,6 +456,7 @@ export const ChatView = () => {
               participationMode={(chat.settings as any)?.participationMode || 'jump-in'}
               canContinue={true}
               onContinue={() => setWantsToContinue(true)}
+              isGuest={isGuest}
             />
           )}
         </div>
