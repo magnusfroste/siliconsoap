@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { Badge } from '@/components/ui/badge';
 import { QuoteShareButton } from './QuoteShareButton';
+import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 
 interface ChatMessageProps {
   message: ConversationMessage;
@@ -47,7 +48,8 @@ export const ChatMessage = ({
     timelineDotClass: 'bg-muted-foreground'
   };
 
-  const agentLetter = message.agent.replace('Agent ', '') as 'A' | 'B' | 'C';
+  const agentLetter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
+  const soapName = getAgentSoapName(message.agent, message.persona);
   const isLastMessage = messageIndex === totalMessages - 1;
 
   return (
@@ -70,7 +72,8 @@ export const ChatMessage = ({
         <CardHeader className="pb-2 px-4 pt-3">
           <div className="flex items-center gap-2 flex-wrap">
             <AgentAvatar agentLetter={agentLetter} iconBgClass={style.iconBgClass} />
-            <span className="font-semibold">{message.agent}</span>
+            <span className="font-semibold">{soapName}</span>
+            <span className="text-xs text-muted-foreground">({agentLetter})</span>
             
             {/* Turn Order Badge */}
             <Badge variant="outline" className="text-xs">
