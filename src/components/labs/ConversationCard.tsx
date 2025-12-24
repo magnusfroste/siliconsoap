@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { getAgentSoapName, getAgentLetter } from '@/pages/agents-meetup/utils/agentNameGenerator';
 
 type ConversationEntry = {
   agent: string;
@@ -335,7 +336,10 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">{entry.agent}</span>
+                      <span className="text-sm font-medium">
+                        {getAgentSoapName(entry.agent, entry.persona)}
+                        <span className="text-muted-foreground font-normal ml-1">({getAgentLetter(entry.agent)})</span>
+                      </span>
                       <div className="flex items-center gap-1.5 text-xs text-gray-500">
                         <span>{modelName}</span>
                         <span>•</span>

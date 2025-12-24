@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
+import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 
 interface ShameMoment {
   id: string;
@@ -140,7 +141,9 @@ export function HallOfShame() {
                   </p>
                   
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-medium">— {moment.agent_name}</span>
+                    <span className="font-medium">
+                      — {getAgentSoapName(moment.agent_name, 'analytical')} ({getAgentLetter(moment.agent_name)})
+                    </span>
                     <span>
                       {formatDistanceToNow(new Date(moment.created_at), { addSuffix: true })}
                     </span>

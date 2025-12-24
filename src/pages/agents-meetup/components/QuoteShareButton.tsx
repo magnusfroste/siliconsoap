@@ -8,6 +8,7 @@ import {
 import { Share2, Copy, Twitter, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConversationMessage } from '../types';
+import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 
 interface QuoteShareButtonProps {
   message: ConversationMessage;
@@ -15,11 +16,14 @@ interface QuoteShareButtonProps {
 }
 
 export const QuoteShareButton = ({ message, chatUrl }: QuoteShareButtonProps) => {
+  const soapName = getAgentSoapName(message.agent, message.persona);
+  const agentLetter = getAgentLetter(message.agent);
+
   const formatQuote = () => {
     const quote = message.message.length > 280 
       ? message.message.slice(0, 277) + '...' 
       : message.message;
-    return `"${quote}"\n\n— ${message.agent} (${message.persona})`;
+    return `"${quote}"\n\n— ${soapName} (${agentLetter}) · ${message.persona}`;
   };
 
   const formatTwitterQuote = () => {
@@ -27,7 +31,7 @@ export const QuoteShareButton = ({ message, chatUrl }: QuoteShareButtonProps) =>
     const quote = message.message.length > maxLen 
       ? message.message.slice(0, maxLen - 3) + '...' 
       : message.message;
-    return `"${quote}" — ${message.agent} 🫧`;
+    return `"${quote}" — ${soapName} 🫧`;
   };
 
   const handleCopyQuote = async () => {
