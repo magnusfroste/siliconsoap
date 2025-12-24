@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Clock, TrendingUp, MessageSquare, Sparkles, Users } from 'lucide-react';
+import { Eye, Clock, TrendingUp, MessageSquare, Sparkles, Users, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ChatSettings } from '@/models/chat';
 import { Json } from '@/integrations/supabase/types';
@@ -26,6 +26,7 @@ export default function ExploreView() {
   const navigate = useNavigate();
   const [debates, setDebates] = useState<PublicDebate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('recent');
 
   usePageMeta({
@@ -42,8 +43,12 @@ export default function ExploreView() {
     fetchPublicDebates();
   }, [activeTab]);
 
-  const fetchPublicDebates = async () => {
-    setLoading(true);
+  const fetchPublicDebates = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     
     let query = supabase
       .from('agent_chats')
@@ -87,6 +92,11 @@ export default function ExploreView() {
     }
     
     setLoading(false);
+    setRefreshing(false);
+  };
+
+  const handleRefresh = () => {
+    fetchPublicDebates(true);
   };
 
   const getAgentCount = (settings: Json | null): number => {
@@ -103,14 +113,24 @@ export default function ExploreView() {
     <div className="flex-1 overflow-auto">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Explore Public Debates</h1>
-          <p className="text-muted-foreground">
-            Discover interesting AI debates shared by the community
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Explore Public Debates</h1>
+            <p className="text-muted-foreground">
+              Discover interesting AI debates shared by the community
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="gap-2 shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
-
-        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList>
             <TabsTrigger value="recent" className="gap-2">
