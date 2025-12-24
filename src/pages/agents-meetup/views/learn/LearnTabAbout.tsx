@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Github, Globe, Sparkles, TrendingUp, Brain, Database, Zap } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Link } from 'react-router-dom';
 
+const BASE_URL = 'https://www.froste.eu';
+const PERSON_SCHEMA_ID = 'founder-person-schema';
 const contextWindowData = [
   { year: '2020', model: 'GPT-3', tokens: 2048, label: '2K', color: 'hsl(var(--muted-foreground))' },
   { year: '2023', model: 'GPT-4', tokens: 128000, label: '128K', color: 'hsl(var(--muted-foreground))' },
@@ -35,6 +38,50 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export const LearnTabAbout = () => {
+  // Add Person schema for founder on mount
+  useEffect(() => {
+    const personSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      '@id': `${BASE_URL}/#founder`,
+      'name': 'Magnus Froste',
+      'jobTitle': 'Founder & Creator',
+      'description': 'Founder and creator of SiliconSoap, an AI debate platform for evaluating and comparing AI models through real conversations.',
+      'url': 'https://www.froste.eu',
+      'sameAs': [
+        'https://github.com/magnusfroste',
+        'https://www.froste.eu'
+      ],
+      'worksFor': {
+        '@type': 'Organization',
+        'name': 'SiliconSoap',
+        'url': BASE_URL,
+        'logo': `${BASE_URL}/og-image.png`
+      },
+      'knowsAbout': [
+        'Artificial Intelligence',
+        'Large Language Models',
+        'AI Model Evaluation',
+        'RAG (Retrieval-Augmented Generation)',
+        'CAG (Cache-Augmented Generation)',
+        'Enterprise AI'
+      ]
+    };
+
+    const script = document.createElement('script');
+    script.id = PERSON_SCHEMA_ID;
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(personSchema);
+    document.head.appendChild(script);
+
+    return () => {
+      const existing = document.getElementById(PERSON_SCHEMA_ID);
+      if (existing) {
+        existing.remove();
+      }
+    };
+  }, []);
+
   return (
     <div className="space-y-8">
       {/* Founder's Note Header */}
