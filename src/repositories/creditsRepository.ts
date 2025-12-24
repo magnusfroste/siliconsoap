@@ -51,22 +51,24 @@ export const creditsRepository = {
     } : null;
   },
 
-  // Use a credit (decrement remaining, increment used)
-  async useCredit(userId: string, currentRemaining: number, currentUsed: number): Promise<boolean> {
-    const { error } = await supabase
-      .from('user_credits')
-      .update({
-        credits_remaining: currentRemaining - 1,
-        credits_used: currentUsed + 1
-      })
-      .eq('user_id', userId);
+  // Use a credit atomically (prevents race conditions)
+  async useCredit(userId: string): Promise<{ success: boolean; newRemaining: number; newUsed: number }> {
+    const { data, error } = await supabase.rpc('use_credit', { p_user_id: userId });
 
     if (error) {
       console.error('Error using credit:', error);
-      return false;
+      return { success: false, newRemaining: 0, newUsed: 0 };
     }
 
-    return true;
+    if (data && data.length > 0) {
+      return {
+        success: data[0].success,
+        newRemaining: data[0].new_remaining,
+        newUsed: data[0].new_used
+      };
+    }
+
+    return { success: false, newRemaining: 0, newUsed: 0 };
   },
 
   // Guest credits operations (localStorage)

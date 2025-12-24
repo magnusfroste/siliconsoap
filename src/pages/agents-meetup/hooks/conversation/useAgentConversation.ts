@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ConversationMessage, ResponseLength, ScenarioType, TurnOrder } from '../../types';
 import { 
@@ -25,8 +25,15 @@ export const useAgentConversation = (
 ) => {
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const isStartingRef = useRef(false); // Guard against concurrent starts
 
   const handleStartConversation = async (): Promise<ConversationMessage[] | null> => {
+    // Prevent concurrent conversation starts
+    if (isStartingRef.current) {
+      console.log('Conversation already starting, ignoring request');
+      return null;
+    }
+    isStartingRef.current = true;
     const currentPrompt = getCurrentPrompt();
     const currentScenario = getCurrentScenario();
     
@@ -46,6 +53,7 @@ export const useAgentConversation = (
     const apiAvailable = await checkBeforeStarting(effectiveApiKey);
     if (!apiAvailable) {
       setIsLoading(false);
+      isStartingRef.current = false;
       return null;
     }
     
@@ -59,6 +67,7 @@ export const useAgentConversation = (
       numberOfAgents
     )) {
       setIsLoading(false);
+      isStartingRef.current = false;
       return null;
     }
     
@@ -147,6 +156,7 @@ export const useAgentConversation = (
       return null;
     } finally {
       setIsLoading(false);
+      isStartingRef.current = false;
     }
   };
 
