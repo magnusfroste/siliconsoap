@@ -75,20 +75,15 @@ export const creditsService = {
         };
       }
 
-      // Update existing record
-      const success = await creditsRepository.useCredit(userId, currentRemaining, currentUsed);
+      // Use atomic credit deduction to prevent race conditions
+      const result = await creditsRepository.useCredit(userId);
       
-      if (success) {
+      if (result.success) {
         // Notify other components
         window.dispatchEvent(new CustomEvent('creditsChanged'));
-        return {
-          success: true,
-          newRemaining: currentRemaining - 1,
-          newUsed: currentUsed + 1
-        };
       }
 
-      return { success: false, newRemaining: currentRemaining, newUsed: currentUsed };
+      return result;
     } else {
       // Guest user
       const newUsed = creditsRepository.useGuestCredit();

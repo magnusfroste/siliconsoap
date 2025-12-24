@@ -478,6 +478,14 @@ export type Database = {
         Args: { p_share_id: string }
         Returns: undefined
       }
+      use_credit: {
+        Args: { p_user_id: string }
+        Returns: {
+          new_remaining: number
+          new_used: number
+          success: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
