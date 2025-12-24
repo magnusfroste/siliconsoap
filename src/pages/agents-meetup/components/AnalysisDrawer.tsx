@@ -14,7 +14,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown, Sparkles, X, LogIn } from 'lucide-react';
+import { ChevronDown, Sparkles, X, LogIn, Drama } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnalysisResults } from '@/components/labs/conversation-analysis/components/AnalysisResults';
@@ -45,7 +45,7 @@ export const AnalysisDrawer = ({
   const getVerdict = (analysis: string) => {
     const lines = analysis.split('\n');
     const firstContent = lines.find(l => l.trim() && !l.startsWith('#'));
-    return firstContent?.trim() || "Analyzing the conversation...";
+    return firstContent?.trim() || "Domen förbereds...";
   };
 
   return (
@@ -55,13 +55,15 @@ export const AnalysisDrawer = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12 border-2 border-primary">
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  <Sparkles className="h-6 w-6" />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                  🎭
                 </AvatarFallback>
               </Avatar>
               <div>
                 <DrawerTitle className="text-xl">Judge Bot</DrawerTitle>
-                <DrawerDescription>Your AI conversation referee</DrawerDescription>
+                <DrawerDescription className="italic">
+                  Din opålitliga men charmiga domstol 🗡️
+                </DrawerDescription>
               </div>
             </div>
             <DrawerClose asChild>
@@ -71,12 +73,17 @@ export const AnalysisDrawer = ({
             </DrawerClose>
           </div>
 
+          {/* Ironic disclaimer */}
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            Kan man lita på en AI som dömer andra AI:s? Absolut inte. Men det är ju det som gör det spännande!
+          </p>
+
           {!isAnalyzing && analysisResults && (
             <div className="mt-4 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg">
               <div className="flex items-start gap-2">
-                <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-lg mt-0.5 flex-shrink-0">🔨</span>
                 <div>
-                  <p className="font-semibold text-sm mb-1">The Verdict</p>
+                  <p className="font-semibold text-sm mb-1">Domen har fallit!</p>
                   <p className="text-sm text-muted-foreground italic">
                     "{getVerdict(analysisResults)}"
                   </p>
@@ -91,41 +98,47 @@ export const AnalysisDrawer = ({
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
                 <div className="relative">
-                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
-                  <div className="absolute inset-0 animate-ping">
-                    <Sparkles className="h-16 w-16 text-primary/30" />
-                  </div>
+                  <span className="text-6xl animate-pulse">🎭</span>
                 </div>
-                <p className="text-lg font-medium">Judge Bot is analyzing...</p>
-                <p className="text-sm text-muted-foreground">
-                  Evaluating agent performances, checking scorecards... 🎭
+                <p className="text-lg font-medium">Drottningen samlar bevis...</p>
+                <p className="text-sm text-muted-foreground text-center max-w-sm">
+                  Granskar allianser, räknar backstabs, letar efter dolda agendor... 👀
+                </p>
+                <p className="text-xs text-muted-foreground/70 italic">
+                  (Ingen är oskyldig tills motsatsen bevisats. Och inte ens då.)
                 </p>
               </div>
             ) : !analysisResults ? (
               isGuest ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                   <LogIn className="h-16 w-16 text-muted-foreground" />
-                  <p className="text-lg font-medium">Analysis requires sign in</p>
+                  <p className="text-lg font-medium">Domen kräver inloggning</p>
                   <p className="text-sm text-muted-foreground text-center max-w-md">
-                    Sign in to unlock conversation analysis by Judge Bot and get insights, scores, and witty commentary!
+                    Logga in för att få Judge Bots dramatiska analys - komplett med backstabbing alerts, trust issues och diva moments!
                   </p>
                   <Link to="/auth">
                     <Button size="lg" className="mt-4">
                       <LogIn className="h-4 w-4 mr-2" />
-                      Sign In to Analyze
+                      Logga in för Domen
                     </Button>
                   </Link>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <Sparkles className="h-16 w-16 text-muted-foreground" />
-                  <p className="text-lg font-medium">Ready to judge?</p>
+                  <span className="text-6xl">🎭</span>
+                  <p className="text-lg font-medium">Redo för domen?</p>
+                  <p className="text-sm text-muted-foreground text-center max-w-sm italic">
+                    (Ingen är oskyldig...)
+                  </p>
                   <p className="text-sm text-muted-foreground text-center max-w-md">
-                    Let Judge Bot analyze this conversation and provide insights, scores, and witty commentary!
+                    Låt Judge Bot analysera denna konversation och avslöja vem som backstabbade, vem som spelade diva, och framför allt - vem kan man lita på? 
+                  </p>
+                  <p className="text-xs text-muted-foreground/70">
+                    Spoiler: förmodligen ingen.
                   </p>
                   <Button onClick={onAnalyze} size="lg" className="mt-4">
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Analyze Conversation
+                    Fäll Domen
                   </Button>
                 </div>
               )
@@ -153,7 +166,7 @@ export const AnalysisDrawer = ({
                 <Collapsible open={showStats} onOpenChange={setShowStats}>
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" className="w-full justify-between">
-                      <span className="font-medium">📊 Nerd Stats</span>
+                      <span className="font-medium">📊 Nerd Stats (för de som gillar siffror)</span>
                       <ChevronDown className={`h-4 w-4 transition-transform ${showStats ? 'rotate-180' : ''}`} />
                     </Button>
                   </CollapsibleTrigger>
