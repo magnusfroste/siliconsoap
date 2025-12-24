@@ -19,7 +19,9 @@ interface PublicDebate {
   view_count: number;
   created_at: string;
   settings: Json | null;
+  user_id: string | null;
   message_count?: number;
+  sharer_name?: string | null;
 }
 
 export default function ExploreView() {
@@ -61,7 +63,7 @@ export default function ExploreView() {
     
     let query = supabase
       .from('agent_chats')
-      .select('id, title, prompt, share_id, view_count, created_at, settings')
+      .select('id, title, prompt, share_id, view_count, created_at, settings, user_id')
       .eq('is_public', true)
       .not('share_id', 'is', null)
       .is('deleted_at', null);
@@ -80,8 +82,27 @@ export default function ExploreView() {
       return;
     }
 
-    // Get message counts for each debate
+    // Get message counts and sharer names for each debate
     if (data && data.length > 0) {
+      // Get unique user IDs to fetch their profiles
+      const userIds = [...new Set(data.filter(d => d.user_id).map(d => d.user_id))] as string[];
+      
+      // Fetch user profiles
+      let userProfiles: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, display_name')
+          .in('user_id', userIds);
+        
+        if (profiles) {
+          userProfiles = profiles.reduce((acc, p) => {
+            acc[p.user_id] = p.display_name || null;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+
       const debatesWithCounts = await Promise.all(
         data.map(async (debate) => {
           const { count } = await supabase
@@ -91,7 +112,8 @@ export default function ExploreView() {
           
           return {
             ...debate,
-            message_count: count || 0
+            message_count: count || 0,
+            sharer_name: debate.user_id ? userProfiles[debate.user_id] : null
           };
         })
       );
@@ -243,9 +265,16 @@ function DebateGrid({ debates, loading, onDebateClick, getAgentCount }: DebateGr
             </div>
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {debate.view_count} views
+              <div className="flex items-center gap-4">
+                {debate.sharer_name && (
+                  <span className="text-foreground/70">
+                    Shared via <span className="font-medium">{debate.sharer_name}</span>
+                  </span>
+                )}
+                <div className="flex items-center gap-1">
+                  <Eye className="h-3 w-3" />
+                  {debate.view_count} views
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
