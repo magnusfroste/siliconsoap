@@ -194,7 +194,7 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
 
         {/* Analysis markdown */}
         <div 
-          className="text-foreground bg-muted p-5 rounded-md border prose prose-sm max-w-none"
+          className="text-foreground bg-muted p-5 rounded-md border prose prose-sm max-w-none max-h-[500px] overflow-y-auto"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(analysisResults) }}
         />
         <div className="flex flex-wrap gap-3 mt-4">
