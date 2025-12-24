@@ -33,6 +33,12 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
                 <span className="text-sm truncate max-w-[200px]">{user.email}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <Link to="/profile">
+                <DropdownMenuItem>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
