@@ -4,6 +4,7 @@ import { LogOut, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+// Get initials from display name (e.g., "J.R. Ewing" -> "JE")
+const getInitials = (name: string): string => {
+  const parts = name.split(' ').filter(p => p.length > 0);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  // First letter of first and last part
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
 
 interface ChatHeaderProps {
   onMenuClick?: () => void;
@@ -50,9 +60,14 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled>
-                <span className="text-sm truncate max-w-[200px] font-medium">
-                  🎭 {displayName}
+              <DropdownMenuItem disabled className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {getInitials(displayName || '')}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm truncate max-w-[180px] font-medium">
+                  {displayName}
                 </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
