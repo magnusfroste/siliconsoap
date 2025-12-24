@@ -10,6 +10,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { ChatSettings } from '@/models/chat';
 import { Json } from '@/integrations/supabase/types';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { ProfileStats, calculateRank, SiliconRank } from '../hooks/useProfileStats';
+
+interface UserRankInfo {
+  displayName: string | null;
+  rank: SiliconRank;
+}
 
 interface PublicDebate {
   id: string;
@@ -22,6 +28,7 @@ interface PublicDebate {
   user_id: string | null;
   message_count?: number;
   sharer_name?: string | null;
+  sharer_rank?: SiliconRank | null;
 }
 
 export default function ExploreView() {
@@ -82,24 +89,71 @@ export default function ExploreView() {
       return;
     }
 
-    // Get message counts and sharer names for each debate
+    // Get message counts, sharer names, and ranks for each debate
     if (data && data.length > 0) {
-      // Get unique user IDs to fetch their profiles
+      // Get unique user IDs to fetch their profiles and stats
       const userIds = [...new Set(data.filter(d => d.user_id).map(d => d.user_id))] as string[];
       
-      // Fetch user profiles
-      let userProfiles: Record<string, string> = {};
+      // Fetch user profiles and calculate ranks
+      let userRankInfo: Record<string, UserRankInfo> = {};
       if (userIds.length > 0) {
+        // Fetch profiles
         const { data: profiles } = await supabase
           .from('user_profiles')
           .select('user_id, display_name')
           .in('user_id', userIds);
         
-        if (profiles) {
-          userProfiles = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.display_name || null;
-            return acc;
-          }, {} as Record<string, string>);
+        // Fetch user chats for stats
+        const { data: userChats } = await supabase
+          .from('agent_chats')
+          .select('user_id, is_public, view_count, share_id')
+          .in('user_id', userIds)
+          .is('deleted_at', null);
+
+        // Fetch user credits
+        const { data: userCredits } = await supabase
+          .from('user_credits')
+          .select('user_id, credits_used')
+          .in('user_id', userIds);
+
+        // Get all share_ids for reaction counts
+        const shareIds = userChats?.filter(c => c.is_public && c.share_id).map(c => c.share_id) || [];
+        let reactionCounts: Record<string, number> = {};
+        if (shareIds.length > 0) {
+          const { data: reactions } = await supabase
+            .from('chat_reactions')
+            .select('share_id')
+            .in('share_id', shareIds as string[]);
+          
+          reactions?.forEach(r => {
+            reactionCounts[r.share_id] = (reactionCounts[r.share_id] || 0) + 1;
+          });
+        }
+
+        // Calculate stats and ranks for each user
+        for (const userId of userIds) {
+          const userProfile = profiles?.find(p => p.user_id === userId);
+          const chats = userChats?.filter(c => c.user_id === userId) || [];
+          const publicChats = chats.filter(c => c.is_public && c.share_id);
+          const credits = userCredits?.find(c => c.user_id === userId);
+          
+          const totalViews = publicChats.reduce((sum, c) => sum + (c.view_count || 0), 0);
+          const totalReactions = publicChats.reduce((sum, c) => {
+            return sum + (reactionCounts[c.share_id!] || 0);
+          }, 0);
+
+          const stats: ProfileStats = {
+            totalDebates: chats.length,
+            publicDebates: publicChats.length,
+            totalViews,
+            totalReactions,
+            creditsUsed: credits?.credits_used || 0
+          };
+
+          userRankInfo[userId] = {
+            displayName: userProfile?.display_name || null,
+            rank: calculateRank(stats)
+          };
         }
       }
 
@@ -110,10 +164,13 @@ export default function ExploreView() {
             .select('*', { count: 'exact', head: true })
             .eq('chat_id', debate.id);
           
+          const userInfo = debate.user_id ? userRankInfo[debate.user_id] : null;
+          
           return {
             ...debate,
             message_count: count || 0,
-            sharer_name: debate.user_id ? userProfiles[debate.user_id] : null
+            sharer_name: userInfo?.displayName || null,
+            sharer_rank: userInfo?.rank || null
           };
         })
       );
@@ -266,9 +323,16 @@ function DebateGrid({ debates, loading, onDebateClick, getAgentCount }: DebateGr
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-4">
-                {debate.sharer_name && (
-                  <span className="text-foreground/70">
-                    Shared via <span className="font-medium">{debate.sharer_name}</span>
+                {(debate.sharer_name || debate.sharer_rank) && (
+                  <span className="text-foreground/70 flex items-center gap-1">
+                    {debate.sharer_rank && (
+                      <span title={debate.sharer_rank.title}>{debate.sharer_rank.emoji}</span>
+                    )}
+                    {debate.sharer_name ? (
+                      <>Shared by <span className="font-medium">{debate.sharer_name}</span></>
+                    ) : (
+                      <span className="font-medium">{debate.sharer_rank?.title}</span>
+                    )}
                   </span>
                 )}
                 <div className="flex items-center gap-1">
