@@ -1,10 +1,37 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getAgentGender } from '@/pages/agents-meetup/utils/agentNameGenerator';
 
-// Voice mapping per agent
+// Voice IDs from ElevenLabs
+const MALE_VOICES = [
+  'JBFqnCBsd6RMkjVDRZzb', // George
+  'IKne3meq5aSn9XLyUdCD', // Charlie
+];
+
+const FEMALE_VOICES = [
+  'EXAVITQu4vr4xnSDxMaL', // Sarah
+];
+
+/**
+ * Get appropriate voice ID based on agent's gender
+ * Uses deterministic selection based on agent letter
+ */
+export function getVoiceForAgent(agent: string): string {
+  const gender = getAgentGender(agent);
+  
+  if (gender === 'female') {
+    return FEMALE_VOICES[0];
+  }
+  
+  // For male agents, use different voices for variety
+  const letter = agent.replace('Agent ', '');
+  return letter === 'A' ? MALE_VOICES[0] : MALE_VOICES[1];
+}
+
+// Legacy mapping for backwards compatibility
 export const AGENT_VOICES: Record<string, string> = {
-  'Agent A': 'JBFqnCBsd6RMkjVDRZzb', // George
-  'Agent B': 'EXAVITQu4vr4xnSDxMaL', // Sarah
-  'Agent C': 'IKne3meq5aSn9XLyUdCD', // Charlie
+  'Agent A': 'JBFqnCBsd6RMkjVDRZzb', // George (male)
+  'Agent B': 'EXAVITQu4vr4xnSDxMaL', // Sarah (female)
+  'Agent C': 'IKne3meq5aSn9XLyUdCD', // Charlie (male)
 };
 
 export const generateSpeech = async (text: string, agent: string): Promise<string> => {

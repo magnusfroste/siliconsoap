@@ -1,16 +1,19 @@
 // Soap opera inspired names for agents
-// Uses the same name pools as user display names for consistency
+// Separated by gender to match TTS voices
 
-const SOAP_FIRST_NAMES = [
-  'J.R.', 'Alexis', 'Blake', 'Krystle', 'Fallon',
-  'Ridge', 'Brooke', 'Stephanie', 'Eric', 'Taylor',
-  'Victor', 'Nikki', 'Jack', 'Erica', 'Tad',
-  'Luke', 'Laura', 'Sonny', 'Carly', 'Jason',
-  'Bo', 'Hope', 'Marlena', 'John', 'Stefano',
-  'Rachel', 'Ross', 'Monica', 'Chandler', 'Phoebe',
-  'Carrie', 'Samantha', 'Charlotte', 'Miranda', 'Big',
-  'Don', 'Peggy', 'Betty', 'Joan', 'Roger',
-  'Serena', 'Blair', 'Chuck', 'Nate', 'Dan'
+const MALE_FIRST_NAMES = [
+  'J.R.', 'Blake', 'Ridge', 'Eric', 'Victor',
+  'Jack', 'Tad', 'Luke', 'Sonny', 'Jason',
+  'Bo', 'John', 'Stefano', 'Ross', 'Chandler',
+  'Big', 'Don', 'Roger', 'Chuck', 'Nate', 'Dan'
+];
+
+const FEMALE_FIRST_NAMES = [
+  'Alexis', 'Krystle', 'Fallon', 'Brooke', 'Stephanie',
+  'Taylor', 'Nikki', 'Erica', 'Laura', 'Carly',
+  'Hope', 'Marlena', 'Rachel', 'Monica', 'Phoebe',
+  'Carrie', 'Samantha', 'Charlotte', 'Miranda',
+  'Peggy', 'Betty', 'Joan', 'Serena', 'Blair'
 ];
 
 const SOAP_LAST_NAMES = [
@@ -35,18 +38,32 @@ function hashString(str: string): number {
   return Math.abs(hash);
 }
 
+export type AgentGender = 'male' | 'female';
+
+/**
+ * Determine gender based on agent letter for consistent voice matching
+ * Agent A = male, Agent B = female, Agent C = male
+ */
+export function getAgentGender(agent: string): AgentGender {
+  const letter = agent.replace('Agent ', '');
+  // A and C are male, B is female
+  return letter === 'B' ? 'female' : 'male';
+}
+
 /**
  * Get a deterministic soap opera name for an agent based on agent letter and persona
- * Same agent + persona combination will always return the same name
+ * The gender is determined by the agent letter to match TTS voices
  */
 export function getAgentSoapName(agent: string, persona: string): string {
+  const gender = getAgentGender(agent);
   const combinedKey = `${agent}-${persona}`;
   const hash = hashString(combinedKey);
   
-  const firstNameIndex = hash % SOAP_FIRST_NAMES.length;
+  const firstNames = gender === 'male' ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
+  const firstNameIndex = hash % firstNames.length;
   const lastNameIndex = (hash >> 4) % SOAP_LAST_NAMES.length;
   
-  const firstName = SOAP_FIRST_NAMES[firstNameIndex];
+  const firstName = firstNames[firstNameIndex];
   const lastName = SOAP_LAST_NAMES[lastNameIndex];
   
   return `${firstName} ${lastName}`;
