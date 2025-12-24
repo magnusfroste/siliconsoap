@@ -17,6 +17,7 @@ import {
   createResponseToUserPrompt,
   LANGUAGE_INSTRUCTION
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
+import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 
 /**
  * Wraps persona with language instruction
@@ -176,25 +177,39 @@ export const validateConversationRequirements = (
  */
 const createContinuationPrompt = (
   originalPrompt: string,
-  conversationHistory: string,
+  conversationHistory: ConversationMessage[],
   agentName: string,
+  agentPersona: string,
   currentRound: number,
   totalRounds: number,
   scenario: ScenarioType
 ): string => {
   const isLastRound = currentRound === totalRounds;
+  const soapName = getAgentSoapName(agentName, agentPersona);
+  const agentLetter = agentName.replace('Agent ', '');
   
-  return `You are participating in a multi-agent discussion about: "${originalPrompt}"
+  // Format conversation history with soap opera names
+  const formattedHistory = conversationHistory
+    .map(m => {
+      if (m.isHuman) return `User: ${m.message}`;
+      const msgSoapName = getAgentSoapName(m.agent, m.persona || 'analytical');
+      return `${msgSoapName}: ${m.message}`;
+    })
+    .join('\n\n');
+  
+  return `You are ${soapName} (Agent ${agentLetter}). Speak and act as this character.
+
+You are participating in a multi-agent discussion about: "${originalPrompt}"
 
 This is a ${scenario.name} discussion.
 
 Here is the conversation so far:
-${conversationHistory}
+${formattedHistory}
 
-You are ${agentName}. This is round ${currentRound} of ${totalRounds}.
+This is round ${currentRound} of ${totalRounds}.
 ${isLastRound ? 'This is the FINAL round - try to synthesize key insights and provide concluding thoughts.' : 'Continue the discussion by building on previous points, offering new perspectives, or respectfully challenging ideas.'}
 
-Respond naturally as ${agentName}, staying in character with your assigned persona. Keep your response focused and substantive.`;
+Respond naturally as ${soapName}, staying in character with your assigned persona. Keep your response focused and substantive.`;
 };
 
 /**
@@ -364,14 +379,11 @@ export const handleSingleRound = async (
     const agentConfig = agentConfigs.find(a => a.name === agentName);
     if (!agentConfig) continue;
     
-    const conversationHistory = allMessages
-      .map(m => m.isHuman ? `User: ${m.message}` : `${m.agent}: ${m.message}`)
-      .join('\n\n');
-    
     const continuationPrompt = createContinuationPrompt(
       currentPrompt,
-      conversationHistory,
+      allMessages,
       agentConfig.name,
+      agentConfig.persona,
       roundNumber,
       totalRounds,
       currentScenario
@@ -443,14 +455,11 @@ export const handleAdditionalRounds = async (
       const agentConfig = agentConfigs.find(a => a.name === agentName);
       if (!agentConfig) continue;
       
-      const conversationHistory = allMessages
-        .map(m => m.isHuman ? `User: ${m.message}` : `${m.agent}: ${m.message}`)
-        .join('\n\n');
-      
       const continuationPrompt = createContinuationPrompt(
         currentPrompt,
-        conversationHistory,
+        allMessages,
         agentConfig.name,
+        agentConfig.persona,
         roundNum,
         rounds,
         currentScenario
