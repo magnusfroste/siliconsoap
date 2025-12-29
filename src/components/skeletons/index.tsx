@@ -190,3 +190,17 @@ export const FeaturedDebatesGridSkeleton = () => (
     ))}
   </div>
 );
+
+// Credits badge skeleton
+export const CreditsBadgeSkeleton = () => (
+  <Skeleton className="h-5 w-8 rounded-full" />
+);
+
+// Credits display skeleton (full)
+export const CreditsDisplaySkeleton = () => (
+  <div className="flex items-center gap-2 text-sm">
+    <Skeleton className="h-4 w-4 rounded" />
+    <Skeleton className="h-4 w-12" />
+    <Skeleton className="h-5 w-8 rounded-full" />
+  </div>
+);
