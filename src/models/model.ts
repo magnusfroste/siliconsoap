@@ -20,6 +20,8 @@ export interface CuratedModel {
   category: string | null;
   context_window: number | null;
   speed_rating: string | null;
+  // License type: open-weight (self-hostable) vs closed (cloud API only)
+  license_type: string | null;
 }
 
 export interface CuratedModelInsert {
@@ -53,4 +55,5 @@ export interface CuratedModelUpdate {
   is_free?: boolean;
   display_name?: string;
   default_for_agent?: string | null;
+  license_type?: string | null;
 }

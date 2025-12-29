@@ -244,6 +244,7 @@ export type Database = {
           id: string
           is_enabled: boolean
           is_free: boolean
+          license_type: string | null
           model_id: string
           pros: string[] | null
           provider: string
@@ -264,6 +265,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           is_free?: boolean
+          license_type?: string | null
           model_id: string
           pros?: string[] | null
           provider: string
@@ -284,6 +286,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           is_free?: boolean
+          license_type?: string | null
           model_id?: string
           pros?: string[] | null
           provider?: string

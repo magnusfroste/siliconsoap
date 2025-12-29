@@ -22,6 +22,7 @@ const HARDCODED_MODELS: CuratedModel[] = [
     category: "Large",
     context_window: 128000,
     speed_rating: "Fast",
+    license_type: "open-weight",
   },
   {
     id: "2",
@@ -42,6 +43,7 @@ const HARDCODED_MODELS: CuratedModel[] = [
     category: "Large",
     context_window: 64000,
     speed_rating: "Fast",
+    license_type: "open-weight",
   },
   {
     id: "3",
@@ -62,6 +64,7 @@ const HARDCODED_MODELS: CuratedModel[] = [
     category: "Medium",
     context_window: 8192,
     speed_rating: "Fast",
+    license_type: "open-weight",
   },
   {
     id: "4",
@@ -82,6 +85,7 @@ const HARDCODED_MODELS: CuratedModel[] = [
     category: "Large",
     context_window: 32000,
     speed_rating: "Medium",
+    license_type: "open-weight",
   },
   {
     id: "5",
@@ -102,6 +106,7 @@ const HARDCODED_MODELS: CuratedModel[] = [
     category: "Large",
     context_window: 128000,
     speed_rating: "Medium",
+    license_type: "closed",
   },
 ];
 
