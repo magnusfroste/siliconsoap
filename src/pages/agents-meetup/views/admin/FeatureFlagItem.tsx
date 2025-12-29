@@ -3,8 +3,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProfileSelector } from '../components/ProfileSelector';
-// Note: Model defaults are now set via the "Default for Agent" column in the Models admin tab
-// The feature flag approach for model defaults has been removed as it was not being used
+// Note: Model defaults are now hardcoded in ModelsContext.tsx (single source of truth)
+// The feature flag approach for model defaults has been removed
 
 interface FeatureFlag {
   id: string;
@@ -52,13 +52,12 @@ const SELECT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ]
 };
 
-// Model defaults are now set via the "Default for Agent" column in the Models admin tab
-// These feature flag keys are deprecated and hidden from the UI
+// Model defaults are now hardcoded in ModelsContext.tsx - these keys are deprecated and hidden
 const DEPRECATED_MODEL_KEYS = ['default_model_agent_a', 'default_model_agent_b', 'default_model_agent_c'];
 const PROFILE_KEYS = ['default_profile_agent_a', 'default_profile_agent_b', 'default_profile_agent_c'];
 
 export const FeatureFlagItem = ({ flag, onToggle, onNumericChange, onTextChange }: FeatureFlagItemProps) => {
-  // Skip deprecated model keys - these are now handled in the Models tab
+  // Skip deprecated model keys - defaults are now in ModelsContext.tsx
   if (DEPRECATED_MODEL_KEYS.includes(flag.key)) {
     return null;
   }
