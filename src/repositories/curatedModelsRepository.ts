@@ -61,6 +61,11 @@ export const toggleModelEnabled = async (id: string, isEnabled: boolean): Promis
   }
 };
 
+// Disable a model (convenience function)
+export const disableModel = async (id: string): Promise<void> => {
+  return toggleModelEnabled(id, false);
+};
+
 // Add a new model to curated list
 export const addCuratedModel = async (model: CuratedModelInsert): Promise<CuratedModel> => {
   const { data, error } = await supabase
