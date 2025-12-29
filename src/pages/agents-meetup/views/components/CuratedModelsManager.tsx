@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server, Scan, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { modelInfoService } from '@/services';
+import { detectModelLicense, detectMultipleModelLicenses, LicenseDetectionResult } from '@/services/licenseDetectionService';
 import {
   getAllCuratedModels,
   toggleModelEnabled,
@@ -46,6 +47,9 @@ export const CuratedModelsManager = () => {
   const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set());
   const [generatingAll, setGeneratingAll] = useState(false);
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
+  const [detectingLicense, setDetectingLicense] = useState<string | null>(null);
+  const [detectingAll, setDetectingAll] = useState(false);
+  const [detectionProgress, setDetectionProgress] = useState({ current: 0, total: 0 });
 
   const loadCuratedModels = useCallback(async () => {
     try {
@@ -287,6 +291,75 @@ export const CuratedModelsManager = () => {
     });
   };
 
+  // Auto-detect license type for a single model
+  const handleDetectLicense = async (model: CuratedModel) => {
+    setDetectingLicense(model.id);
+    try {
+      const result = await detectModelLicense(model.model_id, model.provider);
+      
+      await updateModelContent(model.id, { license_type: result.license_type });
+      setCuratedModels(prev =>
+        prev.map(m => (m.id === model.id ? { ...m, license_type: result.license_type } : m))
+      );
+      
+      const hfInfo = result.huggingface.exists 
+        ? ` (finns på HuggingFace)` 
+        : '';
+      toast.success(`${model.display_name}: ${result.license_type === 'open-weight' ? 'Open-Weight' : 'Cloud-Only'}${hfInfo}`);
+    } catch (error) {
+      console.error('Error detecting license:', error);
+      toast.error(`Failed to detect license for ${model.display_name}`);
+    } finally {
+      setDetectingLicense(null);
+    }
+  };
+
+  // Auto-detect license for all models
+  const handleDetectAllLicenses = async () => {
+    const modelsToDetect = curatedModels.filter(m => !m.license_type || m.license_type === 'closed');
+    
+    if (modelsToDetect.length === 0) {
+      toast.info('All models already have license types assigned');
+      return;
+    }
+
+    setDetectingAll(true);
+    setDetectionProgress({ current: 0, total: modelsToDetect.length });
+
+    let openWeightCount = 0;
+    let cloudCount = 0;
+
+    for (let i = 0; i < modelsToDetect.length; i++) {
+      const model = modelsToDetect[i];
+      setDetectionProgress({ current: i + 1, total: modelsToDetect.length });
+      setDetectingLicense(model.id);
+
+      try {
+        const result = await detectModelLicense(model.model_id, model.provider);
+        
+        await updateModelContent(model.id, { license_type: result.license_type });
+        setCuratedModels(prev =>
+          prev.map(m => (m.id === model.id ? { ...m, license_type: result.license_type } : m))
+        );
+
+        if (result.license_type === 'open-weight') openWeightCount++;
+        else cloudCount++;
+      } catch (error) {
+        console.error(`Error detecting license for ${model.display_name}:`, error);
+      }
+
+      // Small delay between requests
+      if (i < modelsToDetect.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+    }
+
+    setDetectingLicense(null);
+    setDetectingAll(false);
+    setDetectionProgress({ current: 0, total: 0 });
+    toast.success(`Detected: ${openWeightCount} open-weight, ${cloudCount} cloud-only`);
+  };
+
   // Filter OpenRouter models that aren't already curated
   const curatedModelIds = new Set(curatedModels.map(m => m.model_id));
   const availableToAdd = allOpenRouterModels.filter(m => !curatedModelIds.has(m.id));
@@ -323,6 +396,25 @@ export const CuratedModelsManager = () => {
           Manage which models are available for users to select
         </p>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDetectAllLicenses}
+            disabled={detectingAll || detectingLicense !== null}
+            className="gap-1.5"
+          >
+            {detectingAll ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {detectionProgress.current}/{detectionProgress.total}
+              </>
+            ) : (
+              <>
+                <Scan className="h-4 w-4" />
+                Auto-Detect All
+              </>
+            )}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -475,6 +567,21 @@ export const CuratedModelsManager = () => {
                       <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
                     </div>
                   <div className="flex items-center gap-2">
+                    {/* Auto-detect license button */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDetectLicense(model)}
+                      disabled={detectingLicense === model.id}
+                      className="gap-1 text-xs"
+                      title="Auto-detect license type"
+                    >
+                      {detectingLicense === model.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Scan className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
                     {/* License type selector */}
                     <Select
                       value={model.license_type || 'closed'}

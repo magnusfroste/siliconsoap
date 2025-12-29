@@ -5,9 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play, Cloud, Server } from 'lucide-react';
+import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play, Cloud, Server, ExternalLink } from 'lucide-react';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { cn } from '@/lib/utils';
+
+// Generate Hugging Face search URL from model ID
+const getHuggingFaceUrl = (modelId: string): string => {
+  const modelName = modelId.split('/').pop() || modelId;
+  return `https://huggingface.co/models?search=${encodeURIComponent(modelName)}`;
+};
 
 interface ModelCardProps {
   model: CuratedModel;
@@ -83,22 +89,44 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                       {model.license_type === 'open-weight' ? (
                         <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
                           <Server className="h-3 w-3" />
-                          Open
+                          Open Source
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30 gap-1">
                           <Cloud className="h-3 w-3" />
-                          Cloud
+                          Cloud API
                         </Badge>
                       )}
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="max-w-xs">
                       {model.license_type === 'open-weight' 
-                        ? 'Open-weight model - can be self-hosted on your own hardware'
-                        : 'Cloud-only model - available via API only'}
+                        ? 'Open-weight model - kan köras på egen hårdvara. Testa här innan du kör lokalt!'
+                        : 'Cloud-only model - endast tillgänglig via API'}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                {/* Hugging Face link for open-weight models */}
+                {model.license_type === 'open-weight' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a 
+                          href={getHuggingFaceUrl(model.model_id)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          🤗
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Hitta på Hugging Face
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 {model.is_free && (
                   <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
                     FREE
