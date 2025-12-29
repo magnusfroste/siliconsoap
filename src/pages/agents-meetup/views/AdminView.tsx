@@ -4,7 +4,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3 } from 'lucide-react';
+import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3, Zap } from 'lucide-react';
 import { 
   AdminHeader, 
   useAdminFlags, 
@@ -13,7 +13,8 @@ import {
   ConversationTab, 
   FeaturesTab,
   SettingsTab,
-  AnalyticsTab
+  AnalyticsTab,
+  SeedingTab
 } from './admin';
 
 export const AdminView = () => {
@@ -56,7 +57,7 @@ export const AdminView = () => {
       <AdminHeader />
 
       <Tabs defaultValue="models" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 h-12">
+        <TabsList className="grid w-full grid-cols-7 h-12">
           <TabsTrigger value="models" className="gap-2 text-sm">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Models</span>
@@ -76,6 +77,10 @@ export const AdminView = () => {
           <TabsTrigger value="analytics" className="gap-2 text-sm">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Analytics</span>
+          </TabsTrigger>
+          <TabsTrigger value="seeding" className="gap-2 text-sm">
+            <Zap className="h-4 w-4" />
+            <span className="hidden sm:inline">Seeding</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2 text-sm">
             <PanelLeft className="h-4 w-4" />
@@ -118,6 +123,10 @@ export const AdminView = () => {
 
           <TabsContent value="analytics" className="m-0">
             <AnalyticsTab />
+          </TabsContent>
+
+          <TabsContent value="seeding" className="m-0">
+            <SeedingTab />
           </TabsContent>
 
           <TabsContent value="settings" className="m-0">

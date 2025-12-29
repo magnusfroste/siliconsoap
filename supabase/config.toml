@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.check-huggingface]
 verify_jwt = false
+
+[functions.seed-debates]
+verify_jwt = false
