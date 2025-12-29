@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const DEMO_BOT_EMAIL = 'ai-debates-bot@lovable.app';
+const DEMO_BOT_PASSWORD = 'demo-bot-secure-password-2025!';
+
 interface AgentConfig {
   name: string;
   model: string;
@@ -39,6 +42,57 @@ function getRandomEmoji(): string {
 
 function generateUUID(): string {
   return crypto.randomUUID();
+}
+
+async function getOrCreateDemoUser(supabase: any): Promise<string> {
+  // Try to find existing demo user
+  const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers();
+  
+  if (listError) {
+    console.error('Error listing users:', listError);
+    throw new Error('Failed to list users');
+  }
+
+  const demoUser = existingUsers?.users?.find((u: any) => u.email === DEMO_BOT_EMAIL);
+  
+  if (demoUser) {
+    console.log('Found existing demo user:', demoUser.id);
+    return demoUser.id;
+  }
+
+  // Create demo user if not exists
+  console.log('Creating demo user...');
+  const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+    email: DEMO_BOT_EMAIL,
+    password: DEMO_BOT_PASSWORD,
+    email_confirm: true,
+    user_metadata: {
+      display_name: 'AI Debates Bot',
+      is_demo_account: true
+    }
+  });
+
+  if (createError) {
+    console.error('Error creating demo user:', createError);
+    throw new Error('Failed to create demo user');
+  }
+
+  console.log('Created demo user:', newUser.user.id);
+  
+  // Also create a user_profile for the demo user
+  const { error: profileError } = await supabase
+    .from('user_profiles')
+    .upsert({
+      user_id: newUser.user.id,
+      display_name: 'AI Debates Bot'
+    }, { onConflict: 'user_id' });
+
+  if (profileError) {
+    console.error('Error creating demo user profile:', profileError);
+    // Don't throw, profile is not critical
+  }
+
+  return newUser.user.id;
 }
 
 async function callOpenRouter(
@@ -101,6 +155,10 @@ serve(async (req) => {
 
     console.log(`Seeding debate: "${topic}" for date ${targetDate}`);
 
+    // Get or create demo user
+    const demoUserId = await getOrCreateDemoUser(supabase);
+    console.log(`Using demo user: ${demoUserId}`);
+
     // Generate share_id
     const shareId = generateUUID().slice(0, 8);
 
@@ -114,7 +172,7 @@ serve(async (req) => {
     const { data: chat, error: chatError } = await supabase
       .from('agent_chats')
       .insert({
-        user_id: null, // Editorial content, no user
+        user_id: demoUserId,
         title: topic,
         prompt: prompt,
         scenario_id: scenarioId,
