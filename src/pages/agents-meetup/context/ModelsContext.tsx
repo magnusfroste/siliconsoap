@@ -1,114 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepository";
 
-// Hardcoded curated models - no database dependency
-const HARDCODED_MODELS: CuratedModel[] = [
-  {
-    id: "1",
-    model_id: "meta-llama/llama-3.3-70b-instruct",
-    display_name: "Llama 3.3 70B",
-    provider: "Meta",
-    is_enabled: true,
-    is_free: false,
-    sort_order: 1,
-    default_for_agent: "A",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    description: "Meta's flagship open-weight model with strong reasoning",
-    pros: ["Open-weight", "Strong reasoning", "Fast inference"],
-    cons: ["Large model size"],
-    use_cases: ["General conversation", "Analysis"],
-    avoid_cases: [],
-    category: "Large",
-    context_window: 128000,
-    speed_rating: "Fast",
-    license_type: "open-weight",
-  },
-  {
-    id: "2",
-    model_id: "deepseek/deepseek-chat-v3-0324",
-    display_name: "DeepSeek V3",
-    provider: "DeepSeek",
-    is_enabled: true,
-    is_free: false,
-    sort_order: 2,
-    default_for_agent: "B",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    description: "DeepSeek's latest conversational AI model",
-    pros: ["Cost effective", "Good reasoning"],
-    cons: [],
-    use_cases: ["Conversation", "Problem solving"],
-    avoid_cases: [],
-    category: "Large",
-    context_window: 64000,
-    speed_rating: "Fast",
-    license_type: "open-weight",
-  },
-  {
-    id: "3",
-    model_id: "google/gemma-3-27b-it",
-    display_name: "Gemma 3 27B",
-    provider: "Google",
-    is_enabled: true,
-    is_free: false,
-    sort_order: 3,
-    default_for_agent: "C",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    description: "Google's efficient open model",
-    pros: ["Efficient", "Good at instruction following"],
-    cons: ["Smaller context"],
-    use_cases: ["Creative writing", "Analysis"],
-    avoid_cases: [],
-    category: "Medium",
-    context_window: 8192,
-    speed_rating: "Fast",
-    license_type: "open-weight",
-  },
-  {
-    id: "4",
-    model_id: "qwen/qwen-2.5-72b-instruct",
-    display_name: "Qwen 2.5 72B",
-    provider: "Alibaba",
-    is_enabled: true,
-    is_free: false,
-    sort_order: 4,
-    default_for_agent: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    description: "Alibaba's powerful instruction-following model",
-    pros: ["Multilingual", "Strong reasoning"],
-    cons: [],
-    use_cases: ["Analysis", "Translation"],
-    avoid_cases: [],
-    category: "Large",
-    context_window: 32000,
-    speed_rating: "Medium",
-    license_type: "open-weight",
-  },
-  {
-    id: "5",
-    model_id: "mistralai/mistral-large-2411",
-    display_name: "Mistral Large",
-    provider: "Mistral",
-    is_enabled: true,
-    is_free: false,
-    sort_order: 5,
-    default_for_agent: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    description: "Mistral's flagship large language model",
-    pros: ["European AI", "Strong performance"],
-    cons: [],
-    use_cases: ["Conversation", "Writing"],
-    avoid_cases: [],
-    category: "Large",
-    context_window: 128000,
-    speed_rating: "Medium",
-    license_type: "closed",
-  },
-];
+// Default models for each agent - must exist in the curated_models table
+const DEFAULT_AGENT_MODELS = {
+  agentA: "x-ai/grok-4-fast",
+  agentB: "qwen/qwen3-32b", 
+  agentC: "mistralai/mixtral-8x7b-instruct",
+};
 
 interface ModelsContextType {
   agentAModel: string;
@@ -126,13 +24,8 @@ interface ModelsContextType {
 const ModelsContext = createContext<ModelsContextType | null>(null);
 
 export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with hardcoded defaults - these never change based on database
-  const [agentModels, setAgentModels] = useState({
-    agentA: "google/gemini-2.5-flash",
-    agentB: "x-ai/grok-4.1-fast",
-    agentC: "baidu/ernie-4.5-21b-a3b",
-  });
-  const [availableModels, setAvailableModels] = useState<CuratedModel[]>(HARDCODED_MODELS);
+  const [agentModels, setAgentModels] = useState(DEFAULT_AGENT_MODELS);
+  const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
 
   // Load curated models from database
@@ -140,13 +33,9 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const loadModels = async () => {
       try {
         const models = await getEnabledModels();
-        if (models.length > 0) {
-          setAvailableModels(models);
-        }
-        // If empty, keep HARDCODED_MODELS as fallback
+        setAvailableModels(models);
       } catch (error) {
         console.error("Failed to load curated models:", error);
-        // Keep HARDCODED_MODELS as fallback
       } finally {
         setLoadingModels(false);
       }
