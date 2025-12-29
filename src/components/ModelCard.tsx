@@ -55,10 +55,22 @@ export const ModelCard = ({ model }: ModelCardProps) => {
     return tokens.toString();
   };
 
+  const handleHeaderClick = () => {
+    if (hasEducationalContent) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-colors">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <div className="p-4">
+        <div 
+          className={cn(
+            "p-4 transition-colors",
+            hasEducationalContent && "cursor-pointer hover:bg-muted/50"
+          )}
+          onClick={handleHeaderClick}
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -94,21 +106,19 @@ export const ModelCard = ({ model }: ModelCardProps) => {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <Link to="/new">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <Play className="h-3.5 w-3.5" />
-                  Try
-                </Button>
-              </Link>
-              {hasEducationalContent && (
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <ChevronDown className={cn(
-                      "h-4 w-4 transition-transform",
-                      isExpanded && "rotate-180"
-                    )} />
+              <div onClick={(e) => e.stopPropagation()}>
+                <Link to="/new">
+                  <Button size="sm" variant="outline" className="gap-1.5">
+                    <Play className="h-3.5 w-3.5" />
+                    Try
                   </Button>
-                </CollapsibleTrigger>
+                </Link>
+              </div>
+              {hasEducationalContent && (
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform",
+                  isExpanded && "rotate-180"
+                )} />
               )}
             </div>
           </div>
