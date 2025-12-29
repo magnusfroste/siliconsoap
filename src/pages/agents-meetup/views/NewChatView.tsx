@@ -45,7 +45,7 @@ export const NewChatView = () => {
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
-  const { creditsRemaining, hasCredits, useCredit, isGuest } = useCredits(user?.id);
+  const { creditsRemaining, hasCredits, useCredit, isGuest, loading: creditsLoading } = useCredits(user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -88,6 +88,12 @@ export const NewChatView = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPrompt.trim() || isGenerating) return;
+
+    // Wait for credits to load before checking
+    if (creditsLoading) {
+      toast.info('Loading credits...');
+      return;
+    }
 
     // Check credits before proceeding
     if (!creditsService.canStartConversation(creditsRemaining)) {
