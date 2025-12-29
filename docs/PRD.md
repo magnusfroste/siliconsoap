@@ -6,6 +6,8 @@ AI Labs is a multi-project platform showcasing advanced AI agent technologies. T
 
 **Current Status**: Project 1 (AI Agents Meetup) is in production. Project 2 (Workflow Builder) is in active development. Project 3 (Research Assistant) is planned.
 
+**Next Release**: Swarm Builder feature for interactive agent team configuration.
+
 ---
 
 ## Architecture Overview
@@ -118,6 +120,38 @@ Agent personas are centralized in the `agent_profiles` table, replacing hardcode
 - **Content**: Quick verdict, nerd stats (tokens, cost, charts), detailed analysis
 - **Access**: Logged-in users only (guests see sign-in prompt)
 - **Purpose**: Entertainment value + incentivizes user signup
+
+#### 6. Swarm Builder (Planned - Next Release)
+
+An interactive "Build Your Own Agent Swarm" feature in the Learn section that allows users to configure optimal agent team compositions.
+
+**Core Functionality:**
+- Choose from 8 specialized agent types (requires expanding from current 4 personas)
+- Select 2-3 agents to form an optimal collaboration team
+- Pick collaboration architecture (Debate, Sequential, Round-Robin)
+- Preview swarm strengths and considerations
+- Launch directly to `/new` with pre-configured agent setup
+
+**Agent Types (Expansion Required):**
+- **Existing personas**: Analytical Expert, Creative Thinker, Strategic Planner, Empathy Expert
+- **New personas to create**: Critic, Synthesizer, Fact-Checker, Devil's Advocate
+
+**Pedagogical Element:**
+- Explains why 2-3 agents is the optimal "sweet spot" for demo swarms
+- Shows how different agent combinations create unique dynamics
+- Educates users about swarm architectures before they experiment
+
+**Technical Requirements:**
+- Create 4 new system personas in `agent_profiles` table
+- Build `SwarmBuilderSection.tsx` interactive component
+- Add URL query parameter support in `NewChatView.tsx` for swarm pre-configuration
+- Integration path: Learn section → configured `/new` experience
+
+**Use Cases Available:**
+- Research Project
+- Content Creation
+- Code Review
+- Problem Solving
 
 ### Technical Architecture
 
@@ -486,6 +520,7 @@ graph TD
 
 ### 📋 Planned
 
+- [ ] **Swarm Builder** - Interactive agent team configuration tool with 8 specialized agent types, architecture selection, and direct launch to pre-configured conversations
 - [ ] Agent Marketplace (premium profiles, user-created profiles)
 - [ ] Stripe integration (credit purchases)
 - [ ] AI Research Assistant (new project)
@@ -533,6 +568,6 @@ VITE_SUPABASE_PROJECT_ID=<auto-configured>
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-12-29
 **Version**: 1.0
 **Status**: Living Document
