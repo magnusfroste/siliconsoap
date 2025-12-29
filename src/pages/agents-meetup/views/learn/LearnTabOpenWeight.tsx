@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Scale, Shield, Wrench, DollarSign, Users, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Scale, Shield, Wrench, DollarSign, Users, ExternalLink, TrendingDown, Network, Target, Sparkles, ArrowRight, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const LearnTabOpenWeight = () => {
   const openModels = [
@@ -185,20 +187,147 @@ export const LearnTabOpenWeight = () => {
         </CardContent>
       </Card>
 
+      {/* The Next Frontier: Multi-Agent Future */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <CardHeader>
+          <div className="flex items-center gap-2 text-primary mb-2">
+            <Network className="h-5 w-5" />
+            <Badge variant="outline" className="border-primary/30 text-primary">2024-2025 Trend</Badge>
+          </div>
+          <CardTitle className="text-xl">Beyond the Plateau: The Multi-Agent Future</CardTitle>
+          <CardDescription>
+            Why specialized AI swarms are replacing monolithic giants
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* The Plateau Problem */}
+          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingDown className="h-5 w-5 text-destructive" />
+              <h4 className="font-semibold text-foreground">The Transformer Plateau</h4>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Research shows that simply scaling LLMs larger is hitting diminishing returns. 
+              Training costs double but improvements shrink. We're running out of quality training data, 
+              and the biggest models struggle with the same reasoning tasks as smaller ones.
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-bold text-foreground">10x</div>
+                <div className="text-muted-foreground">compute increase</div>
+              </div>
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-bold text-foreground">→</div>
+                <div className="text-muted-foreground">yields only</div>
+              </div>
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-bold text-foreground">~5%</div>
+                <div className="text-muted-foreground">benchmark gain</div>
+              </div>
+            </div>
+          </div>
+
+          {/* The Multi-Agent Solution */}
+          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-5 w-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Multi-Agent Swarms: The Solution</h4>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Instead of one massive model trying to do everything, the future is specialized agents 
+              collaborating—each an expert in their domain. Like a team of specialists vs. one generalist.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3 mb-4">
+              <div className="flex items-start gap-2 p-2 rounded bg-background/50">
+                <Target className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">Researcher Agent</div>
+                  <div className="text-xs text-muted-foreground">Gathers information, searches knowledge bases</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded bg-background/50">
+                <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">Critic Agent</div>
+                  <div className="text-xs text-muted-foreground">Challenges assumptions, finds flaws</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded bg-background/50">
+                <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">Fact-Checker Agent</div>
+                  <div className="text-xs text-muted-foreground">Verifies claims, prevents hallucinations</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded bg-background/50">
+                <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-sm">Synthesizer Agent</div>
+                  <div className="text-xs text-muted-foreground">Combines insights into final output</div>
+                </div>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground bg-background/30 p-2 rounded">
+              <strong className="text-foreground">Why open-weight matters here:</strong> You can fine-tune 
+              each agent for its specific role, run them privately, and swap components without vendor lock-in.
+            </div>
+          </div>
+
+          {/* SiliconSoap Connection */}
+          <div className="p-5 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
+            <div className="flex items-center gap-2 mb-3">
+              <Network className="h-5 w-5 text-primary" />
+              <h4 className="font-semibold text-foreground">See It In Action: SiliconSoap</h4>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              SiliconSoap lets you observe how different AI models interact, debate, and challenge each other. 
+              Understand their personalities, strengths, and quirks before deploying them in your own agent swarms.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3 mb-4 text-xs">
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-semibold text-foreground">Compare Models</div>
+                <div className="text-muted-foreground">Side-by-side behavior</div>
+              </div>
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-semibold text-foreground">Watch Debates</div>
+                <div className="text-muted-foreground">Multi-agent dynamics</div>
+              </div>
+              <div className="p-2 rounded bg-background/50 text-center">
+                <div className="font-semibold text-foreground">Test Privately</div>
+                <div className="text-muted-foreground">Open-weight models</div>
+              </div>
+            </div>
+            <Link to="/new">
+              <Button className="w-full sm:w-auto gap-2">
+                Start an Agent Conversation
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* CTA */}
       <div className="text-center p-6 rounded-xl bg-muted/50 border">
         <p className="text-muted-foreground mb-4">
-          Ready to try open-weight models? They're available on SiliconSoap or you can self-host.
+          Open-weight models power the next generation of private, specialized AI swarms. 
+          Start exploring them today.
         </p>
-        <a 
-          href="https://huggingface.co/models" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-primary hover:underline"
-        >
-          Browse models on Hugging Face
-          <ExternalLink className="h-4 w-4" />
-        </a>
+        <div className="flex flex-wrap justify-center gap-4">
+          <a 
+            href="https://huggingface.co/models" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-primary hover:underline"
+          >
+            Browse on Hugging Face
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <Link to="/new" className="inline-flex items-center gap-2 text-primary hover:underline">
+            Test Agent Interactions
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </div>
   );

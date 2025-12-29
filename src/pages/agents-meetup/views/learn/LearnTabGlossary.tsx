@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookText, Sparkles, Thermometer, Layers, MessageSquare, Cpu, Zap, Database } from 'lucide-react';
+import { BookText, Sparkles, Thermometer, Layers, MessageSquare, Cpu, Zap, Database, Users, Network, Target, Bot } from 'lucide-react';
 
 interface GlossaryTerm {
   term: string;
@@ -105,6 +105,36 @@ const glossaryTerms: GlossaryTerm[] = [
     definition: "Reducing the precision of model weights to decrease memory usage and increase speed, with minimal quality loss. Common formats: Q4, Q8, FP16.",
     example: "A Q4 quantized model uses ~4x less memory than the full-precision version.",
     icon: <Cpu className="h-5 w-5" />
+  },
+  {
+    term: "Multi-Agent System (MAS)",
+    definition: "An AI architecture where multiple specialized agents collaborate to solve complex tasks. Each agent focuses on a specific capability (research, critique, synthesis) and communicates with others to achieve a shared goal.",
+    example: "A MAS for content creation might have a researcher agent, writer agent, editor agent, and fact-checker agent working together.",
+    icon: <Users className="h-5 w-5" />
+  },
+  {
+    term: "Swarm Intelligence",
+    definition: "Collective behavior that emerges from the interactions of multiple simple agents. The group achieves more sophisticated results than any individual agent could alone.",
+    example: "Like how a flock of birds navigates without a leader, AI swarms can solve problems through distributed decision-making.",
+    icon: <Network className="h-5 w-5" />
+  },
+  {
+    term: "Agent Orchestration",
+    definition: "The process of coordinating multiple AI agents, managing their communication, task assignment, and combining their outputs toward a common objective.",
+    example: "An orchestrator decides which agent handles each part of a user query and synthesizes their responses.",
+    icon: <Target className="h-5 w-5" />
+  },
+  {
+    term: "Mixture of Experts (MoE)",
+    definition: "A neural network architecture where different 'expert' sub-networks specialize in different types of inputs. A gating mechanism routes each input to the most relevant experts.",
+    example: "DeepSeek V3 (671B) uses MoE—only ~37B parameters are active per query, making it efficient despite its size.",
+    icon: <Layers className="h-5 w-5" />
+  },
+  {
+    term: "Agentic AI",
+    definition: "AI systems that can plan, reason, use tools, and take autonomous actions to achieve goals—rather than just responding to prompts. They can break down tasks and execute multi-step workflows.",
+    example: "An agentic AI assistant might research a topic, write a report, fact-check it, and email it to you—all from one request.",
+    icon: <Bot className="h-5 w-5" />
   }
 ];
 
