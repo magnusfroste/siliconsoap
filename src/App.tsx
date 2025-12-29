@@ -1,10 +1,10 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import { Landing } from "./pages/Landing";
 import { AgentsMeetupLayout } from "./pages/agents-meetup/layout/AgentsMeetupLayout";
@@ -50,35 +50,37 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <PageTracker />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route element={<AgentsMeetupLayout />}>
-              <Route path="new" element={<NewChatView />} />
-              <Route path="chat/:chatId" element={<ChatView />} />
-              <Route path="explore" element={<ExploreView />} />
-              <Route path="leaderboard" element={<LeaderboardView />} />
-              <Route path="profile" element={<ProfileView />} />
-              <Route path="agent-profiles" element={<AgentProfilesView />} />
-              <Route path="learn" element={<LearnView />} />
-              <Route path="models" element={<ModelsView />} />
-              <Route path="about" element={<AboutView />} />
-              <Route path="settings" element={<SettingsView />} />
-              <Route path="admin" element={<AdminView />} />
-            </Route>
-            <Route path="/shared/:shareId" element={<SharedChatView />} />
-            <Route path="/auth" element={<Auth />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <PageTracker />
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route element={<AgentsMeetupLayout />}>
+                <Route path="new" element={<ErrorBoundary><NewChatView /></ErrorBoundary>} />
+                <Route path="chat/:chatId" element={<ErrorBoundary><ChatView /></ErrorBoundary>} />
+                <Route path="explore" element={<ErrorBoundary><ExploreView /></ErrorBoundary>} />
+                <Route path="leaderboard" element={<ErrorBoundary><LeaderboardView /></ErrorBoundary>} />
+                <Route path="profile" element={<ErrorBoundary><ProfileView /></ErrorBoundary>} />
+                <Route path="agent-profiles" element={<ErrorBoundary><AgentProfilesView /></ErrorBoundary>} />
+                <Route path="learn" element={<ErrorBoundary><LearnView /></ErrorBoundary>} />
+                <Route path="models" element={<ErrorBoundary><ModelsView /></ErrorBoundary>} />
+                <Route path="about" element={<ErrorBoundary><AboutView /></ErrorBoundary>} />
+                <Route path="settings" element={<ErrorBoundary><SettingsView /></ErrorBoundary>} />
+                <Route path="admin" element={<ErrorBoundary><AdminView /></ErrorBoundary>} />
+              </Route>
+              <Route path="/shared/:shareId" element={<ErrorBoundary><SharedChatView /></ErrorBoundary>} />
+              <Route path="/auth" element={<Auth />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
