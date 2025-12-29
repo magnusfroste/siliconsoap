@@ -23,7 +23,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Will AGI arrive within 5 years?',
     prompt: 'Debate whether Artificial General Intelligence will be achieved by 2030. Consider current AI capabilities, research trajectories, and the fundamental challenges that remain.',
     targetDate: '2025-01-15',
-    models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'meta-llama/llama-3.1-70b-instruct'],
+    models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'deepseek/deepseek-chat-v3-0324'],
     personas: ['Tech Optimist', 'Skeptical Researcher', 'Pragmatic Engineer']
   },
   {
@@ -31,7 +31,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'EU AI Act: Good or bad for innovation?',
     prompt: 'Discuss whether the EU AI Act will help or hinder AI innovation in Europe. Consider safety benefits, compliance costs, and global competitiveness.',
     targetDate: '2025-02-12',
-    models: ['mistralai/mistral-large', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
+    models: ['mistralai/mistral-large-2411', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o'],
     personas: ['EU Policy Advocate', 'Startup Founder', 'AI Safety Researcher']
   },
   {
@@ -39,7 +39,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Should AI-generated art be protected by copyright?',
     prompt: 'Debate whether AI-generated artwork deserves copyright protection. Consider the role of human creativity, training data rights, and economic implications for artists.',
     targetDate: '2025-03-18',
-    models: ['anthropic/claude-3.5-sonnet', 'meta-llama/llama-3.1-70b-instruct', 'google/gemini-pro-1.5'],
+    models: ['anthropic/claude-3.5-sonnet', 'google/gemini-2.5-flash', 'deepseek/deepseek-r1'],
     personas: ['Digital Artist', 'IP Lawyer', 'AI Researcher']
   },
   {
@@ -47,7 +47,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Will AI replace programmers?',
     prompt: 'Discuss whether AI coding assistants will eventually replace human programmers. Consider current capabilities, the nature of software development, and the evolution of the profession.',
     targetDate: '2025-04-22',
-    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'qwen/qwen-2.5-72b-instruct'],
+    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'anthropic/claude-3.7-sonnet'],
     personas: ['Senior Developer', 'AI Enthusiast', 'Tech Lead']
   },
   {
@@ -55,7 +55,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Open-source AI vs closed models - which is safer?',
     prompt: 'Debate whether open-source AI models are safer than closed proprietary models. Consider transparency, misuse potential, and collective improvement.',
     targetDate: '2025-05-08',
-    models: ['meta-llama/llama-3.1-70b-instruct', 'anthropic/claude-3.5-sonnet', 'mistralai/mistral-large'],
+    models: ['deepseek/deepseek-r1-distill-llama-70b', 'anthropic/claude-3.5-sonnet', 'mistralai/mistral-large-2411'],
     personas: ['Open Source Advocate', 'Corporate AI Lead', 'Security Expert']
   },
   {
@@ -63,7 +63,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'AI in schools: Cheating tool or future of education?',
     prompt: 'Discuss whether AI tools in education represent a threat to learning or an opportunity to transform education. Consider critical thinking, accessibility, and pedagogical approaches.',
     targetDate: '2025-06-05',
-    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'google/gemini-pro-1.5'],
+    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'google/gemini-2.5-pro-preview-06-05'],
     personas: ['High School Teacher', 'EdTech Entrepreneur', 'Education Researcher']
   },
   {
@@ -71,7 +71,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Can AI solve the climate crisis?',
     prompt: 'Debate whether AI can be a significant force in addressing climate change. Consider energy optimization, scientific discovery, and the carbon footprint of AI itself.',
     targetDate: '2025-07-14',
-    models: ['anthropic/claude-3.5-sonnet', 'meta-llama/llama-3.1-70b-instruct', 'openai/gpt-4o'],
+    models: ['anthropic/claude-3.5-sonnet', 'deepseek/deepseek-chat-v3-0324', 'openai/gpt-4o'],
     personas: ['Climate Scientist', 'AI Researcher', 'Environmental Activist']
   },
   {
@@ -79,7 +79,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Should AI models be regulated like pharmaceuticals?',
     prompt: 'Discuss whether AI systems should undergo rigorous testing and approval processes similar to drug regulation. Consider safety, innovation speed, and enforcement challenges.',
     targetDate: '2025-08-20',
-    models: ['mistralai/mistral-large', 'anthropic/claude-3.5-sonnet', 'qwen/qwen-2.5-72b-instruct'],
+    models: ['mistralai/mistral-large-2411', 'anthropic/claude-3.5-sonnet', 'x-ai/grok-3-mini'],
     personas: ['Regulatory Expert', 'AI Startup CEO', 'Bioethicist']
   },
   {
@@ -87,7 +87,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Deepfakes and democracy: The invisible threat',
     prompt: 'Debate how deepfakes and AI-generated misinformation threaten democratic processes. Consider detection technology, media literacy, and regulatory responses.',
     targetDate: '2025-09-10',
-    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'meta-llama/llama-3.1-70b-instruct'],
+    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'deepseek/deepseek-r1'],
     personas: ['Journalist', 'AI Ethics Researcher', 'Political Scientist']
   },
   {
@@ -95,7 +95,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'Who owns the data that trains AI?',
     prompt: 'Discuss data ownership and consent in AI training. Consider creator rights, fair compensation, and the balance between innovation and intellectual property.',
     targetDate: '2025-10-07',
-    models: ['anthropic/claude-3.5-sonnet', 'google/gemini-pro-1.5', 'meta-llama/llama-3.1-70b-instruct'],
+    models: ['anthropic/claude-3.5-sonnet', 'google/gemini-2.5-flash', 'meta-llama/llama-4-maverick'],
     personas: ['Content Creator', 'Tech Lawyer', 'AI Company Representative']
   },
   {
@@ -103,7 +103,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'AI assistants: Friend or foe?',
     prompt: 'Debate whether AI personal assistants are beneficial or harmful to human autonomy and wellbeing. Consider productivity, privacy, dependency, and social skills.',
     targetDate: '2025-11-15',
-    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'mistralai/mistral-large'],
+    models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'mistralai/mistral-large-2411'],
     personas: ['Psychologist', 'Tech Executive', 'Digital Minimalist']
   },
   {
@@ -111,7 +111,7 @@ const HOT_TOPICS_2025: HotTopic[] = [
     topic: 'The biggest AI breakthroughs of 2025',
     prompt: 'Discuss what the most significant AI advancements of 2025 have been and their implications for the future. Consider technical progress, societal impact, and unexpected developments.',
     targetDate: '2025-12-20',
-    models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'google/gemini-pro-1.5'],
+    models: ['anthropic/claude-sonnet-4.5', 'openai/gpt-4o', 'google/gemini-2.5-pro-preview-06-05'],
     personas: ['AI Researcher', 'Tech Journalist', 'Venture Capitalist']
   }
 ];
