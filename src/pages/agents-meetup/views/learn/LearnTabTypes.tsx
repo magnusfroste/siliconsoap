@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Lightbulb, Code, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Lightbulb, Code, Sparkles, Users, ArrowRight, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const LearnTabTypes = () => {
   return (
@@ -186,6 +188,68 @@ export const LearnTabTypes = () => {
           <p className="text-xs text-muted-foreground mt-4">
             Most modern applications use the Chat API. SiliconSoap uses Chat API for all conversations.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Emerging: Specialized Agent Models */}
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Emerging: Specialized Agent Models
+            </CardTitle>
+            <Badge className="bg-primary/20 text-primary border-0">The Future</Badge>
+          </div>
+          <CardDescription>
+            Beyond monolithic LLMs—the rise of collaborative AI swarms
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            As single-model scaling hits diminishing returns, the industry is shifting toward 
+            <strong> multi-agent architectures</strong>: smaller, specialized models that collaborate 
+            like a team of experts rather than one generalist trying to do everything.
+          </p>
+          
+          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+            <div className="text-sm font-medium mb-2 flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              Why This Matters
+            </div>
+            <ul className="text-sm text-muted-foreground space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span><strong>More robust:</strong> One agent failing doesn't crash the system</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span><strong>More transparent:</strong> You can see each agent's reasoning</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span><strong>More efficient:</strong> Smaller models cost less to run</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span><strong>More updatable:</strong> Swap one specialist without retraining all</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <div className="font-medium mb-2">🔬 See Agent Dynamics on SiliconSoap</div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Watch how different models debate, challenge, and collaborate. Understand their 
+              personalities before deploying them in your own agent systems.
+            </p>
+            <Link to="/new">
+              <Button variant="outline" size="sm" className="gap-2">
+                Start an Agent Conversation
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
