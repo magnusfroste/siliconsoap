@@ -8,6 +8,7 @@ import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
+import { ChatHistorySkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
@@ -168,9 +169,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         {user ? (
           <>
             {loading ? (
-              <div className="text-sm text-muted-foreground text-center py-8">
-                Loading chats...
-              </div>
+              <ChatHistorySkeleton />
             ) : chats.length === 0 ? (
               <div className="text-sm text-muted-foreground text-center py-8">
                 No saved chats yet

@@ -12,6 +12,7 @@ import { Json } from '@/integrations/supabase/types';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProfileStats, calculateRank, SiliconRank } from '../hooks/useProfileStats';
 import { HallOfShame } from '../components/HallOfShame';
+import { DebateCardSkeleton } from '@/components/skeletons';
 
 interface UserRankInfo {
   displayName: string | null;
@@ -287,17 +288,7 @@ function DebateGrid({ debates, loading, onDebateClick, getAgentCount }: DebateGr
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-5 bg-muted rounded w-3/4 mb-3" />
-              <div className="h-4 bg-muted rounded w-full mb-2" />
-              <div className="h-4 bg-muted rounded w-2/3 mb-4" />
-              <div className="flex gap-2">
-                <div className="h-6 bg-muted rounded w-16" />
-                <div className="h-6 bg-muted rounded w-16" />
-              </div>
-            </CardContent>
-          </Card>
+          <DebateCardSkeleton key={i} />
         ))}
       </div>
     );

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Eye, MessageSquare, Users, TrendingUp, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { FeaturedDebatesGridSkeleton } from '@/components/skeletons';
 import { Link } from 'react-router-dom';
 
 interface FeaturedDebate {
@@ -81,19 +81,7 @@ export const FeaturedDebates = () => {
             <TrendingUp className="h-5 w-5 text-primary" />
             <h3 className="text-2xl font-semibold">Trending Debates</h3>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-6">
-                <Skeleton className="h-6 w-3/4 mb-3" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3 mb-4" />
-                <div className="flex gap-4">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </Card>
-            ))}
-          </div>
+          <FeaturedDebatesGridSkeleton />
         </div>
       </section>
     );
