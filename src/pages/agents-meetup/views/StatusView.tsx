@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, Circle, Play } from 'lucide-react';
-import { getEnabledModels } from '@/repositories/curatedModelsRepository';
+import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, Circle, Play, Ban } from 'lucide-react';
+import { getEnabledModels, disableModel } from '@/repositories/curatedModelsRepository';
 import { CuratedModel } from '@/models';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ModelStatus {
   model_id: string;
@@ -134,6 +135,23 @@ export const StatusView = () => {
       return result;
     }
   }, []);
+
+  const handleDisableModel = async (model: CuratedModel) => {
+    try {
+      await disableModel(model.id);
+      toast.success(`Disabled ${model.display_name}`);
+      // Remove from local state
+      setModels(prev => prev.filter(m => m.id !== model.id));
+      setStatuses(prev => {
+        const newStatuses = { ...prev };
+        delete newStatuses[model.model_id];
+        return newStatuses;
+      });
+    } catch (error) {
+      console.error('Failed to disable model:', error);
+      toast.error('Failed to disable model');
+    }
+  };
 
   const checkAllModels = async () => {
     setCheckingAll(true);
@@ -276,6 +294,15 @@ export const StatusView = () => {
                         ) : (
                           'Test'
                         )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDisableModel(model)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        title="Disable this model"
+                      >
+                        <Ban className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
