@@ -67,6 +67,9 @@ async function checkModel(modelId: string): Promise<CheckResult> {
     
     const data = await response.json();
     
+    // Log full raw response for debugging GPT-5 issues
+    console.log(`[check-model-status] Raw API response for ${modelId}:`, JSON.stringify(data).substring(0, 500));
+    
     // Standard content location
     let content = data.choices?.[0]?.message?.content || '';
     
