@@ -8,7 +8,7 @@ import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
-import { ChatHistorySkeleton } from '@/components/skeletons';
+import { ChatHistorySkeleton, CreditsBadgeSkeleton, CreditsDisplaySkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
@@ -22,7 +22,7 @@ interface ChatSidebarProps {
 
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
-  const { creditsRemaining, isGuest } = useCredits(user?.id);
+  const { creditsRemaining, isGuest, loading: creditsLoading } = useCredits(user?.id);
   const { isAdmin } = useIsAdmin();
   const { isEnabled, getTextValue } = useFeatureFlags();
   const location = useLocation();
@@ -101,11 +101,15 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         <div className="flex-1" />
         
         {/* Credits Display */}
-        <div className="flex flex-col items-center gap-1 mb-2" title={`${creditsRemaining} credits remaining`}>
+        <div className="flex flex-col items-center gap-1 mb-2" title={creditsLoading ? 'Loading credits...' : `${creditsRemaining} credits remaining`}>
           <Ticket className="h-4 w-4 text-muted-foreground" />
-          <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"} className="text-xs px-1.5 py-0">
-            {creditsRemaining}
-          </Badge>
+          {creditsLoading ? (
+            <CreditsBadgeSkeleton />
+          ) : (
+            <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"} className="text-xs px-1.5 py-0">
+              {creditsRemaining}
+            </Badge>
+          )}
         </div>
         
         <div className="h-px w-8 bg-border mb-2" />
@@ -222,17 +226,23 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
       <div className="border-t">
         {/* Credits Display */}
         <div className="p-3 border-b">
-          <div className="flex items-center gap-2 text-sm">
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Credits:</span>
-            <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"}>
-              {creditsRemaining}
-            </Badge>
-          </div>
-          {isGuest && creditsRemaining > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Sign up for {10 - creditsRemaining} more credits
-            </p>
+          {creditsLoading ? (
+            <CreditsDisplaySkeleton />
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-sm">
+                <Ticket className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Credits:</span>
+                <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"}>
+                  {creditsRemaining}
+                </Badge>
+              </div>
+              {isGuest && creditsRemaining > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Sign up for {10 - creditsRemaining} more credits
+                </p>
+              )}
+            </>
           )}
         </div>
 
