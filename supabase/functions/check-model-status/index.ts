@@ -41,7 +41,10 @@ async function checkModel(modelId: string): Promise<CheckResult> {
         messages: [
           { role: 'user', content: TEST_PROMPT }
         ],
-        max_tokens: 20, // Increased from 10 - OpenAI requires minimum 16
+        // GPT-5 and newer OpenAI models require max_completion_tokens instead of max_tokens
+        ...(modelId.includes('gpt-5') || modelId.includes('gpt-4.1') || modelId.includes('o3') || modelId.includes('o4')
+          ? { max_completion_tokens: 20 }
+          : { max_tokens: 20 }),
         // Removed temperature - some models don't support it
       }),
       signal: controller.signal,
