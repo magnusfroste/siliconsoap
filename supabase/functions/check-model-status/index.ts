@@ -41,8 +41,8 @@ async function checkModel(modelId: string): Promise<CheckResult> {
         messages: [
           { role: 'user', content: TEST_PROMPT }
         ],
-        max_tokens: 10,
-        temperature: 0,
+        max_tokens: 20, // Increased from 10 - OpenAI requires minimum 16
+        // Removed temperature - some models don't support it
       }),
       signal: controller.signal,
     });
@@ -63,12 +63,49 @@ async function checkModel(modelId: string): Promise<CheckResult> {
     }
     
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    
+    // Standard content location
+    let content = data.choices?.[0]?.message?.content || '';
+    
+    // For "thinking" models, also check reasoning_content
+    const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
+    
+    // Check if we got usage (indicates model processed the request)
+    const hasUsage = data.usage?.completion_tokens > 0;
+    const finishReason = data.choices?.[0]?.finish_reason;
+    
+    // Log full response structure for debugging
+    console.log(`[check-model-status] Response structure for ${modelId}:`, JSON.stringify({
+      hasContent: !!content,
+      contentLength: content?.length || 0,
+      hasReasoning: !!reasoningContent,
+      reasoningLength: reasoningContent?.length || 0,
+      finishReason,
+      completionTokens: data.usage?.completion_tokens || 0,
+    }));
+    
+    // If content is empty, try to use reasoning content
+    if (!content && reasoningContent) {
+      content = reasoningContent;
+    }
     
     console.log(`[check-model-status] Response from ${modelId}: "${content}" (${responseTime}ms)`);
     
-    // Check if response is valid
-    const isValidResponse = content.toLowerCase().includes('ok');
+    // Check if response is valid - more lenient for thinking models
+    const isValidResponse = content.toLowerCase().includes('ok') || 
+                            reasoningContent.toLowerCase().includes('ok');
+    
+    // If we got usage tokens, model is working even if response format is unexpected
+    if (!isValidResponse && hasUsage) {
+      console.log(`[check-model-status] ℹ️ ${modelId} - Got response with usage (${data.usage?.completion_tokens} tokens) but unexpected format`);
+      return {
+        model_id: modelId,
+        status: 'operational', // Model is working, just different response format
+        response_time_ms: responseTime,
+        error_message: null,
+        raw_response: content || reasoningContent || '[thinking model]',
+      };
+    }
     
     if (!isValidResponse) {
       console.warn(`[check-model-status] ⚠️ ${modelId} - Unexpected response: "${content}"`);
