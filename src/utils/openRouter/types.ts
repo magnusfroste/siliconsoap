@@ -38,7 +38,3 @@ export interface ApiError {
 }
 
 export type ResponseLength = "short" | "medium" | "long";
-
-// Importing default model IDs from dedicated models file
-import { DEFAULT_MODEL_IDS } from './models';
-export { DEFAULT_MODEL_IDS };

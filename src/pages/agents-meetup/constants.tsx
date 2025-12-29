@@ -1,6 +1,5 @@
-import { Atom, MessageSquare, HelpCircle, FileText, BookOpen, Users, Zap, User, UserRound, Settings, MessageCircle, Lightbulb } from 'lucide-react';
+import { MessageCircle, Lightbulb, Settings, Zap, UserRound, HelpCircle, BookOpen, Users } from 'lucide-react';
 import { Profile, ScenarioType } from './types';
-import { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS } from '@/utils/openRouter/models';
 
 export const profiles: Profile[] = [
   {
@@ -39,7 +38,7 @@ export const responseLengthOptions = [
   { value: 'long', label: 'Long (detailed analysis)', icon: <MessageCircle className="h-5 w-5" /> }
 ];
 
-export { AGENT_A_PREFERRED_MODELS, AGENT_B_PREFERRED_MODELS, AGENT_C_PREFERRED_MODELS };
+
 
 export const scenarioTypes: ScenarioType[] = [
   {
