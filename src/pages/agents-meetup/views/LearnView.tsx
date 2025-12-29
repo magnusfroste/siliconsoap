@@ -1,15 +1,16 @@
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Cpu, Scale, Server, BookText, Users } from 'lucide-react';
+import { BookOpen, Cpu, Scale, Server, BookText, Users, Shield } from 'lucide-react';
 import { LearnTabBasics } from './learn/LearnTabBasics';
 import { LearnTabTypes } from './learn/LearnTabTypes';
 import { LearnTabOpenWeight } from './learn/LearnTabOpenWeight';
 import { LearnTabMultiAgent } from './learn/LearnTabMultiAgent';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
+import { LearnTabSecurity } from './learn/LearnTabSecurity';
 import { LearnTabGlossary } from './learn/LearnTabGlossary';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
-const VALID_TABS = ['basics', 'types', 'open-weight', 'multi-agent', 'self-hosting', 'glossary'];
+const VALID_TABS = ['basics', 'types', 'open-weight', 'multi-agent', 'self-hosting', 'security', 'glossary'];
 
 export const LearnView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -72,6 +73,11 @@ export const LearnView = () => {
             <span className="hidden sm:inline">Self-Hosting</span>
             <span className="sm:hidden">Hosting</span>
           </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2 px-4 py-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Security</span>
+            <span className="sm:hidden">Security</span>
+          </TabsTrigger>
           <TabsTrigger value="glossary" className="flex items-center gap-2 px-4 py-2">
             <BookText className="h-4 w-4" />
             <span className="hidden sm:inline">Glossary</span>
@@ -93,6 +99,9 @@ export const LearnView = () => {
         </TabsContent>
         <TabsContent value="self-hosting">
           <LearnTabSelfHosting />
+        </TabsContent>
+        <TabsContent value="security">
+          <LearnTabSecurity />
         </TabsContent>
         <TabsContent value="glossary">
           <LearnTabGlossary />
