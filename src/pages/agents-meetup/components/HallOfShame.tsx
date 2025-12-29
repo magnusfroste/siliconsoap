@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { HallOfShameSkeleton } from '@/components/skeletons';
 import { formatDistanceToNow } from 'date-fns';
 import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 
@@ -58,23 +58,7 @@ export function HallOfShame() {
   };
 
   if (loading) {
-    return (
-      <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">🎭</span>
-            Hall of Shame
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-lg" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <HallOfShameSkeleton />;
   }
 
   if (moments.length === 0) {

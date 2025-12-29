@@ -9,6 +9,7 @@ import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen } from 'lu
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { ModelCard } from '@/components/ModelCard';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { ModelsGridSkeleton, QuickStatsSkeleton } from '@/components/skeletons';
 
 export const ModelsView = () => {
   const [models, setModels] = useState<CuratedModel[]>([]);
@@ -81,20 +82,24 @@ export const ModelsView = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{models.length}</div>
-          <div className="text-sm text-muted-foreground">Available Models</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{providers.length}</div>
-          <div className="text-sm text-muted-foreground">Providers</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{models.filter(m => m.is_free).length}</div>
-          <div className="text-sm text-muted-foreground">Free Models</div>
-        </Card>
-      </div>
+      {loading ? (
+        <QuickStatsSkeleton />
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{models.length}</div>
+            <div className="text-sm text-muted-foreground">Available Models</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{providers.length}</div>
+            <div className="text-sm text-muted-foreground">Providers</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{models.filter(m => m.is_free).length}</div>
+            <div className="text-sm text-muted-foreground">Free Models</div>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="p-4">
@@ -152,9 +157,7 @@ export const ModelsView = () => {
 
       {/* Models List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <ModelsGridSkeleton />
       ) : filteredModels.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
           No models found matching your criteria

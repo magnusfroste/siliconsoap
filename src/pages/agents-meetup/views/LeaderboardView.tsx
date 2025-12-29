@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Medal, Award, Eye, MessageSquare, Heart, TrendingUp } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProfileStats, calculateRank, SILICON_RANKS } from '../hooks/useProfileStats';
+import { LeaderboardRowSkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 
 interface LeaderboardUser {
@@ -187,7 +187,7 @@ export const LeaderboardView = () => {
           <CardContent className="space-y-3">
             {isLoading ? (
               [...Array(10)].map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                <LeaderboardRowSkeleton key={i} />
               ))
             ) : !leaderboard || leaderboard.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
