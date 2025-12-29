@@ -1,24 +1,35 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Github, Globe, Sparkles, TrendingUp, Brain, Database, Zap, Linkedin, Twitter } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Link } from 'react-router-dom';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  ExternalLink,
+  Github,
+  Globe,
+  Sparkles,
+  TrendingUp,
+  Brain,
+  Database,
+  Zap,
+  Linkedin,
+  Twitter,
+} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Link } from "react-router-dom";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const contextWindowData = [
-  { year: '2020', model: 'GPT-3', tokens: 2048, label: '2K', color: 'hsl(var(--muted-foreground))' },
-  { year: '2023', model: 'GPT-4', tokens: 128000, label: '128K', color: 'hsl(var(--muted-foreground))' },
-  { year: '2024', model: 'Gemini 1.5', tokens: 1000000, label: '1M', color: 'hsl(var(--primary))' },
-  { year: '2025', model: 'Grok 4', tokens: 2000000, label: '2M', color: 'hsl(var(--primary))' },
-  { year: '2025', model: 'Llama 4', tokens: 10000000, label: '10M', color: 'hsl(var(--accent-foreground))' },
+  { year: "2020", model: "GPT-3", tokens: 2048, label: "2K", color: "hsl(var(--muted-foreground))" },
+  { year: "2023", model: "GPT-4", tokens: 128000, label: "128K", color: "hsl(var(--muted-foreground))" },
+  { year: "2024", model: "Gemini 1.5", tokens: 1000000, label: "1M", color: "hsl(var(--primary))" },
+  { year: "2025", model: "Grok 4", tokens: 2000000, label: "2M", color: "hsl(var(--primary))" },
+  { year: "2025", model: "Llama 4", tokens: 10000000, label: "10M", color: "hsl(var(--accent-foreground))" },
 ];
 
 const referencePoints = [
-  { tokens: '2K', example: 'A short email', icon: '📄' },
-  { tokens: '128K', example: 'A full novel', icon: '📖' },
-  { tokens: '1M', example: 'Your entire codebase', icon: '💻' },
-  { tokens: '2M', example: "Shakespeare's complete works", icon: '📚' },
-  { tokens: '10M', example: 'The complete IRS tax code', icon: '🏛️' },
+  { tokens: "2K", example: "A short email", icon: "📄" },
+  { tokens: "128K", example: "A full novel", icon: "📖" },
+  { tokens: "1M", example: "Your entire codebase", icon: "💻" },
+  { tokens: "2M", example: "Shakespeare's complete works", icon: "📚" },
+  { tokens: "10M", example: "The complete IRS tax code", icon: "🏛️" },
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -37,12 +48,13 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export const AboutView = () => {
   usePageMeta({
-    title: 'About SiliconSoap - Founded by Magnus Froste',
-    description: 'Learn about SiliconSoap\'s mission to help evaluate AI models through real conversations. Founded by Magnus Froste to explore the AI revolution.',
-    canonicalPath: '/about',
+    title: "About SiliconSoap - Founded by Magnus Froste",
+    description:
+      "Learn about SiliconSoap's mission to help evaluate AI models through real conversations. Founded by Magnus Froste to explore the AI revolution.",
+    canonicalPath: "/about",
     breadcrumbs: [
-      { name: 'Home', path: '/' },
-      { name: 'About', path: '/about' },
+      { name: "Home", path: "/" },
+      { name: "About", path: "/about" },
     ],
   });
 
@@ -60,9 +72,10 @@ export const AboutView = () => {
           </CardHeader>
           <CardContent className="prose prose-lg dark:prose-invert max-w-none">
             <p className="text-muted-foreground text-lg leading-relaxed">
-              24 months ago, AI models struggled with single documents – <strong>32K tokens was premium</strong>. 
-              Today, xAI's Grok 4 Fast handles <span className="text-primary font-semibold">2 million tokens</span>, 
-              and Meta's Llama 4 Scout processes <span className="text-primary font-semibold">10 million tokens</span> in a single call.
+              24 months ago, AI models struggled with single documents – <strong>32K tokens was premium</strong>. Today,
+              xAI's Grok 4 Fast handles <span className="text-primary font-semibold">2 million tokens</span>, and Meta's
+              Llama 4 Scout processes <span className="text-primary font-semibold">10 million tokens</span> in a single
+              call.
             </p>
             <p className="text-muted-foreground text-lg leading-relaxed">
               That's Shakespeare's complete works – <strong>15 times over</strong>.
@@ -85,17 +98,17 @@ export const AboutView = () => {
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={contextWindowData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                  <XAxis 
-                    dataKey="model" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  <XAxis
+                    dataKey="model"
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
-                  <YAxis 
+                  <YAxis
                     scale="log"
                     domain={[1000, 15000000]}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
                     tickFormatter={(value) => {
                       if (value >= 1000000) return `${value / 1000000}M`;
                       if (value >= 1000) return `${value / 1000}K`;
@@ -112,10 +125,10 @@ export const AboutView = () => {
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-4">
-              Data based on research from{' '}
-              <a 
-                href="https://epoch.ai/data-insights/context-windows" 
-                target="_blank" 
+              Data based on research from{" "}
+              <a
+                href="https://epoch.ai/data-insights/context-windows"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline inline-flex items-center gap-1"
               >
@@ -133,10 +146,7 @@ export const AboutView = () => {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {referencePoints.map((point) => (
-                <div 
-                  key={point.tokens} 
-                  className="text-center p-4 rounded-lg bg-muted/50 border border-border/50"
-                >
+                <div key={point.tokens} className="text-center p-4 rounded-lg bg-muted/50 border border-border/50">
                   <span className="text-3xl mb-2 block">{point.icon}</span>
                   <p className="font-bold text-primary">{point.tokens}</p>
                   <p className="text-sm text-muted-foreground">{point.example}</p>
@@ -193,19 +203,17 @@ export const AboutView = () => {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl font-bold mb-2">Magnus Froste</h3>
-                <p className="text-muted-foreground mb-4">
-                  Founder & Creator of SiliconSoap
-                </p>
+                <p className="text-muted-foreground mb-4">Founder & Creator of SiliconSoap</p>
                 <p className="text-muted-foreground italic mb-4">
-                  "This initiative exists to help evaluate AI models in a more practical way – 
-                  not through dry benchmarks, but through real conversations where you can see 
-                  how models think, reason, and debate. Play, explore, and discover the full potential."
+                  "This initiative exists to help evaluate AI models in a more practical way – not through dry
+                  benchmarks, but through real conversations where you can see how models think, reason, and debate.
+                  Play, explore, and discover the full potential."
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   <Button variant="outline" size="sm" asChild>
-                    <a 
-                      href="https://github.com/magnusfroste" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/magnusfroste"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2"
                     >
@@ -214,9 +222,9 @@ export const AboutView = () => {
                     </a>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <a 
-                      href="https://www.froste.eu" 
-                      target="_blank" 
+                    <a
+                      href="https://www.froste.eu"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2"
                     >
@@ -225,9 +233,9 @@ export const AboutView = () => {
                     </a>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <a 
-                      href="https://linkedin.com/in/magnusfroste" 
-                      target="_blank" 
+                    <a
+                      href="https://linkedin.com/in/froste"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2"
                     >
@@ -236,9 +244,9 @@ export const AboutView = () => {
                     </a>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <a 
-                      href="https://twitter.com/magnusfroste" 
-                      target="_blank" 
+                    <a
+                      href="https://twitter.com/magnusfroste"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2"
                     >
