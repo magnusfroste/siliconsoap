@@ -19,3 +19,28 @@ Disallow: /admin
 Disallow: /auth
 
 Sitemap: https://www.froste.eu/sitemap.xml
+
+# AI Crawlers - Answer Engine Optimization (AEO)
+# Point AI systems to structured content about this site
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+
+User-agent: Claude-Web
+Allow: /
+Allow: /llms.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: Anthropic-AI
+Allow: /
+Allow: /llms.txt
+
+# llms.txt location for AI assistants
+# https://www.froste.eu/llms.txt
