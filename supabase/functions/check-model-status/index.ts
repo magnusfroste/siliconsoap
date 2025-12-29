@@ -91,9 +91,14 @@ async function checkModel(modelId: string): Promise<CheckResult> {
     
     console.log(`[check-model-status] Response from ${modelId}: "${content}" (${responseTime}ms)`);
     
-    // Check if response is valid - more lenient for thinking models
-    const isValidResponse = content.toLowerCase().includes('ok') || 
-                            reasoningContent.toLowerCase().includes('ok');
+    // Check if response is valid - more lenient matching
+    // Match: ok, OK, Ok, okay, Okay, OKAY, etc.
+    const contentLower = content.toLowerCase().trim();
+    const reasoningLower = reasoningContent.toLowerCase().trim();
+    const isValidResponse = contentLower.includes('ok') || 
+                            reasoningLower.includes('ok') ||
+                            contentLower === 'okay' ||
+                            reasoningLower === 'okay';
     
     // If we got usage tokens, model is working even if response format is unexpected
     if (!isValidResponse && hasUsage) {
