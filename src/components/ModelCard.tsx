@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play, Cloud, Server } from 'lucide-react';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +76,29 @@ export const ModelCard = ({ model }: ModelCardProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold truncate">{model.display_name}</h3>
+                {/* License type badge */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {model.license_type === 'open-weight' ? (
+                        <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
+                          <Server className="h-3 w-3" />
+                          Open
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30 gap-1">
+                          <Cloud className="h-3 w-3" />
+                          Cloud
+                        </Badge>
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {model.license_type === 'open-weight' 
+                        ? 'Open-weight model - can be self-hosted on your own hardware'
+                        : 'Cloud-only model - available via API only'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {model.is_free && (
                   <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
                     FREE

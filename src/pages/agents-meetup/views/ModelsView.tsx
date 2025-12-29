@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen } from 'lucide-react';
+import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen, Server, Cloud, Shield } from 'lucide-react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { ModelCard } from '@/components/ModelCard';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -16,6 +16,7 @@ export const ModelsView = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [providerFilter, setProviderFilter] = useState<string>('all');
+  const [licenseFilter, setLicenseFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'provider'>('provider');
 
   usePageMeta({
@@ -44,12 +45,15 @@ export const ModelsView = () => {
 
   const providers = [...new Set(models.map(m => m.provider))];
 
+  const openWeightCount = models.filter(m => m.license_type === 'open-weight').length;
+
   const filteredModels = models
     .filter(m => {
       const matchesSearch = m.display_name.toLowerCase().includes(search.toLowerCase()) ||
         m.model_id.toLowerCase().includes(search.toLowerCase());
       const matchesProvider = providerFilter === 'all' || m.provider === providerFilter;
-      return matchesSearch && matchesProvider;
+      const matchesLicense = licenseFilter === 'all' || m.license_type === licenseFilter;
+      return matchesSearch && matchesProvider && matchesLicense;
     })
     .sort((a, b) => {
       if (sortBy === 'name') return a.display_name.localeCompare(b.display_name);
@@ -85,14 +89,24 @@ export const ModelsView = () => {
       {loading ? (
         <QuickStatsSkeleton />
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{models.length}</div>
             <div className="text-sm text-muted-foreground">Available Models</div>
           </Card>
           <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{providers.length}</div>
-            <div className="text-sm text-muted-foreground">Providers</div>
+            <div className="text-2xl font-bold text-emerald-600">{openWeightCount}</div>
+            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <Server className="h-3 w-3" />
+              Open-Weight
+            </div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-sky-600">{models.length - openWeightCount}</div>
+            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              <Cloud className="h-3 w-3" />
+              Cloud-Only
+            </div>
           </Card>
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{models.filter(m => m.is_free).length}</div>
@@ -100,6 +114,41 @@ export const ModelsView = () => {
           </Card>
         </div>
       )}
+
+      {/* Open-Weight Education Banner */}
+      <Card className="p-5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20">
+        <div className="flex items-start gap-4">
+          <div className="p-2 rounded-lg bg-emerald-500/10">
+            <Shield className="h-6 w-6 text-emerald-600" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-emerald-700 dark:text-emerald-400">
+              Privacy-First AI with Open-Weight Models
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-emerald-600">Open-weight models</span> can be downloaded and run on your own hardware — 
+              giving you complete control over your data. No API calls, no cloud dependency, full privacy.
+              Perfect for sensitive applications, air-gapped environments, or reducing costs at scale.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <a
+                href="https://huggingface.co/models"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 font-medium"
+              >
+                Browse models on Hugging Face <ExternalLink className="h-3 w-3" />
+              </a>
+              <Link
+                to="/learn?tab=open-weight"
+                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline inline-flex items-center gap-1 font-medium"
+              >
+                Learn about open-weight models →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Filters */}
       <Card className="p-4">
@@ -113,8 +162,28 @@ export const ModelsView = () => {
               className="pl-9"
             />
           </div>
+          <Select value={licenseFilter} onValueChange={setLicenseFilter}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="open-weight">
+                <span className="flex items-center gap-2">
+                  <Server className="h-3.5 w-3.5 text-emerald-600" />
+                  Open-Weight
+                </span>
+              </SelectItem>
+              <SelectItem value="closed">
+                <span className="flex items-center gap-2">
+                  <Cloud className="h-3.5 w-3.5 text-sky-600" />
+                  Cloud-Only
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={providerFilter} onValueChange={setProviderFilter}>
-            <SelectTrigger className="w-full sm:w-48">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="All Providers" />
             </SelectTrigger>
             <SelectContent>
@@ -138,16 +207,20 @@ export const ModelsView = () => {
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5">
+          <Server className="h-4 w-4 text-emerald-600" />
+          <span>Open-Weight (Self-Hostable)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Cloud className="h-4 w-4 text-sky-600" />
+          <span>Cloud-Only</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           <Zap className="h-4 w-4 text-green-500" />
           <span>Fast</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="h-4 w-4 text-yellow-500" />
           <span>Medium</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Clock className="h-4 w-4 text-orange-500" />
-          <span>Slow</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Badge variant="secondary" className="text-xs">FREE</Badge>

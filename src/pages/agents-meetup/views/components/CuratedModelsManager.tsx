@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { modelInfoService } from '@/services';
@@ -141,6 +141,18 @@ export const CuratedModelsManager = () => {
       );
     } catch (error) {
       toast.error('Failed to set default agent');
+    }
+  };
+
+  const handleSetLicenseType = async (model: CuratedModel, licenseType: 'open-weight' | 'closed') => {
+    try {
+      await updateModelContent(model.id, { license_type: licenseType });
+      setCuratedModels(prev =>
+        prev.map(m => (m.id === model.id ? { ...m, license_type: licenseType } : m))
+      );
+      toast.success(`${model.display_name} set to ${licenseType === 'open-weight' ? 'Open-Weight' : 'Cloud-Only'}`);
+    } catch (error) {
+      toast.error('Failed to update license type');
     }
   };
 
@@ -426,31 +438,66 @@ export const CuratedModelsManager = () => {
             >
               <div className="rounded-lg border bg-card overflow-hidden">
                 <div className="flex items-center justify-between p-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{model.display_name}</p>
-                      <Badge variant="outline" className="text-xs">
-                        {model.provider}
-                      </Badge>
-                      {model.is_free && (
-                        <Badge variant="secondary" className="text-xs">
-                          FREE
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{model.display_name}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {model.provider}
                         </Badge>
-                      )}
-                      {model.default_for_agent && (
-                        <Badge variant="default" className="text-xs">
-                          Default: Agent {model.default_for_agent}
-                        </Badge>
-                      )}
-                      {hasContent && (
-                        <Badge variant="default" className="text-xs bg-primary/20 text-primary">
-                          Has Info
-                        </Badge>
-                      )}
+                        {/* License type badge */}
+                        {model.license_type === 'open-weight' ? (
+                          <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
+                            <Server className="h-2.5 w-2.5" />
+                            Open
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30 gap-1">
+                            <Cloud className="h-2.5 w-2.5" />
+                            Cloud
+                          </Badge>
+                        )}
+                        {model.is_free && (
+                          <Badge variant="secondary" className="text-xs">
+                            FREE
+                          </Badge>
+                        )}
+                        {model.default_for_agent && (
+                          <Badge variant="default" className="text-xs">
+                            Default: Agent {model.default_for_agent}
+                          </Badge>
+                        )}
+                        {hasContent && (
+                          <Badge variant="default" className="text-xs bg-primary/20 text-primary">
+                            Has Info
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
-                  </div>
                   <div className="flex items-center gap-2">
+                    {/* License type selector */}
+                    <Select
+                      value={model.license_type || 'closed'}
+                      onValueChange={(value) => handleSetLicenseType(model, value as 'open-weight' | 'closed')}
+                    >
+                      <SelectTrigger className="w-[90px] h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open-weight">
+                          <span className="flex items-center gap-1.5">
+                            <Server className="h-3 w-3 text-emerald-600" />
+                            Open
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="closed">
+                          <span className="flex items-center gap-1.5">
+                            <Cloud className="h-3 w-3 text-sky-600" />
+                            Cloud
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Select
                       value={model.default_for_agent || 'none'}
                       onValueChange={(value) => handleSetDefaultAgent(model, value === 'none' ? null : value)}
