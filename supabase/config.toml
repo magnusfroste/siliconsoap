@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.extract-shame-moments]
 verify_jwt = false
+
+[functions.check-model-status]
+verify_jwt = false
