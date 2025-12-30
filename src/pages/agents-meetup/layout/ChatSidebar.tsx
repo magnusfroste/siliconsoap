@@ -35,7 +35,6 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
     { key: 'about', icon: Info, label: 'About', path: '/about', requiresAuth: false },
     { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
     { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
-    { key: 'api-settings', icon: Key, label: 'API Settings', path: '/api-settings', requiresAuth: true, featureFlag: 'show_openrouter_api_settings' },
     { key: 'settings', icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
     { key: 'admin', icon: Shield, label: 'Admin', path: '/admin', requiresAuth: true, adminOnly: true },
   ];
@@ -50,11 +49,10 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const missingItems = navItems.filter(item => !orderedNavItems.some(o => o?.key === item.key));
   const finalNavItems = [...orderedNavItems, ...missingItems] as typeof navItems;
 
-  // Filter nav items based on authentication, admin status, and feature flags
+  // Filter nav items based on authentication and admin status
   const filteredNavItems = finalNavItems.filter(item => {
     if (item.requiresAuth && !user) return false;
     if (item.adminOnly && !isAdmin) return false;
-    if (item.featureFlag && !isEnabled(item.featureFlag)) return false;
     return true;
   });
 
