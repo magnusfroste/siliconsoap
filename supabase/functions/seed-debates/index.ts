@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DEMO_BOT_EMAIL = 'ai-debates-bot@lovable.app';
+const DEMO_BOT_EMAIL = 'ai-debates-bot@siliconsoap.com';
 const DEMO_BOT_PASSWORD = 'demo-bot-secure-password-2025!';
 
 interface AgentConfig {
