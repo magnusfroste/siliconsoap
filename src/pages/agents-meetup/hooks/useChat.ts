@@ -12,6 +12,7 @@ export interface ChatData {
   scenario_id: string;
   prompt: string;
   settings: ChatSettings;
+  share_id?: string | null;
 }
 
 export const useChat = (chatId: string | undefined, userId: string | undefined) => {
@@ -102,7 +103,8 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
         title: chatData.title,
         scenario_id: chatData.scenario_id,
         prompt: chatData.prompt,
-        settings: chatData.settings
+        settings: chatData.settings,
+        share_id: chatData.share_id
       });
       setMessages(messagesData);
     } catch (error) {

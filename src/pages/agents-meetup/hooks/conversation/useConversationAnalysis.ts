@@ -5,7 +5,9 @@ import { analyzeConversation } from './analysis/analyzerService';
 
 export const useConversationAnalysis = (
   savedApiKey: string | null, 
-  conversation: ConversationMessage[]
+  conversation: ConversationMessage[],
+  chatId?: string,
+  shareId?: string
 ) => {
   // Use the analysis state hook
   const {
@@ -41,7 +43,9 @@ export const useConversationAnalysis = (
         selectedModel,
         effectiveApiKey,
         prompt,
-        'long'
+        'long',
+        chatId,
+        shareId
       );
       
       setAnalysisResults(analysis);

@@ -54,7 +54,7 @@ export const ChatView = () => {
     isAnalyzing,
     analysisResults,
     handleAnalyzeConversation
-  } = useConversationAnalysis(state.apiKey, messages);
+  } = useConversationAnalysis(state.apiKey, messages, chatId, chat?.share_id || undefined);
 
   const {
     isPlaying,
