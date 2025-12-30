@@ -34,23 +34,31 @@ serve(async (req) => {
     }
 
     const extractionPrompt = `
-    Du är en expert på att hitta dramatiska ögonblick i AI-konversationer.
-    
-    Analysera följande Judge Bot-analys och extrahera de BÄSTA citaten/momenten.
-    Returnera EXAKT 1-3 moments i JSON-format.
-    
-    Varje moment ska ha:
-    - agent_name: Namnet på agenten (t.ex. "Agent A", "GPT-4", etc.)
-    - quote: Det dramatiska citatet eller beskrivningen (max 150 tecken)
-    - shame_type: En av: "backstab" (underminerade någon), "diva" (tog över scenen), "trust_issue" (sa en sak, menade annan)
-    - severity: 1-5 hur dramatiskt (5 = maximalt drama)
-    
-    Här är analysen:
-    ${analysis.substring(0, 3000)}
-    
-    Returnera ENDAST valid JSON-array, ingen annan text:
-    [{"agent_name": "...", "quote": "...", "shame_type": "...", "severity": 3}]
-    `;
+You are an expert at finding dramatic, backstabbing, and diva moments in AI agent conversations.
+
+Analyze the following Judge Bot analysis and extract the BEST dramatic quotes/moments.
+Return EXACTLY 1-3 moments in JSON format.
+
+Each moment should have:
+- agent_name: The agent's name (e.g., "Agent A", "GPT-4", "Claude", etc.)
+- quote: A dramatic quote or description of the shameful behavior (max 150 characters, in English)
+- shame_type: One of: "backstab" (undermined another agent), "diva" (took over the scene, dramatic ego), "trust_issue" (said one thing, meant another)
+- severity: 1-5 how dramatic (5 = maximum drama)
+
+Focus on finding moments where agents:
+- Contradicted themselves or flip-flopped
+- Subtly undermined another agent's argument
+- Made overly dramatic statements
+- Showed ego or superiority complex
+- Were passive-aggressive
+- Made promises they didn't keep
+
+Analysis to extract from:
+${analysis.substring(0, 3000)}
+
+Return ONLY a valid JSON array, no other text:
+[{"agent_name": "...", "quote": "...", "shame_type": "...", "severity": 3}]
+`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
