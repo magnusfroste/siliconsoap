@@ -34,7 +34,7 @@ export const ChatView = () => {
   const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
-  const { hasCredits, creditsRemaining, refreshCredits } = useCredits(user?.id);
+  const { hasCredits, creditsRemaining, refreshCredits, loading: creditsLoading } = useCredits(user?.id);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
@@ -149,7 +149,8 @@ export const ChatView = () => {
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
     // Guard against multiple generations and race conditions
-    if (!chat || !chatId || loading || messages.length > 0 || isGenerating || hasStartedGeneration.current) return;
+    // Wait for credits to load before checking hasCredits()
+    if (!chat || !chatId || loading || creditsLoading || messages.length > 0 || isGenerating || hasStartedGeneration.current) return;
     
     // Mark that we've started generation to prevent duplicate calls
     hasStartedGeneration.current = true;
