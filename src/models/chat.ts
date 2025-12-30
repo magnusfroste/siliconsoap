@@ -21,6 +21,10 @@ export interface ChatSettings {
   agreementBias?: number;
   temperature?: number;
   personalityIntensity?: 'mild' | 'moderate' | 'extreme';
+  // Judge Bot analysis
+  analysisResults?: string;
+  analysisModel?: string;
+  analyzedAt?: string;
 }
 
 export interface Chat {

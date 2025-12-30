@@ -1,13 +1,17 @@
+import React from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ConversationMessage } from '../../types';
 import { useAnalysisState } from './analysis/useAnalysisState';
 import { analyzeConversation } from './analysis/analyzerService';
+import { chatRepository } from '@/repositories/chatRepository';
 
 export const useConversationAnalysis = (
   savedApiKey: string | null, 
   conversation: ConversationMessage[],
   chatId?: string,
-  shareId?: string
+  shareId?: string,
+  initialAnalysis?: string,
+  initialAnalyzerModel?: string
 ) => {
   // Use the analysis state hook
   const {
@@ -18,6 +22,16 @@ export const useConversationAnalysis = (
     analyzerModel,
     setAnalyzerModel
   } = useAnalysisState();
+
+  // Load initial analysis from saved chat
+  React.useEffect(() => {
+    if (initialAnalysis && !analysisResults) {
+      setAnalysisResults(initialAnalysis);
+    }
+    if (initialAnalyzerModel) {
+      setAnalyzerModel(initialAnalyzerModel);
+    }
+  }, [initialAnalysis, initialAnalyzerModel]);
 
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
     // Check for API key in localStorage as fallback
@@ -49,6 +63,16 @@ export const useConversationAnalysis = (
       );
       
       setAnalysisResults(analysis);
+      
+      // Save analysis to database if we have a valid chatId (not guest)
+      if (chatId && !chatRepository.isGuestChat(chatId)) {
+        await chatRepository.updateChatSettings(chatId, {
+          analysisResults: analysis,
+          analysisModel: selectedModel,
+          analyzedAt: new Date().toISOString()
+        });
+        console.log('[Analysis] Saved to database for chat:', chatId);
+      }
     } catch (error) {
       console.error("Error analyzing conversation:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to analyze the conversation. Please try again.";

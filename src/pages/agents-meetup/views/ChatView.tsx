@@ -51,11 +51,22 @@ export const ChatView = () => {
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
   
+  // Get saved analysis from chat settings
+  const savedAnalysis = (chat?.settings as any)?.analysisResults;
+  const savedAnalyzerModel = (chat?.settings as any)?.analysisModel;
+
   const {
     isAnalyzing,
     analysisResults,
     handleAnalyzeConversation
-  } = useConversationAnalysis(state.apiKey, messages, chatId, chat?.share_id || undefined);
+  } = useConversationAnalysis(
+    state.apiKey, 
+    messages, 
+    chatId, 
+    chat?.share_id || undefined,
+    savedAnalysis,
+    savedAnalyzerModel
+  );
 
   const {
     isPlaying,
