@@ -159,15 +159,22 @@ export const analyticsRepository = {
   },
 
   async logChatCompleteByChartId(chatId: string, totalMessages: number, durationMs: number): Promise<void> {
-    const { error } = await supabase
+    // For guest chats, use session_id instead of chat_id (which is UUID only)
+    const isGuestChat = chatId.startsWith('guest_');
+    
+    const query = supabase
       .from('chat_analytics')
       .update({
         total_messages: totalMessages,
         generation_duration_ms: durationMs,
         completed_at: new Date().toISOString()
       })
-      .eq('chat_id', chatId)
       .is('completed_at', null);
+
+    // Use appropriate column based on chat type
+    const { error } = isGuestChat 
+      ? await query.eq('session_id', chatId)
+      : await query.eq('chat_id', chatId);
 
     if (error) {
       console.error('Error logging chat complete by chat_id:', error);
