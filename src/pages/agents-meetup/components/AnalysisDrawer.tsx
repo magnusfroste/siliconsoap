@@ -28,6 +28,7 @@ interface AnalysisDrawerProps {
   conversation: ConversationMessage[];
   onAnalyze: () => void;
   isGuest?: boolean;
+  isSaved?: boolean;
 }
 
 export const AnalysisDrawer = ({
@@ -37,7 +38,8 @@ export const AnalysisDrawer = ({
   analysisResults,
   conversation,
   onAnalyze,
-  isGuest = false
+  isGuest = false,
+  isSaved = false
 }: AnalysisDrawerProps) => {
   const [showStats, setShowStats] = useState(false);
 
@@ -174,6 +176,7 @@ export const AnalysisDrawer = ({
                     <AnalysisResults 
                       analysisResults={analysisResults}
                       conversation={conversation}
+                      isSaved={isSaved}
                     />
                   </CollapsibleContent>
                 </Collapsible>

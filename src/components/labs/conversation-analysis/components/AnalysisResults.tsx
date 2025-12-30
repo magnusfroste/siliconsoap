@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Printer, CheckCircle, ListChecks, AlertCircle, Speech } from 'lucide-react';
+import { Copy, Printer, CheckCircle, ListChecks, AlertCircle, Speech, Cloud } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -11,11 +11,13 @@ import { ConversationEntry } from '../../types';
 interface AnalysisResultsProps {
   analysisResults: string;
   conversation: ConversationEntry[];
+  isSaved?: boolean;
 }
 
 export const AnalysisResults: React.FC<AnalysisResultsProps> = ({ 
   analysisResults,
-  conversation
+  conversation,
+  isSaved = false
 }) => {
   const renderMarkdown = (markdown: string) => {
     if (!markdown) return '';
@@ -134,7 +136,15 @@ export const AnalysisResults: React.FC<AnalysisResultsProps> = ({
     <div className="space-y-6">
       <div>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-medium">Analysis Results</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium">Analysis Results</h3>
+            {isSaved && (
+              <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
+                <Cloud className="h-3 w-3" />
+                Saved
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleCopySummary} className="h-8">
               <Copy className="h-3.5 w-3.5 mr-1" />

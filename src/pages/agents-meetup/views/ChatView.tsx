@@ -58,7 +58,8 @@ export const ChatView = () => {
   const {
     isAnalyzing,
     analysisResults,
-    handleAnalyzeConversation
+    handleAnalyzeConversation,
+    isSaved: isAnalysisSaved
   } = useConversationAnalysis(
     state.apiKey, 
     messages, 
@@ -686,6 +687,7 @@ export const ChatView = () => {
         conversation={messages}
         onAnalyze={() => handleAnalyzeConversation()}
         isGuest={isGuest}
+        isSaved={isAnalysisSaved}
       />
     </div>
   );
