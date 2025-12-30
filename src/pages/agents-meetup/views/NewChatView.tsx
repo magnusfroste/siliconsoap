@@ -45,7 +45,7 @@ export const NewChatView = () => {
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
-  const { creditsRemaining, hasCredits, useCredit, isGuest, loading: creditsLoading } = useCredits(user?.id);
+  const { creditsRemaining, hasCredits, useCredit: deductCredit, isGuest, loading: creditsLoading } = useCredits(user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -116,8 +116,16 @@ export const NewChatView = () => {
     setIsGenerating(true);
 
     try {
-      // Token-based billing: credits are deducted based on actual token usage
-      // during the conversation, not upfront
+      // Deduct credit upfront for guests (simple credit system)
+      // Logged-in users use token-based billing via useTokensForCredit
+      if (isGuest) {
+        const creditUsed = await deductCredit();
+        if (!creditUsed) {
+          setShowCreditsModal(true);
+          setIsGenerating(false);
+          return;
+        }
+      }
 
       const settings = buildChatSettings();
       const title = chatService.generateTitle(currentPrompt);
