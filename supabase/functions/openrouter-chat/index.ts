@@ -112,6 +112,61 @@ serve(async (req) => {
       );
     }
 
+    // Check for empty content (silent rate limiting or model issues)
+    const content = data.choices?.[0]?.message?.content;
+    if (!content || content.trim() === '') {
+      console.warn(`Empty response from model ${model}, possibly rate limited`);
+      
+      // Try fallback model if the original returned empty
+      const fallbackModel = 'mistralai/mixtral-8x7b-instruct';
+      if (model !== fallbackModel) {
+        console.log(`Retrying with fallback model: ${fallbackModel}`);
+        
+        const fallbackResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
+            'X-Title': 'Magnus Froste Labs'
+          },
+          body: JSON.stringify({
+            model: fallbackModel,
+            messages,
+            max_tokens,
+            temperature,
+            top_p,
+            stream: false
+          }),
+        });
+
+        const fallbackData = await fallbackResponse.json();
+        
+        if (fallbackResponse.ok && fallbackData.choices?.[0]?.message?.content) {
+          console.log('Fallback model succeeded');
+          // Mark that we used a fallback
+          fallbackData.fallback_used = true;
+          fallbackData.original_model = model;
+          return new Response(JSON.stringify(fallbackData), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      // Return error if no content and fallback failed
+      return new Response(
+        JSON.stringify({ 
+          error: 'Model returned empty response. It may be rate limited or unavailable.',
+          code: 'EMPTY_RESPONSE',
+          model: model
+        }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
