@@ -3,6 +3,12 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FeaturedDebates } from '@/components/FeaturedDebates';
+import { 
+  LandingHallOfShame, 
+  SiliconRanksShowcase, 
+  LiveStatsCounter, 
+  AgentPersonasShowcase 
+} from '@/components/landing';
 
 export const Landing = () => {
   const navigate = useNavigate();
@@ -47,7 +53,7 @@ export const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24 text-center relative z-10">
+      <section className="container mx-auto px-4 pt-20 pb-12 md:pt-32 md:pb-16 text-center relative z-10">
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
             <Droplets className="h-4 w-4 text-primary" />
@@ -82,8 +88,11 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* Live Stats Counter */}
+      <LiveStatsCounter />
+
       {/* Features Section */}
-      <section className="container mx-auto px-4 pb-20 md:pb-32">
+      <section className="container mx-auto px-4 pb-16 md:pb-20">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div 
@@ -102,8 +111,17 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* Agent Personas Showcase */}
+      <AgentPersonasShowcase />
+
+      {/* Hall of Shame */}
+      <LandingHallOfShame />
+
       {/* Featured Debates Section */}
       <FeaturedDebates />
+
+      {/* Silicon Ranks Showcase */}
+      <SiliconRanksShowcase />
 
       {/* Footer */}
       <footer className="border-t bg-muted/30 py-12 relative z-10">
@@ -177,6 +195,9 @@ export const Landing = () => {
                 </Link>
                 <Link to="/models" className="text-sm text-foreground hover:text-primary transition-colors">
                   Browse Models
+                </Link>
+                <Link to="/leaderboard" className="text-sm text-foreground hover:text-primary transition-colors">
+                  Leaderboard
                 </Link>
               </div>
             </div>
