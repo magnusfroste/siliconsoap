@@ -37,7 +37,7 @@ const Footer = () => {
                 <Globe className="h-5 w-5" />
               </a>
               <a
-                href="https://linkedin.com/in/magnusfroste"
+                href="https://linkedin.com/in/froste"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors"
