@@ -13,10 +13,11 @@ import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2, Eye, MessageSquare, Users } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp } from '../hooks/conversation/agent/conversationManager';
+import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, checkTokenBudget, TokenUsageCallback } from '@/services/conversationService';
 import { useCredits } from '../hooks/useCredits';
+import { useTokens } from '../hooks/useTokens';
 import { toast } from 'sonner';
-import { ConversationMessage } from '../types';
+import { ConversationMessage, TokenUsage } from '@/models';
 import { scenarioTypes } from '../constants';
 import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
@@ -34,6 +35,7 @@ export const ChatView = () => {
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
   const { hasCredits, useCredit } = useCredits(user?.id);
+  const { useTokensForCall, refreshTokens } = useTokens(user?.id);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
@@ -150,6 +152,13 @@ export const ChatView = () => {
       const settings = chat.settings as any;
 
       try {
+        // Check token budget before starting
+        const { canStart } = await checkTokenBudget(user?.id || null);
+        if (!canStart) {
+          if (isMounted.current) setIsGenerating(false);
+          return;
+        }
+
         const apiAvailable = await checkBeforeStarting(state.apiKey);
         if (!apiAvailable || !isMounted.current) {
           if (isMounted.current) setIsGenerating(false);
@@ -168,6 +177,11 @@ export const ChatView = () => {
           await saveMessage(chatId, message);
         };
 
+        // Token usage callback
+        const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+          await useTokensForCall(chatId || null, modelId, usage);
+        };
+
         if (isMounted.current) setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
@@ -181,7 +195,10 @@ export const ChatView = () => {
           settings.personas.agentC,
           state.apiKey || '',
           settings.responseLength,
-          onMessageReceived
+          onMessageReceived,
+          undefined, // temperature
+          settings.turnOrder || 'sequential',
+          onTokenUsage
         );
 
         if (!isMounted.current) return;
@@ -214,7 +231,10 @@ export const ChatView = () => {
               conversationMessages,
               state.apiKey || '',
               settings.responseLength,
-              onMessageReceived
+              onMessageReceived,
+              undefined, // temperature
+              settings.turnOrder || 'sequential',
+              onTokenUsage
             );
             if (isMounted.current) {
               setCurrentAgent(null);
@@ -399,6 +419,11 @@ export const ChatView = () => {
                   // In round-by-round mode, run only one round at a time
                   const nextRound = currentRoundInProgress;
                   
+                  // Token usage callback
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                    await useTokensForCall(chatId || null, modelId, usage);
+                  };
+                  
                   if (nextRound <= settings.rounds) {
                     await handleSingleRound(
                       chat.prompt,
@@ -419,7 +444,10 @@ export const ChatView = () => {
                         if (!chatId) return;
                         setCurrentAgent(message.agent);
                         await saveMessage(chatId, message);
-                      }
+                      },
+                      undefined, // temperature
+                      settings.turnOrder || 'sequential',
+                      onTokenUsage
                     );
                     
                     setCurrentAgent(null);
@@ -520,6 +548,11 @@ export const ChatView = () => {
                   
                   const nextRound = currentRoundInProgress;
                   
+                  // Token usage callback
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                    await useTokensForCall(chatId || null, modelId, usage);
+                  };
+                  
                   await handleSingleRound(
                     chat.prompt,
                     scenario,
@@ -539,7 +572,10 @@ export const ChatView = () => {
                       if (!chatId) return;
                       setCurrentAgent(message.agent);
                       await saveMessage(chatId, message);
-                    }
+                    },
+                    undefined,
+                    settings.turnOrder || 'sequential',
+                    onTokenUsage
                   );
                   
                   setCurrentAgent(null);
@@ -557,6 +593,11 @@ export const ChatView = () => {
                     toast.success('Conversation complete!');
                   }
                 } else {
+                  // Token usage callback
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                    await useTokensForCall(chatId || null, modelId, usage);
+                  };
+                  
                   // Jump-in mode or continuing after completion: trigger agents to respond to user's message
                   await handleUserFollowUp(
                     chat.prompt,
@@ -576,7 +617,9 @@ export const ChatView = () => {
                       if (!chatId) return;
                       setCurrentAgent(message.agent);
                       await saveMessage(chatId, message);
-                    }
+                    },
+                    undefined,
+                    onTokenUsage
                   );
                   
                   setCurrentAgent(null);

@@ -32,6 +32,22 @@ export const getAllCuratedModels = async (): Promise<CuratedModel[]> => {
   return data || [];
 };
 
+// Get a specific curated model by model_id
+export const getCuratedModelById = async (modelId: string): Promise<CuratedModel | null> => {
+  const { data, error } = await supabase
+    .from('curated_models')
+    .select('*')
+    .eq('model_id', modelId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching curated model by id:', error);
+    return null;
+  }
+
+  return data;
+};
+
 // Get only enabled models (for user-facing selectors)
 export const getEnabledModels = async (): Promise<CuratedModel[]> => {
   const { data, error } = await supabase

@@ -3,12 +3,13 @@
 
 import { toast } from '@/hooks/use-toast';
 import { checkApiAvailability } from '@/utils/openRouter';
-import { callOpenRouterViaEdge } from '@/utils/openRouter/api/completions';
+import { callOpenRouterWithUsage, CompletionResult } from '@/utils/openRouter/api/completions';
 import { 
   ConversationMessage, 
   ResponseLength, 
   ScenarioType, 
-  TurnOrder 
+  TurnOrder,
+  TokenUsage
 } from '@/models';
 import {
   createAgentAInitialPrompt,
@@ -18,12 +19,83 @@ import {
   LANGUAGE_INSTRUCTION
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
 import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
+import { tokenService } from './tokenService';
+import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
+
+// Callback for tracking token usage
+export type TokenUsageCallback = (usage: TokenUsage, modelId: string) => Promise<void>;
 
 /**
  * Wraps persona with language instruction
  */
 const withLanguageInstruction = (persona: string): string => {
   return persona + LANGUAGE_INSTRUCTION;
+};
+
+/**
+ * Calculates token cost based on model pricing
+ */
+const calculateTokenCost = async (
+  modelId: string,
+  promptTokens: number,
+  completionTokens: number
+): Promise<number> => {
+  const model = await getCuratedModelById(modelId);
+  if (!model || !model.price_input || !model.price_output) {
+    // Default to a small cost if model pricing not found
+    return 0;
+  }
+  return tokenService.calculateCost(
+    modelId,
+    promptTokens,
+    completionTokens,
+    Number(model.price_input),
+    Number(model.price_output)
+  );
+};
+
+/**
+ * Makes an API call and optionally logs token usage
+ */
+const callWithTokenTracking = async (
+  prompt: string,
+  model: string,
+  persona: string,
+  apiKey: string | null,
+  responseLength: ResponseLength,
+  temperature: number | undefined,
+  onTokenUsage?: TokenUsageCallback
+): Promise<string> => {
+  const result = await callOpenRouterWithUsage(
+    prompt,
+    model,
+    persona,
+    apiKey,
+    responseLength,
+    temperature ?? 0.7
+  );
+
+  // Log token usage if callback provided and we have usage data
+  if (onTokenUsage && result.usage) {
+    const cost = await calculateTokenCost(
+      model,
+      result.usage.prompt_tokens,
+      result.usage.completion_tokens
+    );
+    
+    const tokenUsage: TokenUsage = {
+      prompt_tokens: result.usage.prompt_tokens,
+      completion_tokens: result.usage.completion_tokens,
+      total_tokens: result.usage.total_tokens,
+      estimated_cost: cost
+    };
+    
+    await onTokenUsage(tokenUsage, model);
+    
+    console.log(`[TokenTracking] Model: ${model}, Tokens: ${result.usage.total_tokens}, Cost: $${cost.toFixed(6)}`);
+  }
+
+  return result.content;
 };
 
 /**
@@ -66,6 +138,28 @@ export const checkBeforeStarting = async (
 };
 
 /**
+ * Checks if user has sufficient token budget before starting
+ */
+export const checkTokenBudget = async (
+  userId: string | null,
+  estimatedTokens: number = 10000
+): Promise<{ canStart: boolean; budgetRemaining: number }> => {
+  const state = await tokenService.loadTokenState(userId);
+  const canStart = tokenService.canStartConversation(state.budgetRemaining, estimatedTokens);
+  
+  if (!canStart) {
+    toast({
+      title: "Insufficient Token Budget",
+      description: `You need approximately ${tokenService.formatTokens(estimatedTokens)} tokens for this conversation. You have ${tokenService.formatTokens(state.budgetRemaining)} remaining.`,
+      variant: "destructive",
+      duration: 5000,
+    });
+  }
+  
+  return { canStart, budgetRemaining: state.budgetRemaining };
+};
+
+/**
  * Shuffles an array using Fisher-Yates algorithm
  */
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -84,7 +178,8 @@ const selectNextAgent = async (
   conversationHistory: ConversationMessage[],
   availableAgents: Array<{ id: string; name: string; persona: string }>,
   apiKey: string,
-  currentPrompt: string
+  currentPrompt: string,
+  onTokenUsage?: TokenUsageCallback
 ): Promise<string> => {
   const recentMessages = conversationHistory.slice(-4);
   const conversationContext = recentMessages
@@ -113,12 +208,14 @@ Respond with ONLY the agent ID (A, B, or C) followed by a brief reason.
 Format: "AGENT_ID: reason"`;
 
   try {
-    const response = await callOpenRouterViaEdge(
+    const response = await callWithTokenTracking(
       prompt,
       'anthropic/claude-3.5-sonnet',
       'You are a conversation coordinator who selects the most relevant speaker.',
       apiKey || null,
-      'short'
+      'short',
+      undefined,
+      onTokenUsage
     );
 
     const match = response.match(/^([ABC]):/i);
@@ -229,7 +326,8 @@ export const handleInitialRound = async (
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
-  turnOrder: TurnOrder = 'sequential'
+  turnOrder: TurnOrder = 'sequential',
+  onTokenUsage?: TokenUsageCallback
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -244,13 +342,14 @@ export const handleInitialRound = async (
   // Agent A always starts
   const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona);
   
-  const agentAResponse = await callOpenRouterViaEdge(
+  const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
     agentAModel,
     withLanguageInstruction(agentAPersona),
     apiKey || null,
     responseLength,
-    temperature
+    temperature,
+    onTokenUsage
   );
   
   const agentAMessage: ConversationMessage = {
@@ -274,18 +373,19 @@ export const handleInitialRound = async (
       { id: 'B', name: 'Agent B', persona: agentBPersona },
       ...(numberOfAgents === 3 ? [{ id: 'C', name: 'Agent C', persona: agentCPersona }] : [])
     ];
-    nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt);
+    nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt, onTokenUsage);
   }
   
   const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario, turnOrder, agentAPersona, agentBPersona);
   
-  const agentBResponse = await callOpenRouterViaEdge(
+  const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
     agentBModel,
     withLanguageInstruction(agentBPersona),
     apiKey || null,
     responseLength,
-    temperature
+    temperature,
+    onTokenUsage
   );
   
   const agentBMessage: ConversationMessage = {
@@ -312,19 +412,20 @@ export const handleInitialRound = async (
       ].filter(a => !messages.slice(-1).some(m => m.agent === a.name));
       
       if (availableAgents.length > 0) {
-        finalAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt);
+        finalAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt, onTokenUsage);
       }
     }
     
     const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona);
     
-    const agentCResponse = await callOpenRouterViaEdge(
+    const agentCResponse = await callWithTokenTracking(
       agentCPrompt,
       agentCModel,
       withLanguageInstruction(agentCPersona),
       apiKey || null,
       responseLength,
-      temperature
+      temperature,
+      onTokenUsage
     );
     
     const agentCMessage: ConversationMessage = {
@@ -361,7 +462,8 @@ export const handleSingleRound = async (
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
-  turnOrder: TurnOrder = 'sequential'
+  turnOrder: TurnOrder = 'sequential',
+  onTokenUsage?: TokenUsageCallback
 ): Promise<ConversationMessage[]> => {
   const allMessages: ConversationMessage[] = [...conversation];
   
@@ -389,13 +491,14 @@ export const handleSingleRound = async (
       currentScenario
     );
     
-    const response = await callOpenRouterViaEdge(
+    const response = await callWithTokenTracking(
       continuationPrompt,
       agentConfig.model,
       withLanguageInstruction(agentConfig.persona),
       apiKey || null,
       responseLength,
-      temperature
+      temperature,
+      onTokenUsage
     );
     
     const message: ConversationMessage = {
@@ -434,7 +537,8 @@ export const handleAdditionalRounds = async (
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
-  turnOrder: TurnOrder = 'sequential'
+  turnOrder: TurnOrder = 'sequential',
+  onTokenUsage?: TokenUsageCallback
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -465,13 +569,14 @@ export const handleAdditionalRounds = async (
         currentScenario
       );
       
-      const response = await callOpenRouterViaEdge(
+      const response = await callWithTokenTracking(
         continuationPrompt,
         agentConfig.model,
         withLanguageInstruction(agentConfig.persona),
         apiKey || null,
         responseLength,
-        temperature
+        temperature,
+        onTokenUsage
       );
       
       const message: ConversationMessage = {
@@ -508,7 +613,8 @@ export const handleUserFollowUp = async (
   apiKey: string,
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
-  temperature?: number
+  temperature?: number,
+  onTokenUsage?: TokenUsageCallback
 ): Promise<void> => {
   // Agent A responds
   const agentAPrompt = createResponseToUserPrompt(
@@ -520,13 +626,14 @@ export const handleUserFollowUp = async (
     agentAPersona
   );
   
-  const agentAResponse = await callOpenRouterViaEdge(
+  const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
     agentAModel,
     withLanguageInstruction(agentAPersona),
     apiKey || null,
     responseLength,
-    temperature
+    temperature,
+    onTokenUsage
   );
   
   const agentAMessage: ConversationMessage = {
@@ -550,13 +657,14 @@ export const handleUserFollowUp = async (
     agentBPersona
   );
   
-  const agentBResponse = await callOpenRouterViaEdge(
+  const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
     agentBModel,
     withLanguageInstruction(agentBPersona),
     apiKey || null,
     responseLength,
-    temperature
+    temperature,
+    onTokenUsage
   );
   
   const agentBMessage: ConversationMessage = {
@@ -580,13 +688,14 @@ export const handleUserFollowUp = async (
     agentCPersona
   );
   
-  const agentCResponse = await callOpenRouterViaEdge(
+  const agentCResponse = await callWithTokenTracking(
     agentCPrompt,
     agentCModel,
     withLanguageInstruction(agentCPersona),
     apiKey || null,
     responseLength,
-    temperature
+    temperature,
+    onTokenUsage
   );
   
   const agentCMessage: ConversationMessage = {
