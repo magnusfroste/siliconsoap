@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server, Scan, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server, Scan, ExternalLink, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { modelInfoService } from '@/services';
@@ -550,7 +550,27 @@ export const CuratedModelsManager = () => {
                                   Cloud
                                 </Badge>
                               )}
-                              {model.is_free && (
+                              {/* Price tier badge */}
+                              {model.price_tier && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-xs font-bold",
+                                    model.price_tier === 'free' && "bg-green-500/10 text-green-600 border-green-500/20",
+                                    model.price_tier === 'budget' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                                    model.price_tier === 'standard' && "bg-amber-500/10 text-amber-600 border-amber-500/20",
+                                    model.price_tier === 'premium' && "bg-orange-500/10 text-orange-600 border-orange-500/20",
+                                    model.price_tier === 'elite' && "bg-red-500/10 text-red-600 border-red-500/20"
+                                  )}
+                                >
+                                  {model.price_tier === 'free' ? 'FREE' : 
+                                   model.price_tier === 'budget' ? '$' :
+                                   model.price_tier === 'standard' ? '$$' :
+                                   model.price_tier === 'premium' ? '$$$' : '$$$$'}
+                                </Badge>
+                              )}
+                              {/* Fallback FREE badge when no price_tier */}
+                              {!model.price_tier && model.is_free && (
                                 <Badge variant="secondary" className="text-xs">
                                   FREE
                                 </Badge>
