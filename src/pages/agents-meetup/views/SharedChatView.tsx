@@ -13,7 +13,7 @@ import { useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const BASE_URL = 'https://www.froste.eu';
+const BASE_URL = 'https://siliconsoap.com';
 const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
 
 export const SharedChatView = () => {

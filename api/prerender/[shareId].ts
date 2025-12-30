@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://apfrjuomozdvdeondzaz.supabase.co';
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZnJqdW9tb3pkdmRlb25kemF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwOTQ4MzAsImV4cCI6MjA3OTY3MDgzMH0.wtSVuTKB_w46FfUNjn1t9-wW8fNPxuln3AfYhl10xbo';
-const BASE_URL = 'https://www.froste.eu';
+const BASE_URL = 'https://siliconsoap.com';
 
 interface ChatData {
   id: string;
@@ -181,7 +181,7 @@ function generateErrorHtml(message: string): string {
 </head>
 <body>
   <h1>${message}</h1>
-  <p><a href="https://www.froste.eu">Visit SiliconSoap</a></p>
+  <p><a href="https://siliconsoap.com">Visit SiliconSoap</a></p>
 </body>
 </html>`;
 }
