@@ -2,6 +2,8 @@
 
 export { chatService } from './chatService';
 export { creditsService } from './creditsService';
+export { tokenService } from './tokenService';
+export type { TokenCostEstimate } from './tokenService';
 export * from './conversationService';
 export { settingsService } from './settingsService';
 export { analyticsService } from './analyticsService';

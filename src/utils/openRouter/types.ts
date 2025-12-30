@@ -10,6 +10,12 @@ export interface OpenRouterRequest {
   messages: OpenRouterMessage[];
 }
 
+export interface OpenRouterUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
 export interface OpenRouterResponse {
   id: string;
   choices: {
@@ -22,6 +28,7 @@ export interface OpenRouterResponse {
   }[];
   model: string;
   created: number;
+  usage?: OpenRouterUsage;
 }
 
 export interface OpenRouterModel {

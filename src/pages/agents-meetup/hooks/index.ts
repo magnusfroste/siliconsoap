@@ -6,6 +6,7 @@ export * from './useProfiles';
 export * from './useScenarios';
 export * from './useConversationFlow';
 export * from './useCredits';
+export * from './useTokens';
 export * from './useChat';
 export * from './useSharedChat';
 export * from './useAuth';

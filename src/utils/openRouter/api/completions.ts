@@ -1,10 +1,17 @@
-import { OpenRouterMessage, OpenRouterResponse, ResponseLength } from "../types";
+import { OpenRouterMessage, OpenRouterResponse, OpenRouterUsage, ResponseLength } from "../types";
 import { createSystemPrompt, getMaxTokens } from "../constants";
 import { supabase } from "@/integrations/supabase/client";
+
+export interface CompletionResult {
+  content: string;
+  usage?: OpenRouterUsage;
+  model: string;
+}
 
 /**
  * Calls OpenRouter API via edge function (shared key only).
  * All API calls go through the edge function for security.
+ * Returns both content and usage data for token tracking.
  */
 export const callOpenRouterViaEdge = async (
   prompt: string,
@@ -14,6 +21,21 @@ export const callOpenRouterViaEdge = async (
   responseLength: ResponseLength = "medium",
   temperature: number = 0.7
 ): Promise<string> => {
+  const result = await callOpenRouterWithUsage(prompt, model, persona, userApiKey, responseLength, temperature);
+  return result.content;
+};
+
+/**
+ * Calls OpenRouter API via edge function and returns full result including token usage.
+ */
+export const callOpenRouterWithUsage = async (
+  prompt: string,
+  model: string,
+  persona: string,
+  userApiKey: string | null,
+  responseLength: ResponseLength = "medium",
+  temperature: number = 0.7
+): Promise<CompletionResult> => {
   const systemPrompt = await createSystemPrompt(persona, responseLength);
   const maxTokens = getMaxTokens(responseLength);
 
@@ -57,7 +79,13 @@ export const callOpenRouterViaEdge = async (
       throw new Error((data as any).error);
     }
 
-    return (data as OpenRouterResponse).choices[0].message.content;
+    const response = data as OpenRouterResponse;
+    
+    return {
+      content: response.choices[0].message.content,
+      usage: response.usage,
+      model: response.model
+    };
   } catch (error) {
     console.error("Error calling OpenRouter via edge:", error);
     throw error;
