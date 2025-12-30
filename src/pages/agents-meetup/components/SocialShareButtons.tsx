@@ -8,9 +8,23 @@ interface SocialShareButtonsProps {
 }
 
 export const SocialShareButtons = ({ url, title, description }: SocialShareButtonsProps) => {
-  const encodedUrl = encodeURIComponent(url);
+  // Ensure we use the production URL for sharing
+  const getShareUrl = () => {
+    // If already a production URL, use it
+    if (url.includes('siliconsoap.com') || url.includes('agent-labs.lovable.app')) {
+      return url;
+    }
+    // Convert preview/localhost URLs to production
+    const shareId = url.split('/shared/')[1];
+    if (shareId) {
+      return `https://siliconsoap.com/shared/${shareId}`;
+    }
+    return url;
+  };
+  
+  const shareUrl = getShareUrl();
+  const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
-  const encodedDesc = encodeURIComponent(description || '');
   
   const shareLinks = {
     twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}%20%F0%9F%AB%A7%20via%20%40SiliconSoap`,
@@ -19,13 +33,26 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
-    window.open(shareLinks[platform], '_blank', 'width=600,height=400');
-    toast.success(`Opening ${platform}...`);
+    const shareWindow = window.open(shareLinks[platform], '_blank', 'width=600,height=600,noopener,noreferrer');
+    
+    if (shareWindow) {
+      toast.success(`Opening ${platform}...`);
+    } else {
+      // Popup was blocked - offer to copy link instead
+      toast.error(`Popup blocked. Opening in new tab...`, {
+        action: {
+          label: 'Copy link',
+          onClick: () => navigator.clipboard.writeText(shareLinks[platform])
+        }
+      });
+      // Try opening in same tab as fallback
+      window.location.href = shareLinks[platform];
+    }
   };
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied to clipboard!');
     } catch {
       toast.error('Failed to copy link');
