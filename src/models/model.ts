@@ -22,6 +22,11 @@ export interface CuratedModel {
   speed_rating: string | null;
   // License type: open-weight (self-hostable) vs closed (cloud API only)
   license_type: string | null;
+  // Pricing fields
+  price_input: number | null;
+  price_output: number | null;
+  price_tier: string | null;
+  pricing_updated_at: string | null;
 }
 
 export interface CuratedModelInsert {
@@ -56,4 +61,7 @@ export interface CuratedModelUpdate {
   display_name?: string;
   default_for_agent?: string | null;
   license_type?: string | null;
+  price_input?: number | null;
+  price_output?: number | null;
+  price_tier?: string | null;
 }

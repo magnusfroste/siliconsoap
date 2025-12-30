@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play, Cloud, Server, ExternalLink } from 'lucide-react';
+import { ChevronDown, Zap, Clock, Check, AlertTriangle, Target, Ban, Play, Cloud, Server, ExternalLink, DollarSign } from 'lucide-react';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,55 @@ import { cn } from '@/lib/utils';
 const getHuggingFaceUrl = (modelId: string): string => {
   const modelName = modelId.split('/').pop() || modelId;
   return `https://huggingface.co/models?search=${encodeURIComponent(modelName)}`;
+};
+
+// Price tier badge configuration
+const PRICE_TIER_CONFIG: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
+  free: { 
+    label: 'FREE', 
+    className: 'bg-green-500/10 text-green-600 border-green-500/20',
+    icon: null 
+  },
+  budget: { 
+    label: '$', 
+    className: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    icon: <DollarSign className="h-3 w-3" />
+  },
+  standard: { 
+    label: '$$', 
+    className: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    icon: <DollarSign className="h-3 w-3" />
+  },
+  premium: { 
+    label: '$$$', 
+    className: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+    icon: <DollarSign className="h-3 w-3" />
+  },
+  elite: { 
+    label: '$$$$', 
+    className: 'bg-red-500/10 text-red-600 border-red-500/20',
+    icon: <DollarSign className="h-3 w-3" />
+  },
+};
+
+// Estimate cost per conversation (2 agents x 3 rounds x ~500 tokens each)
+const estimateConversationCost = (model: CuratedModel): number | null => {
+  if (model.price_output == null) return null;
+  // 2 agents × 3 rounds × 500 output tokens per response = 3000 tokens
+  // Plus input tokens (roughly 1000 tokens per round of context) = 6000 input tokens
+  const estimatedOutputTokens = 3000;
+  const estimatedInputTokens = 6000;
+  const cost = (estimatedOutputTokens * (model.price_output || 0)) + 
+               (estimatedInputTokens * (model.price_input || 0));
+  return cost;
+};
+
+const formatCost = (cost: number): string => {
+  if (cost === 0) return 'Free';
+  if (cost < 0.001) return '<$0.001';
+  if (cost < 0.01) return `~$${cost.toFixed(4)}`;
+  if (cost < 0.1) return `~$${cost.toFixed(3)}`;
+  return `~$${cost.toFixed(2)}`;
 };
 
 interface ModelCardProps {
@@ -68,6 +117,9 @@ export const ModelCard = ({ model }: ModelCardProps) => {
     }
   };
 
+  const priceTierConfig = model.price_tier ? PRICE_TIER_CONFIG[model.price_tier] : null;
+  const estimatedCost = estimateConversationCost(model);
+
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-colors">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -82,6 +134,37 @@ export const ModelCard = ({ model }: ModelCardProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold truncate">{model.display_name}</h3>
+                
+                {/* Price tier badge */}
+                {priceTierConfig && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className={cn("text-xs font-bold", priceTierConfig.className)}>
+                          {priceTierConfig.label}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <div className="space-y-1">
+                          <p className="font-medium capitalize">{model.price_tier} tier</p>
+                          {estimatedCost !== null && (
+                            <p className="text-xs text-muted-foreground">
+                              Est. {formatCost(estimatedCost)} per conversation
+                            </p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {/* Legacy FREE badge (fallback when no price_tier) */}
+                {!priceTierConfig && model.is_free && (
+                  <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
+                    FREE
+                  </Badge>
+                )}
+                
                 {/* License type badge */}
                 <TooltipProvider>
                   <Tooltip>
@@ -127,11 +210,6 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                {model.is_free && (
-                  <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
-                    FREE
-                  </Badge>
-                )}
                 {model.category && (
                   <Badge variant="outline" className={cn("text-xs capitalize", getCategoryColor(model.category))}>
                     {model.category}
@@ -152,6 +230,12 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                   <span className="flex items-center gap-1">
                     <span className="text-xs">📝</span>
                     {formatContextWindow(model.context_window)} context
+                  </span>
+                )}
+                {estimatedCost !== null && (
+                  <span className="flex items-center gap-1 text-xs">
+                    <DollarSign className="h-3 w-3" />
+                    {formatCost(estimatedCost)}/conv
                   </span>
                 )}
               </div>
