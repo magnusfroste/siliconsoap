@@ -13,7 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ChevronDown, Sparkles, X, LogIn, Drama } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -183,6 +183,7 @@ export const AnalysisDrawer = ({
               </div>
             )}
           </div>
+          <ScrollBar alwaysVisible />
         </ScrollArea>
       </DrawerContent>
     </Drawer>
