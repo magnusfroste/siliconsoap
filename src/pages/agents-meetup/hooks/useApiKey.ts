@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-// Simplified hook - shared key mode only (no BYOK)
+// Simplified hook - shared key mode only
 export const useApiKey = () => {
   // Always use shared key mode (empty string = edge function with shared key)
   const [apiKey] = useState<string>('');

@@ -1,4 +1,4 @@
-// Credits Service - business logic for credit system (credits-only, no BYOK)
+// Credits Service - business logic for credit system
 import { creditsRepository } from '@/repositories';
 import { CreditState } from '@/models/credits';
 

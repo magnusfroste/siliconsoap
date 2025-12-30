@@ -1,12 +1,14 @@
-# Product Requirements Document: AI Labs Platform
+# Product Requirements Document: Silicon Soap
 
 ## Executive Summary
 
-AI Labs is a multi-project platform showcasing advanced AI agent technologies. The platform hosts multiple independent applications that demonstrate different approaches to AI interaction and automation. Each project operates as a standalone application with its own routing, state management, and feature set, while sharing common infrastructure and backend services.
+**Silicon Soap** is an open-source AI multi-agent conversation platform where users can create and witness dynamic debates between AI agents with different personalities and models. The platform is available as both a free downloadable application and a hosted cloud version at [siliconsoap.com](https://siliconsoap.com).
 
-**Current Status**: Project 1 (AI Agents Meetup) is in production. Project 2 (Workflow Builder) is in active development. Project 3 (Research Assistant) is planned.
+**Open Source**: Free to download, run locally, and modify. No vendor lock-in.
+**Cloud Version**: Hosted at siliconsoap.com with shared infrastructure.
+**Technology**: React + TypeScript frontend, Supabase backend, OpenRouter AI integration.
 
-**Next Release**: Swarm Builder feature for interactive agent team configuration.
+**Current Status**: Production-ready with core multi-agent conversation features, credit system, and AI-powered conversation analysis.
 
 ---
 
@@ -14,39 +16,379 @@ AI Labs is a multi-project platform showcasing advanced AI agent technologies. T
 
 ```mermaid
 graph TD
-    A[AI Labs Platform] --> B[Project 1: Agents Meetup]
-    A --> C[Project 2: Workflow Builder]
-    A --> D[Project 3: Research Assistant - Planned]
-    
-    B --> E[Multi-Agent Chat]
-    B --> F[Database-Driven Personas]
-    B --> G[Credit System]
-    B --> H[Judge Bot Analyzer]
-    
-    C --> I[Visual Workflow Designer]
-    C --> J[Node-Based Logic]
-    C --> K[Execution Engine]
-    
-    D --> L[Document Analysis]
-    D --> M[RAG System]
-    D --> N[Citation Management]
-    
-    E --> O[Shared Backend]
-    F --> O
-    G --> O
-    I --> O
-    J --> O
-    L --> O
-    
-    O --> P[Supabase Auth]
-    O --> Q[PostgreSQL Database]
-    O --> R[Edge Functions]
-    O --> S[Realtime Subscriptions]
-    
-    style B fill:#4CAF50
-    style C fill:#FFC107
-    style D fill:#9E9E9E
+    A[Silicon Soap Platform] --> B[Open Source Download]
+    A --> C[Cloud Version siliconsoap.com]
+
+    B --> D[Local Installation]
+    B --> E[Self-Hosting]
+
+    C --> F[Multi-Agent Chat]
+    C --> G[Credit System]
+    C --> H[Judge Bot Analyzer]
+
+    D --> F
+    E --> F
+
+    F --> I[Supabase Backend]
+    G --> I
+    H --> I
+
+    I --> J[PostgreSQL Database]
+    I --> K[Edge Functions]
+    I --> L[Realtime Subscriptions]
+    I --> M[OpenRouter API]
+
+    style C fill:#4CAF50
+    style B fill:#2196F3
 ```
+
+---
+
+## Core Features
+
+### Multi-Agent Conversations
+
+**Agent Configuration**:
+- **Count**: 2-3 agents per conversation
+- **Models**: Each agent uses different AI models from OpenRouter catalog
+- **Personas**: Database-driven personalities (Analytical, Creative, Strategic, Empathy)
+- **Soap Opera Names**: Agents get dramatic soap opera names (e.g., "Blake Carrington", "Alexis Colby")
+
+**Conversation Flow**:
+- **Turn-Taking**: Structured rounds (Agent A → Agent B → Agent C, then follow-ups)
+- **Real-Time Streaming**: Messages appear progressively via Supabase Realtime
+- **Typing Indicators**: Per-agent indicators during generation
+- **Round Separators**: Visual markers between conversation phases
+
+**Scenarios**:
+1. **General Problem**: Universal problem-solving and analysis
+2. **Ethical Dilemma**: Ethical exploration and moral reasoning
+3. **Future Trends**: Speculative discussion about future developments
+
+### Credit System
+
+**Guest Users** (No Account Required):
+- **5 free credits** per session
+- **Local storage** for chat history
+- **Limited UI** (no sidebar, minimal features)
+- **Credit deduction** happens upfront when starting battles
+
+**Logged-In Users**:
+- **10 total credits** (3 initial + 7 signup bonus)
+- **Database storage** with real-time chat history
+- **Full features** including Judge Bot analysis
+- **Token-based billing** - credits deducted based on actual AI usage
+- **Stripe integration** for purchasing additional credits (planned)
+
+**Credit Usage**:
+- **Guests**: 1 credit per battle start
+- **Logged-in**: Credits deducted based on token consumption during conversation
+- **Atomic operations** prevent race conditions and ensure accurate billing
+
+### Judge Bot Analyzer
+
+**Personality**: Dramatic soap opera queen who judges AI agents with full dramatic flair 🎭
+
+**Features**:
+- **Trigger**: Floating action button (bottom-right) when conversation completes
+- **Analysis Style**: Uses actual agent names, creates dramatic soap opera narratives
+- **Content**: Punchy verdict, trust issues, diva moments, final rose ceremony
+- **Access**: Logged-in users only (guests see sign-in prompt)
+- **Time Estimate**: Shows "⏱️ This usually takes 15-30 seconds" during analysis
+
+**Sample Output**:
+```
+🎭 Blake Carrington played it risky, Alexis had hidden agendas, and Luke... well, Luke at least tried to look innocent.
+
+## 🗡️ Backstabbing Alert
+Blake undermined Alexis by questioning her "strategic vision" while secretly pursuing the same approach...
+
+## 👑 Diva Moment
+Alexis took up 60% of the conversation space with her dramatic flourishes and main character energy...
+```
+
+### Technical Architecture
+
+**Frontend**: React 18 + TypeScript, Vite, Tailwind CSS, shadcn/ui
+**Backend**: Supabase (PostgreSQL + Edge Functions + Realtime)
+**AI Integration**: OpenRouter API with shared key infrastructure
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant EF as Edge Function
+    participant OR as OpenRouter API
+    participant DB as Database
+
+    U->>FE: Submit prompt + start battle
+    FE->>DB: Deduct credits (guests) or track tokens (logged-in)
+    FE->>EF: Trigger conversation generation
+
+    loop For each agent turn
+        EF->>OR: Call with persona + model
+        OR-->>EF: Stream response
+        EF->>DB: Save message + deduct tokens (logged-in)
+        DB->>FE: Real-time message broadcast
+    end
+
+    U->>FE: Click Judge Bot
+    FE->>EF: Analyze conversation
+    EF->>OR: Generate dramatic analysis
+    EF-->>FE: Return soap opera verdict
+```
+
+### Database Schema
+
+#### `agent_chats`
+```sql
+- id: uuid (PK)
+- user_id: uuid (nullable for guests)
+- title: text
+- prompt: text
+- scenario_id: text
+- settings: jsonb (models, personas, rounds)
+- created_at: timestamp
+- updated_at: timestamp
+```
+
+#### `agent_chat_messages`
+```sql
+- id: uuid (PK)
+- chat_id: uuid (FK)
+- agent: text ("Agent A", "Agent B", "Agent C")
+- persona: text (persona slug)
+- model: text (OpenRouter model ID)
+- message: text
+- created_at: timestamp
+```
+
+#### `user_credits`
+```sql
+- id: uuid (PK)
+- user_id: uuid (FK)
+- credits_remaining: integer
+- credits_used: integer
+- created_at: timestamp
+- updated_at: timestamp
+```
+
+#### `user_token_usage`
+```sql
+- id: uuid (PK)
+- user_id: uuid (FK)
+- chat_id: uuid (nullable)
+- model_id: text
+- prompt_tokens: integer
+- completion_tokens: integer
+- total_tokens: integer
+- estimated_cost: decimal
+- created_at: timestamp
+```
+
+#### `chat_analytics`
+```sql
+- id: uuid (PK)
+- chat_id: uuid (nullable)
+- user_id: uuid (nullable)
+- session_id: text (for guest tracking)
+- is_guest: boolean
+- total_messages: integer
+- total_tokens_used: integer
+- estimated_cost: decimal
+- generation_duration_ms: integer
+- models_used: text[]
+- num_agents: integer
+- started_at: timestamp
+- completed_at: timestamp (nullable)
+```
+
+### Edge Functions
+
+#### `openrouter-chat`
+- **Purpose**: Proxy all OpenRouter API calls with shared API key
+- **Features**: Rate limit handling, cost tracking, streaming responses
+- **Security**: Server-side API key management, no client exposure
+
+#### `openrouter-models`
+- **Purpose**: Fetch available models from OpenRouter catalog
+- **Caching**: Models cached for performance
+
+#### `create-credits-checkout`
+- **Purpose**: Handle Stripe credit purchases
+- **Status**: Planned
+
+#### `log-battle-start`
+- **Purpose**: Capture user IP addresses for analytics
+- **Privacy**: Non-critical, fails silently
+
+### Open Source & Self-Hosting
+
+**Download & Run Locally**:
+- Full source code available on GitHub
+- Run with `npm install && npm run dev`
+- Requires Supabase account for backend
+- Uses shared OpenRouter API key (server-side)
+
+**Cloud Version**:
+- Hosted at siliconsoap.com
+- Shared infrastructure with premium features
+- Credit system with Stripe payments (planned)
+- Enhanced analytics and monitoring
+
+**Key Benefits**:
+- **No Vendor Lock-in**: Run locally or migrate anytime
+- **Privacy**: Local conversations stay on your machine
+- **Customization**: Modify code for your needs
+- **Learning**: Study AI agent orchestration patterns
+
+---
+
+## Success Metrics
+
+### User Engagement
+- **Battle Count**: Total conversations generated
+- **User Growth**: Guest → logged-in conversion rate
+- **Retention**: Returning users, chat history usage
+- **Feature Adoption**: Judge Bot usage, custom scenarios
+
+### Technical Metrics
+- **API Usage**: OpenRouter token consumption tracking
+- **Performance**: Conversation generation speed, streaming reliability
+- **Analytics**: Battle completion rates, model preferences
+
+### Business Metrics (Cloud Version)
+- **Credit Sales**: Stripe revenue from credit purchases
+- **User Acquisition**: Organic growth vs marketing
+- **Platform Usage**: Daily/weekly active users
+
+---
+
+## Development Roadmap
+
+### ✅ Completed
+
+**Core Multi-Agent System**:
+- [x] 2-3 agent conversations with different models/personas
+- [x] Real-time streaming via Supabase Realtime
+- [x] Soap opera agent naming system
+- [x] Three conversation scenarios
+- [x] Turn-taking conversation flow
+
+**Credit & Billing System**:
+- [x] Guest credits (5 free battles)
+- [x] Logged-in token-based billing (10 credits)
+- [x] Atomic credit operations
+- [x] Stripe integration preparation
+
+**Analysis & Entertainment**:
+- [x] Judge Bot dramatic analyzer with soap opera theme
+- [x] Real-time chat history with database storage
+- [x] Conversation completion analytics
+- [x] User participation modes
+
+**Technical Infrastructure**:
+- [x] OpenRouter API integration with shared keys
+- [x] Supabase backend with edge functions
+- [x] Open source codebase with local development
+- [x] Comprehensive analytics tracking
+
+### 🚧 In Progress
+
+- [ ] **Agent Profile Marketplace**: User-created and premium personas
+- [ ] **Conversation Branching**: Edit messages, regenerate from points
+- [ ] **Export Features**: PDF, Markdown, JSON export
+- [ ] **Advanced UI Modes**: Different conversation layouts
+
+### 📋 Planned
+
+- [ ] **Workflow Builder**: Node-based automation tool (separate project)
+- [ ] **Research Assistant**: Document analysis with RAG (separate project)
+- [ ] **Team Workspaces**: Multi-user collaboration features
+- [ ] **Advanced Analytics**: Usage dashboards and insights
+- [ ] **Mobile App**: React Native companion
+- [ ] **API Access**: Programmatic battle creation
+
+---
+
+## Installation & Setup
+
+### Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/siliconsoap.git
+cd siliconsoap
+
+# Install dependencies
+npm install
+
+# Set up environment (Supabase project required)
+# Copy .env.example to .env and fill in values
+
+# Start development server
+npm run dev
+```
+
+### Self-Hosting
+
+1. **Supabase Setup**:
+   - Create Supabase project
+   - Run database migrations
+   - Configure edge functions
+
+2. **OpenRouter API**:
+   - Get API key from OpenRouter
+   - Configure in Supabase secrets
+
+3. **Environment Variables**:
+   ```bash
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_key
+   ```
+
+### Cloud Version
+
+Visit [siliconsoap.com](https://siliconsoap.com) for the hosted version with premium features and credit purchasing.
+
+---
+
+## Appendix
+
+### Key Files
+
+**Core Application**:
+- `src/pages/agents-meetup/` - Main application
+- `src/repositories/` - Data access layer
+- `src/services/` - Business logic
+- `src/hooks/` - React hooks
+- `supabase/functions/` - Edge functions
+
+### Environment Variables
+
+```bash
+# Supabase (required)
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+
+# OpenRouter (configured in Supabase edge functions)
+# OPENROUTER_API_KEY=your_api_key
+```
+
+### Contributing
+
+Silicon Soap is open source! Contributions welcome:
+- Bug reports and feature requests
+- Code improvements and optimizations
+- Documentation updates
+- Agent persona additions
+
+---
+
+**Last Updated**: 2025-12-30
+**Version**: 2.0
+**License**: MIT (Open Source)
+**Status**: Production Ready
 
 ---
 

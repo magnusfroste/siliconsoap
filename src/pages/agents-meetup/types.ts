@@ -30,7 +30,7 @@ import type {
   AnalysisResults
 } from '@/models';
 
-// Consolidated LabsState - single source of truth (simplified without BYOK)
+// Consolidated LabsState - single source of truth
 export interface LabsState {
   apiKey: string;
   savedApiKey: string;
@@ -69,7 +69,7 @@ export interface LabsState {
   personalityIntensity: 'mild' | 'moderate' | 'extreme';
 }
 
-// Consolidated LabsActions - single source of truth (simplified without BYOK)
+// Consolidated LabsActions - single source of truth
 export interface LabsActions {
   setApiKey: (key: string) => void;
   setSavedApiKey: (key: string) => void;

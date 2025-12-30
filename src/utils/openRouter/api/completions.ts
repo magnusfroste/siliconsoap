@@ -10,6 +10,21 @@ export interface CompletionResult {
   originalModel?: string;
 }
 
+// Edge function response type that includes error handling
+interface EdgeFunctionResponse {
+  error?: string;
+  code?: string;
+  choices?: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+  usage?: OpenRouterUsage;
+  model: string;
+  fallback_used?: boolean;
+  original_model?: string;
+}
+
 /**
  * Calls OpenRouter API via edge function (shared key only).
  * All API calls go through the edge function for security.
@@ -19,7 +34,7 @@ export const callOpenRouterViaEdge = async (
   prompt: string,
   model: string,
   persona: string,
-  userApiKey: string | null, // Kept for backwards compatibility, always null now
+  userApiKey: string | null,
   responseLength: ResponseLength = "medium",
   temperature: number = 0.7
 ): Promise<string> => {
@@ -70,18 +85,22 @@ export const callOpenRouterWithUsage = async (
       throw error;
     }
 
-    if ((data as any)?.error) {
+    const response = data as EdgeFunctionResponse;
+
+    if (response.error) {
       console.error("OpenRouter API error via edge:", data);
 
       // Handle rate limit
-      if ((data as any).code === "RATE_LIMIT") {
+      if (response.code === "RATE_LIMIT") {
         throw new Error("Rate limit exceeded. Please try again later.");
       }
 
-      throw new Error((data as any).error);
+      throw new Error(response.error);
     }
 
-    const response = data as OpenRouterResponse & { fallback_used?: boolean; original_model?: string };
+    if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+      throw new Error("Invalid response format from edge function");
+    }
     
     return {
       content: response.choices[0].message.content,
