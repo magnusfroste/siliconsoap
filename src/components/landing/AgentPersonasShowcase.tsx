@@ -49,17 +49,22 @@ export function AgentPersonasShowcase() {
           {personas.map((persona, index) => (
             <Card 
               key={persona.id}
-              className="bg-card/50 border-border/50 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+              className="group bg-card/50 border-border/50 hover:border-primary/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 animate-fade-in overflow-hidden relative"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="p-4 text-center">
+              {/* Background gradient on hover */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${persona.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
+              
+              <CardContent className="p-4 text-center relative">
                 <div 
-                  className={`w-12 h-12 mx-auto rounded-full bg-gradient-to-br ${persona.gradient} flex items-center justify-center mb-3`}
+                  className={`relative w-12 h-12 mx-auto rounded-full bg-gradient-to-br ${persona.gradient} flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}
                 >
-                  <persona.icon className="h-6 w-6 text-white" />
+                  {/* Orbit ring */}
+                  <div className="absolute inset-[-4px] rounded-full border border-dashed border-primary/20 opacity-0 group-hover:opacity-100 group-hover:animate-spin transition-opacity duration-300" style={{ animationDuration: '8s' }} />
+                  <persona.icon className="h-6 w-6 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
-                <h4 className="font-semibold text-sm mb-1">{persona.name}</h4>
-                <p className="text-xs text-muted-foreground">{persona.description}</p>
+                <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors duration-300">{persona.name}</h4>
+                <p className="text-xs text-muted-foreground group-hover:text-foreground/70 transition-colors duration-300">{persona.description}</p>
               </CardContent>
             </Card>
           ))}

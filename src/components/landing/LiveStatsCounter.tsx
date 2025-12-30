@@ -89,18 +89,20 @@ export function LiveStatsCounter() {
           {statItems.map((item, index) => (
             <div 
               key={item.label}
-              className="text-center animate-fade-in"
+              className="group text-center animate-fade-in"
               style={{ animationDelay: `${index * 0.15}s` }}
             >
               <div className="flex justify-center mb-2">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <item.icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
+                  <item.icon className="h-5 w-5 md:h-6 md:w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                  {/* Pulse ring */}
+                  <div className="absolute inset-0 rounded-full border-2 border-primary/30 opacity-0 group-hover:opacity-100 group-hover:animate-ping" />
                 </div>
               </div>
-              <div className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {loading ? '—' : item.value.toLocaleString()}
+              <div className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
+                {loading ? '—' : item.value.toLocaleString()}+
               </div>
-              <div className="text-xs md:text-sm text-muted-foreground mt-1">
+              <div className="text-xs md:text-sm text-muted-foreground mt-1 group-hover:text-foreground/80 transition-colors duration-300">
                 {item.label}
               </div>
             </div>

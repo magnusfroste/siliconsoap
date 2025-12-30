@@ -27,16 +27,18 @@ export function SiliconRanksShowcase() {
           {SILICON_RANKS.map((rank, index) => (
             <div 
               key={rank.level}
-              className="flex flex-col items-center animate-fade-in"
+              className="group flex flex-col items-center animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div 
-                className={`w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${rank.color} flex items-center justify-center text-2xl md:text-3xl shadow-lg hover:scale-110 transition-transform cursor-default`}
+                className={`relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${rank.color} flex items-center justify-center text-2xl md:text-3xl shadow-lg hover:scale-125 hover:rotate-12 transition-all duration-300 cursor-default`}
                 title={rank.title}
               >
-                {rank.emoji}
+                {/* Glow effect */}
+                <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${rank.color} blur-md opacity-0 group-hover:opacity-60 transition-opacity duration-300 -z-10`} />
+                <span className="group-hover:animate-bounce">{rank.emoji}</span>
               </div>
-              <span className="text-[10px] md:text-xs text-muted-foreground mt-2 max-w-[60px] md:max-w-[80px] text-center leading-tight">
+              <span className="text-[10px] md:text-xs text-muted-foreground mt-2 max-w-[60px] md:max-w-[80px] text-center leading-tight group-hover:text-foreground transition-colors duration-300">
                 {rank.title}
               </span>
             </div>
