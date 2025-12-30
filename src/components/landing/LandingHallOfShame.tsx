@@ -99,15 +99,18 @@ export function LandingHallOfShame() {
             return (
               <Card 
                 key={moment.id} 
-                className="bg-card/50 hover:bg-card/80 transition-all duration-300 border-border/50 hover:-translate-y-1 cursor-pointer animate-fade-in"
+                className="group bg-card/50 hover:bg-card/80 transition-all duration-300 border-border/50 hover:border-primary/30 hover:-translate-y-2 hover:shadow-lg hover:shadow-primary/5 cursor-pointer animate-fade-in relative overflow-hidden"
                 style={{ animationDelay: `${index * 0.1}s` }}
                 onClick={() => moment.share_id && navigate(`/shared/${moment.share_id}`)}
               >
-                <CardContent className="p-4">
+                {/* Shimmer effect on hover */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                
+                <CardContent className="p-4 relative">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <Badge 
                       variant="outline" 
-                      className={`${config.color} text-xs`}
+                      className={`${config.color} text-xs transition-transform duration-300 group-hover:scale-105`}
                     >
                       {config.emoji} {config.label}
                     </Badge>
@@ -118,7 +121,7 @@ export function LandingHallOfShame() {
                     </div>
                   </div>
                   
-                  <p className="text-sm font-medium mb-2 line-clamp-3 italic">
+                  <p className="text-sm font-medium mb-2 line-clamp-3 italic group-hover:text-foreground/90 transition-colors">
                     "{moment.quote}"
                   </p>
                   
