@@ -37,17 +37,10 @@ export const useConversationAnalysis = (
   }, [initialAnalysis, initialAnalyzerModel]);
 
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
-    // Check for API key in localStorage as fallback
-    const storedApiKey = localStorage.getItem('userOpenRouterApiKey');
-    const effectiveApiKey = savedApiKey || storedApiKey || null;
+    // Always use shared key mode (edge function with server-side API key)
+    const effectiveApiKey: string | null = null;
     
-    console.log("Analysis API Key Debug:", {
-      savedApiKey: savedApiKey ? `${savedApiKey.substring(0, 8)}...` : null,
-      storedApiKey: storedApiKey ? `${storedApiKey.substring(0, 8)}...` : null,
-      effectiveApiKey: effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : 'shared key'
-    });
-
-    // API key is optional now (shared key mode via edge function)
+    console.log("Analysis using shared key mode");
 
     const selectedModel = model || analyzerModel;
     

@@ -4,7 +4,6 @@ import {
   useConversationNavigation
 } from './conversation';
 import { ConversationMessage, ResponseLength, ScenarioType, TurnOrder } from '../types';
-import { checkApiAvailability } from '@/utils/openRouter';
 import { toast } from '@/hooks/use-toast';
 
 export const useConversationFlow = (
@@ -66,9 +65,7 @@ export const useConversationFlow = (
 
   // Custom wrapper around startConversation that also updates the step
   const handleStartConversation = async () => {
-    console.log("Starting conversation...");
-    console.log("- apiKey exists:", !!apiKey);
-    console.log("- apiKey length:", apiKey ? apiKey.length : 0);
+    console.log("Starting conversation (shared key mode)...");
     console.log("- agentAModel:", agentAModel);
     console.log("- agentBModel:", agentBModel);
     console.log("- agentCModel:", agentCModel);
@@ -76,27 +73,6 @@ export const useConversationFlow = (
     
     // Set loading state immediately to prevent multiple clicks
     setIsLoading(true);
-    
-    // Double-check if we have an API key from localStorage
-    const storedApiKey = localStorage.getItem('userOpenRouterApiKey');
-    if (!apiKey && storedApiKey) {
-      console.log("Using API key from localStorage");
-      // We'll use the stored API key for the conversation
-    }
-    
-    const effectiveApiKey = apiKey || storedApiKey || '';
-    
-    // Check if API key is provided
-    if (!effectiveApiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please provide your OpenRouter API key to use this feature.",
-        variant: "destructive",
-      });
-      // No step navigation needed in new design
-      setIsLoading(false);
-      return;
-    }
     
     // Check if we have valid models selected
     if (!agentAModel || (numberOfAgents >= 2 && !agentBModel) || (numberOfAgents >= 3 && !agentCModel)) {
@@ -121,41 +97,11 @@ export const useConversationFlow = (
       return;
     }
     
-    // Check API availability before starting
-    try {
-      console.log("Checking API availability with key:", effectiveApiKey.substring(0, 8) + "...");
-      const result = await checkApiAvailability(effectiveApiKey);
-      
-      if (!result.available) {
-        console.error("API not available:", result.message);
-        
-        toast({
-          title: "API Error",
-          description: result.message,
-          variant: "destructive",
-        });
-        
-        setIsLoading(false);
-        return;
-      }
-    } catch (error) {
-      console.error("Error checking API availability:", error);
-      
-      toast({
-        title: "API Error",
-        description: "Failed to check API availability. Please try again.",
-        variant: "destructive",
-      });
-      
-      setIsLoading(false);
-      return;
-    }
-    
     // Switch to conversation view
     setCurrentView('conversation');
     
     try {
-      console.log("Starting conversation with API key:", effectiveApiKey.substring(0, 8) + "...");
+      console.log("Starting conversation with shared key mode");
       await startConversation();
     } catch (error) {
       console.error("Error starting conversation:", error);
@@ -174,71 +120,25 @@ export const useConversationFlow = (
 
   // Custom wrapper around analyzeConversation that passes the current prompt
   const handleAnalyzeConversation = async (model?: string) => {
-    console.log("Analyzing conversation...");
-    console.log("- apiKey exists:", !!apiKey);
+    console.log("Analyzing conversation (shared key mode)...");
     
-    // Double-check if we have an API key from localStorage
-    const storedApiKey = localStorage.getItem('userOpenRouterApiKey');
-    if (!apiKey && storedApiKey) {
-      console.log("Using API key from localStorage for analysis");
-      // We'll use the stored API key for the analysis
-    }
+    const currentPrompt = getCurrentPrompt();
+    setIsAnalyzing(true);
     
-    const effectiveApiKey = apiKey || storedApiKey || '';
-    
-    // Check if API key is provided
-    if (!effectiveApiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please provide your OpenRouter API key to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check API availability before analyzing
     try {
-      console.log("Checking API availability for analysis with key:", effectiveApiKey.substring(0, 8) + "...");
-      const result = await checkApiAvailability(effectiveApiKey);
-      
-      if (!result.available) {
-        console.error("API not available for analysis:", result.message);
-        
-        toast({
-          title: "API Error",
-          description: result.message,
-          variant: "destructive",
-        });
-        
-        return; // Don't proceed further
-      }
-      
-      const currentPrompt = getCurrentPrompt();
-      setIsAnalyzing(true);
-      
-      try {
-        await analyzeConversation(model, currentPrompt);
-      } catch (error) {
-        console.error("Error analyzing conversation:", error);
-        
-        // For errors, show a generic error message
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        toast({
-          title: "Error Analyzing Conversation",
-          description: errorMessage || "An error occurred while analyzing the conversation. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsAnalyzing(false);
-      }
+      await analyzeConversation(model, currentPrompt);
     } catch (error) {
-      console.error("Error checking API availability for analysis:", error);
+      console.error("Error analyzing conversation:", error);
       
+      // For errors, show a generic error message
+      const errorMessage = error instanceof Error ? error.message : String(error);
       toast({
-        title: "API Error",
-        description: "Failed to check API availability. Please try again.",
+        title: "Error Analyzing Conversation",
+        description: errorMessage || "An error occurred while analyzing the conversation. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 

@@ -122,59 +122,36 @@ export const creditsRepository = {
     return data?.numeric_value || 100000; // Default: 100K tokens = 1 credit
   },
 
-  // Use tokens and deduct credits when threshold reached
+  // Use tokens atomically via RPC function (prevents race conditions)
   async useTokensAndDeductCredits(
     userId: string,
-    tokensUsed: number
+    tokensUsed: number,
+    chatId?: string,
+    modelId: string = 'unknown'
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
-    const tokensPerCredit = await this.getTokensPerCredit();
-    
-    // Get current user credits
-    const { data: userCredits, error: fetchError } = await supabase
-      .from('user_credits')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Use atomic RPC function to track tokens
+    const { data, error } = await supabase.rpc('use_tokens', {
+      p_user_id: userId,
+      p_chat_id: chatId || null,
+      p_model_id: modelId,
+      p_prompt_tokens: Math.floor(tokensUsed / 2), // Approximate split
+      p_completion_tokens: Math.ceil(tokensUsed / 2),
+      p_estimated_cost: 0 // Cost tracking handled separately
+    });
 
-    if (fetchError || !userCredits) {
-      console.error('Error fetching user credits:', fetchError);
+    if (error) {
+      console.error('Error using tokens:', error);
       return { success: false, creditsDeducted: 0, newCreditsRemaining: 0 };
     }
 
-    // Calculate new tokens used and how many credits to deduct
-    const newTokensUsed = userCredits.tokens_used + tokensUsed;
-    const creditsToDeduct = Math.floor(newTokensUsed / tokensPerCredit);
-    const remainingTokens = newTokensUsed % tokensPerCredit;
-
-    // Check if user has enough credits
-    if (creditsToDeduct > userCredits.credits_remaining) {
-      return { 
-        success: false, 
-        creditsDeducted: 0, 
-        newCreditsRemaining: userCredits.credits_remaining 
+    if (data && data.length > 0) {
+      return {
+        success: data[0].success,
+        creditsDeducted: 0, // Token-based system doesn't deduct credits per-call
+        newCreditsRemaining: data[0].new_budget_remaining
       };
     }
 
-    // Update credits and token counter
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .update({
-        credits_remaining: userCredits.credits_remaining - creditsToDeduct,
-        credits_used: userCredits.credits_used + creditsToDeduct,
-        tokens_used: remainingTokens,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('Error updating credits:', updateError);
-      return { success: false, creditsDeducted: 0, newCreditsRemaining: userCredits.credits_remaining };
-    }
-
-    return {
-      success: true,
-      creditsDeducted: creditsToDeduct,
-      newCreditsRemaining: userCredits.credits_remaining - creditsToDeduct
-    };
+    return { success: false, creditsDeducted: 0, newCreditsRemaining: 0 };
   }
 };

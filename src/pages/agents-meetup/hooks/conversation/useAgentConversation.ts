@@ -40,11 +40,10 @@ export const useAgentConversation = (
     // First check API availability
     setIsLoading(true);
     
-    // Double-check if we have an API key from localStorage if needed
-    const storedApiKey = !apiKey ? localStorage.getItem('userOpenRouterApiKey') : null;
-    const effectiveApiKey = apiKey || storedApiKey || null;
+    // Always use shared key mode (edge function with server-side API key)
+    const effectiveApiKey: string | null = null;
     
-    console.log("Starting conversation with API key:", effectiveApiKey ? `${effectiveApiKey.substring(0, 8)}...` : "shared key");
+    console.log("Starting conversation with shared key mode");
     console.log("Agent models:", { agentAModel, agentBModel, agentCModel });
     console.log("Number of agents:", numberOfAgents);
     console.log("Rounds:", rounds);
@@ -139,20 +138,11 @@ export const useAgentConversation = (
     } catch (error) {
       console.error("Error in conversation flow:", error);
       
-      // Check if this is a rate limit error that should prompt BYOK
-      if (error instanceof Error && 'shouldPromptBYOK' in error && (error as any).shouldPromptBYOK) {
-        toast({
-          title: "Rate Limit Reached",
-          description: "Shared API key limit reached. Please add your own OpenRouter API key to continue with unlimited usage.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Conversation Error",
-          description: error instanceof Error ? error.message : "An error occurred during the conversation.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Conversation Error",
+        description: error instanceof Error ? error.message : "An error occurred during the conversation.",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setIsLoading(false);
