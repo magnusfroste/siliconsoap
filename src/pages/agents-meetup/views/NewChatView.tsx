@@ -95,13 +95,7 @@ export const NewChatView = () => {
       return;
     }
 
-    // Check credits before proceeding
-    if (!creditsService.canStartConversation(creditsRemaining)) {
-      setShowCreditsModal(true);
-      return;
-    }
-
-    // For guests without credits, don't allow starting chat
+    // Check credits before proceeding (only for guests - logged-in users use token-based billing)
     if (isGuest && !hasCredits()) {
       setShowCreditsModal(true);
       return;
