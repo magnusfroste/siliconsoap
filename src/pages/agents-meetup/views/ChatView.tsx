@@ -282,7 +282,9 @@ export const ChatView = () => {
     };
 
     startGeneration();
-  }, [chat, chatId, loading, messages.length, state.apiKey, saveMessage]);
+    // Note: isGenerating intentionally excluded to prevent infinite loop (hasStartedGeneration ref handles this)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat, chatId, loading, creditsLoading, messages.length, state.apiKey, saveMessage, hasCredits, refreshCredits, user?.id, creditsRemaining]);
 
   if (loading) {
     return (
