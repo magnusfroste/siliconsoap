@@ -44,8 +44,8 @@ const PRICE_TIER_CONFIG: Record<string, { label: string; className: string; icon
   },
 };
 
-// Estimate cost per conversation (2 agents x 3 rounds x ~500 tokens each)
-const estimateConversationCost = (model: CuratedModel): number | null => {
+// Estimate cost per debate (2 agents x 3 rounds x ~500 tokens each)
+const estimateDebateCost = (model: CuratedModel): number | null => {
   if (model.price_output == null) return null;
   // 2 agents × 3 rounds × 500 output tokens per response = 3000 tokens
   // Plus input tokens (roughly 1000 tokens per round of context) = 6000 input tokens
@@ -118,7 +118,7 @@ export const ModelCard = ({ model }: ModelCardProps) => {
   };
 
   const priceTierConfig = model.price_tier ? PRICE_TIER_CONFIG[model.price_tier] : null;
-  const estimatedCost = estimateConversationCost(model);
+  const estimatedCost = estimateDebateCost(model);
 
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-colors">
@@ -149,7 +149,7 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                           <p className="font-medium capitalize">{model.price_tier} tier</p>
                           {estimatedCost !== null && (
                             <p className="text-xs text-muted-foreground">
-                              Est. {formatCost(estimatedCost)} per conversation
+                              Est. {formatCost(estimatedCost)} per debate
                             </p>
                           )}
                         </div>
@@ -235,7 +235,7 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                 {estimatedCost !== null && (
                   <span className="flex items-center gap-1 text-xs">
                     <DollarSign className="h-3 w-3" />
-                    {formatCost(estimatedCost)}/conv
+                    {formatCost(estimatedCost)}/debate
                   </span>
                 )}
               </div>
