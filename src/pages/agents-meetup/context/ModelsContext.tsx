@@ -1,11 +1,30 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepository";
 
-// Default models for each agent - must exist in the curated_models table
-const DEFAULT_AGENT_MODELS = {
-  agentA: "x-ai/grok-4-fast",
-  agentB: "qwen/qwen3-32b", 
-  agentC: "mistralai/mixtral-8x7b-instruct",
+// Pool of 10 budget/standard tier models - balanced for speed and reasoning
+const MODEL_POOL = [
+  // Budget tier - solid performers
+  "deepseek/deepseek-r1-distill-qwen-32b",
+  "qwen/qwen3-32b",
+  "meta-llama/llama-3.3-70b-instruct",
+  "meta-llama/llama-4-scout",
+  // Standard tier - proven reliable
+  "deepseek/deepseek-chat-v3-0324",
+  "google/gemini-2.5-flash",
+  "openai/gpt-4o-mini",
+  "mistralai/mixtral-8x7b-instruct",
+  "x-ai/grok-3-mini",
+  "meta-llama/llama-4-maverick",
+];
+
+// Pick 3 unique random models from the pool
+const pickRandomModels = (): { agentA: string; agentB: string; agentC: string } => {
+  const shuffled = [...MODEL_POOL].sort(() => Math.random() - 0.5);
+  return {
+    agentA: shuffled[0],
+    agentB: shuffled[1],
+    agentC: shuffled[2],
+  };
 };
 
 interface ModelsContextType {
@@ -24,7 +43,7 @@ interface ModelsContextType {
 const ModelsContext = createContext<ModelsContextType | null>(null);
 
 export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [agentModels, setAgentModels] = useState(DEFAULT_AGENT_MODELS);
+  const [agentModels, setAgentModels] = useState(pickRandomModels);
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
 
