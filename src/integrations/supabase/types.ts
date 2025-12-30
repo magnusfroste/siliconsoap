@@ -143,16 +143,19 @@ export type Database = {
         Row: {
           chat_id: string | null
           completed_at: string | null
+          country_code: string | null
           created_at: string | null
           estimated_cost: number | null
           generation_duration_ms: number | null
           id: string
+          ip_address: string | null
           is_guest: boolean | null
           models_used: string[] | null
           num_agents: number | null
           num_rounds: number | null
           prompt_preview: string | null
           scenario_id: string | null
+          session_id: string | null
           started_at: string | null
           total_messages: number | null
           total_tokens_used: number | null
@@ -162,16 +165,19 @@ export type Database = {
         Insert: {
           chat_id?: string | null
           completed_at?: string | null
+          country_code?: string | null
           created_at?: string | null
           estimated_cost?: number | null
           generation_duration_ms?: number | null
           id?: string
+          ip_address?: string | null
           is_guest?: boolean | null
           models_used?: string[] | null
           num_agents?: number | null
           num_rounds?: number | null
           prompt_preview?: string | null
           scenario_id?: string | null
+          session_id?: string | null
           started_at?: string | null
           total_messages?: number | null
           total_tokens_used?: number | null
@@ -181,16 +187,19 @@ export type Database = {
         Update: {
           chat_id?: string | null
           completed_at?: string | null
+          country_code?: string | null
           created_at?: string | null
           estimated_cost?: number | null
           generation_duration_ms?: number | null
           id?: string
+          ip_address?: string | null
           is_guest?: boolean | null
           models_used?: string[] | null
           num_agents?: number | null
           num_rounds?: number | null
           prompt_preview?: string | null
           scenario_id?: string | null
+          session_id?: string | null
           started_at?: string | null
           total_messages?: number | null
           total_tokens_used?: number | null

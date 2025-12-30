@@ -25,6 +25,7 @@ export const analyticsService = {
     modelsUsed: string[];
     numAgents: number;
     numRounds: number;
+    sessionId?: string;
   }): Promise<string | null> {
     return analyticsRepository.logChatStart(params);
   },
