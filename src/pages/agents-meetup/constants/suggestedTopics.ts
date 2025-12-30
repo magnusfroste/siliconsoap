@@ -134,6 +134,22 @@ export const suggestedTopicsByScenario: Record<string, string[]> = {
     "Will flying cars become practical transportation?",
     "Will holographic communication replace video calls?",
     "Will neural implants enhance human intelligence?"
+  ],
+
+  // Hot debate topics from seeding - curated 2025 discussions
+  'hot-debates': [
+    "Will AGI arrive within 5 years?",
+    "EU AI Act: Good or bad for innovation?",
+    "Should AI-generated art be protected by copyright?",
+    "Will AI replace programmers?",
+    "Open-source AI vs closed models - which is safer?",
+    "AI in schools: Cheating tool or future of education?",
+    "Can AI solve the climate crisis?",
+    "Should AI models be regulated like pharmaceuticals?",
+    "Deepfakes and democracy: The invisible threat",
+    "Who owns the data that trains AI?",
+    "AI assistants: Friend or foe?",
+    "The biggest AI breakthroughs of 2025"
   ]
 };
 
