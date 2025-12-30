@@ -109,6 +109,11 @@ export const AnalysisDrawer = ({
                 <p className="text-xs text-muted-foreground/70 italic">
                   (No one is innocent until proven otherwise. And not even then.)
                 </p>
+                <div className="mt-4 px-4 py-2 bg-muted/50 rounded-full">
+                  <p className="text-xs text-muted-foreground">
+                    ⏱️ This usually takes 15-30 seconds
+                  </p>
+                </div>
               </div>
             ) : !analysisResults ? (
               isGuest ? (
