@@ -108,6 +108,31 @@ export const chatRepository = {
     return true;
   },
 
+  // Update chat settings (for storing analysis, etc.)
+  async updateChatSettings(chatId: string, settings: Partial<ChatSettings>): Promise<boolean> {
+    // First get existing settings
+    const { data: existing } = await supabase
+      .from('agent_chats')
+      .select('settings')
+      .eq('id', chatId)
+      .single();
+
+    const existingSettings = (existing?.settings as Record<string, unknown>) || {};
+    const mergedSettings = { ...existingSettings, ...settings };
+
+    const { error } = await supabase
+      .from('agent_chats')
+      .update({ settings: mergedSettings })
+      .eq('id', chatId);
+
+    if (error) {
+      console.error('Error updating settings:', error);
+      return false;
+    }
+
+    return true;
+  },
+
   // Soft delete a chat
   async deleteChat(chatId: string): Promise<boolean> {
     const { error } = await supabase
