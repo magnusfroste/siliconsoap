@@ -102,5 +102,30 @@ export const creditsService = {
   // Check if credits are exhausted
   isCreditsExhausted(creditsRemaining: number): boolean {
     return creditsRemaining <= 0;
+  },
+
+  // Use tokens and deduct credits based on token usage
+  async useTokensForCredit(
+    userId: string | null,
+    tokensUsed: number
+  ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
+    if (!userId) {
+      // Guest users use simple credit system, tokens don't affect them
+      return { success: true, creditsDeducted: 0, newCreditsRemaining: 0 };
+    }
+
+    const result = await creditsRepository.useTokensAndDeductCredits(userId, tokensUsed);
+    
+    if (result.creditsDeducted > 0) {
+      // Notify other components that credits changed
+      window.dispatchEvent(new CustomEvent('creditsChanged'));
+    }
+
+    return result;
+  },
+
+  // Get tokens per credit ratio
+  async getTokensPerCredit(): Promise<number> {
+    return creditsRepository.getTokensPerCredit();
   }
 };
