@@ -232,12 +232,6 @@ export const ModelCard = ({ model }: ModelCardProps) => {
                     {formatContextWindow(model.context_window)} context
                   </span>
                 )}
-                {estimatedCost !== null && (
-                  <span className="flex items-center gap-1 text-xs">
-                    <DollarSign className="h-3 w-3" />
-                    {formatCost(estimatedCost)}/debate
-                  </span>
-                )}
               </div>
             </div>
 
