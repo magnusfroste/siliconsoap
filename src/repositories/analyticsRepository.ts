@@ -18,6 +18,9 @@ export interface ChatAnalytics {
   started_at: string;
   completed_at: string | null;
   created_at: string;
+  session_id: string | null;
+  ip_address: string | null;
+  country_code: string | null;
 }
 
 export interface AnalyticsSummary {
@@ -97,11 +100,15 @@ export const analyticsRepository = {
     modelsUsed: string[];
     numAgents: number;
     numRounds: number;
+    sessionId?: string;
   }): Promise<string | null> {
+    // Only use chat_id if it's a valid UUID (not guest session IDs like "guest_123")
+    const isValidUuid = params.chatId && !params.chatId.startsWith('guest_');
+    
     const { data, error } = await supabase
       .from('chat_analytics')
       .insert({
-        chat_id: params.chatId || null,
+        chat_id: isValidUuid ? params.chatId : null,
         user_id: params.userId || null,
         is_guest: params.isGuest,
         prompt_preview: params.promptPreview.slice(0, 200),
@@ -110,7 +117,8 @@ export const analyticsRepository = {
         num_agents: params.numAgents,
         num_rounds: params.numRounds,
         user_agent: navigator.userAgent,
-        started_at: new Date().toISOString()
+        started_at: new Date().toISOString(),
+        session_id: params.sessionId || params.chatId || null // Store guest session ID here
       })
       .select('id')
       .single();
