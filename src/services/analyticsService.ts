@@ -1,7 +1,7 @@
 import { analyticsRepository } from '@/repositories/analyticsRepository';
-import type { ChatAnalytics, AnalyticsSummary } from '@/repositories/analyticsRepository';
+import type { ChatAnalytics, AnalyticsSummary, ModelUsageStats } from '@/repositories/analyticsRepository';
 
-export type { ChatAnalytics, AnalyticsSummary };
+export type { ChatAnalytics, AnalyticsSummary, ModelUsageStats };
 
 export const analyticsService = {
   async getAll(limit = 100): Promise<ChatAnalytics[]> {
@@ -10,6 +10,10 @@ export const analyticsService = {
 
   async getSummary(): Promise<AnalyticsSummary> {
     return analyticsRepository.getSummary();
+  },
+
+  async getModelUsageStats(): Promise<ModelUsageStats[]> {
+    return analyticsRepository.getModelUsageStats();
   },
 
   async logChatStart(params: {
