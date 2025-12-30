@@ -395,6 +395,8 @@ export type Database = {
           credits_remaining: number
           credits_used: number
           id: string
+          token_budget: number
+          tokens_used: number
           updated_at: string | null
           user_id: string
         }
@@ -403,6 +405,8 @@ export type Database = {
           credits_remaining?: number
           credits_used?: number
           id?: string
+          token_budget?: number
+          tokens_used?: number
           updated_at?: string | null
           user_id: string
         }
@@ -411,6 +415,8 @@ export type Database = {
           credits_remaining?: number
           credits_used?: number
           id?: string
+          token_budget?: number
+          tokens_used?: number
           updated_at?: string | null
           user_id?: string
         }
@@ -461,6 +467,50 @@ export type Database = {
         }
         Relationships: []
       }
+      user_token_usage: {
+        Row: {
+          chat_id: string | null
+          completion_tokens: number
+          created_at: string
+          estimated_cost: number
+          id: string
+          model_id: string
+          prompt_tokens: number
+          total_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          completion_tokens?: number
+          created_at?: string
+          estimated_cost?: number
+          id?: string
+          model_id: string
+          prompt_tokens?: number
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          completion_tokens?: number
+          created_at?: string
+          estimated_cost?: number
+          id?: string
+          model_id?: string
+          prompt_tokens?: number
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_token_usage_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -498,6 +548,21 @@ export type Database = {
         Returns: {
           new_remaining: number
           new_used: number
+          success: boolean
+        }[]
+      }
+      use_tokens: {
+        Args: {
+          p_chat_id: string
+          p_completion_tokens: number
+          p_estimated_cost: number
+          p_model_id: string
+          p_prompt_tokens: number
+          p_user_id: string
+        }
+        Returns: {
+          new_budget_remaining: number
+          new_tokens_used: number
           success: boolean
         }[]
       }

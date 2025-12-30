@@ -3,6 +3,8 @@
 export { chatRepository } from './chatRepository';
 export { messageRepository } from './messageRepository';
 export { creditsRepository } from './creditsRepository';
+export { tokenRepository } from './tokenRepository';
+export type { UseTokensResult } from './tokenRepository';
 export { featureFlagsRepository } from './featureFlagsRepository';
 export type { FeatureFlag } from './featureFlagsRepository';
 export * from './curatedModelsRepository';
