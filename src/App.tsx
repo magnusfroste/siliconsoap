@@ -21,6 +21,7 @@ import { SettingsView } from "./pages/agents-meetup/views/SettingsView";
 import { AdminView } from "./pages/agents-meetup/views/AdminView";
 import ExploreView from "./pages/agents-meetup/views/ExploreView";
 import LeaderboardView from "./pages/agents-meetup/views/LeaderboardView";
+import { PaymentSuccessView } from "./pages/agents-meetup/views/PaymentSuccessView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,7 @@ const App = () => {
                 <Route path="about" element={<ErrorBoundary><AboutView /></ErrorBoundary>} />
                 <Route path="settings" element={<ErrorBoundary><SettingsView /></ErrorBoundary>} />
                 <Route path="admin" element={<ErrorBoundary><AdminView /></ErrorBoundary>} />
+                <Route path="payment-success" element={<ErrorBoundary><PaymentSuccessView /></ErrorBoundary>} />
               </Route>
               <Route path="/shared/:shareId" element={<ErrorBoundary><SharedChatView /></ErrorBoundary>} />
               <Route path="/auth" element={<Auth />} />

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Sparkles, LogIn, CreditCard } from 'lucide-react';
+import { Sparkles, LogIn, CreditCard, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CreditsExhaustedModalProps {
   open: boolean;
@@ -21,6 +24,27 @@ export const CreditsExhaustedModal = ({
   onOpenChange,
   isGuest,
 }: CreditsExhaustedModalProps) => {
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const handlePurchaseCredits = async () => {
+    setIsPurchasing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
+        body: { packId: 'pack_50' },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
   if (isGuest) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,14 +101,29 @@ export const CreditsExhaustedModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="flex-col sm:flex-col gap-2 pt-4">
+        <div className="border rounded-lg p-4 bg-muted/30 my-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-semibold">50 Credits Pack</p>
+              <p className="text-sm text-muted-foreground">Generate ~50 AI conversations</p>
+            </div>
+            <p className="text-2xl font-bold">$4.99</p>
+          </div>
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-col gap-2">
           <Button
             className="w-full gap-2"
             size="lg"
-            disabled
+            onClick={handlePurchaseCredits}
+            disabled={isPurchasing}
           >
-            <CreditCard className="h-4 w-4" />
-            Purchase Credits (Coming Soon)
+            {isPurchasing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CreditCard className="h-4 w-4" />
+            )}
+            {isPurchasing ? 'Starting Checkout...' : 'Purchase Credits'}
           </Button>
           <Button
             variant="ghost"
