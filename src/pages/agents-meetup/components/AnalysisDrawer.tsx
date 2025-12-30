@@ -52,7 +52,7 @@ export const AnalysisDrawer = ({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+      <DrawerContent className="max-h-[85vh] flex flex-col">
         <DrawerHeader className="border-b pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export const AnalysisDrawer = ({
           )}
         </DrawerHeader>
 
-        <ScrollArea className="flex-1 px-6">
+        <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
           <div className="py-6 space-y-4">
             {isAnalyzing ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
