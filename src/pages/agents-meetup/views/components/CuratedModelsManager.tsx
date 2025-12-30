@@ -492,256 +492,282 @@ export const CuratedModelsManager = () => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        {curatedModels.map(model => {
-          const isExpanded = expandedModels.has(model.id);
-          const hasContent = hasEducationalContent(model);
+      {/* Group curated models by provider */}
+      {(() => {
+        const curatedByProvider = curatedModels.reduce((acc, model) => {
+          const provider = model.provider || 'Other';
+          if (!acc[provider]) acc[provider] = [];
+          acc[provider].push(model);
+          return acc;
+        }, {} as Record<string, CuratedModel[]>);
 
+        const sortedProviders = Object.keys(curatedByProvider).sort();
+
+        if (curatedModels.length === 0) {
           return (
-            <Collapsible
-              key={model.id}
-              open={isExpanded}
-              onOpenChange={() => toggleModelExpanded(model.id)}
-            >
-              <div className="rounded-lg border bg-card overflow-hidden">
-                <div className="flex items-center justify-between p-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{model.display_name}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {model.provider}
-                        </Badge>
-                        {/* License type badge */}
-                        {model.license_type === 'open-weight' ? (
-                          <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
-                            <Server className="h-2.5 w-2.5" />
-                            Open
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30 gap-1">
-                            <Cloud className="h-2.5 w-2.5" />
-                            Cloud
-                          </Badge>
-                        )}
-                        {model.is_free && (
-                          <Badge variant="secondary" className="text-xs">
-                            FREE
-                          </Badge>
-                        )}
-                        {hasContent && (
-                          <Badge variant="default" className="text-xs bg-primary/20 text-primary">
-                            Has Info
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
-                    </div>
-                  <div className="flex items-center gap-2">
-                    {/* Auto-detect license button */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDetectLicense(model)}
-                      disabled={detectingLicense === model.id}
-                      className="gap-1 text-xs"
-                      title="Auto-detect license type"
-                    >
-                      {detectingLicense === model.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Scan className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                    {/* License type selector */}
-                    <Select
-                      value={model.license_type || 'closed'}
-                      onValueChange={(value) => handleSetLicenseType(model, value as 'open-weight' | 'closed')}
-                    >
-                      <SelectTrigger className="w-[90px] h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open-weight">
-                          <span className="flex items-center gap-1.5">
-                            <Server className="h-3 w-3 text-emerald-600" />
-                            Open
-                          </span>
-                        </SelectItem>
-                        <SelectItem value="closed">
-                          <span className="flex items-center gap-1.5">
-                            <Cloud className="h-3 w-3 text-sky-600" />
-                            Cloud
-                          </span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleGenerateModelInfo(model)}
-                      disabled={generatingForModel === model.id}
-                      className="gap-1.5"
-                    >
-                      {generatingForModel === model.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-3.5 w-3.5" />
-                      )}
-                      {hasContent ? 'Regenerate' : 'Generate'} Info
-                    </Button>
-                    <Switch
-                      checked={model.is_enabled}
-                      onCheckedChange={() => handleToggleEnabled(model)}
-                    />
-                    <CollapsibleTrigger asChild>
-                      <Button size="sm" variant="ghost">
-                        <ChevronDown
-                          className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')}
-                        />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleRemoveModel(model)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <CollapsibleContent>
-                  <div className="border-t p-4 space-y-4 bg-muted/30">
-                    {hasContent ? (
-                      <>
-                        {model.description && (
-                          <div>
-                            <label className="text-xs font-medium text-muted-foreground">
-                              Description
-                            </label>
-                            <p className="text-sm mt-1">{model.description}</p>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-4">
-                          {model.pros && model.pros.length > 0 && (
-                            <div>
-                              <label className="text-xs font-medium text-green-600 flex items-center gap-1">
-                                <Check className="h-3 w-3" /> Strengths
-                              </label>
-                              <ul className="mt-1 space-y-1">
-                                {model.pros.map((pro, i) => (
-                                  <li key={i} className="text-xs text-muted-foreground">
-                                    • {pro}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {model.cons && model.cons.length > 0 && (
-                            <div>
-                              <label className="text-xs font-medium text-amber-600 flex items-center gap-1">
-                                <AlertTriangle className="h-3 w-3" /> Limitations
-                              </label>
-                              <ul className="mt-1 space-y-1">
-                                {model.cons.map((con, i) => (
-                                  <li key={i} className="text-xs text-muted-foreground">
-                                    • {con}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          {model.use_cases && model.use_cases.length > 0 && (
-                            <div>
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Best For
-                              </label>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {model.use_cases.map((uc, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs">
-                                    {uc}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {model.avoid_cases && model.avoid_cases.length > 0 && (
-                            <div>
-                              <label className="text-xs font-medium text-muted-foreground">
-                                Avoid For
-                              </label>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {model.avoid_cases.map((ac, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs">
-                                    {ac}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          {model.category && (
-                            <span>
-                              Category: <strong className="capitalize">{model.category}</strong>
-                            </span>
-                          )}
-                          {model.speed_rating && (
-                            <span>
-                              Speed: <strong className="capitalize">{model.speed_rating}</strong>
-                            </span>
-                          )}
-                          {model.context_window && (
-                            <span>
-                              Context:{' '}
-                              <strong>
-                                {model.context_window >= 1000
-                                  ? `${Math.round(model.context_window / 1000)}K`
-                                  : model.context_window}
-                              </strong>
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          No educational content yet
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleGenerateModelInfo(model)}
-                          disabled={generatingForModel === model.id}
-                          className="gap-1.5"
-                        >
-                          {generatingForModel === model.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Sparkles className="h-3.5 w-3.5" />
-                          )}
-                          Generate with AI
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
+            <p className="text-center text-muted-foreground py-8">
+              No curated models yet. Click "Add Models" to get started.
+            </p>
           );
-        })}
-        {curatedModels.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            No curated models yet. Click "Add Models" to get started.
-          </p>
-        )}
-      </div>
+        }
+
+        return (
+          <div className="space-y-6">
+            {sortedProviders.map(provider => (
+              <div key={provider} className="rounded-lg border bg-card overflow-hidden">
+                <div className="px-4 py-3 border-b bg-muted/30">
+                  <h3 className="text-sm font-semibold">{provider}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {curatedByProvider[provider].length} model{curatedByProvider[provider].length !== 1 ? 's' : ''}
+                    {' · '}
+                    {curatedByProvider[provider].filter(m => m.is_enabled).length} enabled
+                  </p>
+                </div>
+                <div className="divide-y">
+                  {curatedByProvider[provider].map(model => {
+                    const isExpanded = expandedModels.has(model.id);
+                    const hasContent = hasEducationalContent(model);
+
+                    return (
+                      <Collapsible
+                        key={model.id}
+                        open={isExpanded}
+                        onOpenChange={() => toggleModelExpanded(model.id)}
+                      >
+                        <div className="flex items-center justify-between p-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium">{model.display_name}</p>
+                              {/* License type badge */}
+                              {model.license_type === 'open-weight' ? (
+                                <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
+                                  <Server className="h-2.5 w-2.5" />
+                                  Open
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-600 border-sky-500/30 gap-1">
+                                  <Cloud className="h-2.5 w-2.5" />
+                                  Cloud
+                                </Badge>
+                              )}
+                              {model.is_free && (
+                                <Badge variant="secondary" className="text-xs">
+                                  FREE
+                                </Badge>
+                              )}
+                              {hasContent && (
+                                <Badge variant="default" className="text-xs bg-primary/20 text-primary">
+                                  Has Info
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">{model.model_id}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* Auto-detect license button */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDetectLicense(model)}
+                              disabled={detectingLicense === model.id}
+                              className="gap-1 text-xs"
+                              title="Auto-detect license type"
+                            >
+                              {detectingLicense === model.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Scan className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            {/* License type selector */}
+                            <Select
+                              value={model.license_type || 'closed'}
+                              onValueChange={(value) => handleSetLicenseType(model, value as 'open-weight' | 'closed')}
+                            >
+                              <SelectTrigger className="w-[90px] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="open-weight">
+                                  <span className="flex items-center gap-1.5">
+                                    <Server className="h-3 w-3 text-emerald-600" />
+                                    Open
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="closed">
+                                  <span className="flex items-center gap-1.5">
+                                    <Cloud className="h-3 w-3 text-sky-600" />
+                                    Cloud
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleGenerateModelInfo(model)}
+                              disabled={generatingForModel === model.id}
+                              className="gap-1.5"
+                            >
+                              {generatingForModel === model.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-3.5 w-3.5" />
+                              )}
+                              {hasContent ? 'Regenerate' : 'Generate'} Info
+                            </Button>
+                            <Switch
+                              checked={model.is_enabled}
+                              onCheckedChange={() => handleToggleEnabled(model)}
+                            />
+                            <CollapsibleTrigger asChild>
+                              <Button size="sm" variant="ghost">
+                                <ChevronDown
+                                  className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')}
+                                />
+                              </Button>
+                            </CollapsibleTrigger>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRemoveModel(model)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <CollapsibleContent>
+                          <div className="border-t p-4 space-y-4 bg-muted/30">
+                            {hasContent ? (
+                              <>
+                                {model.description && (
+                                  <div>
+                                    <label className="text-xs font-medium text-muted-foreground">
+                                      Description
+                                    </label>
+                                    <p className="text-sm mt-1">{model.description}</p>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  {model.pros && model.pros.length > 0 && (
+                                    <div>
+                                      <label className="text-xs font-medium text-green-600 flex items-center gap-1">
+                                        <Check className="h-3 w-3" /> Strengths
+                                      </label>
+                                      <ul className="mt-1 space-y-1">
+                                        {model.pros.map((pro, i) => (
+                                          <li key={i} className="text-xs text-muted-foreground">
+                                            • {pro}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {model.cons && model.cons.length > 0 && (
+                                    <div>
+                                      <label className="text-xs font-medium text-amber-600 flex items-center gap-1">
+                                        <AlertTriangle className="h-3 w-3" /> Limitations
+                                      </label>
+                                      <ul className="mt-1 space-y-1">
+                                        {model.cons.map((con, i) => (
+                                          <li key={i} className="text-xs text-muted-foreground">
+                                            • {con}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  {model.use_cases && model.use_cases.length > 0 && (
+                                    <div>
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Best For
+                                      </label>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {model.use_cases.map((uc, i) => (
+                                          <Badge key={i} variant="secondary" className="text-xs">
+                                            {uc}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {model.avoid_cases && model.avoid_cases.length > 0 && (
+                                    <div>
+                                      <label className="text-xs font-medium text-muted-foreground">
+                                        Avoid For
+                                      </label>
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {model.avoid_cases.map((ac, i) => (
+                                          <Badge key={i} variant="outline" className="text-xs">
+                                            {ac}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex gap-4 text-xs text-muted-foreground">
+                                  {model.category && (
+                                    <span>
+                                      Category: <strong className="capitalize">{model.category}</strong>
+                                    </span>
+                                  )}
+                                  {model.speed_rating && (
+                                    <span>
+                                      Speed: <strong className="capitalize">{model.speed_rating}</strong>
+                                    </span>
+                                  )}
+                                  {model.context_window && (
+                                    <span>
+                                      Context:{' '}
+                                      <strong>
+                                        {model.context_window >= 1000
+                                          ? `${Math.round(model.context_window / 1000)}K`
+                                          : model.context_window}
+                                      </strong>
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  No educational content yet
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleGenerateModelInfo(model)}
+                                  disabled={generatingForModel === model.id}
+                                  className="gap-1.5"
+                                >
+                                  {generatingForModel === model.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                  )}
+                                  Generate with AI
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 };
