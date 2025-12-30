@@ -37,7 +37,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
     availableModels,
     setAvailableModels,
     loadingModels,
-    refreshModels
+    refreshModels,
+    shuffleModels
   } = useModels(getActiveApiKey());
 
   const {
@@ -202,7 +203,8 @@ export const useLabsState = (): [LabsState, LabsActions] => {
       setAgreementBias,
       setTemperature,
       setPersonalityIntensity,
-      refreshModels
+      refreshModels,
+      shuffleModels
     }
   ] as const;
 };

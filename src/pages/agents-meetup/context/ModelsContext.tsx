@@ -38,6 +38,7 @@ interface ModelsContextType {
   setAvailableModels: (models: CuratedModel[]) => void;
   loadingModels: boolean;
   refreshModels: () => Promise<void>;
+  shuffleModels: () => void;
 }
 
 const ModelsContext = createContext<ModelsContextType | null>(null);
@@ -87,6 +88,10 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
+  const shuffleModels = () => {
+    setAgentModels(pickRandomModels());
+  };
+
   return (
     <ModelsContext.Provider
       value={{
@@ -100,6 +105,7 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setAvailableModels,
         loadingModels,
         refreshModels,
+        shuffleModels,
       }}
     >
       {children}
@@ -119,6 +125,7 @@ const fallbackContext: ModelsContextType = {
   setAvailableModels: () => console.warn("[ModelsContext] setAvailableModels called outside provider"),
   loadingModels: true,
   refreshModels: async () => console.warn("[ModelsContext] refreshModels called outside provider"),
+  shuffleModels: () => console.warn("[ModelsContext] shuffleModels called outside provider"),
 };
 
 export const useModelsContext = (): ModelsContextType => {

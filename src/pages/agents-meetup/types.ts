@@ -108,6 +108,7 @@ export interface LabsActions {
   getCurrentPrompt: () => string;
   formatMessage: (message: string) => string;
   refreshModels: () => Promise<void>;
+  shuffleModels: () => void;
   enableSharedKeyMode: () => void;
   // Expert settings actions
   setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
