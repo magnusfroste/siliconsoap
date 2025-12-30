@@ -55,6 +55,15 @@ const calculateTokenCost = async (
 };
 
 /**
+ * Result from an agent call including content and fallback info
+ */
+export interface AgentCallResult {
+  content: string;
+  fallbackUsed?: boolean;
+  originalModel?: string;
+}
+
+/**
  * Makes an API call and optionally logs token usage
  */
 const callWithTokenTracking = async (
@@ -65,7 +74,7 @@ const callWithTokenTracking = async (
   responseLength: ResponseLength,
   temperature: number | undefined,
   onTokenUsage?: TokenUsageCallback
-): Promise<string> => {
+): Promise<AgentCallResult> => {
   const result = await callOpenRouterWithUsage(
     prompt,
     model,
@@ -95,7 +104,11 @@ const callWithTokenTracking = async (
     console.log(`[TokenTracking] Model: ${model}, Tokens: ${result.usage.total_tokens}, Cost: $${cost.toFixed(6)}`);
   }
 
-  return result.content;
+  return {
+    content: result.content,
+    fallbackUsed: result.fallbackUsed,
+    originalModel: result.originalModel
+  };
 };
 
 /**
@@ -218,7 +231,7 @@ Format: "AGENT_ID: reason"`;
       onTokenUsage
     );
 
-    const match = response.match(/^([ABC]):/i);
+    const match = response.content.match(/^([ABC]):/i);
     if (match) {
       return `Agent ${match[1].toUpperCase()}`;
     }
@@ -354,16 +367,18 @@ export const handleInitialRound = async (
   
   const agentAMessage: ConversationMessage = {
     agent: 'Agent A',
-    message: agentAResponse,
+    message: agentAResponse.content,
     model: agentAModel,
-    persona: agentAPersona
+    persona: agentAPersona,
+    fallbackUsed: agentAResponse.fallbackUsed,
+    originalModel: agentAResponse.originalModel
   };
   
   messages.push(agentAMessage);
   if (onMessageReceived) await onMessageReceived(agentAMessage);
   
   if (numberOfAgents === 1) {
-    return { conversationMessages: messages, agentAResponse, agentBResponse: '' };
+    return { conversationMessages: messages, agentAResponse: agentAResponse.content, agentBResponse: '' };
   }
   
   // Agent B response
@@ -376,7 +391,7 @@ export const handleInitialRound = async (
     nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt, onTokenUsage);
   }
   
-  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse, currentScenario, turnOrder, agentAPersona, agentBPersona);
+  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona);
   
   const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
@@ -390,16 +405,18 @@ export const handleInitialRound = async (
   
   const agentBMessage: ConversationMessage = {
     agent: 'Agent B',
-    message: agentBResponse,
+    message: agentBResponse.content,
     model: agentBModel,
-    persona: agentBPersona
+    persona: agentBPersona,
+    fallbackUsed: agentBResponse.fallbackUsed,
+    originalModel: agentBResponse.originalModel
   };
   
   messages.push(agentBMessage);
   if (onMessageReceived) await onMessageReceived(agentBMessage);
   
   if (numberOfAgents === 2) {
-    return { conversationMessages: messages, agentAResponse, agentBResponse };
+    return { conversationMessages: messages, agentAResponse: agentAResponse.content, agentBResponse: agentBResponse.content };
   }
   
   // Agent C response
@@ -416,7 +433,7 @@ export const handleInitialRound = async (
       }
     }
     
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse, agentBResponse, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona);
+    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona);
     
     const agentCResponse = await callWithTokenTracking(
       agentCPrompt,
@@ -430,16 +447,18 @@ export const handleInitialRound = async (
     
     const agentCMessage: ConversationMessage = {
       agent: 'Agent C',
-      message: agentCResponse,
+      message: agentCResponse.content,
       model: agentCModel,
-      persona: agentCPersona
+      persona: agentCPersona,
+      fallbackUsed: agentCResponse.fallbackUsed,
+      originalModel: agentCResponse.originalModel
     };
     
     messages.push(agentCMessage);
     if (onMessageReceived) await onMessageReceived(agentCMessage);
   }
   
-  return { conversationMessages: messages, agentAResponse, agentBResponse };
+  return { conversationMessages: messages, agentAResponse: agentAResponse.content, agentBResponse: agentBResponse.content };
 };
 
 /**
@@ -503,9 +522,11 @@ export const handleSingleRound = async (
     
     const message: ConversationMessage = {
       agent: agentConfig.name,
-      message: response,
+      message: response.content,
       model: agentConfig.model,
-      persona: agentConfig.persona
+      persona: agentConfig.persona,
+      fallbackUsed: response.fallbackUsed,
+      originalModel: response.originalModel
     };
     
     allMessages.push(message);
@@ -581,9 +602,11 @@ export const handleAdditionalRounds = async (
       
       const message: ConversationMessage = {
         agent: agentConfig.name,
-        message: response,
+        message: response.content,
         model: agentConfig.model,
-        persona: agentConfig.persona
+        persona: agentConfig.persona,
+        fallbackUsed: response.fallbackUsed,
+        originalModel: response.originalModel
       };
       
       allMessages.push(message);
@@ -638,9 +661,11 @@ export const handleUserFollowUp = async (
   
   const agentAMessage: ConversationMessage = {
     agent: 'Agent A',
-    message: agentAResponse,
+    message: agentAResponse.content,
     model: agentAModel,
-    persona: agentAPersona
+    persona: agentAPersona,
+    fallbackUsed: agentAResponse.fallbackUsed,
+    originalModel: agentAResponse.originalModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentAMessage);
@@ -669,9 +694,11 @@ export const handleUserFollowUp = async (
   
   const agentBMessage: ConversationMessage = {
     agent: 'Agent B',
-    message: agentBResponse,
+    message: agentBResponse.content,
     model: agentBModel,
-    persona: agentBPersona
+    persona: agentBPersona,
+    fallbackUsed: agentBResponse.fallbackUsed,
+    originalModel: agentBResponse.originalModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentBMessage);
@@ -700,9 +727,11 @@ export const handleUserFollowUp = async (
   
   const agentCMessage: ConversationMessage = {
     agent: 'Agent C',
-    message: agentCResponse,
+    message: agentCResponse.content,
     model: agentCModel,
-    persona: agentCPersona
+    persona: agentCPersona,
+    fallbackUsed: agentCResponse.fallbackUsed,
+    originalModel: agentCResponse.originalModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentCMessage);
