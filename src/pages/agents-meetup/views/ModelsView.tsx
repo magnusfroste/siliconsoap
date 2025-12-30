@@ -5,11 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen, Server, Cloud, Shield } from 'lucide-react';
+import { Search, ArrowUpDown, ExternalLink, Cpu, Zap, Clock, BookOpen, Server, Cloud, Shield, DollarSign } from 'lucide-react';
 import { getEnabledModels, CuratedModel } from '@/repositories/curatedModelsRepository';
 import { ModelCard } from '@/components/ModelCard';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ModelsGridSkeleton, QuickStatsSkeleton } from '@/components/skeletons';
+
+// Price tier display config
+const PRICE_TIER_LABELS: Record<string, { label: string; color: string }> = {
+  free: { label: 'FREE', color: 'text-green-600' },
+  budget: { label: '$', color: 'text-blue-600' },
+  standard: { label: '$$', color: 'text-amber-600' },
+  premium: { label: '$$$', color: 'text-orange-600' },
+  elite: { label: '$$$$', color: 'text-red-600' },
+};
 
 export const ModelsView = () => {
   const [models, setModels] = useState<CuratedModel[]>([]);
@@ -17,6 +26,7 @@ export const ModelsView = () => {
   const [search, setSearch] = useState('');
   const [providerFilter, setProviderFilter] = useState<string>('all');
   const [licenseFilter, setLicenseFilter] = useState<string>('all');
+  const [priceTierFilter, setPriceTierFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'provider'>('provider');
 
   usePageMeta({
@@ -46,6 +56,13 @@ export const ModelsView = () => {
   const providers = [...new Set(models.map(m => m.provider))];
 
   const openWeightCount = models.filter(m => m.license_type === 'open-weight').length;
+  
+  // Count models by price tier
+  const priceTierCounts = models.reduce((acc, m) => {
+    const tier = m.price_tier || 'unknown';
+    acc[tier] = (acc[tier] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   const filteredModels = models
     .filter(m => {
@@ -53,7 +70,11 @@ export const ModelsView = () => {
         m.model_id.toLowerCase().includes(search.toLowerCase());
       const matchesProvider = providerFilter === 'all' || m.provider === providerFilter;
       const matchesLicense = licenseFilter === 'all' || m.license_type === licenseFilter;
-      return matchesSearch && matchesProvider && matchesLicense;
+      const matchesPriceTier = priceTierFilter === 'all' || 
+        (priceTierFilter === 'budget-friendly' && (m.price_tier === 'free' || m.price_tier === 'budget')) ||
+        (priceTierFilter === 'premium-plus' && (m.price_tier === 'premium' || m.price_tier === 'elite')) ||
+        m.price_tier === priceTierFilter;
+      return matchesSearch && matchesProvider && matchesLicense && matchesPriceTier;
     })
     .sort((a, b) => {
       if (sortBy === 'name') return a.display_name.localeCompare(b.display_name);
@@ -89,10 +110,28 @@ export const ModelsView = () => {
       {loading ? (
         <QuickStatsSkeleton />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-primary">{models.length}</div>
             <div className="text-sm text-muted-foreground">Available Models</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{priceTierCounts.free || 0}</div>
+            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              Free Models
+            </div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{(priceTierCounts.budget || 0) + (priceTierCounts.standard || 0)}</div>
+            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              Budget/Standard
+            </div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">{(priceTierCounts.premium || 0) + (priceTierCounts.elite || 0)}</div>
+            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+              Premium+
+            </div>
           </Card>
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-emerald-600">{openWeightCount}</div>
@@ -100,17 +139,6 @@ export const ModelsView = () => {
               <Server className="h-3 w-3" />
               Open-Weight
             </div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-sky-600">{models.length - openWeightCount}</div>
-            <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-              <Cloud className="h-3 w-3" />
-              Cloud-Only
-            </div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{models.filter(m => m.is_free).length}</div>
-            <div className="text-sm text-muted-foreground">Free Models</div>
           </Card>
         </div>
       )}
@@ -162,6 +190,32 @@ export const ModelsView = () => {
               className="pl-9"
             />
           </div>
+          <Select value={priceTierFilter} onValueChange={setPriceTierFilter}>
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue placeholder="All Prices" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Prices</SelectItem>
+              <SelectItem value="budget-friendly">
+                <span className="flex items-center gap-2">
+                  <DollarSign className="h-3.5 w-3.5 text-green-600" />
+                  Free & Budget
+                </span>
+              </SelectItem>
+              <SelectItem value="standard">
+                <span className="flex items-center gap-2">
+                  <span className="text-amber-600 font-bold text-xs">$$</span>
+                  Standard
+                </span>
+              </SelectItem>
+              <SelectItem value="premium-plus">
+                <span className="flex items-center gap-2">
+                  <span className="text-orange-600 font-bold text-xs">$$$+</span>
+                  Premium+
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={licenseFilter} onValueChange={setLicenseFilter}>
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="All Types" />
@@ -207,24 +261,32 @@ export const ModelsView = () => {
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/20 font-bold">FREE</Badge>
+          <span>Free</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 border-blue-500/20 font-bold">$</Badge>
+          <span>Budget</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold">$$</Badge>
+          <span>Standard</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs bg-orange-500/10 text-orange-600 border-orange-500/20 font-bold">$$$</Badge>
+          <span>Premium</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" className="text-xs bg-red-500/10 text-red-600 border-red-500/20 font-bold">$$$$</Badge>
+          <span>Elite</span>
+        </div>
+        <div className="border-l border-border pl-4 flex items-center gap-1.5">
           <Server className="h-4 w-4 text-emerald-600" />
-          <span>Open-Weight (Self-Hostable)</span>
+          <span>Open-Weight</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Cloud className="h-4 w-4 text-sky-600" />
           <span>Cloud-Only</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Zap className="h-4 w-4 text-green-500" />
-          <span>Fast</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Clock className="h-4 w-4 text-yellow-500" />
-          <span>Medium</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Badge variant="secondary" className="text-xs">FREE</Badge>
-          <span>No cost</span>
         </div>
       </div>
 

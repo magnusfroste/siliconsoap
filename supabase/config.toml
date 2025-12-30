@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.seed-debates]
 verify_jwt = false
+
+[functions.sync-model-pricing]
+verify_jwt = false

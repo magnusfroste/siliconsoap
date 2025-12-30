@@ -246,6 +246,10 @@ export type Database = {
           is_free: boolean
           license_type: string | null
           model_id: string
+          price_input: number | null
+          price_output: number | null
+          price_tier: string | null
+          pricing_updated_at: string | null
           pros: string[] | null
           provider: string
           sort_order: number
@@ -267,6 +271,10 @@ export type Database = {
           is_free?: boolean
           license_type?: string | null
           model_id: string
+          price_input?: number | null
+          price_output?: number | null
+          price_tier?: string | null
+          pricing_updated_at?: string | null
           pros?: string[] | null
           provider: string
           sort_order?: number
@@ -288,6 +296,10 @@ export type Database = {
           is_free?: boolean
           license_type?: string | null
           model_id?: string
+          price_input?: number | null
+          price_output?: number | null
+          price_tier?: string | null
+          pricing_updated_at?: string | null
           pros?: string[] | null
           provider?: string
           sort_order?: number
