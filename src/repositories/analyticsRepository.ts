@@ -28,6 +28,15 @@ export interface AnalyticsSummary {
   guestPercentage: number;
 }
 
+export interface ModelUsageStats {
+  model_id: string;
+  call_count: number;
+  total_tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  estimated_cost: number;
+}
+
 export const analyticsRepository = {
   async getAll(limit = 100): Promise<ChatAnalytics[]> {
     const { data, error } = await supabase
@@ -143,5 +152,42 @@ export const analyticsRepository = {
     if (error) {
       console.error('Error logging chat complete by chat_id:', error);
     }
+  },
+
+  async getModelUsageStats(): Promise<ModelUsageStats[]> {
+    const { data, error } = await supabase
+      .from('user_token_usage')
+      .select('model_id, prompt_tokens, completion_tokens, total_tokens, estimated_cost');
+
+    if (error) {
+      console.error('Error fetching model usage stats:', error);
+      return [];
+    }
+
+    // Aggregate by model_id
+    const statsMap = new Map<string, ModelUsageStats>();
+    
+    for (const row of data || []) {
+      const existing = statsMap.get(row.model_id);
+      if (existing) {
+        existing.call_count += 1;
+        existing.total_tokens += row.total_tokens;
+        existing.prompt_tokens += row.prompt_tokens;
+        existing.completion_tokens += row.completion_tokens;
+        existing.estimated_cost += Number(row.estimated_cost);
+      } else {
+        statsMap.set(row.model_id, {
+          model_id: row.model_id,
+          call_count: 1,
+          total_tokens: row.total_tokens,
+          prompt_tokens: row.prompt_tokens,
+          completion_tokens: row.completion_tokens,
+          estimated_cost: Number(row.estimated_cost)
+        });
+      }
+    }
+
+    // Sort by total tokens descending
+    return Array.from(statsMap.values()).sort((a, b) => b.total_tokens - a.total_tokens);
   }
 };
