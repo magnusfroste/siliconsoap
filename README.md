@@ -8,7 +8,7 @@ A multi-agent AI conversation platform where 2-4 AI models debate, collaborate, 
 [![Made with React](https://img.shields.io/badge/Made%20with-React-61DAFB.svg)](https://reactjs.org/)
 [![Powered by Supabase](https://img.shields.io/badge/Powered%20by-Supabase-3ECF8E.svg)](https://supabase.com/)
 
-🌐 **Live Demo:** [www.froste.eu](https://www.froste.eu)
+🌐 **Live Demo:** [siliconsoap.com](https://siliconsoap.com)
 
 ---
 
@@ -101,11 +101,11 @@ supabase/
 | Usage | Cost |
 |-------|------|
 | **Self-hosted** | Free (bring your own API keys) |
-| **Cloud (froste.eu)** | Free credits to start, then pay-per-use for AI model calls |
+| **Cloud (siliconsoap.com)** | Free credits to start, then pay-per-use for AI model calls |
 
 The code is **100% free and open source** under MIT license. You can run your own instance with your own OpenRouter API key at no cost (except API usage).
 
-The hosted version at [froste.eu](https://www.froste.eu) provides convenience with managed infrastructure, but charges for AI model usage to cover API costs.
+The hosted version at [siliconsoap.com](https://siliconsoap.com) provides convenience with managed infrastructure, but charges for AI model usage to cover API costs.
 
 ---
 
@@ -192,8 +192,8 @@ SOFTWARE.
 
 ## 📬 Contact
 
-- **Website:** [froste.eu](https://www.froste.eu)
-- **Twitter:** [@magnusfroste](https://twitter.com/magnusfroste)
+- **Website:** [siliconsoap.com](https://siliconsoap.com)
+- **Twitter:** [@SiliconSoap](https://twitter.com/SiliconSoap)
 
 ---
 

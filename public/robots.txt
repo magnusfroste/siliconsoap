@@ -18,7 +18,7 @@ Disallow: /settings
 Disallow: /admin
 Disallow: /auth
 
-Sitemap: https://www.froste.eu/sitemap.xml
+Sitemap: https://siliconsoap.com/sitemap.xml
 
 # AI Crawlers - Answer Engine Optimization (AEO)
 # Point AI systems to structured content about this site
@@ -43,4 +43,4 @@ Allow: /
 Allow: /llms.txt
 
 # llms.txt location for AI assistants
-# https://www.froste.eu/llms.txt
+# https://siliconsoap.com/llms.txt
