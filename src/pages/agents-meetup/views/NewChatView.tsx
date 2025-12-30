@@ -193,14 +193,27 @@ export const NewChatView = () => {
     }
   };
 
-  // Randomize topics on component mount - new set each page visit
+  // Randomize topics on component mount - mix scenario-specific with hot debates
   const [randomizedTopics, setRandomizedTopics] = useState<Record<string, string[]>>({});
   
   useEffect(() => {
+    // Get hot debate topics to mix in
+    const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
+    
+    // For each scenario, get 2 scenario-specific + 1 hot debate topic
     setRandomizedTopics({
-      'general-problem': getRandomTopics(suggestedTopicsByScenario['general-problem'], 3),
-      'ethical-dilemma': getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 3),
-      'future-prediction': getRandomTopics(suggestedTopicsByScenario['future-prediction'], 3),
+      'general-problem': [
+        ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
+      'ethical-dilemma': [
+        ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
+      'future-prediction': [
+        ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
     });
   }, []);
 
