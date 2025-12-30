@@ -18,7 +18,7 @@ export const ProfileInfoPopover: React.FC<ProfileInfoPopoverProps> = ({ selected
             <Popover>
               <PopoverTrigger asChild>
                 <button 
-                  className="inline-flex text-gray-500 hover:text-gray-700" 
+                  className="inline-flex text-muted-foreground hover:text-foreground transition-colors" 
                   aria-label="View profile instructions"
                 >
                   <Info className="h-3.5 w-3.5" />
@@ -27,12 +27,12 @@ export const ProfileInfoPopover: React.FC<ProfileInfoPopoverProps> = ({ selected
               <PopoverContent className="w-80 p-4" align="center">
                 <div className="space-y-2">
                   <h4 className="font-medium">Profile Instructions</h4>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {selectedProfile?.description}
                   </p>
-                  <div className="text-xs text-gray-700 p-2 bg-gray-50 rounded border border-gray-200 mt-2">
+                  <div className="text-xs text-foreground p-2 bg-muted rounded border border-border mt-2">
                     <p className="font-medium mb-1">Instructions sent to the AI:</p>
-                    <p className="whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap text-muted-foreground">
                       {selectedProfile?.instructions || 
                         `Act as an ${selectedProfile?.name}. ${selectedProfile?.description}`}
                     </p>
