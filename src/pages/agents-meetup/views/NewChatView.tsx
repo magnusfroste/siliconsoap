@@ -291,6 +291,7 @@ export const NewChatView = () => {
                 agreementBias={state.agreementBias}
                 temperature={state.temperature}
                 personalityIntensity={state.personalityIntensity}
+                onShuffleModels={actions.shuffleModels}
               />
             </CardContent>
           </Card>
