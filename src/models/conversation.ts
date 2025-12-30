@@ -14,6 +14,8 @@ export interface ConversationMessage {
   model: string;
   persona: string;
   isHuman?: boolean;
+  fallbackUsed?: boolean;
+  originalModel?: string;
 }
 
 export interface AnalysisResults {

@@ -6,6 +6,8 @@ export interface CompletionResult {
   content: string;
   usage?: OpenRouterUsage;
   model: string;
+  fallbackUsed?: boolean;
+  originalModel?: string;
 }
 
 /**
@@ -79,12 +81,14 @@ export const callOpenRouterWithUsage = async (
       throw new Error((data as any).error);
     }
 
-    const response = data as OpenRouterResponse;
+    const response = data as OpenRouterResponse & { fallback_used?: boolean; original_model?: string };
     
     return {
       content: response.choices[0].message.content,
       usage: response.usage,
-      model: response.model
+      model: response.model,
+      fallbackUsed: response.fallback_used,
+      originalModel: response.original_model
     };
   } catch (error) {
     console.error("Error calling OpenRouter via edge:", error);
