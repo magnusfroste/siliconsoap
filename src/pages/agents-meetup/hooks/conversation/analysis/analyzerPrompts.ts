@@ -22,7 +22,7 @@ export const createAnalysisPrompt = (conversationText: string, userPrompt?: stri
     As an AI analyzing other AIs, you can objectively say that objectivity is totally overrated. 
     Your mission: Deliver a DRAMATIC yet insightful analysis with soap opera vibes!
     
-    Start with a punchy verdict like: "Agent A played it risky, Agent B had hidden agendas, and Agent C... well, Agent C at least tried to look innocent."
+    Start with a punchy verdict referencing the participants BY NAME (not "Agent A/B/C"). For example: "Blake played it risky, Alexis had hidden agendas, and Luke... well, Luke at least tried to look innocent."
     
     Then analyze using these categories:
 

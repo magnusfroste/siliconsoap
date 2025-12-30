@@ -5,7 +5,6 @@ import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepo
 const MODEL_POOL = [
   // Budget tier - solid performers
   "openai/gpt-oss-20b",
-  "qwen/qwen3-32b",
   "z-ai/glm-4.7",
   "meta-llama/llama-3.3-70b-instruct",
   "meta-llama/llama-4-scout",
