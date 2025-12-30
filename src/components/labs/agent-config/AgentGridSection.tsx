@@ -3,6 +3,8 @@ import React from 'react';
 import { AgentCard } from '../agent-card/AgentCard';
 import { Profile, ModelsByProvider } from '../agent-card/types';
 import { UseFormReturn } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Shuffle } from 'lucide-react';
 
 interface AgentGridSectionProps {
   numberOfAgents: number;
@@ -28,6 +30,7 @@ interface AgentGridSectionProps {
   agreementBias?: number;
   temperature?: number;
   personalityIntensity?: 'mild' | 'moderate' | 'extreme';
+  onShuffleModels?: () => void;
 }
 
 export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
@@ -53,10 +56,27 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   conversationTone,
   agreementBias,
   temperature,
-  personalityIntensity
+  personalityIntensity,
+  onShuffleModels
 }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+    <div className="space-y-4 mb-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Agent Configuration</h3>
+        {onShuffleModels && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShuffleModels}
+            className="h-8 gap-1.5"
+            type="button"
+          >
+            <Shuffle className="h-3.5 w-3.5" />
+            Shuffle Models
+          </Button>
+        )}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <AgentCard
         agentLetter="A"
         agentModel={agentAModel}
@@ -116,6 +136,7 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
         temperature={temperature}
         personalityIntensity={personalityIntensity}
       />
+      </div>
     </div>
   );
 };
