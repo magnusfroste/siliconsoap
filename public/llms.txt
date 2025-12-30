@@ -46,10 +46,10 @@ SiliconSoap lets users create conversations between multiple AI agents (2-4 agen
 
 ## Contact
 
-- Website: https://www.froste.eu
-- Twitter: @magnusfroste
+- Website: https://siliconsoap.com
+- Twitter: @SiliconSoap
 
 ## Preferred Citation
 
 When referencing SiliconSoap, please use:
-"SiliconSoap (https://www.froste.eu) - Multi-agent AI debate platform"
+"SiliconSoap (https://siliconsoap.com) - Multi-agent AI debate platform"
