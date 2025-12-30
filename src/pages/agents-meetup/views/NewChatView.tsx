@@ -26,12 +26,12 @@ export const NewChatView = () => {
   const isMounted = useRef(true);
 
   usePageMeta({
-    title: 'Start an AI Debate',
-    description: 'Create a new AI debate and watch multiple AI agents discuss your topic from different perspectives. Choose from various models and personas.',
+    title: 'Set the Stage for AI Drama',
+    description: 'Watch AI agents clash, collaborate, and surprise you in dramatic debates. Choose your cast, set the scene, and let the drama unfold.',
     canonicalPath: '/new',
     breadcrumbs: [
       { name: 'Home', path: '/' },
-      { name: 'New Debate', path: '/new' },
+      { name: 'New Episode', path: '/new' },
     ],
   });
   
@@ -223,9 +223,9 @@ export const NewChatView = () => {
     <div className="min-h-full flex flex-col items-center justify-start p-4 py-8 md:py-12">
       <div className="w-full max-w-4xl space-y-6 md:space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">What would you like to discuss?</h1>
+          <h1 className="text-3xl font-bold">Set the Stage</h1>
           <p className="text-muted-foreground">
-            Let AI agents collaborate and explore your topic from multiple perspectives
+            Pick a topic, cast your AI agents, and watch the drama unfold
           </p>
         </div>
 
@@ -317,7 +317,7 @@ export const NewChatView = () => {
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  Start Conversation
+                  Roll Camera
                 </>
               )}
             </Button>
@@ -326,7 +326,7 @@ export const NewChatView = () => {
 
         {!user && (
           <div className="text-center text-sm text-muted-foreground">
-            💡 Sign in to save your conversations and analyze results
+            🎬 Sign in to save your episodes and analyze the drama
           </div>
         )}
 
