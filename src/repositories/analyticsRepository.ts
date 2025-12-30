@@ -104,6 +104,7 @@ export const analyticsRepository = {
   }): Promise<string | null> {
     // Only use chat_id if it's a valid UUID (not guest session IDs like "guest_123")
     const isValidUuid = params.chatId && !params.chatId.startsWith('guest_');
+    const sessionId = params.sessionId || params.chatId || null;
     
     const { data, error } = await supabase
       .from('chat_analytics')
@@ -118,7 +119,7 @@ export const analyticsRepository = {
         num_rounds: params.numRounds,
         user_agent: navigator.userAgent,
         started_at: new Date().toISOString(),
-        session_id: params.sessionId || params.chatId || null // Store guest session ID here
+        session_id: sessionId
       })
       .select('id')
       .single();
@@ -128,7 +129,18 @@ export const analyticsRepository = {
       return null;
     }
 
-    return data?.id || null;
+    const analyticsId = data?.id || null;
+
+    // Fire and forget: capture IP address via edge function
+    if (analyticsId || sessionId) {
+      supabase.functions.invoke('log-battle-start', {
+        body: { analyticsId, sessionId }
+      }).catch(err => {
+        console.warn('Failed to log IP (non-critical):', err);
+      });
+    }
+
+    return analyticsId;
   },
 
   async logChatComplete(analyticsId: string, totalMessages: number, durationMs: number): Promise<void> {
