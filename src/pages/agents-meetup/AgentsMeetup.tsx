@@ -182,6 +182,7 @@ const AgentsMeetup: React.FC = () => {
         }
         loadingModels={state.loadingModels}
         isUsingSharedKey={state.isUsingSharedKey}
+        onShuffleModels={actions.shuffleModels}
       />
     </div>
   );

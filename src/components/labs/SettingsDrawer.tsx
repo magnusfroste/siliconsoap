@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Shuffle } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { ConversationSettings, AgentGridSection } from './agent-config';
 import { Profile, ModelsByProvider } from './agent-card/types';
@@ -45,6 +47,7 @@ interface SettingsDrawerProps {
   modelsByProvider: ModelsByProvider;
   loadingModels: boolean;
   isUsingSharedKey: boolean;
+  onShuffleModels?: () => void;
 }
 
 export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
@@ -79,7 +82,8 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   formC,
   modelsByProvider,
   loadingModels,
-  isUsingSharedKey
+  isUsingSharedKey,
+  onShuffleModels
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -126,7 +130,20 @@ export const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
 
           {/* Agent Configuration */}
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">Agent Configuration</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">Agent Configuration</h3>
+              {onShuffleModels && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onShuffleModels}
+                  className="h-8 gap-1.5"
+                >
+                  <Shuffle className="h-3.5 w-3.5" />
+                  Shuffle
+                </Button>
+              )}
+            </div>
             <AgentGridSection
               numberOfAgents={numberOfAgents}
               agentAModel={agentAModel}
