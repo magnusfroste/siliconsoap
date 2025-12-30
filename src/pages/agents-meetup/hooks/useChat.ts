@@ -26,9 +26,19 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
       return;
     }
 
-    // Handle guest chats
+    // Handle guest chats - inline to avoid hoisting issues
     if (chatRepository.isGuestChat(chatId)) {
-      loadGuestChat();
+      const guestChat = chatRepository.getGuestChat(chatId);
+      if (guestChat) {
+        setChat({
+          id: guestChat.id,
+          title: guestChat.title,
+          scenario_id: guestChat.scenario_id,
+          prompt: guestChat.prompt,
+          settings: guestChat.settings
+        });
+        setMessages(guestChat.messages || []);
+      }
       setLoading(false);
       return;
     }
@@ -39,7 +49,35 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
       return;
     }
 
-    loadChat();
+    // Load chat from database
+    const loadChatFromDb = async () => {
+      try {
+        const { chat: chatData, messages: messagesData } = await chatService.getChatWithMessages(chatId, userId);
+
+        if (!chatData) {
+          toast.error('Failed to load chat');
+          setLoading(false);
+          return;
+        }
+
+        setChat({
+          id: chatData.id,
+          title: chatData.title,
+          scenario_id: chatData.scenario_id,
+          prompt: chatData.prompt,
+          settings: chatData.settings,
+          share_id: chatData.share_id
+        });
+        setMessages(messagesData);
+      } catch (error) {
+        console.error('Error loading chat:', error);
+        toast.error('Failed to load chat');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChatFromDb();
 
     // Set up real-time subscription for new messages
     // Use a Set to track message IDs to prevent duplicates
@@ -69,51 +107,6 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
       messageRepository.unsubscribe(channel);
     };
   }, [chatId, userId]);
-
-  const loadGuestChat = () => {
-    if (!chatId) return;
-
-    const guestChat = chatRepository.getGuestChat(chatId);
-    if (guestChat) {
-      setChat({
-        id: guestChat.id,
-        title: guestChat.title,
-        scenario_id: guestChat.scenario_id,
-        prompt: guestChat.prompt,
-        settings: guestChat.settings
-      });
-      setMessages(guestChat.messages || []);
-    }
-  };
-
-  const loadChat = async () => {
-    if (!chatId || !userId) return;
-
-    try {
-      const { chat: chatData, messages: messagesData } = await chatService.getChatWithMessages(chatId, userId);
-
-      if (!chatData) {
-        toast.error('Failed to load chat');
-        setLoading(false);
-        return;
-      }
-
-      setChat({
-        id: chatData.id,
-        title: chatData.title,
-        scenario_id: chatData.scenario_id,
-        prompt: chatData.prompt,
-        settings: chatData.settings,
-        share_id: chatData.share_id
-      });
-      setMessages(messagesData);
-    } catch (error) {
-      console.error('Error loading chat:', error);
-      toast.error('Failed to load chat');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const saveChat = async (
     title: string,
@@ -192,13 +185,52 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     }
   };
 
+  // Refresh function to reload chat data
+  const refreshChat = useCallback(async () => {
+    if (!chatId) return;
+    
+    if (chatRepository.isGuestChat(chatId)) {
+      const guestChat = chatRepository.getGuestChat(chatId);
+      if (guestChat) {
+        setChat({
+          id: guestChat.id,
+          title: guestChat.title,
+          scenario_id: guestChat.scenario_id,
+          prompt: guestChat.prompt,
+          settings: guestChat.settings
+        });
+        setMessages(guestChat.messages || []);
+      }
+      return;
+    }
+
+    if (!userId) return;
+
+    try {
+      const { chat: chatData, messages: messagesData } = await chatService.getChatWithMessages(chatId, userId);
+      if (chatData) {
+        setChat({
+          id: chatData.id,
+          title: chatData.title,
+          scenario_id: chatData.scenario_id,
+          prompt: chatData.prompt,
+          settings: chatData.settings,
+          share_id: chatData.share_id
+        });
+        setMessages(messagesData);
+      }
+    } catch (error) {
+      console.error('Error refreshing chat:', error);
+    }
+  }, [chatId, userId]);
+
   return { 
     chat, 
     messages, 
     loading, 
     saveChat, 
     updateChatTitle, 
-    refreshChat: loadChat, 
+    refreshChat, 
     saveMessage, 
     setMessages, 
     shareChat 
