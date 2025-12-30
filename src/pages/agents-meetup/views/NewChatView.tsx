@@ -116,15 +116,8 @@ export const NewChatView = () => {
     setIsGenerating(true);
 
     try {
-      // Use a credit before starting
-      const creditUsed = await useCredit();
-      if (!creditUsed) {
-        if (isMounted.current) {
-          setShowCreditsModal(true);
-          setIsGenerating(false);
-        }
-        return;
-      }
+      // Token-based billing: credits are deducted based on actual token usage
+      // during the conversation, not upfront
 
       const settings = buildChatSettings();
       const title = chatService.generateTitle(currentPrompt);
