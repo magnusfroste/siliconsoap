@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { validateEnvironment } from "@/utils/env";
 
 import { Landing } from "./pages/Landing";
 import { AgentsMeetupLayout } from "./pages/agents-meetup/layout/AgentsMeetupLayout";
@@ -40,6 +41,9 @@ const PageTracker = () => {
   
   return null;
 };
+
+// Validate environment variables on app startup
+validateEnvironment();
 
 const queryClient = new QueryClient({
   defaultOptions: {

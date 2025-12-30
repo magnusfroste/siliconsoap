@@ -39,6 +39,17 @@ export interface OpenRouterModel {
   isFree?: boolean;
 }
 
+// Raw model data from OpenRouter API
+export interface OpenRouterRawModel {
+  id: string;
+  name?: string;
+  description?: string;
+  pricing?: {
+    prompt: string;
+    completion: string;
+  };
+}
+
 export interface ApiError {
   error: string;
   message: string;

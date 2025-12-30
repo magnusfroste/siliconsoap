@@ -1,13 +1,14 @@
 import { toast } from "@/hooks/use-toast";
-import { OpenRouterModel, ApiError } from "./types";
+import { OpenRouterModel, OpenRouterRawModel, ApiError } from "./types";
 import { OPENROUTER_MODELS_URL } from "./constants";
+import { logger } from "@/utils/logger";
 
 /**
  * Fetches available models from OpenRouter API via edge function (shared key mode)
  */
 const fetchModelsViaEdgeFunction = async (): Promise<OpenRouterModel[]> => {
   try {
-    console.log("Fetching models using shared key via edge function...");
+    logger.info("Fetching models using shared key via edge function...");
     
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openrouter-models`,
@@ -21,26 +22,20 @@ const fetchModelsViaEdgeFunction = async (): Promise<OpenRouterModel[]> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Edge function error:", response.status, errorText);
+      logger.error("Edge function error:", response.status, errorText);
       throw new Error(`Failed to fetch models via edge function (${response.status})`);
     }
 
     const data = await response.json();
     
     if (!data.data || !Array.isArray(data.data)) {
-      console.error("Unexpected response format from edge function:", data);
+      logger.error("Unexpected response format from edge function:", data);
       throw new Error("Unexpected response format from edge function");
     }
 
-    console.log(`Successfully fetched ${data.data.length} models via edge function`);
+    logger.info(`Successfully fetched ${data.data.length} models via edge function`);
     
-    const models: OpenRouterModel[] = data.data.map((model: any) => ({
-      id: model.id,
-      name: model.name || model.id.split('/').pop(),
-      provider: model.id.split('/')[0],
-      description: model.description || "",
-      isFree: model.id.includes(":free") || (model.pricing?.prompt === "0" && model.pricing?.completion === "0")
-    }));
+    const models: OpenRouterModel[] = data.data.map(mapRawModelToModel);
 
     return models.sort((a, b) => {
       if (a.provider === b.provider) {
@@ -49,7 +44,7 @@ const fetchModelsViaEdgeFunction = async (): Promise<OpenRouterModel[]> => {
       return a.provider.localeCompare(b.provider);
     });
   } catch (error) {
-    console.error("Error fetching models via edge function:", error);
+    logger.error("Error fetching models via edge function:", error);
     throw error;
   }
 };
@@ -59,9 +54,9 @@ const fetchModelsViaEdgeFunction = async (): Promise<OpenRouterModel[]> => {
  */
 const fetchModelsDirectly = async (apiKey: string): Promise<OpenRouterModel[]> => {
   try {
-    console.log("Fetching models from OpenRouter API with user key...");
-    console.log("API URL:", OPENROUTER_MODELS_URL);
-    console.log("API Key (first 8 chars):", apiKey.substring(0, 8));
+    logger.info("Fetching models from OpenRouter API with user key...");
+    logger.debug("API URL:", OPENROUTER_MODELS_URL);
+    logger.debug("API Key (first 8 chars):", apiKey.substring(0, 8));
 
     
     const response = await fetch(OPENROUTER_MODELS_URL, {
@@ -73,69 +68,63 @@ const fetchModelsDirectly = async (apiKey: string): Promise<OpenRouterModel[]> =
       },
     });
 
-    console.log("OpenRouter API response status:", response.status);
+    logger.debug("OpenRouter API response status:", response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("Error response text:", errorText);
+      logger.debug("Error response text:", errorText);
       let errorMessage = `Failed to get models from OpenRouter (${response.status})`;
       
       try {
         // Try to parse as JSON to get a better error message
         const errorData = JSON.parse(errorText) as ApiError;
-        console.log("Parsed error data:", errorData);
+        logger.debug("Parsed error data:", errorData);
         if (errorData.message) {
           errorMessage = errorData.message;
         }
       } catch (e) {
-        console.log("Failed to parse error as JSON:", e);
+        logger.debug("Failed to parse error as JSON:", e);
         // If parsing fails, use the raw text
         if (errorText) {
           errorMessage += `: ${errorText}`;
         }
       }
       
-      console.error("OpenRouter API error:", errorMessage);
+      logger.error("OpenRouter API error:", errorMessage);
       throw new Error(errorMessage);
     }
 
     const responseText = await response.text();
-    console.log("Response text length:", responseText.length);
-    console.log("Response text preview:", responseText.substring(0, 200) + "...");
+    logger.debug("Response text length:", responseText.length);
+    logger.debug("Response text preview:", responseText.substring(0, 200) + "...");
     
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (e) {
-      console.error("Failed to parse response as JSON:", e);
+      logger.error("Failed to parse response as JSON:", e);
       throw new Error("Failed to parse OpenRouter API response as JSON");
     }
     
-    console.log("Successfully fetched models from OpenRouter");
-    console.log("Response data structure:", Object.keys(data));
+    logger.info("Successfully fetched models from OpenRouter");
+    logger.debug("Response data structure:", Object.keys(data));
     
     if (!data.data || !Array.isArray(data.data)) {
-      console.error("Unexpected response format from OpenRouter:", data);
+      logger.error("Unexpected response format from OpenRouter:", data);
       throw new Error("Unexpected response format from OpenRouter");
     }
     
-    console.log("Number of models in response:", data.data.length);
+    logger.debug("Number of models in response:", data.data.length);
     if (data.data.length > 0) {
-      console.log("Sample model data:", data.data[0]);
+      logger.debug("Sample model data:", data.data[0]);
     }
     
-    const models: OpenRouterModel[] = data.data.map((model: any) => ({
-      id: model.id,
-      name: model.name || model.id.split('/').pop(),
-      provider: model.id.split('/')[0],
-      description: model.description || "",
-      isFree: model.id.includes(":free") || (model.pricing?.prompt === "0" && model.pricing?.completion === "0")
-    }));
+    const models: OpenRouterModel[] = data.data.map(mapRawModelToModel);
 
-    console.log(`Processed ${models.length} models from OpenRouter`);
+    logger.info(`Processed ${models.length} models from OpenRouter`);
     if (models.length > 0) {
-      console.log("Sample processed model:", models[0]);
-      console.log("Providers found:", [...new Set(models.map(m => m.provider))]);
+      logger.debug("Sample processed model:", models[0]);
+      logger.debug("Providers found:", [...new Set(models.map(m => m.provider))]);
     }
     
     return models.sort((a, b) => {
@@ -145,10 +134,18 @@ const fetchModelsDirectly = async (apiKey: string): Promise<OpenRouterModel[]> =
       return a.provider.localeCompare(b.provider);
     });
   } catch (error) {
-    console.error("Error fetching models directly:", error);
+    logger.error("Error fetching models directly:", error);
     throw error;
   }
 };
+
+const mapRawModelToModel = (model: OpenRouterRawModel): OpenRouterModel => ({
+  id: model.id,
+  name: model.name || model.id.split('/').pop(),
+  provider: model.id.split('/')[0],
+  description: model.description || "",
+  isFree: model.id.includes(":free") || (model.pricing?.prompt === "0" && model.pricing?.completion === "0")
+});
 
 /**
  * Fetches available models from OpenRouter API
@@ -158,15 +155,15 @@ export const fetchOpenRouterModels = async (apiKey: string): Promise<OpenRouterM
   try {
     // Shared key mode - use edge function
     if (!apiKey) {
-      console.log("Using shared key mode via edge function");
+      logger.info("Using shared key mode via edge function");
       return await fetchModelsViaEdgeFunction();
     }
     
     // User API key mode - direct call
-    console.log("Using user API key for direct API call");
+    logger.info("Using user API key for direct API call");
     return await fetchModelsDirectly(apiKey);
   } catch (error) {
-    console.error("Error fetching OpenRouter models:", error);
+    logger.error("Error fetching OpenRouter models:", error);
     toast({
       title: "API Error",
       description: error instanceof Error ? error.message : "Failed to fetch available models",
