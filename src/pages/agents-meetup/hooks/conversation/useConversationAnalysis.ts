@@ -23,10 +23,13 @@ export const useConversationAnalysis = (
     setAnalyzerModel
   } = useAnalysisState();
 
+  const [isSaved, setIsSaved] = React.useState(false);
+
   // Load initial analysis from saved chat
   React.useEffect(() => {
     if (initialAnalysis && !analysisResults) {
       setAnalysisResults(initialAnalysis);
+      setIsSaved(true); // Already saved in DB
     }
     if (initialAnalyzerModel) {
       setAnalyzerModel(initialAnalyzerModel);
@@ -63,6 +66,7 @@ export const useConversationAnalysis = (
       );
       
       setAnalysisResults(analysis);
+      setIsSaved(false); // Not saved yet
       
       // Save analysis to database if we have a valid chatId (not guest)
       if (chatId && !chatRepository.isGuestChat(chatId)) {
@@ -71,6 +75,7 @@ export const useConversationAnalysis = (
           analysisModel: selectedModel,
           analyzedAt: new Date().toISOString()
         });
+        setIsSaved(true);
         console.log('[Analysis] Saved to database for chat:', chatId);
       }
     } catch (error) {
@@ -93,6 +98,7 @@ export const useConversationAnalysis = (
     setAnalysisResults,
     analyzerModel,
     setAnalyzerModel,
-    handleAnalyzeConversation
+    handleAnalyzeConversation,
+    isSaved
   };
 };
