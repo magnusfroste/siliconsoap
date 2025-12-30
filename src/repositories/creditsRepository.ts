@@ -108,5 +108,73 @@ export const creditsRepository = {
       .maybeSingle();
 
     return data?.numeric_value || DEFAULT_USER_CREDITS;
+  },
+
+  // Get tokens per credit conversion rate
+  async getTokensPerCredit(): Promise<number> {
+    const { data } = await supabase
+      .from('feature_flags')
+      .select('numeric_value')
+      .eq('key', 'tokens_per_credit')
+      .eq('enabled', true)
+      .maybeSingle();
+
+    return data?.numeric_value || 100000; // Default: 100K tokens = 1 credit
+  },
+
+  // Use tokens and deduct credits when threshold reached
+  async useTokensAndDeductCredits(
+    userId: string,
+    tokensUsed: number
+  ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
+    const tokensPerCredit = await this.getTokensPerCredit();
+    
+    // Get current user credits
+    const { data: userCredits, error: fetchError } = await supabase
+      .from('user_credits')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (fetchError || !userCredits) {
+      console.error('Error fetching user credits:', fetchError);
+      return { success: false, creditsDeducted: 0, newCreditsRemaining: 0 };
+    }
+
+    // Calculate new tokens used and how many credits to deduct
+    const newTokensUsed = userCredits.tokens_used + tokensUsed;
+    const creditsToDeduct = Math.floor(newTokensUsed / tokensPerCredit);
+    const remainingTokens = newTokensUsed % tokensPerCredit;
+
+    // Check if user has enough credits
+    if (creditsToDeduct > userCredits.credits_remaining) {
+      return { 
+        success: false, 
+        creditsDeducted: 0, 
+        newCreditsRemaining: userCredits.credits_remaining 
+      };
+    }
+
+    // Update credits and token counter
+    const { error: updateError } = await supabase
+      .from('user_credits')
+      .update({
+        credits_remaining: userCredits.credits_remaining - creditsToDeduct,
+        credits_used: userCredits.credits_used + creditsToDeduct,
+        tokens_used: remainingTokens,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+
+    if (updateError) {
+      console.error('Error updating credits:', updateError);
+      return { success: false, creditsDeducted: 0, newCreditsRemaining: userCredits.credits_remaining };
+    }
+
+    return {
+      success: true,
+      creditsDeducted: creditsToDeduct,
+      newCreditsRemaining: userCredits.credits_remaining - creditsToDeduct
+    };
   }
 };

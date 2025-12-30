@@ -13,9 +13,9 @@ import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Loader2, Share2, Eye, MessageSquare, Users } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, checkTokenBudget, TokenUsageCallback } from '@/services/conversationService';
+import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback } from '@/services/conversationService';
 import { useCredits } from '../hooks/useCredits';
-import { useTokens } from '../hooks/useTokens';
+import { creditsService } from '@/services';
 import { toast } from 'sonner';
 import { ConversationMessage, TokenUsage } from '@/models';
 import { scenarioTypes } from '../constants';
@@ -34,8 +34,7 @@ export const ChatView = () => {
   const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
-  const { hasCredits, useCredit } = useCredits(user?.id);
-  const { useTokensForCall, refreshTokens } = useTokens(user?.id);
+  const { hasCredits, creditsRemaining, refreshCredits } = useCredits(user?.id);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<string | null>(null);
   const [showAnalysisDrawer, setShowAnalysisDrawer] = useState(false);
@@ -152,9 +151,9 @@ export const ChatView = () => {
       const settings = chat.settings as any;
 
       try {
-        // Check token budget before starting
-        const { canStart } = await checkTokenBudget(user?.id || null);
-        if (!canStart) {
+        // Check credits before starting
+        if (!hasCredits()) {
+          toast.error('No credits remaining. Please purchase more credits to continue.');
           if (isMounted.current) setIsGenerating(false);
           return;
         }
@@ -177,9 +176,11 @@ export const ChatView = () => {
           await saveMessage(chatId, message);
         };
 
-        // Token usage callback
+        // Token usage callback - deducts credits based on token usage
         const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
-          await useTokensForCall(chatId || null, modelId, usage);
+          const totalTokens = usage.prompt_tokens + usage.completion_tokens;
+          await creditsService.useTokensForCredit(user?.id || null, totalTokens);
+          refreshCredits(); // Update UI
         };
 
         if (isMounted.current) setCurrentAgent('Agent A');
@@ -419,9 +420,11 @@ export const ChatView = () => {
                   // In round-by-round mode, run only one round at a time
                   const nextRound = currentRoundInProgress;
                   
-                  // Token usage callback
+                  // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
-                    await useTokensForCall(chatId || null, modelId, usage);
+                    const totalTokens = usage.prompt_tokens + usage.completion_tokens;
+                    await creditsService.useTokensForCredit(user?.id || null, totalTokens);
+                    refreshCredits();
                   };
                   
                   if (nextRound <= settings.rounds) {
@@ -514,9 +517,8 @@ export const ChatView = () => {
             onSend={async (userMessage) => {
               if (!chatId || !chat) return;
               
-              // Deduct credit for user follow-up
-              const creditUsed = await useCredit();
-              if (!creditUsed) {
+              // Check credits before user follow-up
+              if (!hasCredits()) {
                 toast.error('No credits remaining. Please purchase more credits to continue.');
                 return;
               }
@@ -548,9 +550,11 @@ export const ChatView = () => {
                   
                   const nextRound = currentRoundInProgress;
                   
-                  // Token usage callback
+                  // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
-                    await useTokensForCall(chatId || null, modelId, usage);
+                    const totalTokens = usage.prompt_tokens + usage.completion_tokens;
+                    await creditsService.useTokensForCredit(user?.id || null, totalTokens);
+                    refreshCredits();
                   };
                   
                   await handleSingleRound(
@@ -593,9 +597,11 @@ export const ChatView = () => {
                     toast.success('Conversation complete!');
                   }
                 } else {
-                  // Token usage callback
+                  // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
-                    await useTokensForCall(chatId || null, modelId, usage);
+                    const totalTokens = usage.prompt_tokens + usage.completion_tokens;
+                    await creditsService.useTokensForCredit(user?.id || null, totalTokens);
+                    refreshCredits();
                   };
                   
                   // Jump-in mode or continuing after completion: trigger agents to respond to user's message

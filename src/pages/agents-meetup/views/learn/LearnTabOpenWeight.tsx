@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Scale, Shield, Wrench, DollarSign, Users, ExternalLink, TrendingDown, Network, Target, Sparkles, ArrowRight, MessageSquare } from 'lucide-react';
+import { Scale, Shield, Wrench, DollarSign, Users, ExternalLink, TrendingDown, Network, Target, Sparkles, ArrowRight, MessageSquare, Coins, Zap, Server } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const LearnTabOpenWeight = () => {
   const openModels = [
@@ -303,6 +304,137 @@ export const LearnTabOpenWeight = () => {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* How AI Pricing Works */}
+      <Card className="border-2 border-secondary/30 bg-gradient-to-br from-secondary/5 via-background to-primary/5">
+        <CardHeader>
+          <div className="flex items-center gap-2 text-secondary-foreground mb-2">
+            <Coins className="h-5 w-5 text-primary" />
+            <Badge variant="outline" className="border-secondary/30">Understanding Costs</Badge>
+          </div>
+          <CardTitle className="text-xl">How AI Pricing Works</CardTitle>
+          <CardDescription>
+            Understanding tokens, credits, and the real cost of AI conversations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* What are Tokens */}
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              What are Tokens?
+            </h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Tokens are the "currency" of AI language models. They're fragments of text—roughly 
+              4 characters or ¾ of a word in English. Both your input (prompt) and the AI's 
+              response consume tokens.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded bg-background/50 text-center">
+                <div className="font-bold text-lg text-foreground">1 token</div>
+                <div className="text-muted-foreground">≈ 4 characters</div>
+              </div>
+              <div className="p-3 rounded bg-background/50 text-center">
+                <div className="font-bold text-lg text-foreground">100 tokens</div>
+                <div className="text-muted-foreground">≈ 75 words</div>
+              </div>
+              <div className="p-3 rounded bg-background/50 text-center">
+                <div className="font-bold text-lg text-foreground">1K tokens</div>
+                <div className="text-muted-foreground">≈ 2 paragraphs</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cloud vs Self-Hosted Costs */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg border bg-destructive/5 border-destructive/20">
+              <h4 className="font-semibold mb-2 flex items-center gap-2 text-foreground">
+                <DollarSign className="h-4 w-4 text-destructive" />
+                Cloud API Costs
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Every API call costs money. Prices vary wildly by model quality and provider.
+              </p>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span>GPT-4o</span>
+                  <span className="font-mono text-destructive">$2.50 / 1M tokens</span>
+                </div>
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span>Claude 3.5 Sonnet</span>
+                  <span className="font-mono text-destructive">$3.00 / 1M tokens</span>
+                </div>
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span>DeepSeek V3</span>
+                  <span className="font-mono text-primary">$0.27 / 1M tokens</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
+              <h4 className="font-semibold mb-2 flex items-center gap-2 text-foreground">
+                <Server className="h-4 w-4 text-primary" />
+                Self-Hosted Costs
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Run open-weight models yourself and pay only for hardware + electricity.
+              </p>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span>Hardware (one-time)</span>
+                  <span className="font-mono">$500-$10,000</span>
+                </div>
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span>Electricity</span>
+                  <span className="font-mono">~$0.10-0.50/hour</span>
+                </div>
+                <div className="flex justify-between p-2 rounded bg-background/50">
+                  <span className="text-primary font-medium">Per-token cost</span>
+                  <span className="font-mono text-primary">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SiliconSoap Credits */}
+          <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
+            <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
+              <Coins className="h-4 w-4 text-primary" />
+              SiliconSoap Credits: Fair & Simple
+            </h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              We abstract away the complexity. You see <strong className="text-foreground">credits</strong>, 
+              we handle the token math behind the scenes. Credits are deducted based on actual 
+              token usage—so efficient models cost you less.
+            </p>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="how-it-works" className="border-none">
+                <AccordionTrigger className="text-sm py-2 hover:no-underline">
+                  How credits work
+                </AccordionTrigger>
+                <AccordionContent className="text-xs text-muted-foreground space-y-2">
+                  <p>
+                    • Each credit covers approximately <strong className="text-foreground">100,000 tokens</strong> of usage
+                  </p>
+                  <p>
+                    • A typical 2-agent debate uses <strong className="text-foreground">5,000-15,000 tokens</strong>
+                  </p>
+                  <p>
+                    • Efficient models (DeepSeek, Mistral) stretch your credits further
+                  </p>
+                  <p>
+                    • Premium models (GPT-4, Claude) use more tokens per response
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            <div className="mt-3 p-3 rounded bg-background/50 text-xs text-muted-foreground">
+              <strong className="text-foreground">Pro tip:</strong> For casual debates, use efficient open-weight 
+              models. Save premium closed models for when quality matters most.
+            </div>
           </div>
         </CardContent>
       </Card>

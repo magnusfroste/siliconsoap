@@ -3,17 +3,15 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Key, Settings, Droplets, Ticket, Shield, BookOpen, Cpu, Info, Compass, Trophy, Zap } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Settings, Droplets, Ticket, Shield, BookOpen, Cpu, Info, Compass, Trophy } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
-import { useTokens } from '../hooks/useTokens';
 import { ChatHistoryItem } from '../components/ChatHistoryItem';
 import { ChatHistorySkeleton, CreditsBadgeSkeleton, CreditsDisplaySkeleton } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { TokenBudgetDisplay } from '@/components/labs/TokenBudgetDisplay';
 
 interface ChatSidebarProps {
   onClose?: () => void;
@@ -25,9 +23,8 @@ interface ChatSidebarProps {
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
   const { creditsRemaining, isGuest, loading: creditsLoading } = useCredits(user?.id);
-  const { tokensUsed, tokenBudget, loading: tokensLoading } = useTokens(user?.id);
   const { isAdmin } = useIsAdmin();
-  const { isEnabled, getTextValue } = useFeatureFlags();
+  const { getTextValue } = useFeatureFlags();
   const location = useLocation();
 
   const navItems = [
@@ -225,33 +222,37 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
       {/* Footer Navigation */}
       <div className="border-t">
-        {/* Token Budget Display */}
-        <div className="p-3 border-b space-y-3">
-          <TokenBudgetDisplay 
-            tokensUsed={tokensUsed} 
-            tokenBudget={tokenBudget} 
-            loading={tokensLoading}
-            showDetails
-          />
-          
-          {/* Legacy Credits Display */}
+        {/* Credits Display */}
+        <div className="p-3 border-b">
           {creditsLoading ? (
             <CreditsDisplaySkeleton />
           ) : (
-            <>
-              <div className="flex items-center gap-2 text-sm">
-                <Ticket className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Credits:</span>
-                <Badge variant={creditsRemaining > 3 ? "secondary" : "destructive"}>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Ticket className="h-4 w-4 text-primary" />
+                  <span className="text-muted-foreground">Credits</span>
+                </div>
+                <Badge 
+                  variant={creditsRemaining > 3 ? "secondary" : creditsRemaining > 0 ? "outline" : "destructive"}
+                  className="font-semibold"
+                >
                   {creditsRemaining}
                 </Badge>
               </div>
               {isGuest && creditsRemaining > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Sign up for more tokens
+                <p className="text-xs text-muted-foreground">
+                  Sign up for more credits
                 </p>
               )}
-            </>
+              {creditsRemaining === 0 && (
+                <Link to="/settings">
+                  <Button variant="outline" size="sm" className="w-full text-xs">
+                    Get More Credits
+                  </Button>
+                </Link>
+              )}
+            </div>
           )}
         </div>
 
