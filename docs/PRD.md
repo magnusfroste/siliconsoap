@@ -375,6 +375,40 @@ VITE_SUPABASE_ANON_KEY=your_anon_key
 # OPENROUTER_API_KEY=your_api_key
 ```
 
+### Testing
+
+**Framework**: Vitest + React Testing Library
+
+**Test Coverage**:
+- **Credit System** (23 tests) - Guest/logged-in billing, race conditions, atomic operations
+- **Agent Name Generator** (18 tests) - Deterministic naming, gender consistency
+- **Logger Utility** (3 tests) - Development-only logging, production safety
+
+**Total**: 44 tests passing ✅
+
+**Running Tests**:
+```bash
+npm test                 # Run all tests
+npm test -- --watch      # Watch mode
+npm run test:ui          # Visual UI
+npm run test:coverage    # Coverage report
+```
+
+**Test Structure**:
+```
+src/
+├── services/
+│   ├── creditsService.ts
+│   └── __tests__/
+│       └── creditsService.test.ts
+└── utils/
+    ├── logger.ts
+    └── __tests__/
+        └── logger.test.ts
+```
+
+**CI/CD Integration**: GitHub Actions runs tests automatically on all PRs and commits to main/develop branches.
+
 ### Contributing
 
 Silicon Soap is open source! Contributions welcome:
@@ -382,10 +416,19 @@ Silicon Soap is open source! Contributions welcome:
 - Code improvements and optimizations
 - Documentation updates
 - Agent persona additions
+- Test coverage improvements
+
+**Development Workflow**:
+1. Fork and clone the repository
+2. Install dependencies: `npm install`
+3. Make your changes
+4. Run tests: `npm test`
+5. Run linting: `npm run lint`
+6. Submit a pull request
 
 ---
 
-**Last Updated**: 2025-12-30
+**Last Updated**: 2025-12-31
 **Version**: 2.0
 **License**: MIT (Open Source)
 **Status**: Production Ready

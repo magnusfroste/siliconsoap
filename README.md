@@ -126,10 +126,11 @@ Contributions are welcome! Here's how you can help:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes
-4. Run tests and linting: `npm run lint`
-5. Commit with clear messages: `git commit -m "Add amazing feature"`
-6. Push to your fork: `git push origin feature/amazing-feature`
-7. Open a Pull Request
+4. Run tests: `npm test`
+5. Run linting: `npm run lint`
+6. Commit with clear messages: `git commit -m "Add amazing feature"`
+7. Push to your fork: `git push origin feature/amazing-feature`
+8. Open a Pull Request
 
 ### Code Style
 
@@ -137,6 +138,67 @@ Contributions are welcome! Here's how you can help:
 - Follow existing patterns in the codebase
 - Use semantic commit messages
 - Keep components small and focused
+
+---
+
+## 🧪 Testing
+
+SiliconSoap uses [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/) for testing.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Coverage
+
+Current test coverage focuses on the most critical business logic:
+
+- **Credit System** (23 tests) – Guest and logged-in user billing, race condition prevention
+- **Agent Name Generator** (18 tests) – Deterministic soap opera name generation
+- **Logger Utility** (3 tests) – Development-only logging
+
+**Total: 44 tests passing** ✅
+
+### Writing Tests
+
+Tests are located in `__tests__` directories next to the code they test:
+
+```
+src/
+├── services/
+│   ├── creditsService.ts
+│   └── __tests__/
+│       └── creditsService.test.ts
+└── utils/
+    ├── logger.ts
+    └── __tests__/
+        └── logger.test.ts
+```
+
+Example test:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { creditsService } from '../creditsService';
+
+describe('creditsService', () => {
+  it('should allow conversation when credits > 0', () => {
+    expect(creditsService.canStartConversation(5)).toBe(true);
+  });
+});
+```
 
 ---
 
