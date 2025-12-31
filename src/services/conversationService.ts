@@ -16,7 +16,8 @@ import {
   createAgentBPrompt,
   createAgentCPrompt,
   createResponseToUserPrompt,
-  LANGUAGE_INSTRUCTION
+  LANGUAGE_INSTRUCTION,
+  clearAgentNameCache
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
 import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 import { tokenService } from './tokenService';
@@ -346,6 +347,9 @@ export const handleInitialRound = async (
   agentAResponse: string,
   agentBResponse: string
 }> => {
+  // Clear name cache at start of new conversation to ensure unique names
+  clearAgentNameCache();
+  
   const messages: ConversationMessage[] = [];
   
   const agentOrder = turnOrder === 'popcorn' 

@@ -30,10 +30,42 @@ const intensityModifiers = {
 };
 
 /**
+ * Cache for agent names to ensure consistency and uniqueness within a conversation
+ */
+const agentNameCache = new Map<string, string>();
+const usedFirstNames = new Set<string>();
+
+/**
+ * Clear the name cache (call when starting a new conversation)
+ */
+export const clearAgentNameCache = (): void => {
+  agentNameCache.clear();
+  usedFirstNames.clear();
+};
+
+/**
+ * Get a unique soap name for an agent, using cache to ensure consistency
+ */
+const getCachedAgentName = (agentLetter: string, persona: string): string => {
+  const cacheKey = `${agentLetter}-${persona}`;
+  
+  if (agentNameCache.has(cacheKey)) {
+    return agentNameCache.get(cacheKey)!;
+  }
+  
+  const soapName = getAgentSoapName(`Agent ${agentLetter}`, persona, usedFirstNames);
+  const firstName = soapName.split(' ')[0];
+  usedFirstNames.add(firstName);
+  agentNameCache.set(cacheKey, soapName);
+  
+  return soapName;
+};
+
+/**
  * Generates agent name introductions for the prompts
  */
 const getAgentIntro = (agentLetter: string, persona: string): string => {
-  const soapName = getAgentSoapName(`Agent ${agentLetter}`, persona);
+  const soapName = getCachedAgentName(agentLetter, persona);
   return `You are ${soapName}. 
 
 IMPORTANT NAME RULES:
@@ -45,7 +77,7 @@ Speak and act as this character.`;
 };
 
 const getOtherAgentName = (agentLetter: string, persona: string): string => {
-  return getAgentSoapName(`Agent ${agentLetter}`, persona);
+  return getCachedAgentName(agentLetter, persona);
 };
 
 /**

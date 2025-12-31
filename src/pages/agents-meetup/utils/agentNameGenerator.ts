@@ -54,19 +54,45 @@ export function getAgentGender(agent: string): AgentGender {
  * Get a deterministic soap opera name for an agent based on agent letter and persona
  * The gender is determined by the agent letter to match TTS voices
  */
-export function getAgentSoapName(agent: string, persona: string): string {
+export function getAgentSoapName(agent: string, persona: string, usedFirstNames: Set<string> = new Set()): string {
   const gender = getAgentGender(agent);
   const combinedKey = `${agent}-${persona}`;
   const hash = hashString(combinedKey);
   
   const firstNames = gender === 'male' ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
-  const firstNameIndex = hash % firstNames.length;
-  const lastNameIndex = (hash >> 4) % SOAP_LAST_NAMES.length;
+  let firstNameIndex = hash % firstNames.length;
+  let firstName = firstNames[firstNameIndex];
   
-  const firstName = firstNames[firstNameIndex];
+  // Ensure unique first name by trying next names if collision
+  let attempts = 0;
+  while (usedFirstNames.has(firstName) && attempts < firstNames.length) {
+    firstNameIndex = (firstNameIndex + 1) % firstNames.length;
+    firstName = firstNames[firstNameIndex];
+    attempts++;
+  }
+  
+  const lastNameIndex = (hash >> 4) % SOAP_LAST_NAMES.length;
   const lastName = SOAP_LAST_NAMES[lastNameIndex];
   
   return `${firstName} ${lastName}`;
+}
+
+/**
+ * Generate unique soap opera names for multiple agents
+ * Ensures no two agents share the same first name
+ */
+export function getAgentSoapNames(agents: Array<{ agent: string; persona: string }>): Map<string, string> {
+  const usedFirstNames = new Set<string>();
+  const names = new Map<string, string>();
+  
+  for (const { agent, persona } of agents) {
+    const fullName = getAgentSoapName(agent, persona, usedFirstNames);
+    const firstName = fullName.split(' ')[0];
+    usedFirstNames.add(firstName);
+    names.set(agent, fullName);
+  }
+  
+  return names;
 }
 
 /**

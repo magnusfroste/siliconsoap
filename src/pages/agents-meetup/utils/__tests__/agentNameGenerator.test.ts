@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getAgentGender, getAgentSoapName, getAgentLetter } from '../agentNameGenerator';
+import { getAgentGender, getAgentSoapName, getAgentLetter, getAgentSoapNames } from '../agentNameGenerator';
 
 describe('agentNameGenerator', () => {
   describe('getAgentGender', () => {
@@ -164,6 +164,60 @@ describe('agentNameGenerator', () => {
       ).reverse();
       
       expect(firstRun).toEqual(secondRun);
+    });
+  });
+
+  describe('getAgentSoapNames - unique first names', () => {
+    it('should generate unique first names for all agents', () => {
+      const agents = [
+        { agent: 'Agent A', persona: 'Analytical' },
+        { agent: 'Agent B', persona: 'Creative' },
+        { agent: 'Agent C', persona: 'Strategic' }
+      ];
+      
+      const names = getAgentSoapNames(agents);
+      const firstNames = Array.from(names.values()).map(name => name.split(' ')[0]);
+      const uniqueFirstNames = new Set(firstNames);
+      
+      expect(uniqueFirstNames.size).toBe(firstNames.length);
+    });
+
+    it('should ensure male agents (A and C) have different first names', () => {
+      const agents = [
+        { agent: 'Agent A', persona: 'Analytical' },
+        { agent: 'Agent C', persona: 'Analytical' } // Same persona to test collision handling
+      ];
+      
+      const names = getAgentSoapNames(agents);
+      const nameA = names.get('Agent A')!;
+      const nameC = names.get('Agent C')!;
+      
+      const firstNameA = nameA.split(' ')[0];
+      const firstNameC = nameC.split(' ')[0];
+      
+      expect(firstNameA).not.toBe(firstNameC);
+    });
+
+    it('should return a Map with all agent names', () => {
+      const agents = [
+        { agent: 'Agent A', persona: 'Optimistic' },
+        { agent: 'Agent B', persona: 'Pessimistic' }
+      ];
+      
+      const names = getAgentSoapNames(agents);
+      
+      expect(names.size).toBe(2);
+      expect(names.has('Agent A')).toBe(true);
+      expect(names.has('Agent B')).toBe(true);
+    });
+
+    it('should handle usedFirstNames parameter to avoid collisions', () => {
+      const usedNames = new Set(['Luke', 'Blake']);
+      const name = getAgentSoapName('Agent A', 'Analytical', usedNames);
+      const firstName = name.split(' ')[0];
+      
+      expect(firstName).not.toBe('Luke');
+      expect(firstName).not.toBe('Blake');
     });
   });
 });
