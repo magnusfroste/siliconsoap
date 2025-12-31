@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookText, Sparkles, Thermometer, Layers, MessageSquare, Cpu, Zap, Database, Users, Network, Target, Bot } from 'lucide-react';
+import { BookText, Sparkles, Thermometer, Layers, MessageSquare, Cpu, Zap, Database, Users, Network, Target, Bot, Scale } from 'lucide-react';
 
 interface GlossaryTerm {
   term: string;
@@ -211,6 +212,24 @@ export const LearnTabGlossary = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* CTA */}
+      <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+        <div className="flex justify-center">
+          <Button
+            variant="default"
+            className="gap-2 min-w-[200px]"
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('tab', 'models');
+              window.location.href = url.toString();
+            }}
+          >
+            <Scale className="h-4 w-4" />
+            Back to Models 101
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

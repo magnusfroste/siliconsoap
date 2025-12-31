@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Server, Cpu, HardDrive, Terminal, Download, ExternalLink, Zap, Shield, Wifi } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Server, Cpu, HardDrive, Terminal, Download, ExternalLink, Zap, Shield, Wifi, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const LearnTabSelfHosting = () => {
   const tools = [
@@ -233,6 +235,23 @@ export const LearnTabSelfHosting = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* CTA */}
+      <div className="p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+        <div className="text-center">
+          <h3 className="font-semibold mb-2">Ready to try?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            See how different models behave in debates
+          </p>
+          <Link to="/new">
+            <Button className="gap-2">
+              <Server className="h-4 w-4" />
+              Start a conversation
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

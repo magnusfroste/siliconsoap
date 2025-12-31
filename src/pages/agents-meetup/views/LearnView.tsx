@@ -1,25 +1,23 @@
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Cpu, Scale, Server, BookText, Users, Shield } from 'lucide-react';
-import { LearnTabBasics } from './learn/LearnTabBasics';
-import { LearnTabTypes } from './learn/LearnTabTypes';
-import { LearnTabOpenWeight } from './learn/LearnTabOpenWeight';
-import { LearnTabMultiAgent } from './learn/LearnTabMultiAgent';
+import { BookOpen, Server, BookText, Users, Shield } from 'lucide-react';
+import { LearnTabModels } from './learn/LearnTabModels';
+import { LearnTabPrivacy } from './learn/LearnTabPrivacy';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
-import { LearnTabSecurity } from './learn/LearnTabSecurity';
+import { LearnTabAgents } from './learn/LearnTabAgents';
 import { LearnTabGlossary } from './learn/LearnTabGlossary';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
-const VALID_TABS = ['basics', 'types', 'open-weight', 'multi-agent', 'self-hosting', 'security', 'glossary'];
+const VALID_TABS = ['models', 'privacy', 'local', 'agents', 'glossary'];
 
 export const LearnView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'basics';
+  const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'models';
 
   usePageMeta({
-    title: 'Learn About AI Models - Llama, DeepSeek, Gemma',
-    description: 'Master AI model fundamentals. Learn about instruct vs reasoning models, open-weight advantages, and how to self-host AI with LM Studio and Ollama.',
+    title: 'AI Crash Course - Learn About AI Models',
+    description: 'Learn AI model fundamentals, the difference between cloud and private AI, how to run models locally, and the future of multi-agent systems.',
     canonicalPath: '/learn',
     breadcrumbs: [
       { name: 'Home', path: '/' },
@@ -36,47 +34,37 @@ export const LearnView = () => {
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
           <BookOpen className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">Learn Center</span>
+          <span className="text-sm font-medium text-primary">AI Crash Course</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">
           Understanding AI Models
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Master the fundamentals of AI models, compare architectures, and learn how to run models locally
+          From the basics to the future of AI agents — everything you need to know in one place
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full flex flex-wrap justify-center gap-1 h-auto p-1 mb-8">
-          <TabsTrigger value="basics" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="models" className="flex items-center gap-2 px-4 py-2">
             <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Model Basics</span>
-            <span className="sm:hidden">Basics</span>
+            <span className="hidden sm:inline">Models 101</span>
+            <span className="sm:hidden">Models</span>
           </TabsTrigger>
-          <TabsTrigger value="types" className="flex items-center gap-2 px-4 py-2">
-            <Cpu className="h-4 w-4" />
-            <span className="hidden sm:inline">Instruct vs Reasoning</span>
-            <span className="sm:hidden">Types</span>
-          </TabsTrigger>
-          <TabsTrigger value="open-weight" className="flex items-center gap-2 px-4 py-2">
-            <Scale className="h-4 w-4" />
-            <span className="hidden sm:inline">Open-Weight</span>
-            <span className="sm:hidden">Open</span>
-          </TabsTrigger>
-          <TabsTrigger value="multi-agent" className="flex items-center gap-2 px-4 py-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Multi-Agent AI</span>
-            <span className="sm:hidden">Agents</span>
-          </TabsTrigger>
-          <TabsTrigger value="self-hosting" className="flex items-center gap-2 px-4 py-2">
-            <Server className="h-4 w-4" />
-            <span className="hidden sm:inline">Self-Hosting</span>
-            <span className="sm:hidden">Hosting</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="privacy" className="flex items-center gap-2 px-4 py-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">AI Security</span>
-            <span className="sm:hidden">Security</span>
+            <span className="hidden sm:inline">Cloud vs Private</span>
+            <span className="sm:hidden">Private</span>
+          </TabsTrigger>
+          <TabsTrigger value="local" className="flex items-center gap-2 px-4 py-2">
+            <Server className="h-4 w-4" />
+            <span className="hidden sm:inline">Run Locally</span>
+            <span className="sm:hidden">Local</span>
+          </TabsTrigger>
+          <TabsTrigger value="agents" className="flex items-center gap-2 px-4 py-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Agents</span>
+            <span className="sm:hidden">Agents</span>
           </TabsTrigger>
           <TabsTrigger value="glossary" className="flex items-center gap-2 px-4 py-2">
             <BookText className="h-4 w-4" />
@@ -85,23 +73,17 @@ export const LearnView = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basics">
-          <LearnTabBasics />
+        <TabsContent value="models">
+          <LearnTabModels />
         </TabsContent>
-        <TabsContent value="types">
-          <LearnTabTypes />
+        <TabsContent value="privacy">
+          <LearnTabPrivacy />
         </TabsContent>
-        <TabsContent value="open-weight">
-          <LearnTabOpenWeight />
-        </TabsContent>
-        <TabsContent value="multi-agent">
-          <LearnTabMultiAgent />
-        </TabsContent>
-        <TabsContent value="self-hosting">
+        <TabsContent value="local">
           <LearnTabSelfHosting />
         </TabsContent>
-        <TabsContent value="security">
-          <LearnTabSecurity />
+        <TabsContent value="agents">
+          <LearnTabAgents />
         </TabsContent>
         <TabsContent value="glossary">
           <LearnTabGlossary />
