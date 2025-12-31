@@ -11,9 +11,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { Loader2, Share2, Eye, MessageSquare, Users } from 'lucide-react';
+import { Loader2, Share2, Eye, MessageSquare, Users, Flame, Handshake, GraduationCap, Coffee, Zap, Scale } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback } from '@/services/conversationService';
+import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback, ExpertSettings } from '@/services/conversationService';
 import { useCredits } from '../hooks/useCredits';
 import { creditsService } from '@/services';
 import { toast } from 'sonner';
@@ -196,6 +196,13 @@ export const ChatView = () => {
           refreshCredits(); // Update UI
         };
 
+        // Build expert settings from chat settings
+        const expertSettings: ExpertSettings | undefined = settings.conversationTone ? {
+          conversationTone: settings.conversationTone,
+          agreementBias: settings.agreementBias ?? 50,
+          personalityIntensity: settings.personalityIntensity ?? 'moderate'
+        } : undefined;
+
         if (isMounted.current) setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
@@ -210,9 +217,10 @@ export const ChatView = () => {
           state.apiKey || '',
           settings.responseLength,
           onMessageReceived,
-          undefined, // temperature
+          settings.temperature, // temperature from settings
           settings.turnOrder || 'sequential',
-          onTokenUsage
+          onTokenUsage,
+          expertSettings
         );
 
         if (!isMounted.current) return;
@@ -246,9 +254,10 @@ export const ChatView = () => {
               state.apiKey || '',
               settings.responseLength,
               onMessageReceived,
-              undefined, // temperature
+              settings.temperature, // temperature from settings
               settings.turnOrder || 'sequential',
-              onTokenUsage
+              onTokenUsage,
+              expertSettings
             );
             if (isMounted.current) {
               setCurrentAgent(null);
@@ -338,20 +347,70 @@ export const ChatView = () => {
             };
             const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
             const Icon = config.icon;
+            
+            // Conversation tone config
+            const tone = settings?.conversationTone || 'collaborative';
+            const toneConfig = {
+              'formal': { label: 'Formal', icon: GraduationCap, tooltip: 'Academic rigor and professional discourse' },
+              'casual': { label: 'Casual', icon: Coffee, tooltip: 'Friendly, everyday conversation' },
+              'heated': { label: 'Heated', icon: Flame, tooltip: 'Passionate and assertive viewpoints' },
+              'collaborative': { label: 'Collaborative', icon: Handshake, tooltip: 'Building on ideas together' }
+            };
+            const toneInfo = toneConfig[tone as keyof typeof toneConfig] || toneConfig['collaborative'];
+            const ToneIcon = toneInfo.icon;
+            
+            // Agreement bias
+            const bias = settings?.agreementBias ?? 50;
+            const biasLabel = bias < 30 ? "Devil's Advocate" : bias > 70 ? "Agreeable" : "Balanced";
+            
             return (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
-                      <Icon className="h-3 w-3" />
-                      {config.label}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <p>{config.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex items-center gap-2 flex-wrap">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
+                        <Icon className="h-3 w-3" />
+                        {config.label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p>{config.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {/* Conversation Tone Badge */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                        <ToneIcon className="h-3 w-3" />
+                        {toneInfo.label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p>{toneInfo.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {/* Agreement Bias Badge - only show if not default */}
+                {bias !== 50 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                          <Scale className="h-3 w-3" />
+                          {biasLabel}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <p>Agreement bias: {bias}% - {bias < 30 ? 'Agents challenge each other' : bias > 70 ? 'Agents build on ideas' : 'Balanced debate'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
             );
           })()}
         </div>
@@ -442,6 +501,13 @@ export const ChatView = () => {
                     refreshCredits();
                   };
                   
+                  // Build expert settings
+                  const expertSettings: ExpertSettings | undefined = settings.conversationTone ? {
+                    conversationTone: settings.conversationTone,
+                    agreementBias: settings.agreementBias ?? 50,
+                    personalityIntensity: settings.personalityIntensity ?? 'moderate'
+                  } : undefined;
+
                   if (nextRound <= settings.rounds) {
                     await handleSingleRound(
                       chat.prompt,
@@ -463,9 +529,10 @@ export const ChatView = () => {
                         setCurrentAgent(message.agent);
                         await saveMessage(chatId, message);
                       },
-                      undefined, // temperature
+                      settings.temperature, // temperature from settings
                       settings.turnOrder || 'sequential',
-                      onTokenUsage
+                      onTokenUsage,
+                      expertSettings
                     );
                     
                     setCurrentAgent(null);
@@ -572,6 +639,13 @@ export const ChatView = () => {
                     refreshCredits();
                   };
                   
+                  // Build expert settings
+                  const expertSettings: ExpertSettings | undefined = settings.conversationTone ? {
+                    conversationTone: settings.conversationTone,
+                    agreementBias: settings.agreementBias ?? 50,
+                    personalityIntensity: settings.personalityIntensity ?? 'moderate'
+                  } : undefined;
+
                   await handleSingleRound(
                     chat.prompt,
                     scenario,
@@ -592,9 +666,10 @@ export const ChatView = () => {
                       setCurrentAgent(message.agent);
                       await saveMessage(chatId, message);
                     },
-                    undefined,
+                    settings.temperature,
                     settings.turnOrder || 'sequential',
-                    onTokenUsage
+                    onTokenUsage,
+                    expertSettings
                   );
                   
                   setCurrentAgent(null);

@@ -2,6 +2,13 @@
 import { ScenarioType } from '../../../types';
 import { getAgentSoapName } from '../../../utils/agentNameGenerator';
 
+// Expert settings type for prompt generation
+export interface ExpertSettings {
+  conversationTone: 'formal' | 'casual' | 'heated' | 'collaborative';
+  agreementBias: number;
+  personalityIntensity: 'mild' | 'moderate' | 'extreme';
+}
+
 // Language instruction for all agents
 export const LANGUAGE_INSTRUCTION = `
 
@@ -27,6 +34,24 @@ const intensityModifiers = {
   mild: "Express your persona subtly, focusing primarily on the content.",
   moderate: "Let your persona characteristics come through clearly in your responses.",
   extreme: "Strongly embody your persona with distinctive voice, opinions, and style."
+};
+
+/**
+ * Generates expert settings instructions for prompts
+ */
+const getExpertInstructions = (settings?: ExpertSettings): string => {
+  if (!settings) return '';
+  
+  const toneInstruction = toneInstructions[settings.conversationTone];
+  const agreementInstruction = getAgreementInstruction(settings.agreementBias);
+  const intensityInstruction = intensityModifiers[settings.personalityIntensity];
+  
+  return `
+
+CONVERSATION STYLE INSTRUCTIONS:
+- Tone: ${toneInstruction}
+- Stance: ${agreementInstruction}
+- Expression: ${intensityInstruction}`;
 };
 
 /**
@@ -87,16 +112,18 @@ export const createAgentAInitialPrompt = (
   currentPrompt: string,
   currentScenario: ScenarioType,
   turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential',
-  personaA: string = 'analytical'
+  personaA: string = 'analytical',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('A', personaA);
   const basePrompt = currentScenario.promptTemplate(currentPrompt);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   if (turnOrder === 'popcorn') {
-    return `${agentIntro}\n\n${basePrompt}\n\nNote: This is a dynamic conversation. You can address other agents directly by name to invite their perspectives.`;
+    return `${agentIntro}${expertInstructions}\n\n${basePrompt}\n\nNote: This is a dynamic conversation. You can address other agents directly by name to invite their perspectives.`;
   }
   
-  return `${agentIntro}\n\n${basePrompt}`;
+  return `${agentIntro}${expertInstructions}\n\n${basePrompt}`;
 };
 
 /**
@@ -108,13 +135,15 @@ export const createAgentBPrompt = (
   currentScenario: ScenarioType,
   turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential',
   personaA: string = 'analytical',
-  personaB: string = 'creative'
+  personaB: string = 'creative',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('B', personaB);
   const agentAName = getOtherAgentName('A', personaA);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   return `
-    ${agentIntro}
+    ${agentIntro}${expertInstructions}
     
     ${currentScenario.id === 'text-analysis' ? `${agentAName} analyzed this original text: "${currentPrompt}"` : `We're discussing: "${currentPrompt}"`}
     
@@ -138,14 +167,16 @@ export const createAgentCPrompt = (
   turnOrder: 'sequential' | 'random' | 'popcorn' = 'sequential',
   personaA: string = 'analytical',
   personaB: string = 'creative',
-  personaC: string = 'strategic'
+  personaC: string = 'strategic',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('C', personaC);
   const agentAName = getOtherAgentName('A', personaA);
   const agentBName = getOtherAgentName('B', personaB);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   return `
-    ${agentIntro}
+    ${agentIntro}${expertInstructions}
     
     ${currentScenario.id === 'text-analysis' ? `We're analyzing this original text: "${currentPrompt}"` : `We're discussing: "${currentPrompt}"`}
     
@@ -170,21 +201,23 @@ export const createAgentAFollowupPrompt = (
   currentScenario: ScenarioType,
   personaA: string = 'analytical',
   personaB: string = 'creative',
-  personaC: string = 'strategic'
+  personaC: string = 'strategic',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('A', personaA);
   const agentBName = getOtherAgentName('B', personaB);
   const agentCName = getOtherAgentName('C', personaC);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   if (numberOfAgents === 2) {
-    return `${agentIntro}\n\n${currentScenario.followupTemplate(
+    return `${agentIntro}${expertInstructions}\n\n${currentScenario.followupTemplate(
       currentPrompt,
       agentAResponse,
       agentBResponse
     )}`;
   } else {
     return `
-      ${agentIntro}
+      ${agentIntro}${expertInstructions}
       
       We're discussing ${currentScenario.id === 'text-analysis' ? `this text: "${currentPrompt}"` : `this topic: "${currentPrompt}"`}
       
@@ -210,21 +243,23 @@ export const createAgentBFinalPrompt = (
   currentScenario: ScenarioType,
   personaA: string = 'analytical',
   personaB: string = 'creative',
-  personaC: string = 'strategic'
+  personaC: string = 'strategic',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('B', personaB);
   const agentAName = getOtherAgentName('A', personaA);
   const agentCName = getOtherAgentName('C', personaC);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   if (numberOfAgents === 2) {
-    return `${agentIntro}\n\n${currentScenario.finalTemplate(
+    return `${agentIntro}${expertInstructions}\n\n${currentScenario.finalTemplate(
       currentPrompt,
       agentBResponse,
       agentAFollowup
     )}`;
   } else {
     return `
-      ${agentIntro}
+      ${agentIntro}${expertInstructions}
       
       We're discussing ${currentScenario.id === 'text-analysis' ? `this text: "${currentPrompt}"` : `this topic: "${currentPrompt}"`}
       
@@ -248,14 +283,16 @@ export const createAgentCFinalPrompt = (
   currentScenario: ScenarioType,
   personaA: string = 'analytical',
   personaB: string = 'creative',
-  personaC: string = 'strategic'
+  personaC: string = 'strategic',
+  expertSettings?: ExpertSettings
 ): string => {
   const agentIntro = getAgentIntro('C', personaC);
   const agentAName = getOtherAgentName('A', personaA);
   const agentBName = getOtherAgentName('B', personaB);
+  const expertInstructions = getExpertInstructions(expertSettings);
   
   return `
-    ${agentIntro}
+    ${agentIntro}${expertInstructions}
     
     We're discussing ${currentScenario.id === 'text-analysis' ? `this text: "${currentPrompt}"` : `this topic: "${currentPrompt}"`}
     

@@ -17,8 +17,11 @@ import {
   createAgentCPrompt,
   createResponseToUserPrompt,
   LANGUAGE_INSTRUCTION,
-  clearAgentNameCache
+  clearAgentNameCache,
+  ExpertSettings
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
+
+export type { ExpertSettings };
 import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 import { tokenService } from './tokenService';
 import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
@@ -284,6 +287,50 @@ export const validateConversationRequirements = (
 };
 
 /**
+ * Tone instructions for expert settings
+ */
+const toneInstructions: Record<string, string> = {
+  formal: "Engage formally and professionally, citing evidence and maintaining academic rigor.",
+  casual: "Be conversational and friendly, use everyday language and examples.",
+  heated: "Be passionate and assertive about your position, challenge other viewpoints directly.",
+  collaborative: "Focus on building on others' ideas, find common ground, and synthesize perspectives."
+};
+
+/**
+ * Agreement bias instructions for expert settings
+ */
+const getAgreementInstruction = (bias: number): string => {
+  if (bias < 30) return "Challenge and critically examine other perspectives. Play devil's advocate.";
+  if (bias > 70) return "Look for areas of agreement. Build on and expand other agents' ideas.";
+  return "Balance agreement and disagreement naturally based on the merits of arguments.";
+};
+
+/**
+ * Personality intensity modifiers for expert settings
+ */
+const intensityModifiers: Record<string, string> = {
+  mild: "Express your persona subtly, focusing primarily on the content.",
+  moderate: "Let your persona characteristics come through clearly in your responses.",
+  extreme: "Strongly embody your persona with distinctive voice, opinions, and style."
+};
+
+/**
+ * Generates expert settings instructions for continuation prompts
+ */
+const getExpertInstructionsForContinuation = (settings?: ExpertSettings): string => {
+  if (!settings) return '';
+  
+  const toneInstruction = toneInstructions[settings.conversationTone] || toneInstructions.collaborative;
+  const agreementInstruction = getAgreementInstruction(settings.agreementBias);
+  const intensityInstruction = intensityModifiers[settings.personalityIntensity] || intensityModifiers.moderate;
+  
+  return `\n\nCONVERSATION STYLE INSTRUCTIONS:
+- Tone: ${toneInstruction}
+- Stance: ${agreementInstruction}
+- Expression: ${intensityInstruction}`;
+};
+
+/**
  * Creates a continuation prompt for an agent in later rounds
  */
 const createContinuationPrompt = (
@@ -293,11 +340,13 @@ const createContinuationPrompt = (
   agentPersona: string,
   currentRound: number,
   totalRounds: number,
-  scenario: ScenarioType
+  scenario: ScenarioType,
+  expertSettings?: ExpertSettings
 ): string => {
   const isLastRound = currentRound === totalRounds;
   const soapName = getAgentSoapName(agentName, agentPersona);
   const agentLetter = agentName.replace('Agent ', '');
+  const expertInstructions = getExpertInstructionsForContinuation(expertSettings);
   
   // Format conversation history with soap opera names
   const formattedHistory = conversationHistory
@@ -308,7 +357,7 @@ const createContinuationPrompt = (
     })
     .join('\n\n');
   
-  return `You are ${soapName} (Agent ${agentLetter}). Speak and act as this character.
+  return `You are ${soapName} (Agent ${agentLetter}). Speak and act as this character.${expertInstructions}
 
 You are participating in a multi-agent discussion about: "${originalPrompt}"
 
@@ -341,7 +390,8 @@ export const handleInitialRound = async (
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
-  onTokenUsage?: TokenUsageCallback
+  onTokenUsage?: TokenUsageCallback,
+  expertSettings?: ExpertSettings
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
@@ -357,7 +407,7 @@ export const handleInitialRound = async (
     : getAgentOrder(turnOrder, numberOfAgents, 1);
   
   // Agent A always starts
-  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona);
+  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona, expertSettings);
   
   const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
@@ -395,7 +445,7 @@ export const handleInitialRound = async (
     nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt, onTokenUsage);
   }
   
-  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona);
+  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, expertSettings);
   
   const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
@@ -437,7 +487,7 @@ export const handleInitialRound = async (
       }
     }
     
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona);
+    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona, expertSettings);
     
     const agentCResponse = await callWithTokenTracking(
       agentCPrompt,
@@ -486,7 +536,8 @@ export const handleSingleRound = async (
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
-  onTokenUsage?: TokenUsageCallback
+  onTokenUsage?: TokenUsageCallback,
+  expertSettings?: ExpertSettings
 ): Promise<ConversationMessage[]> => {
   const allMessages: ConversationMessage[] = [...conversation];
   
@@ -511,7 +562,8 @@ export const handleSingleRound = async (
       agentConfig.persona,
       roundNumber,
       totalRounds,
-      currentScenario
+      currentScenario,
+      expertSettings
     );
     
     const response = await callWithTokenTracking(
@@ -563,7 +615,8 @@ export const handleAdditionalRounds = async (
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
-  onTokenUsage?: TokenUsageCallback
+  onTokenUsage?: TokenUsageCallback,
+  expertSettings?: ExpertSettings
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -591,7 +644,8 @@ export const handleAdditionalRounds = async (
         agentConfig.persona,
         roundNum,
         rounds,
-        currentScenario
+        currentScenario,
+        expertSettings
       );
       
       const response = await callWithTokenTracking(
