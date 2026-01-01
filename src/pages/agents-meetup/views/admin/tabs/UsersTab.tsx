@@ -7,10 +7,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { 
   Users, Coins, RefreshCw, Search, ChevronRight, 
-  ArrowUpDown, TrendingUp, Zap
+  ArrowUpDown, TrendingUp, Zap, Trash2, AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserDetailView } from './UserDetailView';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface UserData {
   user_id: string;
@@ -31,6 +43,8 @@ export const UsersTab = () => {
   const [sortBy, setSortBy] = useState<'credits' | 'tokens' | 'debates'>('credits');
   const [sortDesc, setSortDesc] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [unknownRecordsCount, setUnknownRecordsCount] = useState(0);
+  const [isClearing, setIsClearing] = useState(false);
 
   const formatTokens = (tokens: number): string => {
     if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
@@ -100,8 +114,39 @@ export const UsersTab = () => {
     }
   };
 
+  const loadUnknownRecordsCount = async () => {
+    const { count } = await supabase
+      .from('user_token_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('model_id', 'unknown');
+    
+    setUnknownRecordsCount(count || 0);
+  };
+
+  const clearUnknownRecords = async () => {
+    setIsClearing(true);
+    try {
+      const { error } = await supabase
+        .from('user_token_usage')
+        .delete()
+        .eq('model_id', 'unknown');
+
+      if (error) throw error;
+
+      toast.success('Legacy records cleared successfully');
+      setUnknownRecordsCount(0);
+      loadUsers(); // Refresh data
+    } catch (error) {
+      console.error('Failed to clear unknown records:', error);
+      toast.error('Failed to clear legacy records');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   useEffect(() => {
     loadUsers();
+    loadUnknownRecordsCount();
   }, []);
 
   const filteredUsers = users
@@ -216,6 +261,54 @@ export const UsersTab = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Legacy Data Cleanup */}
+      {unknownRecordsCount > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="font-medium">Legacy Token Records Found</p>
+                  <p className="text-sm text-muted-foreground">
+                    {unknownRecordsCount} records with "unknown" model ID from before tracking was fixed
+                  </p>
+                </div>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Clear Legacy Data
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear Legacy Token Records?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete {unknownRecordsCount} token usage records that have "unknown" as the model ID. 
+                      These records were created before the token tracking was properly connected.
+                      <br /><br />
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={clearUnknownRecords}
+                      disabled={isClearing}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isClearing ? 'Clearing...' : 'Delete Records'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Users Table */}
       <Card>
