@@ -111,6 +111,8 @@ export const creditsService = {
     chatId?: string,
     modelId?: string
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
+    console.log('[creditsService.useTokensForCredit] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed);
+    
     if (!userId) {
       // Guest users use simple credit system, tokens don't affect them
       return { success: true, creditsDeducted: 0, newCreditsRemaining: 0 };
