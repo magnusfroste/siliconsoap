@@ -127,12 +127,14 @@ export const creditsRepository = {
     userId: string,
     tokensUsed: number,
     chatId?: string,
-    modelId: string = 'unknown',
+    modelId?: string,
     promptTokens?: number,
     completionTokens?: number,
     estimatedCost?: number
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
-    console.log('[creditsRepository.useTokensAndDeductCredits] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
+    // Ensure modelId is never undefined/null - use 'unknown' as fallback
+    const actualModelId = modelId || 'unknown';
+    console.log('[creditsRepository.useTokensAndDeductCredits] userId:', userId, 'chatId:', chatId, 'modelId:', actualModelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
     
     // Use actual token split if provided, otherwise approximate
     const actualPromptTokens = promptTokens ?? Math.floor(tokensUsed / 2);
@@ -143,7 +145,7 @@ export const creditsRepository = {
     const { data, error } = await supabase.rpc('use_tokens', {
       p_user_id: userId,
       p_chat_id: chatId || null,
-      p_model_id: modelId,
+      p_model_id: actualModelId,
       p_prompt_tokens: actualPromptTokens,
       p_completion_tokens: actualCompletionTokens,
       p_estimated_cost: actualCost
