@@ -163,16 +163,26 @@ export const LeaderboardView = () => {
           <CardContent>
             <div className="flex flex-wrap gap-3 justify-center">
               {SILICON_RANKS.map((rank) => (
-                <Badge 
-                  key={rank.level} 
-                  variant="outline" 
-                  className={cn("gap-1.5 py-1.5 px-3", `bg-gradient-to-r ${rank.color} bg-clip-text text-transparent border-current`)}
+                <div
+                  key={rank.level}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full border",
+                    "bg-gradient-to-r from-muted/50 to-muted/30",
+                    rank.level === 1 && "border-slate-400/50",
+                    rank.level === 2 && "border-blue-400/50",
+                    rank.level === 3 && "border-purple-500/50",
+                    rank.level === 4 && "border-orange-500/50",
+                    rank.level === 5 && "border-violet-500/50"
+                  )}
                 >
-                  <span>{rank.emoji}</span>
-                  <span className={`bg-gradient-to-r ${rank.color} bg-clip-text text-transparent font-medium`}>
+                  <span className="text-base">{rank.emoji}</span>
+                  <span className={cn(
+                    "text-sm font-medium bg-gradient-to-r bg-clip-text text-transparent",
+                    rank.color
+                  )}>
                     {rank.title}
                   </span>
-                </Badge>
+                </div>
               ))}
             </div>
           </CardContent>
