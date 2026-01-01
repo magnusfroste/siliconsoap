@@ -583,16 +583,16 @@ export const AnalyticsTab = () => {
                           <span className="text-muted-foreground text-xs">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs max-w-[150px]">
+                      <TableCell className="text-xs max-w-[180px]">
                         <div className="flex flex-wrap gap-1">
-                          {(a.models_used || []).slice(0, 2).map((m, i) => (
+                          {(a.models_used || []).slice(0, 3).map((m, i) => (
                             <Badge key={i} variant="outline" className="text-xs truncate max-w-[100px]">
                               {m.split('/').pop()}
                             </Badge>
                           ))}
-                          {(a.models_used || []).length > 2 && (
+                          {(a.models_used || []).length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{(a.models_used || []).length - 2}
+                              +{(a.models_used || []).length - 3}
                             </Badge>
                           )}
                         </div>
