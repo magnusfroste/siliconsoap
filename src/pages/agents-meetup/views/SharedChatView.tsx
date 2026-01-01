@@ -6,7 +6,7 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
@@ -241,6 +241,36 @@ export const SharedChatView = () => {
                           </Tooltip>
                         </TooltipProvider>
                       )}
+                      
+                      {/* Personality Intensity Badge - only show if not default */}
+                      {(() => {
+                        const intensity = settings?.personalityIntensity || 'moderate';
+                        if (intensity === 'moderate') return null;
+                        
+                        const intensityConfig = {
+                          'mild': { label: 'Subtle', icon: Feather, tooltip: 'Personas expressed subtly, focus on content' },
+                          'extreme': { label: 'Dramatic', icon: Sparkles, tooltip: 'Strong persona expression with distinctive voice' }
+                        };
+                        const intensityInfo = intensityConfig[intensity as keyof typeof intensityConfig];
+                        if (!intensityInfo) return null;
+                        const IntensityIcon = intensityInfo.icon;
+                        
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                                  <IntensityIcon className="h-3 w-3" />
+                                  {intensityInfo.label}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p>{intensityInfo.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
                     </div>
                   );
                 })()}
