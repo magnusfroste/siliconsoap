@@ -150,21 +150,26 @@ export const AnalyticsTab = () => {
 
   const exportCsv = () => {
     const headers = ['Date', 'User Type', 'Prompt', 'Scenario', 'Models', 'Agents', 'Rounds', 'Messages', 'Duration (s)', 'Shared', 'Mode', 'Tone', 'Turn Order'];
-    const rows = analytics.map(a => [
-      format(new Date(a.created_at), 'yyyy-MM-dd HH:mm'),
-      a.is_guest ? 'Guest' : 'User',
-      `"${(a.prompt_preview || '').replace(/"/g, '""')}"`,
-      a.scenario_id || '',
-      (a.models_used || []).join('; '),
-      a.num_agents,
-      a.num_rounds,
-      a.total_messages,
-      Math.round((a.generation_duration_ms || 0) / 1000),
-      a.is_public && a.share_id ? 'Yes' : 'No',
-      a.settings?.participationMode || '',
-      a.settings?.conversationTone || '',
-      a.settings?.turnOrder || ''
-    ]);
+    const rows = analytics.map(a => {
+      // Use actual message count if available, fall back to total_messages
+      const actualCount = a.chat_id ? actualMessageCounts[a.chat_id] : null;
+      const messageCount = actualCount ?? a.total_messages;
+      return [
+        format(new Date(a.created_at), 'yyyy-MM-dd HH:mm'),
+        a.is_guest ? 'Guest' : 'User',
+        `"${(a.prompt_preview || '').replace(/"/g, '""')}"`,
+        a.scenario_id || '',
+        (a.models_used || []).join('; '),
+        a.num_agents,
+        a.num_rounds,
+        messageCount,
+        Math.round((a.generation_duration_ms || 0) / 1000),
+        a.is_public && a.share_id ? 'Yes' : 'No',
+        a.settings?.participationMode || '',
+        a.settings?.conversationTone || '',
+        a.settings?.turnOrder || ''
+      ];
+    });
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
