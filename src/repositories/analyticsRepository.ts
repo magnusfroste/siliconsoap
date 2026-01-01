@@ -1,5 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ChatSettings {
+  participationMode?: 'spectator' | 'jump-in';
+  turnOrder?: 'alternating' | 'random' | 'free-for-all';
+  conversationTone?: 'formal' | 'casual' | 'heated' | 'collaborative';
+  responseLength?: 'concise' | 'balanced' | 'detailed';
+  agreementBias?: number;
+  temperature?: number;
+  personalityIntensity?: 'mild' | 'moderate' | 'extreme';
+}
+
 export interface ChatAnalytics {
   id: string;
   chat_id: string | null;
@@ -21,6 +31,10 @@ export interface ChatAnalytics {
   session_id: string | null;
   ip_address: string | null;
   country_code: string | null;
+  // Joined from agent_chats
+  is_public: boolean | null;
+  share_id: string | null;
+  settings: ChatSettings | null;
 }
 
 export interface AnalyticsSummary {
@@ -42,9 +56,17 @@ export interface ModelUsageStats {
 
 export const analyticsRepository = {
   async getAll(limit = 100): Promise<ChatAnalytics[]> {
+    // Fetch analytics with joined chat data for settings and sharing info
     const { data, error } = await supabase
       .from('chat_analytics')
-      .select('*')
+      .select(`
+        *,
+        agent_chats!chat_analytics_chat_id_fkey (
+          is_public,
+          share_id,
+          settings
+        )
+      `)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -53,7 +75,14 @@ export const analyticsRepository = {
       throw error;
     }
 
-    return data || [];
+    // Transform data to flatten the joined fields
+    return (data || []).map((row: any) => ({
+      ...row,
+      is_public: row.agent_chats?.is_public ?? null,
+      share_id: row.agent_chats?.share_id ?? null,
+      settings: row.agent_chats?.settings ?? null,
+      agent_chats: undefined // Remove the nested object
+    }));
   },
 
   async getSummary(): Promise<AnalyticsSummary> {
