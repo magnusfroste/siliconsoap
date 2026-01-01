@@ -109,16 +109,27 @@ export const creditsService = {
     userId: string | null,
     tokensUsed: number,
     chatId?: string,
-    modelId?: string
+    modelId?: string,
+    promptTokens?: number,
+    completionTokens?: number,
+    estimatedCost?: number
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
-    console.log('[creditsService.useTokensForCredit] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed);
+    console.log('[creditsService.useTokensForCredit] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
     
     if (!userId) {
       // Guest users use simple credit system, tokens don't affect them
       return { success: true, creditsDeducted: 0, newCreditsRemaining: 0 };
     }
 
-    const result = await creditsRepository.useTokensAndDeductCredits(userId, tokensUsed, chatId, modelId);
+    const result = await creditsRepository.useTokensAndDeductCredits(
+      userId, 
+      tokensUsed, 
+      chatId, 
+      modelId,
+      promptTokens,
+      completionTokens,
+      estimatedCost
+    );
     
     if (result.creditsDeducted > 0) {
       // Notify other components that credits changed
