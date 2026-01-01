@@ -192,8 +192,16 @@ export const ChatView = () => {
         // Token usage callback - deducts credits based on token usage
         const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
           const totalTokens = usage.prompt_tokens + usage.completion_tokens;
-          console.log('[TokenUsage] chatId:', chatId, 'modelId:', modelId, 'tokens:', totalTokens, 'userId:', user?.id);
-          await creditsService.useTokensForCredit(user?.id || null, totalTokens, chatId, modelId);
+          console.log('[TokenUsage] chatId:', chatId, 'modelId:', modelId, 'tokens:', totalTokens, 'cost:', usage.estimated_cost, 'userId:', user?.id);
+          await creditsService.useTokensForCredit(
+            user?.id || null, 
+            totalTokens, 
+            chatId, 
+            modelId,
+            usage.prompt_tokens,
+            usage.completion_tokens,
+            usage.estimated_cost
+          );
           refreshCredits(); // Update UI
         };
 
@@ -498,7 +506,15 @@ export const ChatView = () => {
                   // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
-                    await creditsService.useTokensForCredit(user?.id || null, totalTokens, chatId, modelId);
+                    await creditsService.useTokensForCredit(
+                      user?.id || null, 
+                      totalTokens, 
+                      chatId, 
+                      modelId,
+                      usage.prompt_tokens,
+                      usage.completion_tokens,
+                      usage.estimated_cost
+                    );
                     refreshCredits();
                   };
                   
@@ -636,7 +652,15 @@ export const ChatView = () => {
                   // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
-                    await creditsService.useTokensForCredit(user?.id || null, totalTokens, chatId, modelId);
+                    await creditsService.useTokensForCredit(
+                      user?.id || null, 
+                      totalTokens, 
+                      chatId, 
+                      modelId,
+                      usage.prompt_tokens,
+                      usage.completion_tokens,
+                      usage.estimated_cost
+                    );
                     refreshCredits();
                   };
                   
@@ -691,7 +715,15 @@ export const ChatView = () => {
                   // Token usage callback - deducts credits based on token usage
                   const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
-                    await creditsService.useTokensForCredit(user?.id || null, totalTokens, chatId, modelId);
+                    await creditsService.useTokensForCredit(
+                      user?.id || null, 
+                      totalTokens, 
+                      chatId, 
+                      modelId,
+                      usage.prompt_tokens,
+                      usage.completion_tokens,
+                      usage.estimated_cost
+                    );
                     refreshCredits();
                   };
                   
