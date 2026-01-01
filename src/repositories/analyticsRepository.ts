@@ -316,5 +316,28 @@ export const analyticsRepository = {
     }
     
     return emailMap;
+  },
+
+  async getUserDisplayNames(userIds: string[]): Promise<Record<string, string>> {
+    if (userIds.length === 0) return {};
+    
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('user_id, display_name')
+      .in('user_id', userIds);
+    
+    if (error) {
+      console.error('Error fetching user display names:', error);
+      return {};
+    }
+    
+    const nameMap: Record<string, string> = {};
+    for (const profile of data || []) {
+      if (profile.display_name) {
+        nameMap[profile.user_id] = profile.display_name;
+      }
+    }
+    
+    return nameMap;
   }
 };

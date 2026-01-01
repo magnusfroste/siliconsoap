@@ -30,6 +30,7 @@ export const AnalyticsTab = () => {
   const [tokenUsageMap, setTokenUsageMap] = useState<Record<string, number>>({});
   const [actualMessageCounts, setActualMessageCounts] = useState<Record<string, number>>({});
   const [userEmails, setUserEmails] = useState<Record<string, string>>({});
+  const [userDisplayNames, setUserDisplayNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   
   // Filter states
@@ -79,13 +80,17 @@ export const AnalyticsTab = () => {
         }
       }
 
-      // Fetch user emails for non-guest chats
+      // Fetch user emails and display names for non-guest chats
       const userIds = [...new Set(analyticsData
         .filter(a => a.user_id && !a.is_guest)
         .map(a => a.user_id as string))];
       if (userIds.length > 0) {
-        const emailData = await analyticsService.getUserEmails(userIds);
+        const [emailData, nameData] = await Promise.all([
+          analyticsService.getUserEmails(userIds),
+          analyticsService.getUserDisplayNames(userIds)
+        ]);
         setUserEmails(emailData);
+        setUserDisplayNames(nameData);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -562,8 +567,17 @@ export const AnalyticsTab = () => {
                         ) : (
                           <div className="flex flex-col">
                             <span className="text-xs font-medium truncate max-w-[150px]">
-                              {a.user_id && userEmails[a.user_id] ? userEmails[a.user_id] : 'User'}
+                              {a.user_id && userDisplayNames[a.user_id] 
+                                ? userDisplayNames[a.user_id] 
+                                : a.user_id && userEmails[a.user_id] 
+                                  ? userEmails[a.user_id] 
+                                  : 'User'}
                             </span>
+                            {a.user_id && userDisplayNames[a.user_id] && userEmails[a.user_id] && (
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                                {userEmails[a.user_id]}
+                              </span>
+                            )}
                           </div>
                         )}
                       </TableCell>

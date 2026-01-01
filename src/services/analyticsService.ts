@@ -44,5 +44,9 @@ export const analyticsService = {
 
   async getUserEmails(userIds: string[]): Promise<Record<string, string>> {
     return analyticsRepository.getUserEmails(userIds);
+  },
+
+  async getUserDisplayNames(userIds: string[]): Promise<Record<string, string>> {
+    return analyticsRepository.getUserDisplayNames(userIds);
   }
 };
