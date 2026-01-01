@@ -318,6 +318,26 @@ export const SharedChatView = () => {
                           </TooltipProvider>
                         );
                       })()}
+                      
+                      {/* Number of Agents Badge */}
+                      {(() => {
+                        const numAgents = settings?.numberOfAgents || 2;
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                                  <Users className="h-3 w-3" />
+                                  {numAgents} Agents
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p>{numAgents} AI agents participating in this debate</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
                     </div>
                   );
                 })()}
