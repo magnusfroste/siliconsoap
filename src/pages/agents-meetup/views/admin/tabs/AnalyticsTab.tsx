@@ -675,13 +675,29 @@ export const AnalyticsTab = () => {
                         })()}
                       </TableCell>
                       <TableCell className="text-center">
-                        {a.chat_id && tokenUsageMap[a.chat_id] ? (
-                          <Badge variant="outline" className="text-cyan-600 border-cyan-600">
-                            {formatTokens(tokenUsageMap[a.chat_id])}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">-</span>
-                        )}
+                        {(() => {
+                          // Priority: user_token_usage > chat_analytics.total_tokens_used
+                          const tokenUsage = a.chat_id ? tokenUsageMap[a.chat_id] : null;
+                          const analyticsTokens = a.total_tokens_used;
+                          const displayTokens = tokenUsage || analyticsTokens;
+                          const isFromAnalytics = !tokenUsage && analyticsTokens;
+                          
+                          if (displayTokens) {
+                            return (
+                              <Badge 
+                                variant="outline" 
+                                className={isFromAnalytics 
+                                  ? "text-amber-600 border-amber-600" 
+                                  : "text-cyan-600 border-cyan-600"
+                                }
+                                title={isFromAnalytics ? "From chat_analytics (no detailed token log)" : "From user_token_usage"}
+                              >
+                                {formatTokens(displayTokens)}
+                              </Badge>
+                            );
+                          }
+                          return <span className="text-muted-foreground text-xs">-</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         {a.completed_at ? (
