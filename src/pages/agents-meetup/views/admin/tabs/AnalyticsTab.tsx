@@ -453,7 +453,7 @@ export const AnalyticsTab = () => {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-50 bg-popover" align="end" side="bottom" sideOffset={4}>
                 <Calendar
                   initialFocus
                   mode="range"
@@ -461,7 +461,7 @@ export const AnalyticsTab = () => {
                   selected={dateRange}
                   onSelect={setDateRange}
                   numberOfMonths={2}
-                  className="pointer-events-auto"
+                  className="pointer-events-auto p-3"
                 />
               </PopoverContent>
             </Popover>
