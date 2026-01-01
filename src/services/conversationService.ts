@@ -90,8 +90,10 @@ const callWithTokenTracking = async (
 
   // Log token usage if callback provided and we have usage data
   if (onTokenUsage && result.usage) {
-    const cost = await calculateTokenCost(
-      model,
+    // Use cost from OpenRouter if available, otherwise calculate locally
+    const actualModel = result.model || model;
+    const cost = result.usage.cost ?? await calculateTokenCost(
+      actualModel,
       result.usage.prompt_tokens,
       result.usage.completion_tokens
     );
@@ -103,9 +105,10 @@ const callWithTokenTracking = async (
       estimated_cost: cost
     };
     
-    await onTokenUsage(tokenUsage, model);
+    // Use the actual model returned by OpenRouter (handles fallbacks correctly)
+    await onTokenUsage(tokenUsage, actualModel);
     
-    console.log(`[TokenTracking] Model: ${model}, Tokens: ${result.usage.total_tokens}, Cost: $${cost.toFixed(6)}`);
+    console.log(`[TokenTracking] Model: ${actualModel}, Tokens: ${result.usage.total_tokens}, Cost: $${cost.toFixed(6)}${result.fallbackUsed ? ` (fallback from ${model})` : ''}`);
   }
 
   return {
