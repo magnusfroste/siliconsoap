@@ -73,11 +73,16 @@ serve(async (req) => {
         max_tokens,
         temperature,
         top_p,
-        stream: false
+        stream: false,
+        // Explicitly request usage data to be included in response
+        usage: { include: true }
       }),
     });
 
     const data = await response.json();
+    
+    // Log usage data for debugging
+    console.log(`OpenRouter response - model: ${data.model}, has usage: ${!!data.usage}, usage: ${JSON.stringify(data.usage)}`);
 
     // Handle rate limit errors
     if (!response.ok) {
@@ -136,11 +141,13 @@ serve(async (req) => {
             max_tokens,
             temperature,
             top_p,
-            stream: false
+            stream: false,
+            usage: { include: true }
           }),
         });
 
         const fallbackData = await fallbackResponse.json();
+        console.log(`Fallback response - has usage: ${!!fallbackData.usage}, usage: ${JSON.stringify(fallbackData.usage)}`);
         
         if (fallbackResponse.ok && fallbackData.choices?.[0]?.message?.content) {
           console.log('Fallback model succeeded');
