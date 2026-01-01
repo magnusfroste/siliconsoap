@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
 
 interface ShameMoment {
   id: string;
@@ -34,16 +35,20 @@ const shameTypeConfig = {
   },
 };
 
+const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+
 export function LandingHallOfShame() {
   const [moments, setMoments] = useState<ShameMoment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchShameMoments();
-  }, []);
+  const fetchShameMoments = useCallback(async (isAutoRefresh = false) => {
+    if (isAutoRefresh) {
+      setIsRefreshing(true);
+    }
 
-  const fetchShameMoments = async () => {
     const { data, error } = await supabase
       .from('hall_of_shame')
       .select('*')
@@ -53,10 +58,41 @@ export function LandingHallOfShame() {
     if (error) {
       console.error('Error fetching shame moments:', error);
     } else {
-      setMoments((data as ShameMoment[]) || []);
+      const newMoments = (data as ShameMoment[]) || [];
+      
+      // Find new moments that weren't in the previous list
+      if (isAutoRefresh && moments.length > 0) {
+        const existingIds = new Set(moments.map(m => m.id));
+        const newIds = newMoments.filter(m => !existingIds.has(m.id)).map(m => m.id);
+        
+        if (newIds.length > 0) {
+          setAnimatingIds(new Set(newIds));
+          // Clear animation state after animation completes
+          setTimeout(() => setAnimatingIds(new Set()), 600);
+        }
+      }
+      
+      setMoments(newMoments);
     }
+    
     setLoading(false);
-  };
+    if (isAutoRefresh) {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  }, [moments]);
+
+  useEffect(() => {
+    fetchShameMoments();
+  }, []);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchShameMoments(true);
+    }, AUTO_REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [fetchShameMoments]);
 
   if (loading) {
     return (
@@ -87,6 +123,11 @@ export function LandingHallOfShame() {
           <h3 className="text-2xl md:text-3xl font-bold mb-2 flex items-center justify-center gap-2">
             <span>🎭</span>
             Hall of Shame
+            <RefreshCw 
+              className={`h-4 w-4 text-muted-foreground transition-all duration-500 ${
+                isRefreshing ? 'animate-spin text-primary' : 'opacity-0'
+              }`}
+            />
           </h3>
           <p className="text-sm text-muted-foreground italic">
             Can you trust an AI? Spoiler: no.
@@ -96,13 +137,24 @@ export function LandingHallOfShame() {
         <div className="grid gap-4 md:grid-cols-3">
           {moments.map((moment, index) => {
             const config = shameTypeConfig[moment.shame_type] || shameTypeConfig.backstab;
+            const isNew = animatingIds.has(moment.id);
+            
             return (
               <Card 
                 key={moment.id} 
-                className="group bg-card/50 hover:bg-card/80 transition-all duration-300 border-border/50 hover:border-primary/30 hover:-translate-y-2 hover:shadow-lg hover:shadow-primary/5 cursor-pointer animate-fade-in relative overflow-hidden"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className={`group bg-card/50 hover:bg-card/80 transition-all duration-300 border-border/50 hover:border-primary/30 hover:-translate-y-2 hover:shadow-lg hover:shadow-primary/5 cursor-pointer relative overflow-hidden ${
+                  isNew 
+                    ? 'animate-scale-in ring-2 ring-primary/50 ring-offset-2 ring-offset-background' 
+                    : 'animate-fade-in'
+                }`}
+                style={{ animationDelay: isNew ? '0s' : `${index * 0.1}s` }}
                 onClick={() => moment.share_id && navigate(`/shared/${moment.share_id}`)}
               >
+                {/* New indicator pulse */}
+                {isNew && (
+                  <div className="absolute inset-0 bg-primary/10 animate-pulse" />
+                )}
+                
                 {/* Shimmer effect on hover */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
                 
