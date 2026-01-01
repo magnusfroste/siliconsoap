@@ -78,6 +78,8 @@ export const analyticsRepository = {
       .filter(a => a.chat_id)
       .map(a => a.chat_id as string);
 
+    console.log('[getAll] chatIds to fetch:', chatIds.slice(0, 5));
+
     let chatDataMap: Record<string, { is_public: boolean; share_id: string | null; settings: ChatSettings | null }> = {};
 
     if (chatIds.length > 0) {
@@ -85,6 +87,9 @@ export const analyticsRepository = {
         .from('agent_chats')
         .select('id, is_public, share_id, settings')
         .in('id', chatIds);
+
+      console.log('[getAll] chatData fetched:', chatData?.length, 'error:', chatError);
+      console.log('[getAll] sample chatData:', chatData?.slice(0, 2));
 
       if (!chatError && chatData) {
         chatDataMap = chatData.reduce((acc, chat) => {
@@ -97,6 +102,8 @@ export const analyticsRepository = {
         }, {} as Record<string, { is_public: boolean; share_id: string | null; settings: ChatSettings | null }>);
       }
     }
+
+    console.log('[getAll] chatDataMap keys:', Object.keys(chatDataMap).slice(0, 5));
 
     // Merge analytics with chat data
     return analyticsData.map((row: any) => ({
