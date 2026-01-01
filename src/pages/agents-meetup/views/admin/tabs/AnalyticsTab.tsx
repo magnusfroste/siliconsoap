@@ -14,6 +14,7 @@ import {
   Link2, Eye, MessageSquare, Flame, Briefcase, Coffee, UsersRound, Filter, X
 } from 'lucide-react';
 import { analyticsService, type ChatAnalytics, type AnalyticsSummary, type ModelUsageStats } from '@/services';
+import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
@@ -27,6 +28,7 @@ export const AnalyticsTab = () => {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [modelStats, setModelStats] = useState<ModelUsageStats[]>([]);
   const [tokenUsageMap, setTokenUsageMap] = useState<Record<string, number>>({});
+  const [actualMessageCounts, setActualMessageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   
   // Filter states
@@ -60,6 +62,20 @@ export const AnalyticsTab = () => {
       if (chatIds.length > 0) {
         const tokenData = await analyticsService.getTokenUsagePerChat(chatIds);
         setTokenUsageMap(tokenData);
+
+        // Fetch actual message counts from agent_chat_messages
+        const { data: messageCounts } = await supabase
+          .from('agent_chat_messages')
+          .select('chat_id')
+          .in('chat_id', chatIds);
+        
+        if (messageCounts) {
+          const counts: Record<string, number> = {};
+          messageCounts.forEach((msg) => {
+            counts[msg.chat_id] = (counts[msg.chat_id] || 0) + 1;
+          });
+          setActualMessageCounts(counts);
+        }
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -610,7 +626,19 @@ export const AnalyticsTab = () => {
                       </TableCell>
                       <TableCell className="text-center">{a.num_agents}</TableCell>
                       <TableCell className="text-center">{a.num_rounds}</TableCell>
-                      <TableCell className="text-center">{a.total_messages}</TableCell>
+                      <TableCell className="text-center">
+                        {(() => {
+                          const actualCount = a.chat_id ? actualMessageCounts[a.chat_id] : null;
+                          const displayCount = actualCount ?? a.total_messages;
+                          const hasMore = actualCount && actualCount > (a.total_messages || 0);
+                          return (
+                            <span className={hasMore ? 'text-green-600 font-medium' : ''}>
+                              {displayCount}
+                              {hasMore && <span className="text-xs text-muted-foreground ml-1">↑</span>}
+                            </span>
+                          );
+                        })()}
+                      </TableCell>
                       <TableCell className="text-center">
                         {a.chat_id && tokenUsageMap[a.chat_id] ? (
                           <Badge variant="outline" className="text-cyan-600 border-cyan-600">
