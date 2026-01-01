@@ -6,7 +6,7 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
@@ -266,6 +266,53 @@ export const SharedChatView = () => {
                               </TooltipTrigger>
                               <TooltipContent side="bottom" className="max-w-xs">
                                 <p>{intensityInfo.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                      
+                      {/* Number of Rounds Badge */}
+                      {(() => {
+                        const rounds = settings?.rounds || 2;
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                                  <RotateCcw className="h-3 w-3" />
+                                  {rounds} {rounds === 1 ? 'Round' : 'Rounds'}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p>Number of conversation rounds between agents</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                      
+                      {/* Response Length Badge */}
+                      {(() => {
+                        const length = settings?.responseLength || 'medium';
+                        const lengthConfig = {
+                          'short': { label: 'Brief', tooltip: 'Concise responses (~100 words)' },
+                          'medium': { label: 'Medium', tooltip: 'Balanced responses (~200 words)' },
+                          'long': { label: 'Detailed', tooltip: 'Comprehensive responses (~400 words)' }
+                        };
+                        const lengthInfo = lengthConfig[length as keyof typeof lengthConfig] || lengthConfig['medium'];
+                        
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                                  <FileText className="h-3 w-3" />
+                                  {lengthInfo.label}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p>{lengthInfo.tooltip}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
