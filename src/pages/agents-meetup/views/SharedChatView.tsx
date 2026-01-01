@@ -6,7 +6,7 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
@@ -333,6 +333,34 @@ export const SharedChatView = () => {
                               </TooltipTrigger>
                               <TooltipContent side="bottom" className="max-w-xs">
                                 <p>{numAgents} AI agents participating in this debate</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })()}
+                      
+                      {/* Turn Order Badge */}
+                      {(() => {
+                        const turnOrder = settings?.turnOrder || 'sequential';
+                        const orderConfig = {
+                          'sequential': { label: 'Sequential', icon: ListOrdered, tooltip: 'Agents take turns in fixed order' },
+                          'random': { label: 'Random', icon: Shuffle, tooltip: 'Random agent speaks next each turn' },
+                          'popcorn': { label: 'Popcorn', icon: Popcorn, tooltip: 'Each agent picks who speaks next' }
+                        };
+                        const orderInfo = orderConfig[turnOrder as keyof typeof orderConfig] || orderConfig['sequential'];
+                        const OrderIcon = orderInfo.icon;
+                        
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
+                                  <OrderIcon className="h-3 w-3" />
+                                  {orderInfo.label}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                                <p>{orderInfo.tooltip}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
