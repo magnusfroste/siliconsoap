@@ -33,7 +33,7 @@ serve(async (req) => {
       } catch (textError) {
         console.error('Failed to read as text too:', textError);
       }
-      throw new Error(`Invalid JSON: ${jsonError.message}`);
+      throw new Error(`Invalid JSON: ${jsonError instanceof Error ? jsonError.message : 'Unknown error'}`);
     }
     
     const { model, messages, max_tokens, temperature, top_p } = body;
