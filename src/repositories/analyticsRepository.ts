@@ -57,32 +57,53 @@ export interface ModelUsageStats {
 
 export const analyticsRepository = {
   async getAll(limit = 100): Promise<ChatAnalytics[]> {
-    // Fetch analytics with joined chat data for settings and sharing info
-    const { data, error } = await supabase
+    // Fetch analytics first
+    const { data: analyticsData, error: analyticsError } = await supabase
       .from('chat_analytics')
-      .select(`
-        *,
-        agent_chats!chat_analytics_chat_id_fkey (
-          is_public,
-          share_id,
-          settings
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
-      console.error('Error fetching analytics:', error);
-      throw error;
+    if (analyticsError) {
+      console.error('Error fetching analytics:', analyticsError);
+      throw analyticsError;
     }
 
-    // Transform data to flatten the joined fields
-    return (data || []).map((row: any) => ({
+    if (!analyticsData || analyticsData.length === 0) {
+      return [];
+    }
+
+    // Get chat_ids to fetch agent_chats data
+    const chatIds = analyticsData
+      .filter(a => a.chat_id)
+      .map(a => a.chat_id as string);
+
+    let chatDataMap: Record<string, { is_public: boolean; share_id: string | null; settings: ChatSettings | null }> = {};
+
+    if (chatIds.length > 0) {
+      const { data: chatData, error: chatError } = await supabase
+        .from('agent_chats')
+        .select('id, is_public, share_id, settings')
+        .in('id', chatIds);
+
+      if (!chatError && chatData) {
+        chatDataMap = chatData.reduce((acc, chat) => {
+          acc[chat.id] = {
+            is_public: chat.is_public,
+            share_id: chat.share_id,
+            settings: chat.settings as ChatSettings | null
+          };
+          return acc;
+        }, {} as Record<string, { is_public: boolean; share_id: string | null; settings: ChatSettings | null }>);
+      }
+    }
+
+    // Merge analytics with chat data
+    return analyticsData.map((row: any) => ({
       ...row,
-      is_public: row.agent_chats?.is_public ?? null,
-      share_id: row.agent_chats?.share_id ?? null,
-      settings: row.agent_chats?.settings ?? null,
-      agent_chats: undefined // Remove the nested object
+      is_public: row.chat_id && chatDataMap[row.chat_id] ? chatDataMap[row.chat_id].is_public : null,
+      share_id: row.chat_id && chatDataMap[row.chat_id] ? chatDataMap[row.chat_id].share_id : null,
+      settings: row.chat_id && chatDataMap[row.chat_id] ? chatDataMap[row.chat_id].settings : null
     }));
   },
 
