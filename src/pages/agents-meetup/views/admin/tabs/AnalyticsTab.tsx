@@ -29,6 +29,7 @@ export const AnalyticsTab = () => {
   const [modelStats, setModelStats] = useState<ModelUsageStats[]>([]);
   const [tokenUsageMap, setTokenUsageMap] = useState<Record<string, number>>({});
   const [actualMessageCounts, setActualMessageCounts] = useState<Record<string, number>>({});
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   
   // Filter states
@@ -76,6 +77,15 @@ export const AnalyticsTab = () => {
           });
           setActualMessageCounts(counts);
         }
+      }
+
+      // Fetch user emails for non-guest chats
+      const userIds = [...new Set(analyticsData
+        .filter(a => a.user_id && !a.is_guest)
+        .map(a => a.user_id as string))];
+      if (userIds.length > 0) {
+        const emailData = await analyticsService.getUserEmails(userIds);
+        setUserEmails(emailData);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -547,9 +557,15 @@ export const AnalyticsTab = () => {
                         {format(new Date(a.created_at), 'MMM d, HH:mm')}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={a.is_guest ? 'secondary' : 'default'}>
-                          {a.is_guest ? 'Guest' : 'User'}
-                        </Badge>
+                        {a.is_guest ? (
+                          <Badge variant="secondary">Guest</Badge>
+                        ) : (
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium truncate max-w-[150px]">
+                              {a.user_id && userEmails[a.user_id] ? userEmails[a.user_id] : 'User'}
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="max-w-[250px] truncate text-sm">
                         {a.prompt_preview || '-'}
