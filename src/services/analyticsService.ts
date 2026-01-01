@@ -16,6 +16,10 @@ export const analyticsService = {
     return analyticsRepository.getModelUsageStats();
   },
 
+  async getTokenUsagePerChat(chatIds: string[]): Promise<Record<string, number>> {
+    return analyticsRepository.getTokenUsagePerChat(chatIds);
+  },
+
   async logChatStart(params: {
     chatId?: string;
     userId?: string;

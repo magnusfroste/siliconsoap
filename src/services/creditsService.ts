@@ -107,14 +107,16 @@ export const creditsService = {
   // Use tokens and deduct credits based on token usage
   async useTokensForCredit(
     userId: string | null,
-    tokensUsed: number
+    tokensUsed: number,
+    chatId?: string,
+    modelId?: string
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
     if (!userId) {
       // Guest users use simple credit system, tokens don't affect them
       return { success: true, creditsDeducted: 0, newCreditsRemaining: 0 };
     }
 
-    const result = await creditsRepository.useTokensAndDeductCredits(userId, tokensUsed);
+    const result = await creditsRepository.useTokensAndDeductCredits(userId, tokensUsed, chatId, modelId);
     
     if (result.creditsDeducted > 0) {
       // Notify other components that credits changed
