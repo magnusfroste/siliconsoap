@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { BarChart3, Users, Calendar, TrendingUp, Download, RefreshCw, Cpu, Coins } from 'lucide-react';
+import { 
+  BarChart3, Users, Calendar, TrendingUp, Download, RefreshCw, Cpu, Coins, 
+  Link2, Eye, MessageSquare, Flame, Briefcase, Coffee, UsersRound
+} from 'lucide-react';
 import { analyticsService, type ChatAnalytics, type AnalyticsSummary, type ModelUsageStats } from '@/services';
 import { format } from 'date-fns';
 
@@ -38,8 +41,33 @@ export const AnalyticsTab = () => {
     loadData();
   }, []);
 
+  // Computed stats for settings breakdown
+  const settingsStats = useMemo(() => {
+    const withSettings = analytics.filter(a => a.settings);
+    const shared = analytics.filter(a => a.is_public && a.share_id);
+    const spectator = withSettings.filter(a => a.settings?.participationMode === 'spectator');
+    const heated = withSettings.filter(a => a.settings?.conversationTone === 'heated');
+    const formal = withSettings.filter(a => a.settings?.conversationTone === 'formal');
+    const casual = withSettings.filter(a => a.settings?.conversationTone === 'casual');
+    const collaborative = withSettings.filter(a => a.settings?.conversationTone === 'collaborative');
+    
+    const tones = { heated: heated.length, formal: formal.length, casual: casual.length, collaborative: collaborative.length };
+    const popularTone = Object.entries(tones).sort((a, b) => b[1] - a[1])[0];
+
+    return {
+      sharedCount: shared.length,
+      sharedRate: analytics.length > 0 ? Math.round((shared.length / analytics.length) * 100) : 0,
+      spectatorCount: spectator.length,
+      jumpInCount: withSettings.length - spectator.length,
+      spectatorRate: withSettings.length > 0 ? Math.round((spectator.length / withSettings.length) * 100) : 0,
+      popularTone: popularTone?.[0] || 'N/A',
+      popularToneCount: popularTone?.[1] || 0,
+      tones
+    };
+  }, [analytics]);
+
   const exportCsv = () => {
-    const headers = ['Date', 'User Type', 'Prompt', 'Scenario', 'Models', 'Agents', 'Rounds', 'Messages', 'Duration (s)'];
+    const headers = ['Date', 'User Type', 'Prompt', 'Scenario', 'Models', 'Agents', 'Rounds', 'Messages', 'Duration (s)', 'Shared', 'Mode', 'Tone', 'Turn Order'];
     const rows = analytics.map(a => [
       format(new Date(a.created_at), 'yyyy-MM-dd HH:mm'),
       a.is_guest ? 'Guest' : 'User',
@@ -49,7 +77,11 @@ export const AnalyticsTab = () => {
       a.num_agents,
       a.num_rounds,
       a.total_messages,
-      Math.round((a.generation_duration_ms || 0) / 1000)
+      Math.round((a.generation_duration_ms || 0) / 1000),
+      a.is_public && a.share_id ? 'Yes' : 'No',
+      a.settings?.participationMode || '',
+      a.settings?.conversationTone || '',
+      a.settings?.turnOrder || ''
     ]);
 
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -86,7 +118,7 @@ export const AnalyticsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      {/* Summary Cards - Row 1 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -131,6 +163,61 @@ export const AnalyticsTab = () => {
               <div>
                 <p className="text-2xl font-bold">{summary?.guestPercentage || 0}%</p>
                 <p className="text-sm text-muted-foreground">Guest Rate</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Summary Cards - Row 2: Settings Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-blue-500" />
+              <div>
+                <p className="text-2xl font-bold">{settingsStats.sharedRate}%</p>
+                <p className="text-sm text-muted-foreground">Shared Rate ({settingsStats.sharedCount})</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold">{settingsStats.spectatorRate}%</p>
+                <p className="text-sm text-muted-foreground">Spectator Mode</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold">{settingsStats.jumpInCount}</p>
+                <p className="text-sm text-muted-foreground">Jump-in Debates</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              {settingsStats.popularTone === 'heated' && <Flame className="h-5 w-5 text-orange-500" />}
+              {settingsStats.popularTone === 'formal' && <Briefcase className="h-5 w-5 text-blue-500" />}
+              {settingsStats.popularTone === 'casual' && <Coffee className="h-5 w-5 text-amber-500" />}
+              {settingsStats.popularTone === 'collaborative' && <UsersRound className="h-5 w-5 text-green-500" />}
+              {settingsStats.popularTone === 'N/A' && <BarChart3 className="h-5 w-5 text-muted-foreground" />}
+              <div>
+                <p className="text-2xl font-bold capitalize">{settingsStats.popularTone}</p>
+                <p className="text-sm text-muted-foreground">Popular Tone ({settingsStats.popularToneCount})</p>
               </div>
             </div>
           </CardContent>
@@ -250,8 +337,11 @@ export const AnalyticsTab = () => {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead className="max-w-[300px]">Prompt</TableHead>
+                  <TableHead className="max-w-[250px]">Prompt</TableHead>
                   <TableHead>Scenario</TableHead>
+                  <TableHead className="text-center">Shared</TableHead>
+                  <TableHead>Mode</TableHead>
+                  <TableHead>Tone</TableHead>
                   <TableHead>Models</TableHead>
                   <TableHead className="text-center">Agents</TableHead>
                   <TableHead className="text-center">Rounds</TableHead>
@@ -262,7 +352,7 @@ export const AnalyticsTab = () => {
               <TableBody>
                 {analytics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       No chat analytics yet. Chats will appear here as users create them.
                     </TableCell>
                   </TableRow>
@@ -277,11 +367,69 @@ export const AnalyticsTab = () => {
                           {a.is_guest ? 'Guest' : 'User'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[300px] truncate text-sm">
+                      <TableCell className="max-w-[250px] truncate text-sm">
                         {a.prompt_preview || '-'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {a.scenario_id || '-'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {a.is_public && a.share_id ? (
+                          <a 
+                            href={`/s/${a.share_id}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            <Link2 className="h-4 w-4" />
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {a.settings?.participationMode === 'spectator' ? (
+                          <Badge variant="outline" className="text-purple-600 border-purple-600">
+                            <Eye className="h-3 w-3 mr-1" />
+                            Watch
+                          </Badge>
+                        ) : a.settings?.participationMode === 'jump-in' ? (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Active
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {a.settings?.conversationTone === 'heated' && (
+                          <Badge variant="outline" className="text-orange-600 border-orange-600">
+                            <Flame className="h-3 w-3 mr-1" />
+                            Heated
+                          </Badge>
+                        )}
+                        {a.settings?.conversationTone === 'formal' && (
+                          <Badge variant="outline" className="text-blue-600 border-blue-600">
+                            <Briefcase className="h-3 w-3 mr-1" />
+                            Formal
+                          </Badge>
+                        )}
+                        {a.settings?.conversationTone === 'casual' && (
+                          <Badge variant="outline" className="text-amber-600 border-amber-600">
+                            <Coffee className="h-3 w-3 mr-1" />
+                            Casual
+                          </Badge>
+                        )}
+                        {a.settings?.conversationTone === 'collaborative' && (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            <UsersRound className="h-3 w-3 mr-1" />
+                            Collab
+                          </Badge>
+                        )}
+                        {!a.settings?.conversationTone && (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-xs max-w-[150px]">
                         <div className="flex flex-wrap gap-1">
