@@ -112,9 +112,10 @@ export const creditsService = {
     modelId?: string,
     promptTokens?: number,
     completionTokens?: number,
-    estimatedCost?: number
+    estimatedCost?: number,
+    requestedModelId?: string
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
-    console.log('[creditsService.useTokensForCredit] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
+    console.log('[creditsService.useTokensForCredit] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'requestedModelId:', requestedModelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
     
     if (!userId) {
       // Guest users use simple credit system, tokens don't affect them
@@ -128,7 +129,8 @@ export const creditsService = {
       modelId,
       promptTokens,
       completionTokens,
-      estimatedCost
+      estimatedCost,
+      requestedModelId
     );
     
     if (result.creditsDeducted > 0) {

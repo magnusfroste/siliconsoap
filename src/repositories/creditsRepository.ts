@@ -130,25 +130,27 @@ export const creditsRepository = {
     modelId?: string,
     promptTokens?: number,
     completionTokens?: number,
-    estimatedCost?: number
+    estimatedCost?: number,
+    requestedModelId?: string
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
     // Ensure modelId is never undefined/null - use 'unknown' as fallback
     const actualModelId = modelId || 'unknown';
-    console.log('[creditsRepository.useTokensAndDeductCredits] userId:', userId, 'chatId:', chatId, 'modelId:', actualModelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
+    console.log('[creditsRepository.useTokensAndDeductCredits] userId:', userId, 'chatId:', chatId, 'modelId:', actualModelId, 'requestedModelId:', requestedModelId, 'tokens:', tokensUsed, 'cost:', estimatedCost);
     
     // Use actual token split if provided, otherwise approximate
     const actualPromptTokens = promptTokens ?? Math.floor(tokensUsed / 2);
     const actualCompletionTokens = completionTokens ?? Math.ceil(tokensUsed / 2);
     const actualCost = estimatedCost ?? 0;
     
-    // Use atomic RPC function to track tokens
+    // Use atomic RPC function to track tokens (with requested model for fallback tracking)
     const { data, error } = await supabase.rpc('use_tokens', {
       p_user_id: userId,
       p_chat_id: chatId || null,
       p_model_id: actualModelId,
       p_prompt_tokens: actualPromptTokens,
       p_completion_tokens: actualCompletionTokens,
-      p_estimated_cost: actualCost
+      p_estimated_cost: actualCost,
+      p_requested_model_id: requestedModelId || null
     });
 
     if (error) {

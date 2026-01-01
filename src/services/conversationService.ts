@@ -26,8 +26,8 @@ import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator
 import { tokenService } from './tokenService';
 import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
 
-// Callback for tracking token usage
-export type TokenUsageCallback = (usage: TokenUsage, modelId: string) => Promise<void>;
+// Callback for tracking token usage (includes both actual and requested model for fallback tracking)
+export type TokenUsageCallback = (usage: TokenUsage, modelId: string, requestedModelId?: string) => Promise<void>;
 
 /**
  * Wraps persona with language instruction
@@ -105,8 +105,9 @@ const callWithTokenTracking = async (
       estimated_cost: cost
     };
     
-    // Use the actual model returned by OpenRouter (handles fallbacks correctly)
-    await onTokenUsage(tokenUsage, actualModel);
+    // Pass both actual model and originally requested model for fallback tracking
+    const requestedModel = result.fallbackUsed ? model : undefined;
+    await onTokenUsage(tokenUsage, actualModel, requestedModel);
     
     console.log(`[TokenTracking] Model: ${actualModel}, Tokens: ${result.usage.total_tokens}, Cost: $${cost.toFixed(6)}${result.fallbackUsed ? ` (fallback from ${model})` : ''}`);
   }
