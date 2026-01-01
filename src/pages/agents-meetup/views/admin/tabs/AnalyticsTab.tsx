@@ -6,18 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  BarChart3, Users, Calendar, TrendingUp, Download, RefreshCw, Cpu, Coins, 
-  Link2, Eye, MessageSquare, Flame, Briefcase, Coffee, UsersRound
+  BarChart3, Users, Calendar as CalendarIcon, TrendingUp, Download, RefreshCw, Cpu, Coins, 
+  Link2, Eye, MessageSquare, Flame, Briefcase, Coffee, UsersRound, Filter, X
 } from 'lucide-react';
 import { analyticsService, type ChatAnalytics, type AnalyticsSummary, type ModelUsageStats } from '@/services';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
+
+type SharedFilter = 'all' | 'shared' | 'not-shared';
+type ModeFilter = 'all' | 'spectator' | 'jump-in';
+type ToneFilter = 'all' | 'heated' | 'formal' | 'casual' | 'collaborative';
 
 export const AnalyticsTab = () => {
   const [analytics, setAnalytics] = useState<ChatAnalytics[]>([]);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [modelStats, setModelStats] = useState<ModelUsageStats[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
+  const [sharedFilter, setSharedFilter] = useState<SharedFilter>('all');
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  const [toneFilter, setToneFilter] = useState<ToneFilter>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const loadData = async () => {
     setLoading(true);
@@ -41,7 +56,33 @@ export const AnalyticsTab = () => {
     loadData();
   }, []);
 
-  // Computed stats for settings breakdown
+  // Filtered analytics
+  const filteredAnalytics = useMemo(() => {
+    return analytics.filter(a => {
+      // Shared filter
+      if (sharedFilter === 'shared' && !(a.is_public && a.share_id)) return false;
+      if (sharedFilter === 'not-shared' && (a.is_public && a.share_id)) return false;
+      
+      // Mode filter
+      if (modeFilter === 'spectator' && a.settings?.participationMode !== 'spectator') return false;
+      if (modeFilter === 'jump-in' && a.settings?.participationMode !== 'jump-in') return false;
+      
+      // Tone filter
+      if (toneFilter !== 'all' && a.settings?.conversationTone !== toneFilter) return false;
+      
+      // Date range filter
+      if (dateRange?.from) {
+        const created = new Date(a.created_at);
+        const from = startOfDay(dateRange.from);
+        const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+        if (!isWithinInterval(created, { start: from, end: to })) return false;
+      }
+      
+      return true;
+    });
+  }, [analytics, sharedFilter, modeFilter, toneFilter, dateRange]);
+
+  // Computed stats for settings breakdown (uses all analytics, not filtered)
   const settingsStats = useMemo(() => {
     const withSettings = analytics.filter(a => a.settings);
     const shared = analytics.filter(a => a.is_public && a.share_id);
@@ -65,6 +106,15 @@ export const AnalyticsTab = () => {
       tones
     };
   }, [analytics]);
+
+  const hasActiveFilters = sharedFilter !== 'all' || modeFilter !== 'all' || toneFilter !== 'all' || dateRange !== undefined;
+
+  const clearFilters = () => {
+    setSharedFilter('all');
+    setModeFilter('all');
+    setToneFilter('all');
+    setDateRange(undefined);
+  };
 
   const exportCsv = () => {
     const headers = ['Date', 'User Type', 'Prompt', 'Scenario', 'Models', 'Agents', 'Rounds', 'Messages', 'Duration (s)', 'Shared', 'Mode', 'Tone', 'Turn Order'];
@@ -314,20 +364,114 @@ export const AnalyticsTab = () => {
 
       {/* Chat Log Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Chat Log</CardTitle>
-            <CardDescription>All conversations created on the platform</CardDescription>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Chat Log</CardTitle>
+              <CardDescription>
+                {hasActiveFilters 
+                  ? `Showing ${filteredAnalytics.length} of ${analytics.length} conversations`
+                  : 'All conversations created on the platform'
+                }
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={loadData}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportCsv}>
+                <Download className="h-4 w-4 mr-1" />
+                Export CSV
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={loadData}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportCsv}>
-              <Download className="h-4 w-4 mr-1" />
-              Export CSV
-            </Button>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Filter className="h-4 w-4" />
+              <span>Filters:</span>
+            </div>
+
+            <Select value={sharedFilter} onValueChange={(v) => setSharedFilter(v as SharedFilter)}>
+              <SelectTrigger className="w-[130px] h-8">
+                <SelectValue placeholder="Shared" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="shared">Shared</SelectItem>
+                <SelectItem value="not-shared">Not Shared</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={modeFilter} onValueChange={(v) => setModeFilter(v as ModeFilter)}>
+              <SelectTrigger className="w-[130px] h-8">
+                <SelectValue placeholder="Mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                <SelectItem value="spectator">Spectator</SelectItem>
+                <SelectItem value="jump-in">Jump-in</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={toneFilter} onValueChange={(v) => setToneFilter(v as ToneFilter)}>
+              <SelectTrigger className="w-[140px] h-8">
+                <SelectValue placeholder="Tone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tones</SelectItem>
+                <SelectItem value="heated">Heated</SelectItem>
+                <SelectItem value="formal">Formal</SelectItem>
+                <SelectItem value="casual">Casual</SelectItem>
+                <SelectItem value="collaborative">Collaborative</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-8 justify-start text-left font-normal",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "MMM d, yyyy")
+                    )
+                  ) : (
+                    "Date range"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2">
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -350,14 +494,17 @@ export const AnalyticsTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {analytics.length === 0 ? (
+                {filteredAnalytics.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                      No chat analytics yet. Chats will appear here as users create them.
+                      {hasActiveFilters 
+                        ? 'No conversations match the current filters.'
+                        : 'No chat analytics yet. Chats will appear here as users create them.'
+                      }
                     </TableCell>
                   </TableRow>
                 ) : (
-                  analytics.map((a) => (
+                  filteredAnalytics.map((a) => (
                     <TableRow key={a.id}>
                       <TableCell className="whitespace-nowrap text-sm">
                         {format(new Date(a.created_at), 'MMM d, HH:mm')}
