@@ -298,21 +298,16 @@ export const analyticsRepository = {
     
     const emailMap: Record<string, string> = {};
     
-    console.log('[getUserEmails] Fetching emails for userIds:', userIds);
-    
     // Fetch emails in batches to avoid hitting limits
     for (const userId of userIds) {
       const { data, error } = await supabase
         .rpc('get_user_email', { p_user_id: userId });
-      
-      console.log(`[getUserEmails] userId=${userId}, data=${data}, error=`, error);
       
       if (!error && data) {
         emailMap[userId] = data;
       }
     }
     
-    console.log('[getUserEmails] Final emailMap:', emailMap);
     return emailMap;
   }
 };
