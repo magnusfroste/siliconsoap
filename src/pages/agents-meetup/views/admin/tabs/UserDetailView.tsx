@@ -44,6 +44,16 @@ interface ModelBreakdown {
   total_cost: number;
 }
 
+interface DebateRecord {
+  id: string;
+  chat_id: string | null;
+  prompt_preview: string | null;
+  models_used: string[] | null;
+  created_at: string;
+  completed_at: string | null;
+  total_messages: number | null;
+}
+
 interface UserDetailViewProps {
   user: UserData;
   onBack: () => void;
@@ -52,8 +62,8 @@ interface UserDetailViewProps {
 export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
   const [tokenUsage, setTokenUsage] = useState<TokenUsageRecord[]>([]);
   const [modelBreakdown, setModelBreakdown] = useState<ModelBreakdown[]>([]);
+  const [debates, setDebates] = useState<DebateRecord[]>([]);
   const [loading, setLoading] = useState(true);
-
   const formatTokens = (tokens: number): string => {
     if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
     if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
@@ -68,21 +78,33 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
   const loadUserData = async () => {
     setLoading(true);
     try {
-      // Fetch token usage history
-      const { data: usageData, error } = await supabase
-        .from('user_token_usage')
-        .select('*')
-        .eq('user_id', user.user_id)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      // Fetch token usage history and debates in parallel
+      const [usageResult, debatesResult] = await Promise.all([
+        supabase
+          .from('user_token_usage')
+          .select('*')
+          .eq('user_id', user.user_id)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('chat_analytics')
+          .select('id, chat_id, prompt_preview, models_used, created_at, completed_at, total_messages')
+          .eq('user_id', user.user_id)
+          .order('created_at', { ascending: false })
+          .limit(50)
+      ]);
 
-      if (error) throw error;
+      if (usageResult.error) throw usageResult.error;
+      if (debatesResult.error) throw debatesResult.error;
 
-      setTokenUsage(usageData || []);
+      setTokenUsage(usageResult.data || []);
+      setDebates(debatesResult.data || []);
 
-      // Calculate model breakdown
+      // Calculate model breakdown from both token usage AND debates (for models_used)
       const breakdown = new Map<string, ModelBreakdown>();
-      (usageData || []).forEach(record => {
+      
+      // From token usage records
+      (usageResult.data || []).forEach(record => {
         const existing = breakdown.get(record.model_id) || {
           model_id: record.model_id,
           total_tokens: 0,
@@ -95,9 +117,25 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         breakdown.set(record.model_id, existing);
       });
 
+      // If no token usage, build breakdown from debates' models_used
+      if ((usageResult.data || []).length === 0 && (debatesResult.data || []).length > 0) {
+        (debatesResult.data || []).forEach(debate => {
+          (debate.models_used || []).forEach((modelId: string) => {
+            const existing = breakdown.get(modelId) || {
+              model_id: modelId,
+              total_tokens: 0,
+              call_count: 0,
+              total_cost: 0
+            };
+            existing.call_count += 1;
+            breakdown.set(modelId, existing);
+          });
+        });
+      }
+
       setModelBreakdown(
         Array.from(breakdown.values())
-          .sort((a, b) => b.total_tokens - a.total_tokens)
+          .sort((a, b) => b.call_count - a.call_count)
       );
 
     } catch (error) {
@@ -273,15 +311,76 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         </Card>
       )}
 
-      {/* Activity Log */}
+      {/* Recent Debates - always show if there are debates */}
+      {debates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Recent Debates
+            </CardTitle>
+            <CardDescription>
+              {debates.length} debate{debates.length !== 1 ? 's' : ''} found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Topic</TableHead>
+                  <TableHead>Models</TableHead>
+                  <TableHead className="text-right">Messages</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {debates.map((debate) => (
+                  <TableRow key={debate.id}>
+                    <TableCell className="text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {format(new Date(debate.created_at), 'MMM d, HH:mm')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm truncate max-w-[200px] block">
+                        {debate.prompt_preview || 'No topic'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {(debate.models_used || []).slice(0, 2).map((model: string) => (
+                          <Badge key={model} variant="outline" className="font-mono text-xs">
+                            {model.split('/').pop()}
+                          </Badge>
+                        ))}
+                        {(debate.models_used || []).length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{(debate.models_used || []).length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {debate.total_messages || '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activity Log - token usage details */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Recent Activity
+            Token Usage Log
           </CardTitle>
           <CardDescription>
-            Last {tokenUsage.length} API calls
+            {tokenUsage.length > 0 ? `Last ${tokenUsage.length} API calls` : 'Detailed API call history'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -293,7 +392,9 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
             </div>
           ) : tokenUsage.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              No activity recorded yet
+              {debates.length > 0 
+                ? 'Detailed token usage not recorded for these debates'
+                : 'No activity recorded yet'}
             </div>
           ) : (
             <Table>
