@@ -5,9 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   ArrowLeft, Coins, Zap, BarChart3, Clock, 
-  MessageSquare, Calendar, RefreshCw
+  MessageSquare, Calendar, RefreshCw, ArrowRightLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -27,6 +28,7 @@ interface UserData {
 interface TokenUsageRecord {
   id: string;
   model_id: string;
+  requested_model_id: string | null;
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
@@ -306,6 +308,8 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
               <TableBody>
                 {tokenUsage.map((record) => {
                   const modelName = record.model_id.split('/').pop() || record.model_id;
+                  const isFallback = record.requested_model_id && record.requested_model_id !== record.model_id;
+                  const requestedModelName = record.requested_model_id?.split('/').pop();
                   
                   return (
                     <TableRow key={record.id}>
@@ -316,9 +320,26 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {modelName}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {modelName}
+                          </Badge>
+                          {isFallback && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="secondary" className="text-xs gap-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 border-amber-500/20">
+                                    <ArrowRightLeft className="h-3 w-3" />
+                                    fallback
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Originally requested: <span className="font-mono">{requestedModelName}</span></p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         <span className="text-muted-foreground">{record.prompt_tokens}</span>

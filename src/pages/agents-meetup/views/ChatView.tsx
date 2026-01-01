@@ -190,9 +190,9 @@ export const ChatView = () => {
         };
 
         // Token usage callback - deducts credits based on token usage
-        const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+        const onTokenUsage: TokenUsageCallback = async (usage, modelId, requestedModelId) => {
           const totalTokens = usage.prompt_tokens + usage.completion_tokens;
-          console.log('[TokenUsage] chatId:', chatId, 'modelId:', modelId, 'tokens:', totalTokens, 'cost:', usage.estimated_cost, 'userId:', user?.id);
+          console.log('[TokenUsage] chatId:', chatId, 'modelId:', modelId, 'requestedModelId:', requestedModelId, 'tokens:', totalTokens, 'cost:', usage.estimated_cost, 'userId:', user?.id);
           await creditsService.useTokensForCredit(
             user?.id || null, 
             totalTokens, 
@@ -200,7 +200,8 @@ export const ChatView = () => {
             modelId,
             usage.prompt_tokens,
             usage.completion_tokens,
-            usage.estimated_cost
+            usage.estimated_cost,
+            requestedModelId
           );
           refreshCredits(); // Update UI
         };
@@ -504,7 +505,7 @@ export const ChatView = () => {
                   const nextRound = currentRoundInProgress;
                   
                   // Token usage callback - deducts credits based on token usage
-                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId, requestedModelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
                     await creditsService.useTokensForCredit(
                       user?.id || null, 
@@ -513,7 +514,8 @@ export const ChatView = () => {
                       modelId,
                       usage.prompt_tokens,
                       usage.completion_tokens,
-                      usage.estimated_cost
+                      usage.estimated_cost,
+                      requestedModelId
                     );
                     refreshCredits();
                   };
@@ -650,7 +652,7 @@ export const ChatView = () => {
                   const nextRound = currentRoundInProgress;
                   
                   // Token usage callback - deducts credits based on token usage
-                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId, requestedModelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
                     await creditsService.useTokensForCredit(
                       user?.id || null, 
@@ -659,7 +661,8 @@ export const ChatView = () => {
                       modelId,
                       usage.prompt_tokens,
                       usage.completion_tokens,
-                      usage.estimated_cost
+                      usage.estimated_cost,
+                      requestedModelId
                     );
                     refreshCredits();
                   };
@@ -713,7 +716,7 @@ export const ChatView = () => {
                   }
                 } else {
                   // Token usage callback - deducts credits based on token usage
-                  const onTokenUsage: TokenUsageCallback = async (usage, modelId) => {
+                  const onTokenUsage: TokenUsageCallback = async (usage, modelId, requestedModelId) => {
                     const totalTokens = usage.prompt_tokens + usage.completion_tokens;
                     await creditsService.useTokensForCredit(
                       user?.id || null, 
@@ -722,7 +725,8 @@ export const ChatView = () => {
                       modelId,
                       usage.prompt_tokens,
                       usage.completion_tokens,
-                      usage.estimated_cost
+                      usage.estimated_cost,
+                      requestedModelId
                     );
                     refreshCredits();
                   };
