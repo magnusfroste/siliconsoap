@@ -26,6 +26,7 @@ export const AnalyticsTab = () => {
   const [analytics, setAnalytics] = useState<ChatAnalytics[]>([]);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [modelStats, setModelStats] = useState<ModelUsageStats[]>([]);
+  const [tokenUsageMap, setTokenUsageMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   
   // Filter states
@@ -33,6 +34,12 @@ export const AnalyticsTab = () => {
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [toneFilter, setToneFilter] = useState<ToneFilter>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  const formatTokens = (tokens: number): string => {
+    if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
+    if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
+    return tokens.toString();
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -45,6 +52,15 @@ export const AnalyticsTab = () => {
       setAnalytics(analyticsData);
       setSummary(summaryData);
       setModelStats(modelStatsData);
+
+      // Fetch token usage for chats that have chat_id
+      const chatIds = analyticsData
+        .filter(a => a.chat_id)
+        .map(a => a.chat_id as string);
+      if (chatIds.length > 0) {
+        const tokenData = await analyticsService.getTokenUsagePerChat(chatIds);
+        setTokenUsageMap(tokenData);
+      }
     } catch (error) {
       console.error('Failed to load analytics:', error);
     } finally {
@@ -142,12 +158,6 @@ export const AnalyticsTab = () => {
     a.download = `siliconsoap-analytics-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const formatTokens = (tokens: number) => {
-    if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(2)}M`;
-    if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
-    return tokens.toString();
   };
 
   const totalTokensUsed = modelStats.reduce((sum, m) => sum + m.total_tokens, 0);
@@ -495,13 +505,14 @@ export const AnalyticsTab = () => {
                   <TableHead className="text-center">Agents</TableHead>
                   <TableHead className="text-center">Rounds</TableHead>
                   <TableHead className="text-center">Msgs</TableHead>
+                  <TableHead className="text-center">Tokens</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAnalytics.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                       {hasActiveFilters 
                         ? 'No conversations match the current filters.'
                         : 'No chat analytics yet. Chats will appear here as users create them.'
@@ -600,6 +611,15 @@ export const AnalyticsTab = () => {
                       <TableCell className="text-center">{a.num_agents}</TableCell>
                       <TableCell className="text-center">{a.num_rounds}</TableCell>
                       <TableCell className="text-center">{a.total_messages}</TableCell>
+                      <TableCell className="text-center">
+                        {a.chat_id && tokenUsageMap[a.chat_id] ? (
+                          <Badge variant="outline" className="text-cyan-600 border-cyan-600">
+                            {formatTokens(tokenUsageMap[a.chat_id])}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {a.completed_at ? (
                           <Badge variant="outline" className="text-green-600 border-green-600">

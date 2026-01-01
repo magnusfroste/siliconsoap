@@ -245,5 +245,29 @@ export const analyticsRepository = {
 
     // Sort by total tokens descending
     return Array.from(statsMap.values()).sort((a, b) => b.total_tokens - a.total_tokens);
+  },
+
+  async getTokenUsagePerChat(chatIds: string[]): Promise<Record<string, number>> {
+    if (chatIds.length === 0) return {};
+    
+    const { data, error } = await supabase
+      .from('user_token_usage')
+      .select('chat_id, total_tokens')
+      .in('chat_id', chatIds);
+
+    if (error) {
+      console.error('Error fetching token usage per chat:', error);
+      return {};
+    }
+
+    // Aggregate tokens per chat_id
+    const tokensMap: Record<string, number> = {};
+    for (const row of data || []) {
+      if (row.chat_id) {
+        tokensMap[row.chat_id] = (tokensMap[row.chat_id] || 0) + row.total_tokens;
+      }
+    }
+
+    return tokensMap;
   }
 };
