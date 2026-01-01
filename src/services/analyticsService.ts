@@ -40,5 +40,9 @@ export const analyticsService = {
 
   async logChatCompleteByChartId(chatId: string, totalMessages: number, durationMs: number): Promise<void> {
     return analyticsRepository.logChatCompleteByChartId(chatId, totalMessages, durationMs);
+  },
+
+  async getUserEmails(userIds: string[]): Promise<Record<string, string>> {
+    return analyticsRepository.getUserEmails(userIds);
   }
 };

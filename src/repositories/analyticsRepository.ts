@@ -14,6 +14,7 @@ export interface ChatAnalytics {
   id: string;
   chat_id: string | null;
   user_id: string | null;
+  user_email?: string | null;
   total_messages: number;
   total_tokens_used: number;
   estimated_cost: number;
@@ -269,5 +270,23 @@ export const analyticsRepository = {
     }
 
     return tokensMap;
+  },
+
+  async getUserEmails(userIds: string[]): Promise<Record<string, string>> {
+    if (userIds.length === 0) return {};
+    
+    const emailMap: Record<string, string> = {};
+    
+    // Fetch emails in batches to avoid hitting limits
+    for (const userId of userIds) {
+      const { data, error } = await supabase
+        .rpc('get_user_email', { p_user_id: userId });
+      
+      if (!error && data) {
+        emailMap[userId] = data;
+      }
+    }
+    
+    return emailMap;
   }
 };
