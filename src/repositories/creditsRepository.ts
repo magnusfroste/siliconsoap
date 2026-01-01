@@ -129,6 +129,8 @@ export const creditsRepository = {
     chatId?: string,
     modelId: string = 'unknown'
   ): Promise<{ success: boolean; creditsDeducted: number; newCreditsRemaining: number }> {
+    console.log('[creditsRepository.useTokensAndDeductCredits] userId:', userId, 'chatId:', chatId, 'modelId:', modelId, 'tokens:', tokensUsed);
+    
     // Use atomic RPC function to track tokens
     const { data, error } = await supabase.rpc('use_tokens', {
       p_user_id: userId,
