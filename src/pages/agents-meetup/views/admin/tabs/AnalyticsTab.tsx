@@ -185,7 +185,7 @@ export const AnalyticsTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-2xl font-bold">{summary?.chatsToday || 0}</p>
                 <p className="text-sm text-muted-foreground">Today</p>
