@@ -15,7 +15,7 @@ verify_jwt = false
 [functions.generate-model-info]
 verify_jwt = false
 
-[functions.generate-og-image]
+[functions.og-image]
 verify_jwt = false
 
 [functions.extract-shame-moments]
@@ -42,5 +42,5 @@ verify_jwt = false
 [functions.verify-credits-payment]
 verify_jwt = false
 
-[functions.prerender-shared]
+[functions.prerender]
 verify_jwt = false
