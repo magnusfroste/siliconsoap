@@ -5,6 +5,8 @@ export interface UserCredits {
   user_id: string;
   credits_remaining: number;
   credits_used: number;
+  token_budget?: number;
+  tokens_used?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -12,6 +14,8 @@ export interface UserCredits {
 export interface CreditState {
   creditsRemaining: number;
   creditsUsed: number;
+  tokenBudget: number;
+  tokensUsed: number;
   loading: boolean;
 }
 

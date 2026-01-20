@@ -6,6 +6,8 @@ export const useCredits = (userId: string | null | undefined) => {
   const [creditData, setCreditData] = useState<CreditState>({
     creditsRemaining: 0,
     creditsUsed: 0,
+    tokenBudget: 0,
+    tokensUsed: 0,
     loading: true,
   });
   
@@ -27,7 +29,7 @@ export const useCredits = (userId: string | null | undefined) => {
     } catch (error) {
       console.error('Error loading credits:', error);
       if (isMounted.current) {
-        setCreditData({ creditsRemaining: 0, creditsUsed: 0, loading: false });
+        setCreditData({ creditsRemaining: 0, creditsUsed: 0, tokenBudget: 0, tokensUsed: 0, loading: false });
       }
     } finally {
       isLoading.current = false;
@@ -54,9 +56,15 @@ export const useCredits = (userId: string | null | undefined) => {
     return () => window.removeEventListener('creditsChanged', handleCreditsChanged);
   }, [loadCredits]);
 
+  // For guests: check credits, for logged-in: check token budget
   const hasCredits = useCallback((): boolean => {
-    return creditsService.canStartConversation(creditData.creditsRemaining);
-  }, [creditData.creditsRemaining]);
+    if (!userId) {
+      // Guest: simple credit check
+      return creditsService.canStartConversation(creditData.creditsRemaining);
+    }
+    // Logged-in user: check token budget
+    return creditData.tokenBudget > creditData.tokensUsed;
+  }, [userId, creditData.creditsRemaining, creditData.tokenBudget, creditData.tokensUsed]);
 
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (!hasCredits()) return false;
@@ -82,9 +90,19 @@ export const useCredits = (userId: string | null | undefined) => {
     loadCredits();
   }, [loadCredits]);
 
+  // Calculate remaining token budget percentage for UI
+  const tokenBudgetRemaining = creditData.tokenBudget - creditData.tokensUsed;
+  const tokenBudgetPercentage = creditData.tokenBudget > 0 
+    ? Math.max(0, Math.min(100, (tokenBudgetRemaining / creditData.tokenBudget) * 100))
+    : 0;
+
   return {
     creditsRemaining: creditData.creditsRemaining,
     creditsUsed: creditData.creditsUsed,
+    tokenBudget: creditData.tokenBudget,
+    tokensUsed: creditData.tokensUsed,
+    tokenBudgetRemaining,
+    tokenBudgetPercentage,
     loading: creditData.loading,
     hasCredits,
     useCredit,
