@@ -67,7 +67,7 @@ export const SharedChatView = () => {
 
   const getOgImageUrl = (shareId: string) => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return `${supabaseUrl}/functions/v1/generate-og-image?shareId=${shareId}`;
+    return `${supabaseUrl}/functions/v1/og-image?shareId=${shareId}`;
   };
 
   const shareUrl = window.location.href;
