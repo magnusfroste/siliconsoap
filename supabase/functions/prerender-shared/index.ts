@@ -1,7 +1,11 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://apfrjuomozdvdeondzaz.supabase.co';
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZnJqdW9tb3pkdmRlb25kemF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwOTQ4MzAsImV4cCI6MjA3OTY3MDgzMH0.wtSVuTKB_w46FfUNjn1t9-wW8fNPxuln3AfYhl10xbo';
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 const BASE_URL = 'https://siliconsoap.com';
 
 interface ChatData {
@@ -9,7 +13,7 @@ interface ChatData {
   title: string;
   prompt: string;
   scenario_id: string;
-  settings: any;
+  settings: Record<string, unknown>;
   view_count?: number;
 }
 
@@ -29,48 +33,58 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { shareId } = req.query;
-
-  if (!shareId || typeof shareId !== 'string') {
-    return res.status(400).send('Missing shareId');
+serve(async (req) => {
+  console.log('prerender-shared: Request received');
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Fetch chat data from Supabase
-    const chatResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/get_shared_chat`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ p_share_id: shareId }),
-      }
-    );
+    const url = new URL(req.url);
+    const shareId = url.searchParams.get('shareId');
+    console.log('prerender-shared: shareId =', shareId);
 
-    const chatData = await chatResponse.json();
-    
-    if (!chatData || chatData.length === 0) {
-      return res.status(404).send(generateErrorHtml('Debate not found'));
+    if (!shareId) {
+      return new Response('Missing shareId parameter', { 
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+      });
     }
 
-    const chat: ChatData = chatData[0];
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch messages
-    const messagesResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/agent_chat_messages?chat_id=eq.${chat.id}&order=created_at.asc`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
+    // Fetch chat data
+    const { data: chatResult, error: chatError } = await supabase.rpc('get_shared_chat', { p_share_id: shareId });
+    console.log('prerender-shared: chat result count =', chatResult?.length, 'error =', chatError);
 
-    const messages: MessageData[] = await messagesResponse.json();
+    if (chatError || !chatResult || chatResult.length === 0) {
+      console.error('Chat not found:', chatError);
+      return new Response(generateErrorHtml('Debate not found'), { 
+        status: 404, 
+        headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+      });
+    }
+
+    const chat: ChatData = chatResult[0];
+
+    // Fetch all messages
+    const { data: messagesResult, error: messagesError } = await supabase
+      .from('agent_chat_messages')
+      .select('agent, model, persona, message')
+      .eq('chat_id', chat.id)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) {
+      console.error('Error fetching messages:', messagesError);
+    }
+
+    const messages: MessageData[] = messagesResult || [];
+    console.log('prerender-shared: fetched', messages.length, 'messages');
 
     // Extract unique agents and models
     const agents = [...new Set(messages.map(m => m.agent))];
@@ -83,14 +97,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? chat.prompt.substring(0, 155) + '...' 
         : chat.prompt
     );
-    const ogImageUrl = `${SUPABASE_URL}/functions/v1/generate-og-image?shareId=${shareId}`;
+    const ogImageUrl = `${supabaseUrl}/functions/v1/generate-og-image?shareId=${shareId}`;
     const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
 
-    // Generate readable content for AI crawlers
-    const debateContent = messages.map((m, i) => 
-      `[${m.agent} using ${m.model}]: ${m.message}`
-    ).join('\n\n');
-
+    // Generate full HTML with structured data for crawlers
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -124,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <meta name="robots" content="index, follow">
   <meta name="author" content="SiliconSoap">
   
-  <!-- Structured Data -->
+  <!-- Structured Data for AI/Search Crawlers -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -150,27 +160,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ${agents.map(a => `{"@type": "Thing", "name": "${escapeHtml(a)}"}`).join(',\n      ')}
     ],
     "comment": [
-      ${messages.slice(0, 20).map(m => `{
+      ${messages.slice(0, 50).map(m => `{
         "@type": "Comment",
         "author": {"@type": "Person", "name": "${escapeHtml(m.agent)} (${escapeHtml(m.model)})"},
-        "text": "${escapeHtml(m.message.substring(0, 500))}"
+        "text": "${escapeHtml(m.message.substring(0, 1000).replace(/"/g, '\\"').replace(/\n/g, ' '))}"
       }`).join(',\n      ')}
     ]
   }
   </script>
   
-  <!-- Redirect for non-crawler browsers -->
+  <!-- Redirect for browsers with JavaScript -->
   <meta http-equiv="refresh" content="0;url=${canonicalUrl}">
   <script>window.location.href = "${canonicalUrl}";</script>
+  
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #0f0f23; color: #e2e8f0; }
+    h1 { color: #a855f7; }
+    h2 { color: #06b6d4; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+    blockquote { background: #1e293b; padding: 16px; border-left: 4px solid #a855f7; margin: 16px 0; }
+    .message { background: #1e293b; padding: 12px 16px; margin: 12px 0; border-radius: 8px; }
+    .message strong { color: #a855f7; }
+    .meta { color: #64748b; font-size: 14px; }
+    a { color: #06b6d4; }
+    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; }
+  </style>
 </head>
 <body>
   <article itemscope itemtype="https://schema.org/DiscussionForumPosting">
     <header>
+      <p class="meta">🫧 SiliconSoap - Where AI Debates Get Dramatic</p>
       <h1 itemprop="headline">${title}</h1>
       <p itemprop="description">${description}</p>
-      <p>An AI debate on SiliconSoap featuring ${agents.length} agents: ${agents.join(', ')}</p>
-      <p>Models used: ${models.join(', ')}</p>
-      <p>${messages.length} messages • ${chat.view_count || 0} views</p>
+      <p class="meta">An AI debate featuring ${agents.length} agents: ${agents.join(', ')}</p>
+      <p class="meta">Models used: ${models.join(', ')}</p>
+      <p class="meta">${messages.length} messages • ${chat.view_count || 0} views</p>
     </header>
     
     <section class="debate-content" itemprop="articleBody">
@@ -178,7 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <blockquote>${escapeHtml(chat.prompt)}</blockquote>
       
       <h2>Debate Transcript</h2>
-      ${messages.map((m, i) => `
+      ${messages.map((m) => `
       <div class="message" data-agent="${escapeHtml(m.agent)}" data-model="${escapeHtml(m.model)}">
         <strong>${escapeHtml(m.agent)} (${escapeHtml(m.model)}):</strong>
         <p>${escapeHtml(m.message)}</p>
@@ -191,18 +214,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <p><a href="${BASE_URL}">Start your own AI debate at SiliconSoap.com</a></p>
     </footer>
   </article>
+  
+  <noscript>
+    <p>JavaScript is disabled. <a href="${canonicalUrl}">Click here to view this debate</a>.</p>
+  </noscript>
 </body>
 </html>`;
 
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
-    return res.status(200).send(html);
+    console.log('prerender-shared: Returning HTML with', messages.length, 'messages');
+
+    return new Response(html, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+      },
+    });
 
   } catch (error) {
-    console.error('Prerender error:', error);
-    return res.status(500).send(generateErrorHtml('Error loading debate'));
+    console.error('prerender-shared error:', error);
+    return new Response(generateErrorHtml('Error loading debate'), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+    });
   }
-}
+});
 
 function generateErrorHtml(message: string): string {
   return `<!DOCTYPE html>
@@ -211,6 +247,10 @@ function generateErrorHtml(message: string): string {
   <meta charset="UTF-8">
   <title>${message} | SiliconSoap</title>
   <meta name="robots" content="noindex">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; background: #0f0f23; color: #e2e8f0; }
+    a { color: #06b6d4; }
+  </style>
 </head>
 <body>
   <h1>${message}</h1>

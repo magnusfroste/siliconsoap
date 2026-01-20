@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('generate-og-image: Request received');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -15,6 +17,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const shareId = url.searchParams.get('shareId');
+    console.log('generate-og-image: shareId =', shareId);
 
     if (!shareId) {
       return new Response('Missing shareId parameter', { 
@@ -29,6 +32,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: chat, error } = await supabase.rpc('get_shared_chat', { p_share_id: shareId });
+    console.log('generate-og-image: chat result =', chat, 'error =', error);
 
     if (error || !chat || chat.length === 0) {
       console.error('Chat not found:', error);
@@ -108,12 +112,14 @@ serve(async (req) => {
       </svg>
     `;
 
+    console.log('generate-og-image: Returning SVG');
+    
     // Return SVG as image
     return new Response(svg, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=3600',
       },
     });
 

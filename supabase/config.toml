@@ -35,3 +35,12 @@ verify_jwt = false
 
 [functions.log-battle-start]
 verify_jwt = false
+
+[functions.create-credits-checkout]
+verify_jwt = false
+
+[functions.verify-credits-payment]
+verify_jwt = false
+
+[functions.prerender-shared]
+verify_jwt = false
