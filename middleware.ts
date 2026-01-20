@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Social media crawler user agents
+// Social media and AI crawler user agents
 const CRAWLER_USER_AGENTS = [
+  // Social media crawlers
   'facebookexternalhit',
   'Facebot',
   'Twitterbot',
@@ -14,6 +15,22 @@ const CRAWLER_USER_AGENTS = [
   'Discordbot',
   'Googlebot',
   'bingbot',
+  
+  // AI/LLM crawlers (AEO - Answer Engine Optimization)
+  'PerplexityBot',
+  'GPTBot',
+  'ChatGPT-User',
+  'Claude-Web',
+  'ClaudeBot',
+  'Anthropic-AI',
+  'CCBot',              // Common Crawl
+  'cohere-ai',          // Cohere
+  'Grok',               // xAI Grok
+  'Meta-ExternalAgent', // Meta AI
+  'Bytespider',         // ByteDance/TikTok AI
+  'Amazonbot',          // Amazon Alexa/AI
+  'YouBot',             // You.com
+  'Applebot',           // Apple/Siri
 ];
 
 export function middleware(request: NextRequest) {

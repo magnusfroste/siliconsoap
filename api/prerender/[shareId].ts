@@ -86,6 +86,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ogImageUrl = `${SUPABASE_URL}/functions/v1/generate-og-image?shareId=${shareId}`;
     const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
 
+    // Generate readable content for AI crawlers
+    const debateContent = messages.map((m, i) => 
+      `[${m.agent} using ${m.model}]: ${m.message}`
+    ).join('\n\n');
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,6 +148,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
     "about": [
       ${agents.map(a => `{"@type": "Thing", "name": "${escapeHtml(a)}"}`).join(',\n      ')}
+    ],
+    "comment": [
+      ${messages.slice(0, 20).map(m => `{
+        "@type": "Comment",
+        "author": {"@type": "Person", "name": "${escapeHtml(m.agent)} (${escapeHtml(m.model)})"},
+        "text": "${escapeHtml(m.message.substring(0, 500))}"
+      }`).join(',\n      ')}
     ]
   }
   </script>
@@ -152,12 +164,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   <script>window.location.href = "${canonicalUrl}";</script>
 </head>
 <body>
-  <h1>${title}</h1>
-  <p>${description}</p>
-  <p>Featuring ${agents.length} AI agents: ${agents.join(', ')}</p>
-  <p>Models: ${models.join(', ')}</p>
-  <p>${messages.length} messages in this debate</p>
-  <p><a href="${canonicalUrl}">View this debate on SiliconSoap</a></p>
+  <article itemscope itemtype="https://schema.org/DiscussionForumPosting">
+    <header>
+      <h1 itemprop="headline">${title}</h1>
+      <p itemprop="description">${description}</p>
+      <p>An AI debate on SiliconSoap featuring ${agents.length} agents: ${agents.join(', ')}</p>
+      <p>Models used: ${models.join(', ')}</p>
+      <p>${messages.length} messages • ${chat.view_count || 0} views</p>
+    </header>
+    
+    <section class="debate-content" itemprop="articleBody">
+      <h2>Original Prompt</h2>
+      <blockquote>${escapeHtml(chat.prompt)}</blockquote>
+      
+      <h2>Debate Transcript</h2>
+      ${messages.map((m, i) => `
+      <div class="message" data-agent="${escapeHtml(m.agent)}" data-model="${escapeHtml(m.model)}">
+        <strong>${escapeHtml(m.agent)} (${escapeHtml(m.model)}):</strong>
+        <p>${escapeHtml(m.message)}</p>
+      </div>
+      `).join('\n')}
+    </section>
+    
+    <footer>
+      <p><a href="${canonicalUrl}">View this debate on SiliconSoap</a></p>
+      <p><a href="${BASE_URL}">Start your own AI debate at SiliconSoap.com</a></p>
+    </footer>
+  </article>
 </body>
 </html>`;
 
