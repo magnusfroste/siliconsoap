@@ -98,7 +98,7 @@ serve(async (req) => {
         ? chat.prompt.substring(0, 155) + '...' 
         : chat.prompt
     );
-    const ogImageUrl = `${supabaseUrl}/functions/v1/generate-og-image?shareId=${shareId}`;
+    const ogImageUrl = `${supabaseUrl}/functions/v1/og-image?shareId=${shareId}`;
     const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
 
     // Generate full HTML with structured data for crawlers
