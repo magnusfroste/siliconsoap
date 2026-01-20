@@ -21,6 +21,8 @@ export const creditsRepository = {
       user_id: data.user_id,
       credits_remaining: data.credits_remaining,
       credits_used: data.credits_used,
+      token_budget: data.token_budget,
+      tokens_used: data.tokens_used,
       created_at: data.created_at || undefined,
       updated_at: data.updated_at || undefined
     } : null;

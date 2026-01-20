@@ -1,6 +1,7 @@
 // Credits Service - business logic for credit system
 import { creditsRepository } from '@/repositories';
 import { CreditState } from '@/models/credits';
+import { DEFAULT_TOKEN_BUDGET } from '@/models/tokens';
 
 export const creditsService = {
   // Check if user has credits
@@ -24,6 +25,8 @@ export const creditsService = {
       return {
         creditsRemaining: credits.credits_remaining,
         creditsUsed: credits.credits_used,
+        tokenBudget: credits.token_budget ?? DEFAULT_TOKEN_BUDGET,
+        tokensUsed: credits.tokens_used ?? 0,
         loading: false
       };
     }
@@ -33,6 +36,8 @@ export const creditsService = {
     return {
       creditsRemaining: initialCredits,
       creditsUsed: 0,
+      tokenBudget: DEFAULT_TOKEN_BUDGET,
+      tokensUsed: 0,
       loading: false
     };
   },
@@ -45,6 +50,8 @@ export const creditsService = {
     return {
       creditsRemaining: Math.max(0, maxCredits - usedCredits),
       creditsUsed: usedCredits,
+      tokenBudget: 0,
+      tokensUsed: 0,
       loading: false
     };
   },

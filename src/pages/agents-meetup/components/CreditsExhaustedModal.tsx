@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,14 +17,46 @@ interface CreditsExhaustedModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isGuest: boolean;
+  guestCreditsUsed?: number;
 }
 
 export const CreditsExhaustedModal = ({
   open,
   onOpenChange,
   isGuest,
+  guestCreditsUsed,
 }: CreditsExhaustedModalProps) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [guestCreditsAmount, setGuestCreditsAmount] = useState(3);
+  const [freeCreditsAmount, setFreeCreditsAmount] = useState(10);
+
+  // Load credit amounts from feature flags
+  useEffect(() => {
+    const loadCreditAmounts = async () => {
+      const { data } = await supabase
+        .from('feature_flags')
+        .select('key, numeric_value')
+        .in('key', ['guest_credits_amount', 'free_credits_amount'])
+        .eq('enabled', true);
+
+      if (data) {
+        data.forEach(flag => {
+          if (flag.key === 'guest_credits_amount' && flag.numeric_value) {
+            setGuestCreditsAmount(flag.numeric_value);
+          }
+          if (flag.key === 'free_credits_amount' && flag.numeric_value) {
+            setFreeCreditsAmount(flag.numeric_value);
+          }
+        });
+      }
+    };
+
+    if (open) {
+      loadCreditAmounts();
+    }
+  }, [open]);
+
+  const bonusCredits = Math.max(0, freeCreditsAmount - guestCreditsAmount);
 
   const handlePurchaseCredits = async () => {
     setIsPurchasing(true);
@@ -56,10 +88,16 @@ export const CreditsExhaustedModal = ({
               </div>
             </div>
             <DialogTitle className="text-center text-2xl">
-              You've used your 3 free chats!
+              You've used your {guestCreditsAmount} free chats!
             </DialogTitle>
             <DialogDescription className="text-center pt-2">
-              Sign up to get <span className="font-semibold text-primary">7 more credits</span> and unlock the ability to save conversations and analyze results.
+              Sign up to get{' '}
+              {bonusCredits > 0 ? (
+                <span className="font-semibold text-primary">{bonusCredits} more credits</span>
+              ) : (
+                <span className="font-semibold text-primary">free credits</span>
+              )}{' '}
+              and unlock the ability to save conversations and analyze results.
             </DialogDescription>
           </DialogHeader>
 
@@ -97,7 +135,7 @@ export const CreditsExhaustedModal = ({
             Out of Credits
           </DialogTitle>
           <DialogDescription className="text-center pt-2">
-            You've used all your free credits. Purchase more credits to continue creating amazing AI conversations.
+            You've used all your token budget. Purchase more credits to continue creating amazing AI conversations.
           </DialogDescription>
         </DialogHeader>
 

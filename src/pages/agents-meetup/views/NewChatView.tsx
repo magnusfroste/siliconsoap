@@ -45,7 +45,7 @@ export const NewChatView = () => {
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
-  const { creditsRemaining, hasCredits, useCredit: deductCredit, isGuest, loading: creditsLoading } = useCredits(user?.id);
+  const { creditsRemaining, hasCredits, useCredit: deductCredit, isGuest, loading: creditsLoading, tokenBudgetRemaining } = useCredits(user?.id);
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
@@ -95,8 +95,8 @@ export const NewChatView = () => {
       return;
     }
 
-    // Check credits before proceeding (only for guests - logged-in users use token-based billing)
-    if (isGuest && !hasCredits()) {
+    // Check credits/token budget before proceeding
+    if (!hasCredits()) {
       setShowCreditsModal(true);
       return;
     }
