@@ -1,4 +1,4 @@
-// v1.1.0 - Created 2026-01-20
+// v1.3.0 - Complete rewrite 2026-01-20
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -34,20 +34,43 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-serve(async (req) => {
-  console.log('prerender-shared: Request received');
+function generateErrorHtml(message: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${message} | SiliconSoap</title>
+  <meta name="robots" content="noindex">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; background: #0f0f23; color: #e2e8f0; }
+    a { color: #06b6d4; }
+  </style>
+</head>
+<body>
+  <h1>${message}</h1>
+  <p><a href="https://siliconsoap.com">Visit SiliconSoap</a></p>
+</body>
+</html>`;
+}
+
+serve(async (req: Request) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] prerender v1.3.0: Request received`);
+  console.log(`[${timestamp}] Method: ${req.method}, URL: ${req.url}`);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log(`[${timestamp}] Handling OPTIONS preflight`);
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const url = new URL(req.url);
     const shareId = url.searchParams.get('shareId');
-    console.log('prerender-shared: shareId =', shareId);
+    console.log(`[${timestamp}] Extracted shareId: ${shareId}`);
 
     if (!shareId) {
+      console.log(`[${timestamp}] Missing shareId parameter`);
       return new Response('Missing shareId parameter', { 
         status: 400, 
         headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
@@ -55,16 +78,33 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    console.log(`[${timestamp}] Supabase URL available: ${!!supabaseUrl}`);
+    console.log(`[${timestamp}] Service role key available: ${!!supabaseKey}`);
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error(`[${timestamp}] Missing environment variables`);
+      return new Response(generateErrorHtml('Configuration error'), { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+      });
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch chat data
+    console.log(`[${timestamp}] Fetching chat with share_id: ${shareId}`);
     const { data: chatResult, error: chatError } = await supabase.rpc('get_shared_chat', { p_share_id: shareId });
-    console.log('prerender-shared: chat result count =', chatResult?.length, 'error =', chatError);
+    
+    console.log(`[${timestamp}] Chat result count: ${chatResult?.length || 0}`);
+    if (chatError) {
+      console.error(`[${timestamp}] Chat error:`, chatError);
+    }
 
     if (chatError || !chatResult || chatResult.length === 0) {
-      console.error('Chat not found:', chatError);
+      console.error(`[${timestamp}] Chat not found for shareId: ${shareId}`);
       return new Response(generateErrorHtml('Debate not found'), { 
         status: 404, 
         headers: { ...corsHeaders, 'Content-Type': 'text/html' }
@@ -72,6 +112,7 @@ serve(async (req) => {
     }
 
     const chat: ChatData = chatResult[0];
+    console.log(`[${timestamp}] Found chat: ${chat.id}, title: ${chat.title}`);
 
     // Fetch all messages
     const { data: messagesResult, error: messagesError } = await supabase
@@ -81,11 +122,11 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     if (messagesError) {
-      console.error('Error fetching messages:', messagesError);
+      console.error(`[${timestamp}] Error fetching messages:`, messagesError);
     }
 
     const messages: MessageData[] = messagesResult || [];
-    console.log('prerender-shared: fetched', messages.length, 'messages');
+    console.log(`[${timestamp}] Fetched ${messages.length} messages`);
 
     // Extract unique agents and models
     const agents = [...new Set(messages.map(m => m.agent))];
@@ -222,7 +263,7 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    console.log('prerender-shared: Returning HTML with', messages.length, 'messages');
+    console.log(`[${timestamp}] Returning HTML with ${messages.length} messages`);
 
     return new Response(html, {
       headers: {
@@ -233,29 +274,10 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('prerender-shared error:', error);
+    console.error(`[${timestamp}] prerender error:`, error);
     return new Response(generateErrorHtml('Error loading debate'), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'text/html' },
     });
   }
 });
-
-function generateErrorHtml(message: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${message} | SiliconSoap</title>
-  <meta name="robots" content="noindex">
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; background: #0f0f23; color: #e2e8f0; }
-    a { color: #06b6d4; }
-  </style>
-</head>
-<body>
-  <h1>${message}</h1>
-  <p><a href="https://siliconsoap.com">Visit SiliconSoap</a></p>
-</body>
-</html>`;
-}
