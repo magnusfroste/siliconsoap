@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { creditsService } from '@/services';
 import { CreditState } from '@/models/credits';
+import { DEFAULT_TOKEN_BUDGET } from '@/models/tokens';
 
 export const useCredits = (userId: string | null | undefined) => {
   const [creditData, setCreditData] = useState<CreditState>({
     creditsRemaining: 0,
     creditsUsed: 0,
-    tokenBudget: 0,
+    tokenBudget: DEFAULT_TOKEN_BUDGET, // Use default to avoid false negatives during loading
     tokensUsed: 0,
     loading: true,
   });
@@ -29,7 +30,14 @@ export const useCredits = (userId: string | null | undefined) => {
     } catch (error) {
       console.error('Error loading credits:', error);
       if (isMounted.current) {
-        setCreditData({ creditsRemaining: 0, creditsUsed: 0, tokenBudget: 0, tokensUsed: 0, loading: false });
+        // Keep reasonable defaults on error to avoid false negatives
+        setCreditData({ 
+          creditsRemaining: 0, 
+          creditsUsed: 0, 
+          tokenBudget: DEFAULT_TOKEN_BUDGET, 
+          tokensUsed: 0, 
+          loading: false 
+        });
       }
     } finally {
       isLoading.current = false;
@@ -58,13 +66,25 @@ export const useCredits = (userId: string | null | undefined) => {
 
   // For guests: check credits, for logged-in: check token budget
   const hasCredits = useCallback((): boolean => {
+    // During loading, assume user has credits to avoid false negatives
+    if (creditData.loading) {
+      return true;
+    }
+    
     if (!userId) {
       // Guest: simple credit check
       return creditsService.canStartConversation(creditData.creditsRemaining);
     }
+    
     // Logged-in user: check token budget
+    // Also check credits_remaining as a fallback when token budget appears unset
+    if (creditData.tokenBudget === 0) {
+      // Token budget not loaded properly, fall back to credits check
+      return creditData.creditsRemaining > 0;
+    }
+    
     return creditData.tokenBudget > creditData.tokensUsed;
-  }, [userId, creditData.creditsRemaining, creditData.tokenBudget, creditData.tokensUsed]);
+  }, [userId, creditData.loading, creditData.creditsRemaining, creditData.tokenBudget, creditData.tokensUsed]);
 
   const useCredit = useCallback(async (): Promise<boolean> => {
     if (!hasCredits()) return false;
