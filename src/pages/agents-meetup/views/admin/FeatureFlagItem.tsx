@@ -116,6 +116,18 @@ export const FeatureFlagItem = ({ flag, onToggle, onNumericChange, onTextChange 
             </Select>
           </div>
         )}
+        
+        {flag.text_value !== null && !isProfileSelector && !hasSelectOptions && (
+          <div className="pt-2">
+            <Input
+              type="text"
+              value={flag.text_value}
+              onChange={(e) => onTextChange(flag.id, e.target.value)}
+              className="w-64"
+              placeholder="Enter value..."
+            />
+          </div>
+        )}
       </div>
       <Switch
         id={flag.id}
