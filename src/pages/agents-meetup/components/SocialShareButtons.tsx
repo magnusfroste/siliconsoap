@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { trackShare } from '@/utils/analytics';
 
 interface SocialShareButtonsProps {
   url: string;
@@ -33,6 +34,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
+    trackShare({ shareId: url.split('/shared/')[1] || '', platform });
     const shareWindow = window.open(shareLinks[platform], '_blank', 'width=600,height=600,noopener,noreferrer');
     
     if (shareWindow) {
@@ -53,6 +55,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
+      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'copy_link' });
       toast.success('Link copied to clipboard!');
     } catch {
       toast.error('Failed to copy link');

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { trackReaction } from '@/utils/analytics';
 
 interface ReactionButtonsProps {
   shareId: string;
@@ -134,6 +135,8 @@ export const ReactionButtons = ({ shareId }: ReactionButtonsProps) => {
         return;
       }
 
+      // Track in GA
+      trackReaction({ shareId, emoji: emojiType });
       // Update local state
       setUserReactions((prev) => new Set([...prev, emojiType]));
       // Count will be updated via real-time subscription

@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, LogIn, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { trackCreditsExhausted, trackCreditsPurchaseStart } from '@/utils/analytics';
 
 interface CreditsExhaustedModalProps {
   open: boolean;
@@ -53,6 +54,7 @@ export const CreditsExhaustedModal = ({
 
     if (open) {
       loadCreditAmounts();
+      trackCreditsExhausted();
     }
   }, [open]);
 
@@ -60,6 +62,7 @@ export const CreditsExhaustedModal = ({
 
   const handlePurchaseCredits = async () => {
     setIsPurchasing(true);
+    trackCreditsPurchaseStart();
     try {
       const { data, error } = await supabase.functions.invoke('create-credits-checkout', {
         body: { packId: 'pack_50' },
