@@ -13,6 +13,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProfileStats, calculateRank, SiliconRank } from '../hooks/useProfileStats';
 import { HallOfShame } from '../components/HallOfShame';
 import { DebateCardSkeleton } from '@/components/skeletons';
+import { trackExploreView } from '@/utils/analytics';
 
 interface UserRankInfo {
   displayName: string | null;
@@ -227,7 +228,7 @@ export default function ExploreView() {
           <HallOfShame />
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); trackExploreView(val); }} className="mb-6">
           <TabsList>
             <TabsTrigger value="recent" className="gap-2">
               <Clock className="h-4 w-4" />
@@ -257,6 +258,33 @@ export default function ExploreView() {
             />
           </TabsContent>
         </Tabs>
+
+        {/* JSON-LD ItemList structured data for debates */}
+        {!loading && debates.length > 0 && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'name': 'SiliconSoap AI Debates',
+            'description': 'Popular AI debates shared by the SiliconSoap community',
+            'numberOfItems': debates.length,
+            'itemListElement': debates.slice(0, 10).map((debate, i) => ({
+              '@type': 'ListItem',
+              'position': i + 1,
+              'item': {
+                '@type': 'DiscussionForumPosting',
+                'headline': debate.title,
+                'text': debate.prompt,
+                'url': `https://siliconsoap.com/shared/${debate.share_id}`,
+                'datePublished': debate.created_at,
+                'interactionStatistic': [
+                  { '@type': 'InteractionCounter', 'interactionType': 'https://schema.org/ViewAction', 'userInteractionCount': debate.view_count },
+                  { '@type': 'InteractionCounter', 'interactionType': 'https://schema.org/CommentAction', 'userInteractionCount': debate.message_count || 0 }
+                ],
+                'author': debate.sharer_name ? { '@type': 'Person', 'name': debate.sharer_name } : { '@type': 'Organization', 'name': 'SiliconSoap' }
+              }
+            }))
+          })}} />
+        )}
 
         {/* Empty state */}
         {!loading && debates.length === 0 && (
