@@ -159,12 +159,25 @@ export const trackLogin = () => {
 
 /**
  * Initialize or update the GA tracking ID dynamically.
- * Called when feature flags load with a custom GA ID.
+ * Loads the gtag.js script if not already present, then configures the tracking ID.
+ * Called when feature flags load with a custom GA ID from admin settings.
  */
 export const initializeGA = (trackingId: string) => {
-  if (!trackingId || typeof window.gtag !== 'function') return;
+  if (!trackingId) return;
 
-  // Configure the new tracking ID
+  // Load gtag.js script dynamically if not already present
+  const existingScript = document.querySelector('script[src*="googletagmanager.com/gtag/js"]');
+  if (!existingScript) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
+    document.head.appendChild(script);
+
+    // Initialize gtag timestamp after script element is added
+    window.gtag('js', new Date());
+  }
+
+  // Configure the tracking ID
   window.gtag('config', trackingId, {
     send_page_view: false, // We handle page views via PageTracker
   });
