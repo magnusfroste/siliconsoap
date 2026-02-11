@@ -13,7 +13,7 @@ interface PageMetaOptions {
   breadcrumbs?: BreadcrumbItem[];
 }
 
-const BASE_URL = 'https://www.froste.eu';
+const BASE_URL = 'https://siliconsoap.com';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
 const SITE_NAME = 'SiliconSoap';
 const BREADCRUMB_SCRIPT_ID = 'breadcrumb-schema';
