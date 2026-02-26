@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Sparkles, Loader2, Check } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Loader2, Check, Pencil, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickPrompt {
