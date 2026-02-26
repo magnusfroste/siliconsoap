@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -188,28 +189,79 @@ export const NewChatView = () => {
     }
   };
 
-  // Randomize topics on component mount - mix scenario-specific with hot debates
+  // Fetch quick prompts from DB, fallback to hardcoded
   const [randomizedTopics, setRandomizedTopics] = useState<Record<string, string[]>>({});
   
   useEffect(() => {
-    // Get hot debate topics to mix in
-    const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
-    
-    // For each scenario, get 2 scenario-specific + 1 hot debate topic
-    setRandomizedTopics({
-      'general-problem': [
-        ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
-        ...getRandomTopics(hotDebates, 1)
-      ],
-      'ethical-dilemma': [
-        ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
-        ...getRandomTopics(hotDebates, 1)
-      ],
-      'future-prediction': [
-        ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
-        ...getRandomTopics(hotDebates, 1)
-      ],
-    });
+    const loadTopics = async () => {
+      try {
+        const { data } = await supabase
+          .from('quick_prompts')
+          .select('topic, scenario_id')
+          .eq('is_enabled', true)
+          .order('sort_order', { ascending: true });
+
+        if (data && data.length > 0) {
+          // Group by scenario
+          const byScenario: Record<string, string[]> = {};
+          data.forEach(p => {
+            if (!byScenario[p.scenario_id]) byScenario[p.scenario_id] = [];
+            byScenario[p.scenario_id].push(p.topic);
+          });
+          const hotDebates = byScenario['hot-debates'] || [];
+          
+          setRandomizedTopics({
+            'general-problem': [
+              ...getRandomTopics(byScenario['general-problem'] || [], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+            'ethical-dilemma': [
+              ...getRandomTopics(byScenario['ethical-dilemma'] || [], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+            'future-prediction': [
+              ...getRandomTopics(byScenario['future-prediction'] || [], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+          });
+        } else {
+          // Fallback to hardcoded
+          const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
+          setRandomizedTopics({
+            'general-problem': [
+              ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+            'ethical-dilemma': [
+              ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+            'future-prediction': [
+              ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
+              ...getRandomTopics(hotDebates, 1)
+            ],
+          });
+        }
+      } catch {
+        // Fallback on error
+        const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
+        setRandomizedTopics({
+          'general-problem': [
+            ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
+            ...getRandomTopics(hotDebates, 1)
+          ],
+          'ethical-dilemma': [
+            ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
+            ...getRandomTopics(hotDebates, 1)
+          ],
+          'future-prediction': [
+            ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
+            ...getRandomTopics(hotDebates, 1)
+          ],
+        });
+      }
+    };
+    loadTopics();
   }, []);
 
   const suggestedTopics = randomizedTopics[state.activeScenario] || [];
