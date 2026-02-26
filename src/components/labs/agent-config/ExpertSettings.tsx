@@ -1,35 +1,20 @@
 import { Settings } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState } from "react";
 
 interface ExpertSettingsProps {
-  conversationTone: 'formal' | 'casual' | 'heated' | 'collaborative';
-  setConversationTone: (tone: 'formal' | 'casual' | 'heated' | 'collaborative') => void;
+  conversationTone: "formal" | "casual" | "heated" | "collaborative";
+  setConversationTone: (tone: "formal" | "casual" | "heated" | "collaborative") => void;
   agreementBias: number;
   setAgreementBias: (bias: number) => void;
   temperature: number;
   setTemperature: (temp: number) => void;
-  personalityIntensity: 'mild' | 'moderate' | 'extreme';
-  setPersonalityIntensity: (intensity: 'mild' | 'moderate' | 'extreme') => void;
+  personalityIntensity: "mild" | "moderate" | "extreme";
+  setPersonalityIntensity: (intensity: "mild" | "moderate" | "extreme") => void;
 }
 
 export function ExpertSettings({
@@ -45,16 +30,16 @@ export function ExpertSettings({
   const [isOpen, setIsOpen] = useState(false);
 
   const toneOptions = [
-    { value: 'formal', label: '🎓 Formal Debate', description: 'Academic rigor and professional discourse' },
-    { value: 'casual', label: '☕ Casual Chat', description: 'Friendly, everyday conversation' },
-    { value: 'heated', label: '🔥 Heated Discussion', description: 'Passionate and assertive viewpoints' },
-    { value: 'collaborative', label: '🤝 Collaborative', description: 'Building on ideas together' },
+    { value: "formal", label: "🎓 Formal Debate", description: "Academic rigor and professional discourse" },
+    { value: "casual", label: "☕ Casual Chat", description: "Friendly, everyday conversation" },
+    { value: "heated", label: "🔥 Heated Discussion", description: "Passionate and assertive viewpoints" },
+    { value: "collaborative", label: "🤝 Collaborative", description: "Building on ideas together" },
   ];
 
   const intensityOptions = [
-    { value: 'mild', label: 'Mild', description: 'Subtle persona expression' },
-    { value: 'moderate', label: 'Moderate', description: 'Clear persona characteristics' },
-    { value: 'extreme', label: 'Extreme', description: 'Strongly embodied persona' },
+    { value: "mild", label: "Mild", description: "Subtle persona expression" },
+    { value: "moderate", label: "Moderate", description: "Clear persona characteristics" },
+    { value: "extreme", label: "Extreme", description: "Strongly embodied persona" },
   ];
 
   const getAgreementLabel = (bias: number) => {
@@ -73,10 +58,10 @@ export function ExpertSettings({
     <TooltipProvider>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full pt-3 group cursor-pointer">
-          <span>More options</span>
+          <span>More...</span>
           <Settings className="h-3 w-3 transition-transform duration-200" />
         </CollapsibleTrigger>
-        
+
         <CollapsibleContent className="pt-6 space-y-6">
           {/* Conversation Tone */}
           <div className="space-y-3">
