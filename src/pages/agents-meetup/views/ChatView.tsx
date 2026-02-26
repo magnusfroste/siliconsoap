@@ -77,7 +77,9 @@ export const ChatView = () => {
     isPaused,
     currentMessageIndex,
     isGenerating: isGeneratingAudio,
+    theaterMode,
     play,
+    playTheater,
     pause,
     stop
   } = useConversationPlayback(messages);
@@ -488,6 +490,12 @@ export const ChatView = () => {
             const previousRound = index > 0 ? Math.floor((index - 1) / numberOfAgents) + 1 : 0;
             const isNewRound = currentRound > previousRound;
 
+            // Theater mode: hide messages that haven't been revealed yet
+            const isHiddenInTheater = theaterMode && (isPlaying || isPaused) && index > currentMessageIndex;
+            const isCurrentTheaterMessage = theaterMode && isPlaying && index === currentMessageIndex;
+
+            if (isHiddenInTheater) return null;
+
             return (
               <div key={index}>
                 {/* Round Separator */}
@@ -515,6 +523,7 @@ export const ChatView = () => {
                       totalMessages={messages.length}
                       showTimeline={true}
                       isPlaying={isPlaying && currentMessageIndex === index}
+                      isTheaterReveal={isCurrentTheaterMessage}
                     />
                   )}
                 </div>
@@ -827,7 +836,9 @@ export const ChatView = () => {
           isGeneratingAudio={isGeneratingAudio}
           currentMessageIndex={currentMessageIndex}
           totalMessages={messages.length}
+          theaterMode={theaterMode}
           onPlay={play}
+          onPlayTheater={playTheater}
           onPause={pause}
           onStop={stop}
           canAnalyze={!isGuest}

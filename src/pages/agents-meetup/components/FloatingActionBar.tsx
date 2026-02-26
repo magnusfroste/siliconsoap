@@ -1,4 +1,4 @@
-import { Headphones, Sparkles, Play, Pause, Square, SkipBack, SkipForward } from 'lucide-react';
+import { Headphones, Sparkles, Play, Pause, Square, Drama } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,7 +12,9 @@ interface FloatingActionBarProps {
   isGeneratingAudio: boolean;
   currentMessageIndex: number;
   totalMessages: number;
+  theaterMode: boolean;
   onPlay: () => void;
+  onPlayTheater: () => void;
   onPause: () => void;
   onStop: () => void;
   
@@ -30,7 +32,9 @@ export const FloatingActionBar = ({
   isGeneratingAudio,
   currentMessageIndex,
   totalMessages,
+  theaterMode,
   onPlay,
+  onPlayTheater,
   onPause,
   onStop,
   canAnalyze,
@@ -54,24 +58,53 @@ export const FloatingActionBar = ({
             {audioEnabled && (
               <>
                 {!showPlaybackControls ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={onPlay}
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 rounded-full hover:bg-accent"
-                        disabled={totalMessages === 0}
-                      >
-                        <Headphones className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Listen to Debate</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <div className="flex items-center gap-1">
+                    {/* Listen button */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={onPlay}
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-full hover:bg-accent"
+                          disabled={totalMessages === 0}
+                        >
+                          <Headphones className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Listen to Debate</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Theater button */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={onPlayTheater}
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-full hover:bg-accent"
+                          disabled={totalMessages === 0}
+                        >
+                          <Drama className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Theater Mode</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2">
+                    {/* Theater mode indicator */}
+                    {theaterMode && (
+                      <Badge variant="secondary" className="gap-1 text-xs">
+                        <Drama className="h-3 w-3" />
+                        Theater
+                      </Badge>
+                    )}
+                    
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
