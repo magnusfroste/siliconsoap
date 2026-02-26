@@ -72,12 +72,9 @@ export function ExpertSettings({
   return (
     <TooltipProvider>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex items-center gap-3 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors w-full py-3 group">
-          <Settings className="h-4 w-4 transition-transform duration-200" />
-          <span>Advanced</span>
-          <span className="ml-auto text-xs opacity-50 group-hover:opacity-100 transition-opacity">
-            {isOpen ? '−' : '+'}
-          </span>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full pt-3 group cursor-pointer">
+          <span>More options</span>
+          <Settings className="h-3 w-3 transition-transform duration-200" />
         </CollapsibleTrigger>
         
         <CollapsibleContent className="pt-6 space-y-6">
