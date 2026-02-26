@@ -630,6 +630,8 @@ export const ChatView = () => {
               canContinue={true}
               onContinue={() => setWantsToContinue(true)}
               isGuest={isGuest}
+              shareId={guestShareId || chat?.share_id}
+              isSavingGuest={isSavingGuest}
             />
           )}
         </div>
