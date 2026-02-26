@@ -39,7 +39,8 @@ const agentStyles = {
 };
 
 /**
- * Typewriter effect hook – reveals text synced to audio duration when available
+ * Typewriter effect hook – waits for audio duration before starting,
+ * then reveals text synced to the audio playback length.
  */
 const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number | null) => {
   const [displayedText, setDisplayedText] = useState(enabled ? '' : text);
@@ -59,34 +60,23 @@ const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number 
       return;
     }
 
+    // Don't start typing until we know the audio duration
+    // Show empty text while waiting for audio to load
+    if (!audioDurationMs || audioDurationMs <= 0) {
+      setDisplayedText('');
+      setIsTyping(true); // show cursor to indicate loading
+      return;
+    }
+
+    // Audio duration is known – spread typing across ~90% of it
     setDisplayedText('');
     setIsTyping(true);
     let index = 0;
 
-    // If we know the audio duration, spread typing across ~90% of it
-    // so text finishes just before audio ends
-    if (audioDurationMs && audioDurationMs > 0) {
-      const targetDuration = audioDurationMs * 0.9;
-      const intervalMs = Math.max(10, targetDuration / len);
-      // For very fast intervals, reveal multiple chars per tick
-      const chunkSize = intervalMs < 10 ? Math.ceil(10 / intervalMs) : 1;
-      const adjustedInterval = Math.max(10, intervalMs * chunkSize);
-
-      const interval = setInterval(() => {
-        index = Math.min(index + chunkSize, len);
-        setDisplayedText(text.slice(0, index));
-        if (index >= len) {
-          clearInterval(interval);
-          setIsTyping(false);
-        }
-      }, adjustedInterval);
-
-      return () => clearInterval(interval);
-    }
-
-    // Fallback: dynamic speed without audio sync
-    const speed = len < 200 ? 18 : len < 600 ? 10 : len < 1200 ? 5 : 3;
-    const chunkSize = len > 1200 ? 3 : len > 600 ? 2 : 1;
+    const targetDuration = audioDurationMs * 0.9;
+    const intervalMs = Math.max(10, targetDuration / len);
+    const chunkSize = intervalMs < 10 ? Math.ceil(10 / intervalMs) : 1;
+    const adjustedInterval = Math.max(10, intervalMs * chunkSize);
 
     const interval = setInterval(() => {
       index = Math.min(index + chunkSize, len);
@@ -95,7 +85,7 @@ const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number 
         clearInterval(interval);
         setIsTyping(false);
       }
-    }, speed);
+    }, adjustedInterval);
 
     return () => clearInterval(interval);
   }, [text, enabled, audioDurationMs]);
