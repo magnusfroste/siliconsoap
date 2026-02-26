@@ -78,6 +78,7 @@ export const ChatView = () => {
     currentMessageIndex,
     isGenerating: isGeneratingAudio,
     theaterMode,
+    audioDuration,
     play,
     playTheater,
     pause,
@@ -524,6 +525,7 @@ export const ChatView = () => {
                       showTimeline={true}
                       isPlaying={isPlaying && currentMessageIndex === index}
                       isTheaterReveal={isCurrentTheaterMessage}
+                      audioDurationMs={isCurrentTheaterMessage ? audioDuration : null}
                     />
                   )}
                 </div>

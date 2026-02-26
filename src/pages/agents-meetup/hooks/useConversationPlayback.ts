@@ -9,6 +9,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(-1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [theaterMode, setTheaterMode] = useState(false);
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const playbackControlsRef = useRef<PlaybackControls | null>(null);
   const isPlayingRef = useRef(false);
@@ -27,6 +28,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     setCurrentMessageIndex(-1);
     setIsGenerating(false);
     setTheaterMode(false);
+    setAudioDuration(null);
   }, []);
 
   useEffect(() => {
@@ -59,11 +61,10 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
         }
 
         setCurrentMessageIndex(i);
+        setAudioDuration(null); // Reset for each message
         const message = messages[i];
 
         if (withTheater) {
-          // In theater mode, add a small delay before generating audio
-          // to let the typing animation start
           await new Promise(resolve => setTimeout(resolve, 300));
         }
 
@@ -76,7 +77,9 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
             break;
           }
 
-          await playBase64Audio(base64Audio, playbackControlsRef);
+          await playBase64Audio(base64Audio, playbackControlsRef, (durationMs) => {
+            setAudioDuration(durationMs);
+          });
         } catch (err) {
           setIsGenerating(false);
           if (abortControllerRef.current?.signal.aborted) {
@@ -107,6 +110,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
       setCurrentMessageIndex(-1);
       setIsGenerating(false);
       setTheaterMode(false);
+      setAudioDuration(null);
     }
   }, [messages, stop]);
 
@@ -150,6 +154,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     currentMessageIndex,
     isGenerating,
     theaterMode,
+    audioDuration,
     play,
     playTheater,
     pause,
