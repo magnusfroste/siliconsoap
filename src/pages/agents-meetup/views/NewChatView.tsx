@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2, Settings, Shuffle } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
 import { ExpertSettings } from '@/components/labs/agent-config/ExpertSettings';
-import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
@@ -20,7 +20,6 @@ import { analyticsService } from '@/services';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import { suggestedTopicsByScenario, getRandomTopics } from '../constants/suggestedTopics';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { getAgentSoapName } from '../utils/agentNameGenerator';
 import type { ChatSettings } from '@/models/chat';
 
 export const NewChatView = () => {
@@ -36,11 +35,13 @@ export const NewChatView = () => {
     ],
   });
   
+  // Cleanup on unmount
   useEffect(() => {
     isMounted.current = true;
-    return () => { isMounted.current = false; };
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
-
   const { profiles } = useAgentProfiles();
   const [state, actions] = useLabsState();
   const { user } = useAuth();
@@ -48,15 +49,18 @@ export const NewChatView = () => {
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Group models by provider for CuratedModel type
   const modelsByProvider = state.availableModels.reduce((acc, model) => {
-    if (!acc[model.provider]) acc[model.provider] = [];
+    if (!acc[model.provider]) {
+      acc[model.provider] = [];
+    }
     acc[model.provider].push(model);
     return acc;
   }, {} as Record<string, typeof state.availableModels>);
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
+
 
   // Build chat settings from current state
   const buildChatSettings = (): ChatSettings => ({
@@ -85,16 +89,19 @@ export const NewChatView = () => {
     e.preventDefault();
     if (!currentPrompt.trim() || isGenerating) return;
 
+    // Wait for credits to load before checking
     if (creditsLoading) {
       toast.info('Loading credits...');
       return;
     }
 
+    // Check credits/token budget before proceeding
     if (!hasCredits()) {
       setShowCreditsModal(true);
       return;
     }
 
+    // For logged-in users, require user ID
     if (!isGuest && !user?.id) {
       toast.error('Please sign in to continue');
       return;
@@ -103,6 +110,8 @@ export const NewChatView = () => {
     setIsGenerating(true);
 
     try {
+      // Deduct credit upfront for guests (simple credit system)
+      // Logged-in users use token-based billing via useTokensForCredit
       if (isGuest) {
         const creditUsed = await deductCredit();
         if (!creditUsed) {
@@ -114,76 +123,100 @@ export const NewChatView = () => {
 
       const settings = buildChatSettings();
       const title = chatService.generateTitle(currentPrompt);
+
+      // Collect models used for analytics
       const modelsUsed: string[] = [settings.models.agentA];
       if (settings.numberOfAgents >= 2) modelsUsed.push(settings.models.agentB);
       if (settings.numberOfAgents >= 3) modelsUsed.push(settings.models.agentC);
 
       if (isGuest) {
-        const guestChat = chatService.createGuestChat(currentPrompt, state.activeScenario, settings);
+        // Guests: Create chat in localStorage
+        const guestChat = chatService.createGuestChat(
+          currentPrompt,
+          state.activeScenario,
+          settings
+        );
+        
+        // Log analytics for guest chat
         analyticsService.logChatStart({
-          chatId: guestChat.id, isGuest: true, promptPreview: currentPrompt,
-          scenarioId: state.activeScenario, modelsUsed, numAgents: settings.numberOfAgents, numRounds: settings.rounds
+          chatId: guestChat.id,
+          isGuest: true,
+          promptPreview: currentPrompt,
+          scenarioId: state.activeScenario,
+          modelsUsed,
+          numAgents: settings.numberOfAgents,
+          numRounds: settings.rounds
         });
-        if (isMounted.current) navigate(`/chat/${guestChat.id}`);
+        
+        if (isMounted.current) {
+          navigate(`/chat/${guestChat.id}`);
+        }
       } else {
+        // Logged-in users: Create in database
         const chat = await chatService.createChat({
-          user_id: user!.id, title, scenario_id: state.activeScenario,
-          prompt: currentPrompt, settings
+          user_id: user!.id,
+          title,
+          scenario_id: state.activeScenario,
+          prompt: currentPrompt,
+          settings
         });
+        
+        // Log analytics for logged-in user
         analyticsService.logChatStart({
-          chatId: chat.id, userId: user!.id, isGuest: false, promptPreview: currentPrompt,
-          scenarioId: state.activeScenario, modelsUsed, numAgents: settings.numberOfAgents, numRounds: settings.rounds
+          chatId: chat.id,
+          userId: user!.id,
+          isGuest: false,
+          promptPreview: currentPrompt,
+          scenarioId: state.activeScenario,
+          modelsUsed,
+          numAgents: settings.numberOfAgents,
+          numRounds: settings.rounds
         });
-        if (isMounted.current) navigate(`/chat/${chat.id}`);
+        
+        if (isMounted.current) {
+          navigate(`/chat/${chat.id}`);
+        }
       }
     } catch (error: any) {
       console.error('Error creating chat:', error);
       if (isMounted.current) {
-        toast.error('Failed to create conversation', { description: error.message || 'Please try again' });
+        toast.error('Failed to create conversation', {
+          description: error.message || 'Please try again'
+        });
         setIsGenerating(false);
       }
     }
   };
 
-  // Randomize topics on mount
+  // Randomize topics on component mount - mix scenario-specific with hot debates
   const [randomizedTopics, setRandomizedTopics] = useState<Record<string, string[]>>({});
+  
   useEffect(() => {
+    // Get hot debate topics to mix in
     const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
+    
+    // For each scenario, get 2 scenario-specific + 1 hot debate topic
     setRandomizedTopics({
-      'general-problem': [...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2), ...getRandomTopics(hotDebates, 1)],
-      'ethical-dilemma': [...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2), ...getRandomTopics(hotDebates, 1)],
-      'future-prediction': [...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2), ...getRandomTopics(hotDebates, 1)],
+      'general-problem': [
+        ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
+      'ethical-dilemma': [
+        ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
+      'future-prediction': [
+        ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
+        ...getRandomTopics(hotDebates, 1)
+      ],
     });
   }, []);
 
   const suggestedTopics = randomizedTopics[state.activeScenario] || [];
 
-  // Get model display name helper
-  const getModelDisplayName = (modelId: string) => {
-    const model = state.availableModels.find(m => m.model_id === modelId);
-    if (model) return model.display_name;
-    // Fallback: extract name from model ID
-    const parts = modelId.split('/');
-    return parts.length > 1 ? parts[1] : modelId;
-  };
-
-  // Get persona display name
-  const getPersonaName = (personaId: string) => {
-    const profile = profiles.find(p => p.id === personaId);
-    return profile?.name || 'Default';
-  };
-
-  // Build agent summaries for compact display
-  const agentSummaries = [
-    { letter: 'A', model: state.agentAModel, persona: state.agentAPersona, color: 'bg-purple-500' },
-    ...(state.numberOfAgents >= 2 ? [{ letter: 'B', model: state.agentBModel, persona: state.agentBPersona, color: 'bg-blue-500' }] : []),
-    ...(state.numberOfAgents >= 3 ? [{ letter: 'C', model: state.agentCModel, persona: state.agentCPersona, color: 'bg-green-500' }] : []),
-  ];
-
   return (
     <div className="min-h-full flex flex-col items-center justify-start p-4 py-8 md:py-12">
       <div className="w-full max-w-4xl space-y-6 md:space-y-8">
-        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Set the Stage</h1>
           <p className="text-muted-foreground">
@@ -191,8 +224,7 @@ export const NewChatView = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 1. Scenario + Prompt */}
+        <form onSubmit={handleSubmit} className="space-y-8">
           <ScenarioSelector
             scenarioTypes={scenarioTypes}
             activeScenario={state.activeScenario}
@@ -202,63 +234,9 @@ export const NewChatView = () => {
             suggestedTopics={suggestedTopics}
           />
 
-          {/* 2. Agent Cast - compact cards showing name, model, persona */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Your Cast</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={actions.shuffleModels}
-                className="h-7 gap-1.5 text-xs text-muted-foreground"
-                type="button"
-              >
-                <Shuffle className="h-3 w-3" />
-                Shuffle
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {agentSummaries.map((agent) => {
-                const soapName = getAgentSoapName(`Agent ${agent.letter}`, agent.persona);
-                return (
-                  <div
-                    key={agent.letter}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
-                  >
-                    <div className={`h-8 w-8 rounded-full ${agent.color} flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
-                      {agent.letter}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{soapName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{getModelDisplayName(agent.model)}</p>
-                      {agent.persona && (
-                        <p className="text-xs text-muted-foreground/70 truncate">{getPersonaName(agent.persona)}</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 3. Compact defaults summary */}
-          <div className="flex flex-wrap items-center gap-2 justify-center">
-            <Badge variant="secondary" className="text-xs">{state.numberOfAgents} Agents</Badge>
-            <Badge variant="secondary" className="text-xs">{state.rounds} Rounds</Badge>
-            <Badge variant="secondary" className="text-xs capitalize">{state.responseLength}</Badge>
-            <Badge variant="secondary" className="text-xs capitalize">{state.participationMode === 'round-by-round' ? 'Interactive' : state.participationMode === 'jump-in' ? 'Jump In' : 'Spectator'}</Badge>
-          </div>
-
-          {/* 4. Expandable Settings */}
-          <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-center py-2 group">
-              <Settings className="h-4 w-4" />
-              <span>Customize Settings</span>
-              <span className="text-xs opacity-50 group-hover:opacity-100 transition-opacity">
-                {settingsOpen ? '−' : '+'}
-              </span>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4 space-y-6">
+          {/* Configuration Card */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
               {/* Conversation Settings */}
               <ConversationSettings
                 numberOfAgents={state.numberOfAgents}
@@ -273,7 +251,9 @@ export const NewChatView = () => {
                 setTurnOrder={actions.setTurnOrder}
                 responseLengthOptions={responseLengthOptions}
               />
-
+              
+              <Separator className="my-4" />
+              
               {/* Expert Settings */}
               <ExpertSettings
                 conversationTone={state.conversationTone}
@@ -286,7 +266,9 @@ export const NewChatView = () => {
                 setPersonalityIntensity={actions.setPersonalityIntensity}
               />
 
-              {/* Full Agent Configuration */}
+              <Separator className="my-4" />
+
+              {/* Agent Configuration */}
               <AgentGridSection
                 numberOfAgents={state.numberOfAgents}
                 agentAModel={state.agentAModel}
@@ -313,10 +295,9 @@ export const NewChatView = () => {
                 personalityIntensity={state.personalityIntensity}
                 onShuffleModels={actions.shuffleModels}
               />
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* 5. Start Debate CTA */}
+            </CardContent>
+          </Card>
+          
           <div className="flex justify-center">
             <Button
               type="submit"
@@ -327,12 +308,12 @@ export const NewChatView = () => {
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Starting...
+                  Generating...
                 </>
               ) : (
                 <>
-                  <MessageSquare className="h-4 w-4" />
-                  Start Debate
+                  <Sparkles className="h-4 w-4" />
+                  Roll Camera
                 </>
               )}
             </Button>
