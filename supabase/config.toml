@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.save-guest-debate]
 verify_jwt = false
+
+[functions.generate-trending-topics]
+verify_jwt = false
