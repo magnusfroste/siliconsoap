@@ -2,7 +2,6 @@ import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
-import { CuratedModel } from '@/repositories/curatedModelsRepository';
 
 interface ModelsByProvider {
   [provider: string]: CuratedModel[];
