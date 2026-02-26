@@ -250,7 +250,7 @@ export const QuickPromptsTab = () => {
                 <TableHead>Topic</TableHead>
                 <TableHead className="w-[100px]">Scenario</TableHead>
                 <TableHead className="w-[80px]">Active</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
