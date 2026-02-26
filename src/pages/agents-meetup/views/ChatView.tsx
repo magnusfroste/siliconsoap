@@ -77,7 +77,9 @@ export const ChatView = () => {
     isPaused,
     currentMessageIndex,
     isGenerating: isGeneratingAudio,
+    theaterMode,
     play,
+    playTheater,
     pause,
     stop
   } = useConversationPlayback(messages);
