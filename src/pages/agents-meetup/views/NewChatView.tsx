@@ -19,7 +19,7 @@ import { chatService } from '@/services';
 import { creditsService } from '@/services';
 import { analyticsService } from '@/services';
 import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
-import { suggestedTopicsByScenario, getRandomTopics } from '../constants/suggestedTopics';
+import { getRandomTopics } from '../constants/suggestedTopics';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import type { ChatSettings } from '@/models/chat';
 
