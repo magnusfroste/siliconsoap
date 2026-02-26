@@ -155,6 +155,10 @@ export const AdminView = () => {
           <TabsContent value="prompts" className="m-0">
             <QuickPromptsTab />
           </TabsContent>
+
+          <TabsContent value="elevenlabs" className="m-0">
+            <ElevenLabsTab />
+          </TabsContent>
         </div>
       </Tabs>
     </div>
