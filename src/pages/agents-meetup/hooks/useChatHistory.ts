@@ -9,6 +9,7 @@ export interface ChatHistoryItem {
   title: string;
   created_at: string;
   updated_at: string;
+  is_shared: boolean;
 }
 
 export const useChatHistory = (userId: string | undefined) => {
