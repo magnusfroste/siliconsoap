@@ -34,6 +34,9 @@ export const QuickPromptsTab = () => {
   const [generating, setGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<{ topic: string; scenario_id: string }[]>([]);
   const [addingSuggestion, setAddingSuggestion] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTopic, setEditTopic] = useState('');
+  const [editScenario, setEditScenario] = useState('');
 
   const fetchPrompts = async () => {
     const { data, error } = await supabase
