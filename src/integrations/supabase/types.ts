@@ -398,6 +398,36 @@ export type Database = {
           },
         ]
       }
+      quick_prompts: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          scenario_id: string
+          sort_order: number
+          topic: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          scenario_id?: string
+          sort_order?: number
+          topic: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          scenario_id?: string
+          sort_order?: number
+          topic?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           created_at: string | null
