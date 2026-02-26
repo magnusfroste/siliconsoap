@@ -15,6 +15,7 @@ interface ChatMessageProps {
   showTimeline?: boolean;
   isPlaying?: boolean;
   isTheaterReveal?: boolean;
+  audioDurationMs?: number | null;
   chatUrl?: string;
   showQuoteShare?: boolean;
 }
