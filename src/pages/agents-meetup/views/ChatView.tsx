@@ -43,6 +43,8 @@ export const ChatView = () => {
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
+  const [guestShareId, setGuestShareId] = useState<string | null>(null);
+  const [isSavingGuest, setIsSavingGuest] = useState(false);
   
   // Refs to prevent race conditions
   const hasStartedGeneration = useRef(false);
