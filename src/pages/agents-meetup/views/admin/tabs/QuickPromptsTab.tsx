@@ -102,8 +102,15 @@ export const QuickPromptsTab = () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-trending-topics');
       if (error) throw error;
-      setSuggestions(data?.topics || []);
-      if (!data?.topics?.length) toast.info('No suggestions generated');
+      const categorized = data?.categorized || {};
+      const flat: { topic: string; scenario_id: string }[] = [];
+      for (const [scenarioId, topics] of Object.entries(categorized)) {
+        if (Array.isArray(topics)) {
+          topics.forEach((t: string) => flat.push({ topic: t, scenario_id: scenarioId }));
+        }
+      }
+      setSuggestions(flat);
+      if (!flat.length) toast.info('No suggestions generated');
     } catch (err) {
       console.error(err);
       toast.error('Failed to generate topics');
