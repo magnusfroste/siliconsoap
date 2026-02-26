@@ -56,7 +56,8 @@ export const useChatHistory = (userId: string | undefined) => {
         id: chat.id,
         title: chat.title,
         created_at: chat.created_at || '',
-        updated_at: chat.updated_at || ''
+        updated_at: chat.updated_at || '',
+        is_shared: chat.is_public === true && !!chat.share_id
       }));
       
       if (isMounted.current) {
