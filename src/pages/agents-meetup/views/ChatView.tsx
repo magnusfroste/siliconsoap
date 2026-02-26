@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ChatView = () => {
   const { chatId } = useParams();
