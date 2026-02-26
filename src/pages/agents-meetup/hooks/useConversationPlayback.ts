@@ -61,11 +61,10 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
         }
 
         setCurrentMessageIndex(i);
+        setAudioDuration(null); // Reset for each message
         const message = messages[i];
 
         if (withTheater) {
-          // In theater mode, add a small delay before generating audio
-          // to let the typing animation start
           await new Promise(resolve => setTimeout(resolve, 300));
         }
 
@@ -78,7 +77,9 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
             break;
           }
 
-          await playBase64Audio(base64Audio, playbackControlsRef);
+          await playBase64Audio(base64Audio, playbackControlsRef, (durationMs) => {
+            setAudioDuration(durationMs);
+          });
         } catch (err) {
           setIsGenerating(false);
           if (abortControllerRef.current?.signal.aborted) {
