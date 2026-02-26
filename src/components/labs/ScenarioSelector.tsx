@@ -59,8 +59,8 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
         placeholder={currentScenario?.placeholder || "Enter your topic..."}
         value={promptInputs[activeScenario] || ''}
         onChange={(e) => handleInputChange(activeScenario, e.target.value)}
-        className="w-full min-h-[100px] resize-none text-base border-0 focus-visible:ring-0 bg-transparent px-0"
-        rows={4}
+        className="w-full min-h-[3.5rem] resize-none text-base border-0 focus-visible:ring-0 bg-transparent px-0"
+        rows={2}
         onInput={(e) => {
           const target = e.target as HTMLTextAreaElement;
           target.style.height = 'auto';
