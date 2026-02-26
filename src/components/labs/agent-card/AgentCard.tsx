@@ -56,9 +56,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({
     <Card className={`border-2 ${borderColorClass} shadow-md ${isDisabled ? 'opacity-50' : ''}`}>
       <CardHeader className="pb-2 px-3 pt-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <AgentAvatar agentLetter={agentLetter} iconBgClass={iconBgClass} />
+          <AgentAvatar agentLetter={agentLetter} iconBgClass={iconBgClass} name={soapName} />
           <span>{soapName}</span>
-          <span className="text-xs text-muted-foreground font-normal">({agentLetter})</span>
           {isDisabled && <span className="text-xs text-muted-foreground ml-2">(Disabled)</span>}
         </CardTitle>
         
