@@ -154,6 +154,48 @@ export const AnalyticsTab = () => {
     };
   }, [analytics]);
 
+  // Guest-specific statistics
+  const guestStats = useMemo(() => {
+    const guestDebates = analytics.filter(a => a.is_guest);
+    const registeredDebates = analytics.filter(a => !a.is_guest);
+    const guestCount = guestDebates.length;
+    const totalCount = analytics.length;
+    const guestRate = totalCount > 0 ? Math.round((guestCount / totalCount) * 100) : 0;
+
+    // Guest debates with share_id (saved to DB)
+    const savedGuest = guestDebates.filter(a => a.chat_id);
+    
+    // Unique guest sessions (by session_id)
+    const guestSessions = new Set(guestDebates.filter(a => a.session_id).map(a => a.session_id));
+    
+    // Popular topics from guests
+    const topicCounts: Record<string, number> = {};
+    guestDebates.forEach(a => {
+      const topic = a.prompt_preview?.slice(0, 60);
+      if (topic) {
+        topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+      }
+    });
+    const topGuestTopics = Object.entries(topicCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    // Conversion estimate: unique registered users vs total unique sessions
+    const uniqueRegistered = new Set(registeredDebates.filter(a => a.user_id).map(a => a.user_id)).size;
+    const totalUniqueSessions = guestSessions.size + uniqueRegistered;
+    const conversionRate = totalUniqueSessions > 0 ? Math.round((uniqueRegistered / totalUniqueSessions) * 100) : 0;
+
+    return {
+      guestCount,
+      guestRate,
+      savedGuestCount: savedGuest.length,
+      guestSessions: guestSessions.size,
+      conversionRate,
+      uniqueRegistered,
+      topGuestTopics
+    };
+  }, [analytics]);
+
   const hasActiveFilters = sharedFilter !== 'all' || modeFilter !== 'all' || toneFilter !== 'all' || dateRange !== undefined;
 
   const clearFilters = () => {
