@@ -28,6 +28,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     setCurrentMessageIndex(-1);
     setIsGenerating(false);
     setTheaterMode(false);
+    setAudioDuration(null);
   }, []);
 
   useEffect(() => {
