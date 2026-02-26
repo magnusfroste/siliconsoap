@@ -525,6 +525,7 @@ export const ChatView = () => {
                       showTimeline={true}
                       isPlaying={isPlaying && currentMessageIndex === index}
                       isTheaterReveal={isCurrentTheaterMessage}
+                      audioDurationMs={isCurrentTheaterMessage ? audioDuration : null}
                     />
                   )}
                 </div>
