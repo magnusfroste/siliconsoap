@@ -32,7 +32,7 @@ export const QuickPromptsTab = () => {
   const [newScenario, setNewScenario] = useState('general-problem');
   const [adding, setAdding] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{ topic: string; scenario_id: string }[]>([]);
   const [addingSuggestion, setAddingSuggestion] = useState<string | null>(null);
 
   const fetchPrompts = async () => {
