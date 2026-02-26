@@ -9,6 +9,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(-1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [theaterMode, setTheaterMode] = useState(false);
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const playbackControlsRef = useRef<PlaybackControls | null>(null);
   const isPlayingRef = useRef(false);

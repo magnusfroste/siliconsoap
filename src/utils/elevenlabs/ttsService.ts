@@ -60,7 +60,8 @@ export interface PlaybackControls {
 
 export const playBase64Audio = (
   base64Audio: string,
-  controlsRef?: React.MutableRefObject<PlaybackControls | null>
+  controlsRef?: React.MutableRefObject<PlaybackControls | null>,
+  onDurationKnown?: (durationMs: number) => void
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
@@ -78,6 +79,13 @@ export const playBase64Audio = (
       if (controlsRef) {
         controlsRef.current = { audioElement: audio, objectUrl: url };
       }
+
+      // Report duration as soon as metadata is available
+      audio.onloadedmetadata = () => {
+        if (onDurationKnown && audio.duration && isFinite(audio.duration)) {
+          onDurationKnown(audio.duration * 1000); // convert to ms
+        }
+      };
 
       audio.onended = () => {
         URL.revokeObjectURL(url);
