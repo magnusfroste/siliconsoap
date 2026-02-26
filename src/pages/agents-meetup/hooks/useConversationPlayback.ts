@@ -8,37 +8,34 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
   const [isPaused, setIsPaused] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(-1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [theaterMode, setTheaterMode] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const playbackControlsRef = useRef<PlaybackControls | null>(null);
-  const isPlayingRef = useRef(false); // Guard against multiple playback instances
+  const isPlayingRef = useRef(false);
 
   const stop = useCallback(() => {
-    // Abort any pending API calls
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     
-    // Stop current audio playback
     stopAudio(playbackControlsRef);
     
-    // Reset state
     isPlayingRef.current = false;
     setIsPlaying(false);
     setIsPaused(false);
     setCurrentMessageIndex(-1);
     setIsGenerating(false);
+    setTheaterMode(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stop();
     };
   }, [stop]);
 
-  const playSequentially = useCallback(async (startIndex: number = 0) => {
-    // Prevent multiple simultaneous playbacks
+  const playSequentially = useCallback(async (startIndex: number = 0, withTheater: boolean = false) => {
     if (isPlayingRef.current) {
       console.log('Playback already in progress, ignoring request');
       return;
@@ -50,6 +47,10 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     abortControllerRef.current = new AbortController();
     setIsPlaying(true);
     setIsPaused(false);
+    
+    if (withTheater) {
+      setTheaterMode(true);
+    }
 
     try {
       for (let i = startIndex; i < messages.length; i++) {
@@ -59,6 +60,12 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
 
         setCurrentMessageIndex(i);
         const message = messages[i];
+
+        if (withTheater) {
+          // In theater mode, add a small delay before generating audio
+          // to let the typing animation start
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
 
         setIsGenerating(true);
         try {
@@ -84,6 +91,11 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
         if (abortControllerRef.current?.signal.aborted) {
           break;
         }
+
+        if (withTheater) {
+          // Brief pause between messages in theater mode
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
     } catch (error) {
       console.error('Playback error:', error);
@@ -94,33 +106,37 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
       setIsPaused(false);
       setCurrentMessageIndex(-1);
       setIsGenerating(false);
+      setTheaterMode(false);
     }
   }, [messages, stop]);
 
   const play = useCallback(() => {
-    // Guard against multiple plays
     if (isPlayingRef.current) {
       console.log('Already playing, ignoring play request');
       return;
     }
     
     if (isPaused) {
-      // Resume from current position
-      playSequentially(currentMessageIndex);
+      playSequentially(currentMessageIndex, theaterMode);
     } else {
-      // Start from beginning
-      playSequentially(0);
+      playSequentially(0, false);
     }
-  }, [isPaused, currentMessageIndex, playSequentially]);
+  }, [isPaused, currentMessageIndex, playSequentially, theaterMode]);
+
+  const playTheater = useCallback(() => {
+    if (isPlayingRef.current) {
+      console.log('Already playing, ignoring theater request');
+      return;
+    }
+    playSequentially(0, true);
+  }, [playSequentially]);
 
   const pause = useCallback(() => {
-    // Abort pending API calls
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     
-    // Stop current audio
     stopAudio(playbackControlsRef);
     
     isPlayingRef.current = false;
@@ -133,7 +149,9 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     isPaused,
     currentMessageIndex,
     isGenerating,
+    theaterMode,
     play,
+    playTheater,
     pause,
     stop,
   };
