@@ -32,7 +32,7 @@ export const QuickPromptsTab = () => {
   const [newScenario, setNewScenario] = useState('general-problem');
   const [adding, setAdding] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{ topic: string; scenario_id: string }[]>([]);
   const [addingSuggestion, setAddingSuggestion] = useState<string | null>(null);
 
   const fetchPrompts = async () => {
@@ -102,8 +102,15 @@ export const QuickPromptsTab = () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-trending-topics');
       if (error) throw error;
-      setSuggestions(data?.topics || []);
-      if (!data?.topics?.length) toast.info('No suggestions generated');
+      const categorized = data?.categorized || {};
+      const flat: { topic: string; scenario_id: string }[] = [];
+      for (const [scenarioId, topics] of Object.entries(categorized)) {
+        if (Array.isArray(topics)) {
+          topics.forEach((t: string) => flat.push({ topic: t, scenario_id: scenarioId }));
+        }
+      }
+      setSuggestions(flat);
+      if (!flat.length) toast.info('No suggestions generated');
     } catch (err) {
       console.error(err);
       toast.error('Failed to generate topics');
@@ -111,16 +118,16 @@ export const QuickPromptsTab = () => {
     setGenerating(false);
   };
 
-  const handleAddSuggestion = async (topic: string) => {
+  const handleAddSuggestion = async (topic: string, scenarioId: string) => {
     setAddingSuggestion(topic);
     const { error } = await supabase
       .from('quick_prompts')
-      .insert({ topic, scenario_id: 'hot-debates', sort_order: prompts.length });
+      .insert({ topic, scenario_id: scenarioId, sort_order: prompts.length });
     
     if (error) {
       toast.error('Failed to add');
     } else {
-      setSuggestions(prev => prev.filter(s => s !== topic));
+      setSuggestions(prev => prev.filter(s => s.topic !== topic));
       toast.success('Added');
       fetchPrompts();
     }
@@ -177,17 +184,20 @@ export const QuickPromptsTab = () => {
         {suggestions.length > 0 && (
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {suggestions.map((topic, i) => (
+              {suggestions.map((s, i) => (
                 <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50">
-                  <span className="text-sm flex-1">{topic}</span>
+                  <span className="text-sm flex-1">{s.topic}</span>
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {SCENARIO_OPTIONS.find(o => o.value === s.scenario_id)?.label || s.scenario_id}
+                  </Badge>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleAddSuggestion(topic)}
-                    disabled={addingSuggestion === topic}
+                    onClick={() => handleAddSuggestion(s.topic, s.scenario_id)}
+                    disabled={addingSuggestion === s.topic}
                     className="gap-1 shrink-0"
                   >
-                    {addingSuggestion === topic ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                    {addingSuggestion === s.topic ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                     Add
                   </Button>
                 </div>
