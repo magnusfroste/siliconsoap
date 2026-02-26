@@ -256,22 +256,44 @@ export const QuickPromptsTab = () => {
             <TableBody>
               {prompts.map(p => (
                 <TableRow key={p.id}>
-                  <TableCell className="text-sm">{p.topic}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {SCENARIO_OPTIONS.find(s => s.value === p.scenario_id)?.label || p.scenario_id}
-                    </Badge>
+                  <TableCell className="text-sm">
+                    {editingId === p.id ? (
+                      <Input value={editTopic} onChange={e => setEditTopic(e.target.value)} className="h-8" onKeyDown={e => e.key === 'Enter' && saveEdit()} />
+                    ) : (
+                      p.topic
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Switch
-                      checked={p.is_enabled}
-                      onCheckedChange={(checked) => handleToggle(p.id, checked)}
-                    />
+                    {editingId === p.id ? (
+                      <Select value={editScenario} onValueChange={setEditScenario}>
+                        <SelectTrigger className="h-8 w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SCENARIO_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">
+                        {SCENARIO_OPTIONS.find(s => s.value === p.scenario_id)?.label || p.scenario_id}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Switch checked={p.is_enabled} onCheckedChange={(checked) => handleToggle(p.id, checked)} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === p.id ? (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={saveEdit} className="h-8 w-8 text-primary"><Save className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={cancelEdit} className="h-8 w-8"><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={() => startEdit(p)} className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
