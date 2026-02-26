@@ -39,8 +39,9 @@ const agentStyles = {
 
 /**
  * Typewriter effect hook – reveals text character by character
+ * Speed adapts to text length so short and long messages feel natural
  */
-const useTypewriter = (text: string, enabled: boolean, speed: number = 15) => {
+const useTypewriter = (text: string, enabled: boolean) => {
   const [displayedText, setDisplayedText] = useState(enabled ? '' : text);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -51,21 +52,27 @@ const useTypewriter = (text: string, enabled: boolean, speed: number = 15) => {
       return;
     }
 
+    // Dynamic speed: short texts (~100 chars) → 20ms, long texts (~2000+) → 3ms
+    const len = text.length;
+    const speed = len < 200 ? 18 : len < 600 ? 10 : len < 1200 ? 5 : 3;
+
     setDisplayedText('');
     setIsTyping(true);
     let index = 0;
 
     const interval = setInterval(() => {
-      index++;
+      // Reveal multiple chars per tick for very long texts
+      const chunkSize = len > 1200 ? 3 : len > 600 ? 2 : 1;
+      index = Math.min(index + chunkSize, len);
       setDisplayedText(text.slice(0, index));
-      if (index >= text.length) {
+      if (index >= len) {
         clearInterval(interval);
         setIsTyping(false);
       }
     }, speed);
 
     return () => clearInterval(interval);
-  }, [text, enabled, speed]);
+  }, [text, enabled]);
 
   return { displayedText, isTyping };
 };
