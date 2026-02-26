@@ -78,6 +78,7 @@ export const ChatView = () => {
     currentMessageIndex,
     isGenerating: isGeneratingAudio,
     theaterMode,
+    audioDuration,
     play,
     playTheater,
     pause,
