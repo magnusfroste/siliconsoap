@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -42,6 +43,8 @@ export const ChatView = () => {
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
+  const [guestShareId, setGuestShareId] = useState<string | null>(null);
+  const [isSavingGuest, setIsSavingGuest] = useState(false);
   
   // Refs to prevent race conditions
   const hasStartedGeneration = useRef(false);
@@ -129,6 +132,44 @@ export const ChatView = () => {
       setConversationComplete(true);
     }
   }, [chat, loading, messages.length]);
+
+  // Save guest debate to database when conversation completes
+  useEffect(() => {
+    if (!conversationComplete || !isGuest || !chat || messages.length === 0 || guestShareId || isSavingGuest) return;
+    
+    const saveGuestDebate = async () => {
+      setIsSavingGuest(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('save-guest-debate', {
+          body: {
+            prompt: chat.prompt,
+            title: chat.title,
+            scenarioId: chat.scenario_id,
+            settings: chat.settings,
+            messages: messages.map(m => ({
+              agent: m.agent,
+              message: m.message,
+              model: m.model,
+              persona: m.persona,
+            })),
+            sessionId: chatId,
+          }
+        });
+        
+        if (!error && data?.shareId) {
+          setGuestShareId(data.shareId);
+        } else {
+          console.warn('Failed to save guest debate:', error || data?.error);
+        }
+      } catch (err) {
+        console.warn('Error saving guest debate:', err);
+      } finally {
+        setIsSavingGuest(false);
+      }
+    };
+    
+    saveGuestDebate();
+  }, [conversationComplete, isGuest, chat, messages.length, guestShareId, isSavingGuest, chatId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -589,6 +630,8 @@ export const ChatView = () => {
               canContinue={true}
               onContinue={() => setWantsToContinue(true)}
               isGuest={isGuest}
+              shareId={guestShareId || chat?.share_id}
+              isSavingGuest={isSavingGuest}
             />
           )}
         </div>

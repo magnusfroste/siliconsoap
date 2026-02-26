@@ -168,7 +168,7 @@ export const analyticsRepository = {
       .from('chat_analytics')
       .insert({
         chat_id: isValidUuid ? params.chatId : null,
-        user_id: params.userId || null,
+        user_id: params.isGuest ? null : (params.userId || null),
         is_guest: params.isGuest,
         prompt_preview: params.promptPreview.slice(0, 200),
         scenario_id: params.scenarioId,

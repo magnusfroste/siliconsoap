@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, Sparkles, UserPlus } from 'lucide-react';
+import { MessageCircle, Sparkles, UserPlus, Share2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ConversationCompleteProps {
@@ -9,6 +9,8 @@ interface ConversationCompleteProps {
   onContinue?: () => void;
   canContinue?: boolean;
   isGuest?: boolean;
+  shareId?: string | null;
+  isSavingGuest?: boolean;
 }
 
 export const ConversationComplete = ({ 
@@ -16,7 +18,9 @@ export const ConversationComplete = ({
   participationMode,
   onContinue,
   canContinue = true,
-  isGuest = false
+  isGuest = false,
+  shareId,
+  isSavingGuest = false
 }: ConversationCompleteProps) => {
   const navigate = useNavigate();
 
@@ -36,6 +40,31 @@ export const ConversationComplete = ({
                 className="h-7 text-xs px-2"
               >
                 Continue
+              </Button>
+            )}
+            
+            {/* Guest share button */}
+            {isGuest && shareId && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={async () => {
+                  const shareUrl = `${window.location.origin}/shared/${shareId}`;
+                  await navigator.clipboard.writeText(shareUrl);
+                  const { toast } = await import('sonner');
+                  toast.success('Link copied!');
+                }}
+                className="h-7 text-xs px-2 gap-1"
+              >
+                <Share2 className="h-3 w-3" />
+                Share
+              </Button>
+            )}
+
+            {isGuest && isSavingGuest && (
+              <Button variant="outline" size="sm" className="h-7 text-xs px-2 gap-1" disabled>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving...
               </Button>
             )}
             
