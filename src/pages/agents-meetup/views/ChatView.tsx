@@ -490,6 +490,12 @@ export const ChatView = () => {
             const previousRound = index > 0 ? Math.floor((index - 1) / numberOfAgents) + 1 : 0;
             const isNewRound = currentRound > previousRound;
 
+            // Theater mode: hide messages that haven't been revealed yet
+            const isHiddenInTheater = theaterMode && (isPlaying || isPaused) && index > currentMessageIndex;
+            const isCurrentTheaterMessage = theaterMode && isPlaying && index === currentMessageIndex;
+
+            if (isHiddenInTheater) return null;
+
             return (
               <div key={index}>
                 {/* Round Separator */}
@@ -517,6 +523,7 @@ export const ChatView = () => {
                       totalMessages={messages.length}
                       showTimeline={true}
                       isPlaying={isPlaying && currentMessageIndex === index}
+                      isTheaterReveal={isCurrentTheaterMessage}
                     />
                   )}
                 </div>

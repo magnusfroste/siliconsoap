@@ -6,6 +6,7 @@ import { QuoteShareButton } from './QuoteShareButton';
 import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface ChatMessageProps {
   message: ConversationMessage;
@@ -13,6 +14,7 @@ interface ChatMessageProps {
   totalMessages: number;
   showTimeline?: boolean;
   isPlaying?: boolean;
+  isTheaterReveal?: boolean;
   chatUrl?: string;
   showQuoteShare?: boolean;
 }
@@ -35,12 +37,46 @@ const agentStyles = {
   }
 };
 
+/**
+ * Typewriter effect hook – reveals text character by character
+ */
+const useTypewriter = (text: string, enabled: boolean, speed: number = 15) => {
+  const [displayedText, setDisplayedText] = useState(enabled ? '' : text);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (!enabled) {
+      setDisplayedText(text);
+      setIsTyping(false);
+      return;
+    }
+
+    setDisplayedText('');
+    setIsTyping(true);
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index++;
+      setDisplayedText(text.slice(0, index));
+      if (index >= text.length) {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, speed);
+
+    return () => clearInterval(interval);
+  }, [text, enabled, speed]);
+
+  return { displayedText, isTyping };
+};
+
 export const ChatMessage = ({ 
   message, 
   messageIndex, 
   totalMessages, 
   showTimeline = true, 
   isPlaying = false,
+  isTheaterReveal = false,
   chatUrl,
   showQuoteShare = false
 }: ChatMessageProps) => {
@@ -53,18 +89,20 @@ export const ChatMessage = ({
   const agentLetter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
   const soapName = getAgentSoapName(message.agent, message.persona);
   const isLastMessage = messageIndex === totalMessages - 1;
+  
+  const { displayedText, isTyping } = useTypewriter(message.message, isTheaterReveal);
 
   return (
-    <div className="relative pl-8 animate-fade-in group" style={{ animationDelay: `${messageIndex * 0.1}s` }}>
+    <div 
+      className={`relative pl-8 group ${isTheaterReveal ? 'animate-scale-in' : 'animate-fade-in'}`} 
+      style={{ animationDelay: isTheaterReveal ? '0s' : `${messageIndex * 0.1}s` }}
+    >
       {/* Timeline Connector */}
       {showTimeline && (
         <>
-          {/* Vertical Line */}
           {!isLastMessage && (
             <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-border -translate-x-1/2" />
           )}
-          
-          {/* Colored Dot */}
           <div className={`absolute left-4 top-4 w-2 h-2 rounded-full ${style.timelineDotClass} -translate-x-1/2 z-10`} />
         </>
       )}
@@ -76,14 +114,12 @@ export const ChatMessage = ({
             <AgentAvatar agentLetter={agentLetter} iconBgClass={style.iconBgClass} name={soapName} />
             <span className="font-semibold">{soapName}</span>
             
-            {/* Turn Order Badge */}
             <Badge variant="outline" className="text-xs">
               #{messageIndex + 1}
             </Badge>
             
             <span className="text-xs text-muted-foreground">· {message.model}</span>
             
-            {/* Fallback Indicator */}
             {message.fallbackUsed && (
               <TooltipProvider>
                 <Tooltip>
@@ -104,12 +140,10 @@ export const ChatMessage = ({
               </TooltipProvider>
             )}
             
-            {/* Persona Badge */}
             <Badge variant="secondary" className="text-xs">
               {message.persona}
             </Badge>
 
-            {/* Quote Share Button */}
             {showQuoteShare && (
               <div className="ml-auto">
                 <QuoteShareButton message={message} chatUrl={chatUrl} />
@@ -120,7 +154,10 @@ export const ChatMessage = ({
         
         <CardContent className="px-4 pb-4 pt-0">
           <div className="text-sm leading-relaxed whitespace-pre-wrap">
-            {message.message}
+            {isTheaterReveal ? displayedText : message.message}
+            {isTyping && (
+              <span className="inline-block w-0.5 h-4 bg-foreground animate-pulse ml-0.5 align-text-bottom" />
+            )}
           </div>
         </CardContent>
       </Card>
