@@ -25,11 +25,18 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You generate trending debate topics. Return ONLY a JSON array of 8 strings. Each string is a short, provocative debate question (under 80 chars) based on current events and hot topics in tech, AI, society, and politics. No markdown, no explanation, just the JSON array.'
+            content: `You generate trending debate topics categorized by type. Return ONLY a JSON object with these exact keys: "general-problem", "ethical-dilemma", "future-prediction". Each key maps to an array of 3 short debate questions (under 80 chars). Topics should be based on current real-world events and trends. No markdown, no explanation, just the JSON object.
+
+Example format:
+{"general-problem":["topic1","topic2","topic3"],"ethical-dilemma":["topic1","topic2","topic3"],"future-prediction":["topic1","topic2","topic3"]}`
           },
           {
             role: 'user',
-            content: `Generate 8 trending debate topics that would be hot discussions right now in February 2026. Focus on AI, technology, society, and ethics. Return only a JSON array of strings.`
+            content: `Generate 9 trending debate topics (3 per category) that are hot right now in February 2026:
+- general-problem: Real policy/societal problems being debated (e.g. regulation, economy, housing)
+- ethical-dilemma: Moral questions around tech, AI, bioethics, privacy
+- future-prediction: Bold predictions about AI, space, biotech, society
+Return only the JSON object.`
           }
         ],
         max_tokens: 1000,
