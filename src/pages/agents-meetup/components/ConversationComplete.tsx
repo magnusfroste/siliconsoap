@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageCircle, Sparkles, UserPlus } from 'lucide-react';
+import { MessageCircle, Sparkles, UserPlus, Share2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ConversationCompleteProps {
@@ -9,6 +9,8 @@ interface ConversationCompleteProps {
   onContinue?: () => void;
   canContinue?: boolean;
   isGuest?: boolean;
+  shareId?: string | null;
+  isSavingGuest?: boolean;
 }
 
 export const ConversationComplete = ({ 
