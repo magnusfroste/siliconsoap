@@ -829,7 +829,9 @@ export const ChatView = () => {
           isGeneratingAudio={isGeneratingAudio}
           currentMessageIndex={currentMessageIndex}
           totalMessages={messages.length}
+          theaterMode={theaterMode}
           onPlay={play}
+          onPlayTheater={playTheater}
           onPause={pause}
           onStop={stop}
           canAnalyze={!isGuest}
