@@ -9,6 +9,7 @@ export interface ChatHistoryItem {
   title: string;
   created_at: string;
   updated_at: string;
+  is_shared: boolean;
 }
 
 export const useChatHistory = (userId: string | undefined) => {
@@ -24,7 +25,8 @@ export const useChatHistory = (userId: string | undefined) => {
         id: chat.id,
         title: chat.title,
         created_at: chat.created_at || '',
-        updated_at: chat.updated_at || ''
+        updated_at: chat.updated_at || '',
+        is_shared: false
       }));
 
       // Sort by updated_at descending
@@ -54,7 +56,8 @@ export const useChatHistory = (userId: string | undefined) => {
         id: chat.id,
         title: chat.title,
         created_at: chat.created_at || '',
-        updated_at: chat.updated_at || ''
+        updated_at: chat.updated_at || '',
+        is_shared: chat.is_public === true && !!chat.share_id
       }));
       
       if (isMounted.current) {

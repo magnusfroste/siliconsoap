@@ -470,7 +470,7 @@ export const ChatView = () => {
         </div>
         {!isGuest && messages.length > 0 && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={handleShareClick}
             className="gap-2 shrink-0"
