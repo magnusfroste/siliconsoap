@@ -59,7 +59,7 @@ export const AdminView = () => {
       <AdminHeader />
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-8 h-12">
+        <TabsList className="grid w-full grid-cols-9 h-12">
           <TabsTrigger value="users" className="gap-2 text-sm">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
