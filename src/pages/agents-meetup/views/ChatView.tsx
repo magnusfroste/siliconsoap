@@ -133,6 +133,44 @@ export const ChatView = () => {
     }
   }, [chat, loading, messages.length]);
 
+  // Save guest debate to database when conversation completes
+  useEffect(() => {
+    if (!conversationComplete || !isGuest || !chat || messages.length === 0 || guestShareId || isSavingGuest) return;
+    
+    const saveGuestDebate = async () => {
+      setIsSavingGuest(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('save-guest-debate', {
+          body: {
+            prompt: chat.prompt,
+            title: chat.title,
+            scenarioId: chat.scenario_id,
+            settings: chat.settings,
+            messages: messages.map(m => ({
+              agent: m.agent,
+              message: m.message,
+              model: m.model,
+              persona: m.persona,
+            })),
+            sessionId: chatId,
+          }
+        });
+        
+        if (!error && data?.shareId) {
+          setGuestShareId(data.shareId);
+        } else {
+          console.warn('Failed to save guest debate:', error || data?.error);
+        }
+      } catch (err) {
+        console.warn('Error saving guest debate:', err);
+      } finally {
+        setIsSavingGuest(false);
+      }
+    };
+    
+    saveGuestDebate();
+  }, [conversationComplete, isGuest, chat, messages.length, guestShareId, isSavingGuest, chatId]);
+
   // Cleanup on unmount
   useEffect(() => {
     isMounted.current = true;
