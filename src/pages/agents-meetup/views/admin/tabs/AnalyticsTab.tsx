@@ -154,6 +154,48 @@ export const AnalyticsTab = () => {
     };
   }, [analytics]);
 
+  // Guest-specific statistics
+  const guestStats = useMemo(() => {
+    const guestDebates = analytics.filter(a => a.is_guest);
+    const registeredDebates = analytics.filter(a => !a.is_guest);
+    const guestCount = guestDebates.length;
+    const totalCount = analytics.length;
+    const guestRate = totalCount > 0 ? Math.round((guestCount / totalCount) * 100) : 0;
+
+    // Guest debates with share_id (saved to DB)
+    const savedGuest = guestDebates.filter(a => a.chat_id);
+    
+    // Unique guest sessions (by session_id)
+    const guestSessions = new Set(guestDebates.filter(a => a.session_id).map(a => a.session_id));
+    
+    // Popular topics from guests
+    const topicCounts: Record<string, number> = {};
+    guestDebates.forEach(a => {
+      const topic = a.prompt_preview?.slice(0, 60);
+      if (topic) {
+        topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+      }
+    });
+    const topGuestTopics = Object.entries(topicCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    // Conversion estimate: unique registered users vs total unique sessions
+    const uniqueRegistered = new Set(registeredDebates.filter(a => a.user_id).map(a => a.user_id)).size;
+    const totalUniqueSessions = guestSessions.size + uniqueRegistered;
+    const conversionRate = totalUniqueSessions > 0 ? Math.round((uniqueRegistered / totalUniqueSessions) * 100) : 0;
+
+    return {
+      guestCount,
+      guestRate,
+      savedGuestCount: savedGuest.length,
+      guestSessions: guestSessions.size,
+      conversionRate,
+      uniqueRegistered,
+      topGuestTopics
+    };
+  }, [analytics]);
+
   const hasActiveFilters = sharedFilter !== 'all' || modeFilter !== 'all' || toneFilter !== 'all' || dateRange !== undefined;
 
   const clearFilters = () => {
@@ -320,7 +362,62 @@ export const AnalyticsTab = () => {
         </Card>
       </div>
 
-      {/* Model Usage Breakdown */}
+      {/* Guest Activity Stats */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <div>
+              <CardTitle>Guest Activity</CardTitle>
+              <CardDescription>
+                Visitor engagement and conversion funnel
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.guestCount}</div>
+              <div className="text-xs text-muted-foreground">Guest Debates</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.guestSessions}</div>
+              <div className="text-xs text-muted-foreground">Unique Guest Sessions</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.conversionRate}%</div>
+              <div className="text-xs text-muted-foreground">Conversion Rate</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.uniqueRegistered}</div>
+              <div className="text-xs text-muted-foreground">Registered Users</div>
+            </div>
+          </div>
+
+          {guestStats.topGuestTopics.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Top Guest Topics</h4>
+              <div className="space-y-2">
+                {guestStats.topGuestTopics.map(([topic, count], i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className="truncate text-muted-foreground flex-1 mr-2">{topic}</span>
+                    <Badge variant="secondary">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {guestStats.guestCount === 0 && (
+            <div className="text-center text-muted-foreground py-4 text-sm">
+              No guest debates recorded yet. Guest analytics will appear here once visitors start debates.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
