@@ -39,10 +39,9 @@ const agentStyles = {
 };
 
 /**
- * Typewriter effect hook – reveals text character by character
- * Speed adapts to text length so short and long messages feel natural
+ * Typewriter effect hook – reveals text synced to audio duration when available
  */
-const useTypewriter = (text: string, enabled: boolean) => {
+const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number | null) => {
   const [displayedText, setDisplayedText] = useState(enabled ? '' : text);
   const [isTyping, setIsTyping] = useState(false);
 
@@ -53,17 +52,43 @@ const useTypewriter = (text: string, enabled: boolean) => {
       return;
     }
 
-    // Dynamic speed: short texts (~100 chars) → 20ms, long texts (~2000+) → 3ms
     const len = text.length;
-    const speed = len < 200 ? 18 : len < 600 ? 10 : len < 1200 ? 5 : 3;
+    if (len === 0) {
+      setDisplayedText('');
+      setIsTyping(false);
+      return;
+    }
 
     setDisplayedText('');
     setIsTyping(true);
     let index = 0;
 
+    // If we know the audio duration, spread typing across ~90% of it
+    // so text finishes just before audio ends
+    if (audioDurationMs && audioDurationMs > 0) {
+      const targetDuration = audioDurationMs * 0.9;
+      const intervalMs = Math.max(10, targetDuration / len);
+      // For very fast intervals, reveal multiple chars per tick
+      const chunkSize = intervalMs < 10 ? Math.ceil(10 / intervalMs) : 1;
+      const adjustedInterval = Math.max(10, intervalMs * chunkSize);
+
+      const interval = setInterval(() => {
+        index = Math.min(index + chunkSize, len);
+        setDisplayedText(text.slice(0, index));
+        if (index >= len) {
+          clearInterval(interval);
+          setIsTyping(false);
+        }
+      }, adjustedInterval);
+
+      return () => clearInterval(interval);
+    }
+
+    // Fallback: dynamic speed without audio sync
+    const speed = len < 200 ? 18 : len < 600 ? 10 : len < 1200 ? 5 : 3;
+    const chunkSize = len > 1200 ? 3 : len > 600 ? 2 : 1;
+
     const interval = setInterval(() => {
-      // Reveal multiple chars per tick for very long texts
-      const chunkSize = len > 1200 ? 3 : len > 600 ? 2 : 1;
       index = Math.min(index + chunkSize, len);
       setDisplayedText(text.slice(0, index));
       if (index >= len) {
@@ -73,7 +98,7 @@ const useTypewriter = (text: string, enabled: boolean) => {
     }, speed);
 
     return () => clearInterval(interval);
-  }, [text, enabled]);
+  }, [text, enabled, audioDurationMs]);
 
   return { displayedText, isTyping };
 };
