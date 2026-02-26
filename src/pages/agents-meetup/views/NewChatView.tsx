@@ -309,8 +309,8 @@ export const NewChatView = () => {
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" />
-                  Roll Camera
+                   <Sparkles className="h-4 w-4" />
+                   Start Debate
                 </>
               )}
             </Button>
