@@ -28,12 +28,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   // If loading, show a static disabled trigger instead of a Select (avoids BubbleSelect issues)
   if (loadingModels) {
     return (
-      <div className="flex items-center gap-1.5">
-        <div className="h-8 text-sm flex-1 flex items-center gap-1 px-3 rounded-md border border-input bg-background text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin" />
-          <span>Loading...</span>
-        </div>
-        <ModelInfoLink />
+      <div className="h-8 text-sm flex items-center gap-1 px-3 rounded-md border border-input bg-background text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Loading...</span>
       </div>
     );
   }
