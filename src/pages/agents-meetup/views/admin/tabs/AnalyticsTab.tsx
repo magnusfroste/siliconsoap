@@ -362,7 +362,62 @@ export const AnalyticsTab = () => {
         </Card>
       </div>
 
-      {/* Model Usage Breakdown */}
+      {/* Guest Activity Stats */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <div>
+              <CardTitle>Guest Activity</CardTitle>
+              <CardDescription>
+                Visitor engagement and conversion funnel
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.guestCount}</div>
+              <div className="text-xs text-muted-foreground">Guest Debates</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.guestSessions}</div>
+              <div className="text-xs text-muted-foreground">Unique Guest Sessions</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.conversionRate}%</div>
+              <div className="text-xs text-muted-foreground">Conversion Rate</div>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50">
+              <div className="text-2xl font-bold">{guestStats.uniqueRegistered}</div>
+              <div className="text-xs text-muted-foreground">Registered Users</div>
+            </div>
+          </div>
+
+          {guestStats.topGuestTopics.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Top Guest Topics</h4>
+              <div className="space-y-2">
+                {guestStats.topGuestTopics.map(([topic, count], i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className="truncate text-muted-foreground flex-1 mr-2">{topic}</span>
+                    <Badge variant="secondary">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {guestStats.guestCount === 0 && (
+            <div className="text-center text-muted-foreground py-4 text-sm">
+              No guest debates recorded yet. Guest analytics will appear here once visitors start debates.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
