@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { CuratedModel } from '@/repositories/curatedModelsRepository';
 import { CuratedModel } from '@/repositories/curatedModelsRepository';
 
 interface ModelsByProvider {
