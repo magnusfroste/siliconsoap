@@ -61,7 +61,7 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   return (
     <div className="space-y-4 mb-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Crew</h3>
+        <h3 className="text-sm font-medium">Agent Crew</h3>
         {onShuffleModels && (
           <Button variant="outline" size="sm" onClick={onShuffleModels} className="h-8 gap-1.5" type="button">
             <Shuffle className="h-3.5 w-3.5" />
