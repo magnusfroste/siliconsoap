@@ -15,7 +15,8 @@ import {
   SettingsTab,
   AnalyticsTab,
   SeedingTab,
-  UsersTab
+  UsersTab,
+  QuickPromptsTab
 } from './admin';
 
 export const AdminView = () => {
