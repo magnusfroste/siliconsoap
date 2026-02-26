@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.prerender]
 verify_jwt = false
+
+[functions.save-guest-debate]
+verify_jwt = false

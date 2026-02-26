@@ -18,7 +18,9 @@ export const ConversationComplete = ({
   participationMode,
   onContinue,
   canContinue = true,
-  isGuest = false
+  isGuest = false,
+  shareId,
+  isSavingGuest = false
 }: ConversationCompleteProps) => {
   const navigate = useNavigate();
 
