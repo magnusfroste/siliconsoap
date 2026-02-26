@@ -117,10 +117,10 @@ export const Landing = () => {
       <AgentPersonasShowcase />
 
       {/* Hall of Shame */}
-      <LandingHallOfShame />
+      {isEnabled('show_landing_hall_of_shame') && <LandingHallOfShame />}
 
       {/* Featured Debates Section */}
-      <FeaturedDebates />
+      {isEnabled('show_landing_trending_debates') && <FeaturedDebates />}
 
       {/* Silicon Ranks Showcase */}
       <SiliconRanksShowcase />
