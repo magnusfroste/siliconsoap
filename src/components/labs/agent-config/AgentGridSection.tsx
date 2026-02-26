@@ -1,10 +1,9 @@
-
-import React from 'react';
-import { AgentCard } from '../agent-card/AgentCard';
-import { Profile, ModelsByProvider } from '../agent-card/types';
-import { UseFormReturn } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Shuffle } from 'lucide-react';
+import React from "react";
+import { AgentCard } from "../agent-card/AgentCard";
+import { Profile, ModelsByProvider } from "../agent-card/types";
+import { UseFormReturn } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Shuffle } from "lucide-react";
 
 interface AgentGridSectionProps {
   numberOfAgents: number;
@@ -26,10 +25,10 @@ interface AgentGridSectionProps {
   formC: UseFormReturn<{ persona: string }>;
   modelsByProvider: ModelsByProvider;
   loadingModels: boolean;
-  conversationTone?: 'formal' | 'casual' | 'heated' | 'collaborative';
+  conversationTone?: "formal" | "casual" | "heated" | "collaborative";
   agreementBias?: number;
   temperature?: number;
-  personalityIntensity?: 'mild' | 'moderate' | 'extreme';
+  personalityIntensity?: "mild" | "moderate" | "extreme";
   onShuffleModels?: () => void;
 }
 
@@ -57,85 +56,79 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   agreementBias,
   temperature,
   personalityIntensity,
-  onShuffleModels
+  onShuffleModels,
 }) => {
   return (
     <div className="space-y-4 mb-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Agent Configuration</h3>
+        <h3 className="text-sm font-medium">Agents</h3>
         {onShuffleModels && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShuffleModels}
-            className="h-8 gap-1.5"
-            type="button"
-          >
+          <Button variant="outline" size="sm" onClick={onShuffleModels} className="h-8 gap-1.5" type="button">
             <Shuffle className="h-3.5 w-3.5" />
             Shuffle Models
           </Button>
         )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <AgentCard
-        agentLetter="A"
-        agentModel={agentAModel}
-        setAgentModel={setAgentAModel}
-        agentPersona={agentAPersona}
-        handleAgentPersonaChange={handleAgentAPersonaChange}
-        profiles={profiles}
-        form={formA}
-        modelsByProvider={modelsByProvider}
-        loadingModels={loadingModels}
-        numberOfAgents={numberOfAgents}
-        minAgents={1}
-        borderColorClass="border-purple-200 dark:border-purple-700"
-        iconBgClass="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-        conversationTone={conversationTone}
-        agreementBias={agreementBias}
-        temperature={temperature}
-        personalityIntensity={personalityIntensity}
-      />
+        <AgentCard
+          agentLetter="A"
+          agentModel={agentAModel}
+          setAgentModel={setAgentAModel}
+          agentPersona={agentAPersona}
+          handleAgentPersonaChange={handleAgentAPersonaChange}
+          profiles={profiles}
+          form={formA}
+          modelsByProvider={modelsByProvider}
+          loadingModels={loadingModels}
+          numberOfAgents={numberOfAgents}
+          minAgents={1}
+          borderColorClass="border-purple-200 dark:border-purple-700"
+          iconBgClass="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+          conversationTone={conversationTone}
+          agreementBias={agreementBias}
+          temperature={temperature}
+          personalityIntensity={personalityIntensity}
+        />
 
-      <AgentCard
-        agentLetter="B"
-        agentModel={agentBModel}
-        setAgentModel={setAgentBModel}
-        agentPersona={agentBPersona}
-        handleAgentPersonaChange={handleAgentBPersonaChange}
-        profiles={profiles}
-        form={formB}
-        modelsByProvider={modelsByProvider}
-        loadingModels={loadingModels}
-        numberOfAgents={numberOfAgents}
-        minAgents={2}
-        borderColorClass="border-blue-200 dark:border-blue-700"
-        iconBgClass="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-        conversationTone={conversationTone}
-        agreementBias={agreementBias}
-        temperature={temperature}
-        personalityIntensity={personalityIntensity}
-      />
-      
-      <AgentCard
-        agentLetter="C"
-        agentModel={agentCModel}
-        setAgentModel={setAgentCModel}
-        agentPersona={agentCPersona}
-        handleAgentPersonaChange={handleAgentCPersonaChange}
-        profiles={profiles}
-        form={formC}
-        modelsByProvider={modelsByProvider}
-        loadingModels={loadingModels}
-        numberOfAgents={numberOfAgents}
-        minAgents={3}
-        borderColorClass="border-green-200 dark:border-green-700"
-        iconBgClass="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-        conversationTone={conversationTone}
-        agreementBias={agreementBias}
-        temperature={temperature}
-        personalityIntensity={personalityIntensity}
-      />
+        <AgentCard
+          agentLetter="B"
+          agentModel={agentBModel}
+          setAgentModel={setAgentBModel}
+          agentPersona={agentBPersona}
+          handleAgentPersonaChange={handleAgentBPersonaChange}
+          profiles={profiles}
+          form={formB}
+          modelsByProvider={modelsByProvider}
+          loadingModels={loadingModels}
+          numberOfAgents={numberOfAgents}
+          minAgents={2}
+          borderColorClass="border-blue-200 dark:border-blue-700"
+          iconBgClass="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+          conversationTone={conversationTone}
+          agreementBias={agreementBias}
+          temperature={temperature}
+          personalityIntensity={personalityIntensity}
+        />
+
+        <AgentCard
+          agentLetter="C"
+          agentModel={agentCModel}
+          setAgentModel={setAgentCModel}
+          agentPersona={agentCPersona}
+          handleAgentPersonaChange={handleAgentCPersonaChange}
+          profiles={profiles}
+          form={formC}
+          modelsByProvider={modelsByProvider}
+          loadingModels={loadingModels}
+          numberOfAgents={numberOfAgents}
+          minAgents={3}
+          borderColorClass="border-green-200 dark:border-green-700"
+          iconBgClass="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+          conversationTone={conversationTone}
+          agreementBias={agreementBias}
+          temperature={temperature}
+          personalityIntensity={personalityIntensity}
+        />
       </div>
     </div>
   );
