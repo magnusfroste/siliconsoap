@@ -110,6 +110,7 @@ export const ChatMessage = ({
   showTimeline = true, 
   isPlaying = false,
   isTheaterReveal = false,
+  audioDurationMs,
   chatUrl,
   showQuoteShare = false
 }: ChatMessageProps) => {
@@ -123,7 +124,7 @@ export const ChatMessage = ({
   const soapName = getAgentSoapName(message.agent, message.persona);
   const isLastMessage = messageIndex === totalMessages - 1;
   
-  const { displayedText, isTyping } = useTypewriter(message.message, isTheaterReveal);
+  const { displayedText, isTyping } = useTypewriter(message.message, isTheaterReveal, audioDurationMs);
 
   return (
     <div 
