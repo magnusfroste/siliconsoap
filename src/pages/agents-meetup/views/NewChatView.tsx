@@ -267,7 +267,7 @@ export const NewChatView = () => {
 
               <Separator className="my-4" />
 
-              {/* Conversation Settings */}
+              {/* Conversation Settings + Advanced */}
               <ConversationSettings
                 numberOfAgents={state.numberOfAgents}
                 setNumberOfAgents={actions.setNumberOfAgents}
@@ -282,9 +282,6 @@ export const NewChatView = () => {
                 responseLengthOptions={responseLengthOptions}
               />
               
-              <Separator className="my-4" />
-              
-              {/* Expert Settings */}
               <ExpertSettings
                 conversationTone={state.conversationTone}
                 setConversationTone={actions.setConversationTone}
