@@ -99,6 +99,34 @@ export const QuickPromptsTab = () => {
     }
   };
 
+  const startEdit = (p: QuickPrompt) => {
+    setEditingId(p.id);
+    setEditTopic(p.topic);
+    setEditScenario(p.scenario_id);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTopic('');
+    setEditScenario('');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTopic.trim()) return;
+    const { error } = await supabase
+      .from('quick_prompts')
+      .update({ topic: editTopic.trim(), scenario_id: editScenario })
+      .eq('id', editingId);
+    
+    if (error) {
+      toast.error('Failed to update');
+    } else {
+      setPrompts(prev => prev.map(p => p.id === editingId ? { ...p, topic: editTopic.trim(), scenario_id: editScenario } : p));
+      toast.success('Updated');
+      cancelEdit();
+    }
+  };
+
   const handleGenerate = async () => {
     setGenerating(true);
     setSuggestions([]);
