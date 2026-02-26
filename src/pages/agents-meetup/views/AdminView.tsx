@@ -97,6 +97,10 @@ export const AdminView = () => {
             <MessageCircleQuestion className="h-4 w-4" />
             <span className="hidden sm:inline">Prompts</span>
           </TabsTrigger>
+          <TabsTrigger value="elevenlabs" className="gap-2 text-sm">
+            <Volume2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Audio</span>
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
