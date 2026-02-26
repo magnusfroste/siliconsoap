@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Sparkles, Loader2, Check } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Loader2, Check, Pencil, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickPrompt {
@@ -34,6 +34,9 @@ export const QuickPromptsTab = () => {
   const [generating, setGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<{ topic: string; scenario_id: string }[]>([]);
   const [addingSuggestion, setAddingSuggestion] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTopic, setEditTopic] = useState('');
+  const [editScenario, setEditScenario] = useState('');
 
   const fetchPrompts = async () => {
     const { data, error } = await supabase
@@ -93,6 +96,34 @@ export const QuickPromptsTab = () => {
     } else {
       setPrompts(prev => prev.filter(p => p.id !== id));
       toast.success('Prompt deleted');
+    }
+  };
+
+  const startEdit = (p: QuickPrompt) => {
+    setEditingId(p.id);
+    setEditTopic(p.topic);
+    setEditScenario(p.scenario_id);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTopic('');
+    setEditScenario('');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTopic.trim()) return;
+    const { error } = await supabase
+      .from('quick_prompts')
+      .update({ topic: editTopic.trim(), scenario_id: editScenario })
+      .eq('id', editingId);
+    
+    if (error) {
+      toast.error('Failed to update');
+    } else {
+      setPrompts(prev => prev.map(p => p.id === editingId ? { ...p, topic: editTopic.trim(), scenario_id: editScenario } : p));
+      toast.success('Updated');
+      cancelEdit();
     }
   };
 
@@ -219,28 +250,50 @@ export const QuickPromptsTab = () => {
                 <TableHead>Topic</TableHead>
                 <TableHead className="w-[100px]">Scenario</TableHead>
                 <TableHead className="w-[80px]">Active</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {prompts.map(p => (
                 <TableRow key={p.id}>
-                  <TableCell className="text-sm">{p.topic}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {SCENARIO_OPTIONS.find(s => s.value === p.scenario_id)?.label || p.scenario_id}
-                    </Badge>
+                  <TableCell className="text-sm">
+                    {editingId === p.id ? (
+                      <Input value={editTopic} onChange={e => setEditTopic(e.target.value)} className="h-8" onKeyDown={e => e.key === 'Enter' && saveEdit()} />
+                    ) : (
+                      p.topic
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Switch
-                      checked={p.is_enabled}
-                      onCheckedChange={(checked) => handleToggle(p.id, checked)}
-                    />
+                    {editingId === p.id ? (
+                      <Select value={editScenario} onValueChange={setEditScenario}>
+                        <SelectTrigger className="h-8 w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SCENARIO_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">
+                        {SCENARIO_OPTIONS.find(s => s.value === p.scenario_id)?.label || p.scenario_id}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Switch checked={p.is_enabled} onCheckedChange={(checked) => handleToggle(p.id, checked)} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {editingId === p.id ? (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={saveEdit} className="h-8 w-8 text-primary"><Save className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={cancelEdit} className="h-8 w-8"><X className="h-4 w-4" /></Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={() => startEdit(p)} className="h-8 w-8"><Pencil className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
