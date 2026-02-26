@@ -4,7 +4,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3, Zap, Users, MessageCircleQuestion } from 'lucide-react';
+import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3, Zap, Users, MessageCircleQuestion, Volume2 } from 'lucide-react';
 import { 
   AdminHeader, 
   useAdminFlags, 
