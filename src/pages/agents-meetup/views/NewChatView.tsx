@@ -202,7 +202,6 @@ export const NewChatView = () => {
           .order('sort_order', { ascending: true });
 
         if (data && data.length > 0) {
-          // Group by scenario
           const byScenario: Record<string, string[]> = {};
           data.forEach(p => {
             if (!byScenario[p.scenario_id]) byScenario[p.scenario_id] = [];
@@ -224,41 +223,9 @@ export const NewChatView = () => {
               ...getRandomTopics(hotDebates, 1)
             ],
           });
-        } else {
-          // Fallback to hardcoded
-          const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
-          setRandomizedTopics({
-            'general-problem': [
-              ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
-              ...getRandomTopics(hotDebates, 1)
-            ],
-            'ethical-dilemma': [
-              ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
-              ...getRandomTopics(hotDebates, 1)
-            ],
-            'future-prediction': [
-              ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
-              ...getRandomTopics(hotDebates, 1)
-            ],
-          });
         }
-      } catch {
-        // Fallback on error
-        const hotDebates = suggestedTopicsByScenario['hot-debates'] || [];
-        setRandomizedTopics({
-          'general-problem': [
-            ...getRandomTopics(suggestedTopicsByScenario['general-problem'], 2),
-            ...getRandomTopics(hotDebates, 1)
-          ],
-          'ethical-dilemma': [
-            ...getRandomTopics(suggestedTopicsByScenario['ethical-dilemma'], 2),
-            ...getRandomTopics(hotDebates, 1)
-          ],
-          'future-prediction': [
-            ...getRandomTopics(suggestedTopicsByScenario['future-prediction'], 2),
-            ...getRandomTopics(hotDebates, 1)
-          ],
-        });
+      } catch (err) {
+        console.error('Failed to load quick prompts:', err);
       }
     };
     loadTopics();
