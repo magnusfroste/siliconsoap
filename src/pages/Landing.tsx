@@ -9,6 +9,7 @@ import {
   LiveStatsCounter, 
   AgentPersonasShowcase 
 } from '@/components/landing';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const Landing = () => {
   const navigate = useNavigate();
