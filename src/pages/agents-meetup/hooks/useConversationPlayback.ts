@@ -154,6 +154,7 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
     currentMessageIndex,
     isGenerating,
     theaterMode,
+    audioDuration,
     play,
     playTheater,
     pause,
