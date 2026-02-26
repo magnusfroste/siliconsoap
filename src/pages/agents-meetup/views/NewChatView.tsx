@@ -237,6 +237,36 @@ export const NewChatView = () => {
           {/* Configuration Card */}
           <Card>
             <CardContent className="pt-6 space-y-4">
+              {/* Agent Configuration */}
+              <AgentGridSection
+                numberOfAgents={state.numberOfAgents}
+                agentAModel={state.agentAModel}
+                setAgentAModel={actions.setAgentAModel}
+                agentBModel={state.agentBModel}
+                setAgentBModel={actions.setAgentBModel}
+                agentCModel={state.agentCModel}
+                setAgentCModel={actions.setAgentCModel}
+                agentAPersona={state.agentAPersona}
+                agentBPersona={state.agentBPersona}
+                agentCPersona={state.agentCPersona}
+                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
+                profiles={profiles}
+                formA={state.formA}
+                formB={state.formB}
+                formC={state.formC}
+                modelsByProvider={modelsByProvider}
+                loadingModels={state.loadingModels}
+                conversationTone={state.conversationTone}
+                agreementBias={state.agreementBias}
+                temperature={state.temperature}
+                personalityIntensity={state.personalityIntensity}
+                onShuffleModels={actions.shuffleModels}
+              />
+
+              <Separator className="my-4" />
+
               {/* Conversation Settings */}
               <ConversationSettings
                 numberOfAgents={state.numberOfAgents}
@@ -264,36 +294,6 @@ export const NewChatView = () => {
                 setTemperature={actions.setTemperature}
                 personalityIntensity={state.personalityIntensity}
                 setPersonalityIntensity={actions.setPersonalityIntensity}
-              />
-
-              <Separator className="my-4" />
-
-              {/* Agent Configuration */}
-              <AgentGridSection
-                numberOfAgents={state.numberOfAgents}
-                agentAModel={state.agentAModel}
-                setAgentAModel={actions.setAgentAModel}
-                agentBModel={state.agentBModel}
-                setAgentBModel={actions.setAgentBModel}
-                agentCModel={state.agentCModel}
-                setAgentCModel={actions.setAgentCModel}
-                agentAPersona={state.agentAPersona}
-                agentBPersona={state.agentBPersona}
-                agentCPersona={state.agentCPersona}
-                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
-                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
-                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
-                profiles={profiles}
-                formA={state.formA}
-                formB={state.formB}
-                formC={state.formC}
-                modelsByProvider={modelsByProvider}
-                loadingModels={state.loadingModels}
-                conversationTone={state.conversationTone}
-                agreementBias={state.agreementBias}
-                temperature={state.temperature}
-                personalityIntensity={state.personalityIntensity}
-                onShuffleModels={actions.shuffleModels}
               />
             </CardContent>
           </Card>
