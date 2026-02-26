@@ -13,6 +13,7 @@ import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const Landing = () => {
   const navigate = useNavigate();
+  const { isEnabled } = useFeatureFlags();
 
   const features = [
     {
