@@ -1,7 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
-import { MessageSquare, Trash2 } from 'lucide-react';
+import { MessageSquare, Trash2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatHistoryItem as ChatHistoryType } from '../hooks/useChatHistory';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatHistoryItemProps {
   chat: ChatHistoryType;
@@ -20,6 +21,18 @@ export const ChatHistoryItem = ({ chat, onDelete }: ChatHistoryItemProps) => {
       >
         <MessageSquare className="h-4 w-4 flex-shrink-0" />
         <span className="text-sm truncate flex-1">{chat.title}</span>
+        {chat.is_shared && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Share2 className="h-3 w-3 flex-shrink-0 text-primary" />
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="text-xs">Shared publicly</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </Link>
       <Button
         variant="ghost"
