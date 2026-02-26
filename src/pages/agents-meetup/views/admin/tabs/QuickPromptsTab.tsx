@@ -118,16 +118,16 @@ export const QuickPromptsTab = () => {
     setGenerating(false);
   };
 
-  const handleAddSuggestion = async (topic: string) => {
+  const handleAddSuggestion = async (topic: string, scenarioId: string) => {
     setAddingSuggestion(topic);
     const { error } = await supabase
       .from('quick_prompts')
-      .insert({ topic, scenario_id: 'hot-debates', sort_order: prompts.length });
+      .insert({ topic, scenario_id: scenarioId, sort_order: prompts.length });
     
     if (error) {
       toast.error('Failed to add');
     } else {
-      setSuggestions(prev => prev.filter(s => s !== topic));
+      setSuggestions(prev => prev.filter(s => s.topic !== topic));
       toast.success('Added');
       fetchPrompts();
     }
