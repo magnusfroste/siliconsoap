@@ -184,17 +184,20 @@ export const QuickPromptsTab = () => {
         {suggestions.length > 0 && (
           <CardContent className="pt-0">
             <div className="space-y-2">
-              {suggestions.map((topic, i) => (
+              {suggestions.map((s, i) => (
                 <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50">
-                  <span className="text-sm flex-1">{topic}</span>
+                  <span className="text-sm flex-1">{s.topic}</span>
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {SCENARIO_OPTIONS.find(o => o.value === s.scenario_id)?.label || s.scenario_id}
+                  </Badge>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleAddSuggestion(topic)}
-                    disabled={addingSuggestion === topic}
+                    onClick={() => handleAddSuggestion(s.topic, s.scenario_id)}
+                    disabled={addingSuggestion === s.topic}
                     className="gap-1 shrink-0"
                   >
-                    {addingSuggestion === topic ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                    {addingSuggestion === s.topic ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                     Add
                   </Button>
                 </div>
