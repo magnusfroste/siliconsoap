@@ -92,6 +92,10 @@ export const AdminView = () => {
             <PanelLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Sidebar</span>
           </TabsTrigger>
+          <TabsTrigger value="prompts" className="gap-2 text-sm">
+            <MessageCircleQuestion className="h-4 w-4" />
+            <span className="hidden sm:inline">Prompts</span>
+          </TabsTrigger>
         </TabsList>
 
         <div className="mt-6">
