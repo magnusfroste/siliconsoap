@@ -64,18 +64,17 @@ Return only the JSON object.`
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '[]';
     
-    // Parse the JSON array from the response
-    let topics: string[] = [];
+    // Parse the JSON object from the response
+    let categorized: Record<string, string[]> = {};
     try {
-      // Handle potential markdown wrapping
       const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      topics = JSON.parse(cleaned);
+      categorized = JSON.parse(cleaned);
     } catch {
       console.error('Failed to parse AI response:', content);
-      topics = [];
+      categorized = {};
     }
 
-    return new Response(JSON.stringify({ topics }), {
+    return new Response(JSON.stringify({ categorized }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
