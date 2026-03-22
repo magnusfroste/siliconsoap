@@ -11,7 +11,8 @@ export const useConversationAnalysis = (
   chatId?: string,
   shareId?: string,
   initialAnalysis?: string,
-  initialAnalyzerModel?: string
+  initialAnalyzerModel?: string,
+  scenarioId?: string
 ) => {
   // Use the analysis state hook
   const {
@@ -55,7 +56,8 @@ export const useConversationAnalysis = (
         prompt,
         'long',
         chatId,
-        shareId
+        shareId,
+        scenarioId
       );
       
       setAnalysisResults(analysis);

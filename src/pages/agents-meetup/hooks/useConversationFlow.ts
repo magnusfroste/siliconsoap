@@ -61,7 +61,7 @@ export const useConversationFlow = (
     analyzerModel,
     setAnalyzerModel,
     handleAnalyzeConversation: analyzeConversation
-  } = useConversationAnalysis(apiKey, conversation);
+  } = useConversationAnalysis(apiKey, conversation, undefined, undefined, undefined, undefined, getCurrentScenario()?.id);
 
   // Custom wrapper around startConversation that also updates the step
   const handleStartConversation = async () => {
