@@ -43,7 +43,8 @@ export const analyzeConversation = async (
   userPrompt?: string,
   responseLength: ResponseLength = 'long',
   chatId?: string,
-  shareId?: string
+  shareId?: string,
+  scenarioId?: string
 ): Promise<string> => {
   // Check if there's a conversation to analyze
   if (conversation.length === 0) {
@@ -55,10 +56,10 @@ export const analyzeConversation = async (
   // Format the conversation for analysis
   const conversationText = formatConversationForAnalysis(conversation);
   
-  // Create the analysis prompt
-  const analysisPrompt = createAnalysisPrompt(conversationText, userPrompt);
+  // Create the scenario-adapted analysis prompt
+  const analysisPrompt = createAnalysisPrompt(conversationText, userPrompt, scenarioId);
   
-  console.log("Analyzing conversation with model:", model);
+  console.log("Analyzing conversation with model:", model, "scenario:", scenarioId);
   console.log("Using API key:", apiKey ? `${apiKey.substring(0, 8)}...` : "shared key");
   
   // Call the API to get the analysis via edge function
