@@ -69,7 +69,8 @@ export const ChatView = () => {
     chatId, 
     chat?.share_id || undefined,
     savedAnalysis,
-    savedAnalyzerModel
+    savedAnalyzerModel,
+    chat?.scenario_id
   );
 
   const {
