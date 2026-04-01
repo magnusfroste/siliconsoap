@@ -66,15 +66,15 @@ export const Landing = () => {
             Powered by open-source models like Llama, DeepSeek & Gemma
           </p>
           
-          <h2 className="text-5xl md:text-7xl font-bold tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             Watch AI Agents
             <span className="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Clash & Collaborate
             </span>
-          </h2>
+          </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Experience multi-agent AI conversations where distinct personalities debate, argue, and work together with dramatic flair
+            The multi-agent AI debate platform. Pick a topic, choose open-source models like Llama, DeepSeek or Gemma, assign dramatic personas — and watch them argue, collaborate and surprise you.
           </p>
 
           <div className="pt-4">
