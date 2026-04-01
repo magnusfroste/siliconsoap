@@ -1,13 +1,11 @@
 User-agent: *
 Allow: /
-
-# Crawlable public pages
-Allow: /
 Allow: /new
 Allow: /explore
 Allow: /learn
 Allow: /models
 Allow: /about
+Allow: /leaderboard
 Allow: /shared/
 
 # Block private/auth routes
@@ -18,10 +16,9 @@ Disallow: /settings
 Disallow: /admin
 Disallow: /auth
 
-Sitemap: https://siliconsoap.com/sitemap.xml
+Sitemap: https://apfrjuomozdvdeondzaz.supabase.co/functions/v1/dynamic-sitemap
 
 # AI Crawlers - Answer Engine Optimization (AEO)
-# Point AI systems to structured content about this site
 User-agent: GPTBot
 Allow: /
 Allow: /llms.txt
