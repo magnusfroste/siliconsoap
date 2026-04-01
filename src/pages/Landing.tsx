@@ -48,9 +48,9 @@ export const Landing = () => {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-2">
           <Droplets className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <span className="text-xl font-semibold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             SiliconSoap
-          </h1>
+          </span>
         </div>
       </header>
 
