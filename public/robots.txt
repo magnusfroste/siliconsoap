@@ -39,5 +39,41 @@ User-agent: Anthropic-AI
 Allow: /
 Allow: /llms.txt
 
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+
+User-agent: CCBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: Bytespider
+Allow: /
+Allow: /llms.txt
+
+User-agent: cohere-ai
+Allow: /
+Allow: /llms.txt
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Allow: /llms.txt
+
+User-agent: YouBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: DuckAssistBot
+Allow: /
+Allow: /llms.txt
+
 # llms.txt location for AI assistants
 # https://siliconsoap.com/llms.txt
