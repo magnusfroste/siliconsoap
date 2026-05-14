@@ -554,6 +554,7 @@ export const ChatView = () => {
                       isPlaying={isPlaying && currentMessageIndex === index}
                       isTheaterReveal={isCurrentTheaterMessage}
                       audioDurationMs={isCurrentTheaterMessage ? audioDuration : null}
+                      showInnerThoughts={showInnerThoughts}
                     />
                   )}
                 </div>
