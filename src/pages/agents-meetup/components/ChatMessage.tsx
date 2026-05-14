@@ -4,8 +4,10 @@ import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { Badge } from '@/components/ui/badge';
 import { QuoteShareButton } from './QuoteShareButton';
 import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
+import { parseAgentResponse } from '../utils/parseAgentResponse';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RefreshCw, Brain, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface ChatMessageProps {
@@ -18,6 +20,7 @@ interface ChatMessageProps {
   audioDurationMs?: number | null;
   chatUrl?: string;
   showQuoteShare?: boolean;
+  showInnerThoughts?: boolean;
 }
 
 const agentStyles = {
@@ -102,7 +105,8 @@ export const ChatMessage = ({
   isTheaterReveal = false,
   audioDurationMs,
   chatUrl,
-  showQuoteShare = false
+  showQuoteShare = false,
+  showInnerThoughts = false
 }: ChatMessageProps) => {
   const style = agentStyles[message.agent as keyof typeof agentStyles] || {
     borderClass: 'border-border',
@@ -113,8 +117,12 @@ export const ChatMessage = ({
   const agentLetter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
   const soapName = getAgentSoapName(message.agent, message.persona);
   const isLastMessage = messageIndex === totalMessages - 1;
-  
-  const { displayedText, isTyping } = useTypewriter(message.message, isTheaterReveal, audioDurationMs);
+
+  // Parse <thinking>...</thinking> scratchpad out of the message.
+  // Public reply is what the typewriter and main bubble show.
+  const { thinking, publicMessage } = parseAgentResponse(message.message);
+
+  const { displayedText, isTyping } = useTypewriter(publicMessage, isTheaterReveal, audioDurationMs);
 
   return (
     <div 
@@ -168,6 +176,13 @@ export const ChatMessage = ({
               {message.persona}
             </Badge>
 
+            {thinking && showInnerThoughts && (
+              <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
+                <Brain className="h-3 w-3" />
+                inner thoughts
+              </Badge>
+            )}
+
             {showQuoteShare && (
               <div className="ml-auto">
                 <QuoteShareButton message={message} chatUrl={chatUrl} />
@@ -176,9 +191,25 @@ export const ChatMessage = ({
           </div>
         </CardHeader>
         
-        <CardContent className="px-4 pb-4 pt-0">
+        <CardContent className="px-4 pb-4 pt-0 space-y-3">
+          {/* Inner thoughts (collapsible, only when user opted in) */}
+          {thinking && showInnerThoughts && (
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group/inner">
+                <Brain className="h-3 w-3" />
+                <span className="italic">Show inner monologue</span>
+                <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]/inner:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <div className="text-xs italic text-muted-foreground bg-muted/30 border-l-2 border-primary/40 pl-3 py-2 rounded-r whitespace-pre-wrap">
+                  {thinking}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           <div className="text-sm leading-relaxed whitespace-pre-wrap">
-            {isTheaterReveal ? displayedText : message.message}
+            {isTheaterReveal ? displayedText : publicMessage}
             {isTyping && (
               <span className="inline-block w-0.5 h-4 bg-foreground animate-pulse ml-0.5 align-text-bottom" />
             )}

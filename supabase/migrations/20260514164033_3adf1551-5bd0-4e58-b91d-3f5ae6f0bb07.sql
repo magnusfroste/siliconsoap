@@ -1,0 +1,6 @@
+INSERT INTO public.feature_flags (key, name, description, enabled, text_value) VALUES
+  ('enable_scratchpad', 'Agent Inner Thoughts (Scratchpad)', 'When enabled, agents produce private <thinking> reasoning before their public reply. Users can toggle visibility per debate. Adds ~30% to token cost.', true, NULL),
+  ('web_search_enabled', 'Web Search for Agents', 'When enabled, agents can ground their arguments in real-time web search results before each debate. Off by default to avoid surprise costs.', false, NULL),
+  ('web_search_provider', 'Web Search Provider', 'Which search backend to use. Options: duckduckgo (free, no key), tavily (1000/mo free, requires TAVILY_API_KEY), brave (2000/mo free, requires BRAVE_SEARCH_API_KEY), firecrawl (paid, requires Firecrawl connector).', true, 'duckduckgo'),
+  ('use_persona_template', 'Structured Persona Prompts (Nous-style)', 'Use the structured [IDENTITY]/[VOICE]/[FORBIDDEN] template for agent system prompts. Improves character consistency across long debates.', true, NULL)
+ON CONFLICT (key) DO NOTHING;
