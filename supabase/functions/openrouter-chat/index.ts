@@ -82,15 +82,24 @@ serve(async (req) => {
     console.log(`Making OpenRouter request with model: ${model}`);
     console.log(`Using ${userApiKey ? 'user' : 'shared'} API key`);
 
-    const requestBody = {
+    // Disable hidden reasoning for Qwen3 hybrid-thinking models to cut latency.
+    // They produce great answers without the thinking pass.
+    const isQwen3Thinking = /^qwen\/qwen3/i.test(model ?? '');
+
+    const requestBody: Record<string, unknown> = {
       model,
       messages,
       max_tokens,
       temperature,
       top_p,
       stream: false,
-      usage: { include: true }
+      usage: { include: true },
     };
+
+    if (isQwen3Thinking) {
+      requestBody.reasoning = { enabled: false };
+      console.log(`[reasoning] Disabled for ${model}`);
+    }
 
     const requestHeaders = {
       'Authorization': `Bearer ${apiKey}`,
