@@ -11,9 +11,10 @@ import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { Loader2, Share2, Eye, MessageSquare, Users, Flame, Handshake, GraduationCap, Coffee, Zap, Scale } from 'lucide-react';
+import { Loader2, Share2, Eye, MessageSquare, Users, Flame, Handshake, GraduationCap, Coffee, Zap, Scale, Brain } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback, ExpertSettings } from '@/services/conversationService';
+import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback, ExpertSettings, EnhancementOptions } from '@/services/conversationService';
+import { webSearchService } from '@/services/webSearchService';
 import { useCredits } from '../hooks/useCredits';
 import { creditsService } from '@/services';
 import { toast } from 'sonner';
@@ -53,6 +54,10 @@ export const ChatView = () => {
   const generationStartTime = useRef<number | null>(null);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
+  const scratchpadEnabled = isEnabled('enable_scratchpad');
+  const webSearchEnabled = isEnabled('web_search_enabled');
+  const personaTemplateEnabled = isEnabled('use_persona_template');
+  const [showInnerThoughts, setShowInnerThoughts] = useState(false);
   
   // Get saved analysis from chat settings
   const savedAnalysis = (chat?.settings as any)?.analysisResults;
@@ -258,6 +263,26 @@ export const ChatView = () => {
           personalityIntensity: settings.personalityIntensity ?? 'moderate'
         } : undefined;
 
+        // Pre-fetch web research context (Hermes-style tool use). Fire-and-wait
+        // once per debate; the same context is injected into every agent prompt.
+        let researchContext: string | undefined;
+        if (webSearchEnabled) {
+          try {
+            const search = await webSearchService.search(chat.prompt, 3);
+            if (search.results.length > 0) {
+              researchContext = webSearchService.formatAsResearchContext(search.results);
+            }
+          } catch (e) {
+            console.warn('[ChatView] web search failed, continuing without context', e);
+          }
+        }
+
+        const enhancements: EnhancementOptions = {
+          enableScratchpad: scratchpadEnabled,
+          usePersonaTemplate: personaTemplateEnabled,
+          researchContext
+        };
+
         if (isMounted.current) setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
@@ -275,7 +300,8 @@ export const ChatView = () => {
           settings.temperature, // temperature from settings
           settings.turnOrder || 'sequential',
           onTokenUsage,
-          expertSettings
+          expertSettings,
+          enhancements
         );
 
         if (!isMounted.current) return;
@@ -312,7 +338,8 @@ export const ChatView = () => {
               settings.temperature, // temperature from settings
               settings.turnOrder || 'sequential',
               onTokenUsage,
-              expertSettings
+              expertSettings,
+              enhancements
             );
             if (isMounted.current) {
               setCurrentAgent(null);
@@ -469,17 +496,40 @@ export const ChatView = () => {
             );
           })()}
         </div>
-        {!isGuest && messages.length > 0 && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleShareClick}
-            className="gap-2 shrink-0"
-          >
-            <Share2 className="h-4 w-4" />
-            Share
-          </Button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {scratchpadEnabled && messages.length > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showInnerThoughts ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShowInnerThoughts(v => !v)}
+                    className="gap-2"
+                    aria-pressed={showInnerThoughts}
+                  >
+                    <Brain className="h-4 w-4" />
+                    {showInnerThoughts ? 'Hide thoughts' : 'Show thoughts'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p>Reveal each agent's private inner monologue (Hermes-style scratchpad).</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {!isGuest && messages.length > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleShareClick}
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -527,6 +577,7 @@ export const ChatView = () => {
                       isPlaying={isPlaying && currentMessageIndex === index}
                       isTheaterReveal={isCurrentTheaterMessage}
                       audioDurationMs={isCurrentTheaterMessage ? audioDuration : null}
+                      showInnerThoughts={showInnerThoughts}
                     />
                   )}
                 </div>
@@ -580,6 +631,11 @@ export const ChatView = () => {
                     personalityIntensity: settings.personalityIntensity ?? 'moderate'
                   } : undefined;
 
+                  const enhancements: EnhancementOptions = {
+                    enableScratchpad: scratchpadEnabled,
+                    usePersonaTemplate: personaTemplateEnabled
+                  };
+
                   if (nextRound <= settings.rounds) {
                     await handleSingleRound(
                       chat.prompt,
@@ -604,7 +660,8 @@ export const ChatView = () => {
                       settings.temperature, // temperature from settings
                       settings.turnOrder || 'sequential',
                       onTokenUsage,
-                      expertSettings
+                      expertSettings,
+                      enhancements
                     );
                     
                     setCurrentAgent(null);
@@ -729,6 +786,11 @@ export const ChatView = () => {
                     personalityIntensity: settings.personalityIntensity ?? 'moderate'
                   } : undefined;
 
+                  const enhancements: EnhancementOptions = {
+                    enableScratchpad: scratchpadEnabled,
+                    usePersonaTemplate: personaTemplateEnabled
+                  };
+
                   await handleSingleRound(
                     chat.prompt,
                     scenario,
@@ -752,7 +814,8 @@ export const ChatView = () => {
                     settings.temperature,
                     settings.turnOrder || 'sequential',
                     onTokenUsage,
-                    expertSettings
+                    expertSettings,
+                    enhancements
                   );
                   
                   setCurrentAgent(null);
@@ -807,7 +870,11 @@ export const ChatView = () => {
                       await saveMessage(chatId, message);
                     },
                     undefined,
-                    onTokenUsage
+                    onTokenUsage,
+                    {
+                      enableScratchpad: scratchpadEnabled,
+                      usePersonaTemplate: personaTemplateEnabled
+                    }
                   );
                   
                   setCurrentAgent(null);

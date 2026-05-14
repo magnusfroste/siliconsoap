@@ -18,10 +18,33 @@ import {
   createResponseToUserPrompt,
   LANGUAGE_INSTRUCTION,
   clearAgentNameCache,
-  ExpertSettings
+  ExpertSettings,
+  withScratchpad,
+  withResearchContext,
+  setUsePersonaTemplate
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
 
 export type { ExpertSettings };
+
+/**
+ * Optional Hermes-style enhancements applied to every prompt in this run.
+ */
+export interface EnhancementOptions {
+  /** Inject <thinking>...</thinking> scratchpad instruction (Hermes-style). */
+  enableScratchpad?: boolean;
+  /** Use the structured Nous-style persona template for agent intros. */
+  usePersonaTemplate?: boolean;
+  /** Pre-fetched research-context block (from web search) to inject. */
+  researchContext?: string;
+}
+
+const applyEnhancements = (prompt: string, opts?: EnhancementOptions): string => {
+  if (!opts) return prompt;
+  let result = prompt;
+  if (opts.researchContext) result = withResearchContext(result, opts.researchContext);
+  if (opts.enableScratchpad) result = withScratchpad(result, true);
+  return result;
+};
 import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 import { tokenService } from './tokenService';
 import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
@@ -395,12 +418,15 @@ export const handleInitialRound = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
   agentBResponse: string
 }> => {
+  // Apply persona template flag for the whole run
+  setUsePersonaTemplate(!!enhancements?.usePersonaTemplate);
   // Clear name cache at start of new conversation to ensure unique names
   clearAgentNameCache();
   
@@ -411,7 +437,7 @@ export const handleInitialRound = async (
     : getAgentOrder(turnOrder, numberOfAgents, 1);
   
   // Agent A always starts
-  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona, expertSettings);
+  const agentAPrompt = applyEnhancements(createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona, expertSettings), enhancements);
   
   const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
@@ -449,7 +475,7 @@ export const handleInitialRound = async (
     nextAgent = await selectNextAgent(messages, availableAgents, apiKey, currentPrompt, onTokenUsage);
   }
   
-  const agentBPrompt = createAgentBPrompt(currentPrompt, agentAResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, expertSettings);
+  const agentBPrompt = applyEnhancements(createAgentBPrompt(currentPrompt, agentAResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, expertSettings), enhancements);
   
   const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
@@ -491,7 +517,7 @@ export const handleInitialRound = async (
       }
     }
     
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona, expertSettings);
+    const agentCPrompt = applyEnhancements(createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona, expertSettings), enhancements);
     
     const agentCResponse = await callWithTokenTracking(
       agentCPrompt,
@@ -541,7 +567,8 @@ export const handleSingleRound = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<ConversationMessage[]> => {
   const allMessages: ConversationMessage[] = [...conversation];
   
@@ -559,7 +586,7 @@ export const handleSingleRound = async (
     const agentConfig = agentConfigs.find(a => a.name === agentName);
     if (!agentConfig) continue;
     
-    const continuationPrompt = createContinuationPrompt(
+    const continuationPrompt = applyEnhancements(createContinuationPrompt(
       currentPrompt,
       allMessages,
       agentConfig.name,
@@ -568,7 +595,7 @@ export const handleSingleRound = async (
       totalRounds,
       currentScenario,
       expertSettings
-    );
+    ), enhancements);
     
     const response = await callWithTokenTracking(
       continuationPrompt,
@@ -620,7 +647,8 @@ export const handleAdditionalRounds = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
@@ -641,7 +669,7 @@ export const handleAdditionalRounds = async (
       const agentConfig = agentConfigs.find(a => a.name === agentName);
       if (!agentConfig) continue;
       
-      const continuationPrompt = createContinuationPrompt(
+      const continuationPrompt = applyEnhancements(createContinuationPrompt(
         currentPrompt,
         allMessages,
         agentConfig.name,
@@ -650,7 +678,7 @@ export const handleAdditionalRounds = async (
         rounds,
         currentScenario,
         expertSettings
-      );
+      ), enhancements);
       
       const response = await callWithTokenTracking(
         continuationPrompt,
@@ -699,17 +727,18 @@ export const handleUserFollowUp = async (
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
-  onTokenUsage?: TokenUsageCallback
+  onTokenUsage?: TokenUsageCallback,
+  enhancements?: EnhancementOptions
 ): Promise<void> => {
   // Agent A responds
-  const agentAPrompt = createResponseToUserPrompt(
+  const agentAPrompt = applyEnhancements(createResponseToUserPrompt(
     originalPrompt,
     userMessage,
     currentConversation,
     'Agent A',
     currentScenario,
     agentAPersona
-  );
+  ), enhancements);
   
   const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
@@ -735,14 +764,14 @@ export const handleUserFollowUp = async (
   if (numberOfAgents === 1) return;
   
   // Agent B responds
-  const agentBPrompt = createResponseToUserPrompt(
+  const agentBPrompt = applyEnhancements(createResponseToUserPrompt(
     originalPrompt,
     userMessage,
     [...currentConversation, agentAMessage],
     'Agent B',
     currentScenario,
     agentBPersona
-  );
+  ), enhancements);
   
   const agentBResponse = await callWithTokenTracking(
     agentBPrompt,
@@ -768,14 +797,14 @@ export const handleUserFollowUp = async (
   if (numberOfAgents === 2) return;
   
   // Agent C responds
-  const agentCPrompt = createResponseToUserPrompt(
+  const agentCPrompt = applyEnhancements(createResponseToUserPrompt(
     originalPrompt,
     userMessage,
     [...currentConversation, agentAMessage, agentBMessage],
     'Agent C',
     currentScenario,
     agentCPersona
-  );
+  ), enhancements);
   
   const agentCResponse = await callWithTokenTracking(
     agentCPrompt,

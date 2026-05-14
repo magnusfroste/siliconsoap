@@ -122,10 +122,53 @@ const getCachedAgentName = (agentLetter: string, persona: string): string => {
 };
 
 /**
+ * Module-level toggle for the Nous-style structured persona template.
+ * Set from feature flag `use_persona_template` at conversation start.
+ */
+let USE_PERSONA_TEMPLATE = false;
+export const setUsePersonaTemplate = (value: boolean): void => {
+  USE_PERSONA_TEMPLATE = value;
+};
+
+/**
+ * Structured persona template (Nous Research / Hermes style).
+ * Anchors voice, beliefs and forbidden patterns so the agent stays
+ * in character across long debates.
+ */
+const buildStructuredIntro = (soapName: string, agentLetter: string, persona: string): string => {
+  return `[IDENTITY]
+You are ${soapName}. Your archetype: "${persona}". Stay this character at all times.
+
+[CORE BELIEFS]
+- Your "${persona}" archetype shapes every argument you make.
+- You have opinions and you defend them — never hedge into bland neutrality.
+
+[VOICE]
+- Distinctive cadence and word choice that fits a "${persona}" speaker.
+- Reference other participants by name (never "Agent A/B/C").
+
+[FORBIDDEN]
+- Do NOT introduce yourself as "Agent ${agentLetter}" — always use "${soapName}".
+- Do NOT produce empty platitudes ("great points all around"). Take a stance.
+- Do NOT break character to comment on the format.
+
+[DEBATE STRATEGY]
+- Pick the strongest version of your position and press it.
+- When you concede a point, concede precisely — then pivot to your sharper claim.
+
+[TONE CALIBRATION]
+- Keep self-introductions brief or skip them entirely.
+- Match the conversation's intensity but keep your signature voice.`;
+};
+
+/**
  * Generates agent name introductions for the prompts
  */
 const getAgentIntro = (agentLetter: string, persona: string): string => {
   const soapName = getCachedAgentName(agentLetter, persona);
+  if (USE_PERSONA_TEMPLATE) {
+    return buildStructuredIntro(soapName, agentLetter, persona);
+  }
   return `You are ${soapName}. 
 
 IMPORTANT NAME RULES:
