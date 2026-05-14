@@ -48,12 +48,16 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [availableModels, setAvailableModels] = useState<CuratedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
 
-  // Load curated models from database
+  // Load curated models from database, then re-shuffle from real enabled pool
   useEffect(() => {
     const loadModels = async () => {
       try {
         const models = await getEnabledModels();
         setAvailableModels(models);
+        if (models.length >= 3) {
+          // Re-pick from curated pool so initial selection reflects what admin enabled
+          setAgentModels(pickRandomModels(models.map((m) => m.model_id)));
+        }
       } catch (error) {
         console.error("Failed to load curated models:", error);
       } finally {
@@ -89,7 +93,8 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const shuffleModels = () => {
-    setAgentModels(pickRandomModels());
+    const pool = availableModels.map((m) => m.model_id);
+    setAgentModels(pickRandomModels(pool));
   };
 
   return (
