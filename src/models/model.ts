@@ -29,6 +29,7 @@ export interface CuratedModel {
   pricing_updated_at: string | null;
   // Per-model toggle to disable hidden reasoning/thinking mode (e.g. Qwen3) for latency
   disable_reasoning: boolean;
+}
 
 export interface CuratedModelInsert {
   model_id: string;
