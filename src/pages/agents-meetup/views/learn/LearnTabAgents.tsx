@@ -6,7 +6,8 @@ import {
   GitBranch, MessageSquare, Shield, Sparkles, 
   Code, Search, FileText, Headphones,
   Zap, CheckCircle2, AlertTriangle, Brain, Database,
-  ExternalLink, Rocket
+  ExternalLink, Rocket,
+  Building2, Globe, Server
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
