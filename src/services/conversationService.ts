@@ -18,10 +18,33 @@ import {
   createResponseToUserPrompt,
   LANGUAGE_INSTRUCTION,
   clearAgentNameCache,
-  ExpertSettings
+  ExpertSettings,
+  withScratchpad,
+  withResearchContext,
+  setUsePersonaTemplate
 } from '@/pages/agents-meetup/hooks/conversation/agent/agentPrompts';
 
 export type { ExpertSettings };
+
+/**
+ * Optional Hermes-style enhancements applied to every prompt in this run.
+ */
+export interface EnhancementOptions {
+  /** Inject <thinking>...</thinking> scratchpad instruction (Hermes-style). */
+  enableScratchpad?: boolean;
+  /** Use the structured Nous-style persona template for agent intros. */
+  usePersonaTemplate?: boolean;
+  /** Pre-fetched research-context block (from web search) to inject. */
+  researchContext?: string;
+}
+
+const applyEnhancements = (prompt: string, opts?: EnhancementOptions): string => {
+  if (!opts) return prompt;
+  let result = prompt;
+  if (opts.researchContext) result = withResearchContext(result, opts.researchContext);
+  if (opts.enableScratchpad) result = withScratchpad(result, true);
+  return result;
+};
 import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
 import { tokenService } from './tokenService';
 import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
