@@ -54,6 +54,10 @@ export const ChatView = () => {
   const generationStartTime = useRef<number | null>(null);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
+  const scratchpadEnabled = isEnabled('enable_scratchpad');
+  const webSearchEnabled = isEnabled('web_search_enabled');
+  const personaTemplateEnabled = isEnabled('use_persona_template');
+  const [showInnerThoughts, setShowInnerThoughts] = useState(false);
   
   // Get saved analysis from chat settings
   const savedAnalysis = (chat?.settings as any)?.analysisResults;
