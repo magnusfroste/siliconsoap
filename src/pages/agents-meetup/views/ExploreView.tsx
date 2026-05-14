@@ -98,7 +98,7 @@ export default function ExploreView() {
       const userIds = [...new Set(data.filter(d => d.user_id).map(d => d.user_id))] as string[];
       
       // Fetch user profiles and calculate ranks
-      let userRankInfo: Record<string, UserRankInfo> = {};
+      const userRankInfo: Record<string, UserRankInfo> = {};
       if (userIds.length > 0) {
         // Fetch profiles
         const { data: profiles } = await supabase
