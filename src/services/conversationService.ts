@@ -647,7 +647,8 @@ export const handleAdditionalRounds = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<ConversationMessage[]> => {
   if (rounds <= 1) return conversation;
   
