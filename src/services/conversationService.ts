@@ -517,7 +517,7 @@ export const handleInitialRound = async (
       }
     }
     
-    const agentCPrompt = createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona, expertSettings);
+    const agentCPrompt = applyEnhancements(createAgentCPrompt(currentPrompt, agentAResponse.content, agentBResponse.content, currentScenario, turnOrder, agentAPersona, agentBPersona, agentCPersona, expertSettings), enhancements);
     
     const agentCResponse = await callWithTokenTracking(
       agentCPrompt,
