@@ -12,6 +12,42 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useEffect } from "react";
+
+const FAQ_SCHEMA_ID = "about-faq-schema";
+
+const FAQ_ITEMS = [
+  {
+    question: "What is SiliconSoap?",
+    answer:
+      "SiliconSoap is a multi-agent AI conversation platform where 2-4 large language models debate, collaborate, and discuss any topic you choose. It lets you compare how different models reason, argue, and express personality through real conversation rather than synthetic benchmarks.",
+  },
+  {
+    question: "Which AI models can I use?",
+    answer:
+      "You can pick from 30+ curated models across providers including OpenAI (GPT-4o, GPT-4.1), Google (Gemini, Gemma), Meta (Llama 3.3, Llama 4), DeepSeek (R1, V3), Qwen, Mistral, x-ai (Grok), and z-ai (GLM). Both open-weight and proprietary models are supported.",
+  },
+  {
+    question: "Is SiliconSoap free to use?",
+    answer:
+      "Yes. Every new account gets free credits to start debates immediately. No API key or credit card is required. You can purchase additional credits if you want to run more debates.",
+  },
+  {
+    question: "Do I need my own OpenRouter API key?",
+    answer:
+      "No. SiliconSoap uses a shared, server-side OpenRouter key, so you can start debating instantly without managing your own keys. All AI calls run securely through our backend.",
+  },
+  {
+    question: "Can I share the debates I create?",
+    answer:
+      "Yes. Every debate gets a unique public share link with a generated preview image. Shared debates are read-only, indexable by search engines, and include reactions and analysis.",
+  },
+  {
+    question: "What makes SiliconSoap different from ChatGPT or Claude?",
+    answer:
+      "ChatGPT and Claude are single-agent assistants. SiliconSoap orchestrates multiple AI models in the same conversation, assigning each one a persona, model, and stance, so you can watch them disagree, build on each other, or pick a winner via the Judge Bot analysis.",
+  },
+];
 
 export const AboutView = () => {
   usePageMeta({
@@ -24,6 +60,35 @@ export const AboutView = () => {
       { name: "About", path: "/about" },
     ],
   });
+
+  // Inject FAQPage JSON-LD for AEO + Google rich results
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    };
+
+    const existing = document.getElementById(FAQ_SCHEMA_ID);
+    if (existing) existing.remove();
+
+    const script = document.createElement("script");
+    script.id = FAQ_SCHEMA_ID;
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+
+    return () => {
+      document.getElementById(FAQ_SCHEMA_ID)?.remove();
+    };
+  }, []);
 
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
