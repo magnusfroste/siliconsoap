@@ -263,6 +263,26 @@ export const ChatView = () => {
           personalityIntensity: settings.personalityIntensity ?? 'moderate'
         } : undefined;
 
+        // Pre-fetch web research context (Hermes-style tool use). Fire-and-wait
+        // once per debate; the same context is injected into every agent prompt.
+        let researchContext: string | undefined;
+        if (webSearchEnabled) {
+          try {
+            const search = await webSearchService.search(chat.prompt, 3);
+            if (search.results.length > 0) {
+              researchContext = webSearchService.formatAsResearchContext(search.results);
+            }
+          } catch (e) {
+            console.warn('[ChatView] web search failed, continuing without context', e);
+          }
+        }
+
+        const enhancements: EnhancementOptions = {
+          enableScratchpad: scratchpadEnabled,
+          usePersonaTemplate: personaTemplateEnabled,
+          researchContext
+        };
+
         if (isMounted.current) setCurrentAgent('Agent A');
         const { conversationMessages, agentAResponse, agentBResponse } = await handleInitialRound(
           chat.prompt,
