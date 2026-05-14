@@ -4,8 +4,10 @@ import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { Badge } from '@/components/ui/badge';
 import { QuoteShareButton } from './QuoteShareButton';
 import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
+import { parseAgentResponse } from '../utils/parseAgentResponse';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RefreshCw, Brain, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface ChatMessageProps {
@@ -18,6 +20,7 @@ interface ChatMessageProps {
   audioDurationMs?: number | null;
   chatUrl?: string;
   showQuoteShare?: boolean;
+  showInnerThoughts?: boolean;
 }
 
 const agentStyles = {
