@@ -479,6 +479,17 @@ function updateMetaTag(property: string, content: string) {
   }
 }
 
+// Helper to update <link rel="..."> tags
+function updateLinkTag(rel: string, href: string) {
+  let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = rel;
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+
 // Helper to update DiscussionForumPosting schema
 function updateDiscussionSchema(chat: any, messages: any[], shareId: string) {
   removeDiscussionSchema();
