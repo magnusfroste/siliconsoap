@@ -14,6 +14,41 @@ export const LANGUAGE_INSTRUCTION = `
 
 IMPORTANT: Respond in the same language as the user's question/prompt. If the language cannot be detected, default to English.`;
 
+// Inner monologue / scratchpad instruction (Hermes / Nous-style).
+// When prepended to an agent prompt, the model first reasons privately
+// inside <thinking>...</thinking> tags, then delivers its public reply.
+// The UI parses these tags and hides the thinking by default.
+export const SCRATCHPAD_INSTRUCTION = `
+
+THINK PRIVATELY FIRST: Before your public response, write a brief private monologue inside <thinking>...</thinking> tags. Use it to plan your strategy: what's the strongest version of your argument? What might other agents counter with? Where can you be sharper or more concrete?
+
+After </thinking>, deliver your public reply in your normal voice. Do NOT reference your inner thoughts in the public reply — they stay private.
+
+Example format:
+<thinking>
+The previous speaker leaned on emotional appeal. I should counter with hard data and a concrete example. My signature move is the rhetorical question — open with one.
+</thinking>
+But ask yourself this: where is the actual evidence?...`;
+
+/**
+ * Wraps any agent prompt with a scratchpad instruction when enabled.
+ * The instruction is prepended so it sits at the top of the system context
+ * and the model treats it as a meta-rule for every response.
+ */
+export const withScratchpad = (prompt: string, enabled: boolean): string => {
+  if (!enabled) return prompt;
+  return `${SCRATCHPAD_INSTRUCTION}\n\n${prompt}`;
+};
+
+/**
+ * Wraps an agent prompt with a research context block from web search.
+ * Injected as a separate section so the model treats it as background evidence.
+ */
+export const withResearchContext = (prompt: string, researchBlock: string): string => {
+  if (!researchBlock) return prompt;
+  return `${prompt}${researchBlock}`;
+};
+
 // Tone instructions for expert settings
 const toneInstructions = {
   formal: "Engage formally and professionally, citing evidence and maintaining academic rigor.",
