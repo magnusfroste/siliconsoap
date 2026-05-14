@@ -449,6 +449,64 @@ export const LearnTabAgents = () => {
         </CardContent>
       </Card>
 
+      {/* FAQ: Agent Approvals in Enterprise Workflows */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HelpCircle className="h-5 w-5 text-primary" />
+            FAQ: Agent Approvals in Enterprise Workflows
+          </CardTitle>
+          <CardDescription>
+            How businesses safely delegate to autonomous agents
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-muted/30 border">
+              <h4 className="font-semibold mb-2 flex items-start gap-2">
+                <ChevronDown className="h-4 w-4 text-primary mt-1 shrink-0" />
+                What does "approval-only" mean?
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                The agent proposes and executes actions, but critical operations — payments,
+                data exports, contract changes — pause for human approval. The human is the
+                final gate, not the bottleneck.
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/30 border">
+              <h4 className="font-semibold mb-2 flex items-start gap-2">
+                <ChevronDown className="h-4 w-4 text-primary mt-1 shrink-0" />
+                How do agents handle sensitive data?
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Self-hosted open-weight models keep data inside your perimeter. No tokens
+                leave your network, no third-party API sees your PII, and audit trails stay local.
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/30 border">
+              <h4 className="font-semibold mb-2 flex items-start gap-2">
+                <ChevronDown className="h-4 w-4 text-primary mt-1 shrink-0" />
+                Can agents run 24/7 without supervision?
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Yes — for low-risk, repetitive tasks. High-stakes actions still trigger approval
+                workflows. The agent never sleeps, but it never signs a contract without you either.
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/30 border">
+              <h4 className="font-semibold mb-2 flex items-start gap-2">
+                <ChevronDown className="h-4 w-4 text-primary mt-1 shrink-0" />
+                What if an agent makes a mistake?
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Multi-agent setups include a critic or judge agent that reviews outputs before
+                they reach you. Debate and critique patterns catch errors that a single model misses.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* SiliconSoap CTA */}
       <Card className="bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/20 border-primary/30">
         <CardContent className="pt-6">
