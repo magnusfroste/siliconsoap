@@ -5,6 +5,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-api-key',
 };
 
+const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+const extractMessageContent = (payload: any): string => {
+  const rawContent = payload?.choices?.[0]?.message?.content;
+
+  if (typeof rawContent === 'string') {
+    return rawContent.trim();
+  }
+
+  if (Array.isArray(rawContent)) {
+    return rawContent
+      .map((part: any) => {
+        if (typeof part === 'string') return part;
+        if (typeof part?.text === 'string') return part.text;
+        return '';
+      })
+      .join('')
+      .trim();
+  }
+
+  return '';
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -59,24 +82,27 @@ serve(async (req) => {
     console.log(`Making OpenRouter request with model: ${model}`);
     console.log(`Using ${userApiKey ? 'user' : 'shared'} API key`);
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const requestBody = {
+      model,
+      messages,
+      max_tokens,
+      temperature,
+      top_p,
+      stream: false,
+      usage: { include: true }
+    };
+
+    const requestHeaders = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
+      'X-Title': 'Magnus Froste Labs'
+    };
+
+    const response = await fetch(openRouterUrl, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
-        'X-Title': 'Magnus Froste Labs'
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens,
-        temperature,
-        top_p,
-        stream: false,
-        // Explicitly request usage data to be included in response
-        usage: { include: true }
-      }),
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
@@ -118,76 +144,55 @@ serve(async (req) => {
     }
 
     // Check for empty content (silent rate limiting or model issues)
-    const content = data.choices?.[0]?.message?.content;
+    const content = extractMessageContent(data);
     if (!content || content.trim() === '') {
       console.warn(`Empty response from model ${model}, possibly rate limited`);
-
-      // Reasoning models (e.g. deepseek-r1, o1) can consume the entire token
-      // budget on hidden reasoning, leaving content empty. Detect & retry
-      // the SAME model with a much larger max_tokens before falling back.
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-      // Always retry the same model once with a much larger token budget before
-      // falling back. Reasoning models (deepseek-r1, o1) and some others (kimi)
-      // can silently consume the entire budget on hidden tokens.
-      {
-        const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
-        console.log(`Empty response (reasoning_tokens=${reasoningTokens}). Retrying ${model} with max_tokens=${boostedMaxTokens}`);
-        const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
-            'X-Title': 'Magnus Froste Labs'
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            max_tokens: boostedMaxTokens,
-            temperature,
-            top_p,
-            stream: false,
-            usage: { include: true }
-          }),
+
+      const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
+      console.log(`Model ${model} returned empty response (reasoning_tokens=${reasoningTokens}). Retrying with max_tokens=${boostedMaxTokens}`);
+
+      const retryResponse = await fetch(openRouterUrl, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: JSON.stringify({
+          ...requestBody,
+          max_tokens: boostedMaxTokens,
+        }),
+      });
+      const retryData = await retryResponse.json();
+      const retryContent = extractMessageContent(retryData);
+
+      if (retryResponse.ok && retryContent) {
+        console.log('Retry successful.');
+        return new Response(JSON.stringify(retryData), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-        const retryData = await retryResponse.json();
-        if (retryResponse.ok && retryData.choices?.[0]?.message?.content?.trim()) {
-          console.log('Reasoning-model retry succeeded');
-          return new Response(JSON.stringify(retryData), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        console.warn('Reasoning-model retry still empty, falling back');
       }
 
-      // Try fallback model if the original returned empty
-      const fallbackModel = 'mistralai/mixtral-8x7b-instruct';
+      console.error('Retry failed. Falling back to Mixtral.', {
+        status: retryResponse.status,
+        error: retryData?.error,
+      });
+
+      const fallbackModel = 'mistralai/mixtral-8x7b-instruct-v0.1';
       if (model !== fallbackModel) {
         console.log(`Retrying with fallback model: ${fallbackModel}`);
         
-        const fallbackResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const fallbackResponse = await fetch(openRouterUrl, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
-            'X-Title': 'Magnus Froste Labs'
-          },
+          headers: requestHeaders,
           body: JSON.stringify({
+            ...requestBody,
             model: fallbackModel,
-            messages,
-            max_tokens,
-            temperature,
-            top_p,
-            stream: false,
-            usage: { include: true }
           }),
         });
 
         const fallbackData = await fallbackResponse.json();
-        console.log(`Fallback response - has usage: ${!!fallbackData.usage}, usage: ${JSON.stringify(fallbackData.usage)}`);
+        const fallbackContent = extractMessageContent(fallbackData);
+        console.log(`Fallback response - status: ${fallbackResponse.status}, has usage: ${!!fallbackData.usage}, usage: ${JSON.stringify(fallbackData.usage)}, error: ${JSON.stringify(fallbackData?.error)}`);
         
-        if (fallbackResponse.ok && fallbackData.choices?.[0]?.message?.content) {
+        if (fallbackResponse.ok && fallbackContent) {
           console.log('Fallback model succeeded');
           // Mark that we used a fallback
           fallbackData.fallback_used = true;
