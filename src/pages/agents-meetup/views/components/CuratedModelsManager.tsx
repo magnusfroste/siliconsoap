@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server, Scan, ExternalLink, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Trash2, Search, Sparkles, ChevronDown, Check, AlertTriangle, Cloud, Server, Scan, ExternalLink, DollarSign, Brain } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { modelInfoService } from '@/services';
@@ -88,6 +88,19 @@ export const CuratedModelsManager = () => {
       toast.success(`${model.display_name} ${!model.is_enabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
       toast.error('Failed to toggle model');
+    }
+  };
+
+  const handleToggleDisableReasoning = async (model: CuratedModel) => {
+    const next = !model.disable_reasoning;
+    try {
+      await updateModelContent(model.id, { disable_reasoning: next });
+      setCuratedModels(prev =>
+        prev.map(m => (m.id === model.id ? { ...m, disable_reasoning: next } : m))
+      );
+      toast.success(`${model.display_name}: reasoning ${next ? 'disabled' : 'enabled'}`);
+    } catch (error) {
+      toast.error('Failed to update reasoning toggle');
     }
   };
 
