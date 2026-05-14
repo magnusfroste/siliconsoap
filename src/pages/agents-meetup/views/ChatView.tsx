@@ -846,7 +846,11 @@ export const ChatView = () => {
                       await saveMessage(chatId, message);
                     },
                     undefined,
-                    onTokenUsage
+                    onTokenUsage,
+                    {
+                      enableScratchpad: scratchpadEnabled,
+                      usePersonaTemplate: personaTemplateEnabled
+                    }
                   );
                   
                   setCurrentAgent(null);
