@@ -45,7 +45,7 @@ export const parseMarkdown = (markdown: string) => {
   
   // Parse lists
   parsed = parsed.replace(/^\s*\d+\.\s(.+)/gim, '<li class="ml-5 list-decimal">$1</li>');
-  parsed = parsed.replace(/^\s*[\-\*]\s(.+)/gim, '<li class="ml-5 list-disc">$1</li>');
+  parsed = parsed.replace(/^\s*[-*]\s(.+)/gim, '<li class="ml-5 list-disc">$1</li>');
   
   // Group consecutive list items
   parsed = parsed
