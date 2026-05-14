@@ -82,9 +82,26 @@ serve(async (req) => {
     console.log(`Making OpenRouter request with model: ${model}`);
     console.log(`Using ${userApiKey ? 'user' : 'shared'} API key`);
 
-    // Disable hidden reasoning for Qwen3 hybrid-thinking models to cut latency.
-    // They produce great answers without the thinking pass.
-    const isQwen3Thinking = /^qwen\/qwen3/i.test(model ?? '');
+    // Per-model toggle: admin can disable hidden reasoning from the Admin Panel.
+    // Stored in curated_models.disable_reasoning. We query via REST with the
+    // anon key (curated_models has public SELECT RLS).
+    let disableReasoning = false;
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      if (supabaseUrl && anonKey && model) {
+        const lookupRes = await fetch(
+          `${supabaseUrl}/rest/v1/curated_models?model_id=eq.${encodeURIComponent(model)}&select=disable_reasoning&limit=1`,
+          { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } }
+        );
+        if (lookupRes.ok) {
+          const rows = await lookupRes.json();
+          disableReasoning = rows?.[0]?.disable_reasoning === true;
+        }
+      }
+    } catch (lookupErr) {
+      console.warn('[reasoning] Lookup failed, defaulting to enabled:', lookupErr);
+    }
 
     const requestBody: Record<string, unknown> = {
       model,
@@ -96,10 +113,11 @@ serve(async (req) => {
       usage: { include: true },
     };
 
-    if (isQwen3Thinking) {
+    if (disableReasoning) {
       requestBody.reasoning = { enabled: false };
-      console.log(`[reasoning] Disabled for ${model}`);
+      console.log(`[reasoning] Disabled for ${model} (admin toggle)`);
     }
+
 
     const requestHeaders = {
       'Authorization': `Bearer ${apiKey}`,
