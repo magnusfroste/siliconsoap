@@ -42,16 +42,26 @@ export const SharedChatView = () => {
   // Dynamic meta tags for OG and DiscussionForumPosting schema
   useEffect(() => {
     if (chat) {
+      const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
+      const descriptionText = chat.prompt?.length > 160
+        ? chat.prompt.slice(0, 157) + '...'
+        : chat.prompt || `AI debate: ${chat.title}`;
+
       // Update document title
       document.title = `${chat.title} | SiliconSoap`;
-      
+
+      // Standard description + canonical (was missing)
+      updateMetaTag('description', descriptionText);
+      updateLinkTag('canonical', canonicalUrl);
+
       // Update meta tags dynamically
       updateMetaTag('og:title', chat.title);
-      updateMetaTag('og:description', chat.prompt);
-      updateMetaTag('og:url', window.location.href);
+      updateMetaTag('og:description', descriptionText);
+      updateMetaTag('og:url', canonicalUrl);
+      updateMetaTag('og:type', 'article');
       updateMetaTag('og:image', getOgImageUrl(shareId || ''));
       updateMetaTag('twitter:title', chat.title);
-      updateMetaTag('twitter:description', chat.prompt);
+      updateMetaTag('twitter:description', descriptionText);
       updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
 
       // Add DiscussionForumPosting schema
@@ -61,6 +71,8 @@ export const SharedChatView = () => {
     return () => {
       // Reset on unmount
       document.title = 'SiliconSoap - Where AI Debates Get Dramatic';
+      updateLinkTag('canonical', `${BASE_URL}/`);
+      updateMetaTag('og:type', 'website');
       removeDiscussionSchema();
     };
   }, [chat, messages, shareId]);
