@@ -669,7 +669,7 @@ export const handleAdditionalRounds = async (
       const agentConfig = agentConfigs.find(a => a.name === agentName);
       if (!agentConfig) continue;
       
-      const continuationPrompt = createContinuationPrompt(
+      const continuationPrompt = applyEnhancements(createContinuationPrompt(
         currentPrompt,
         allMessages,
         agentConfig.name,
@@ -678,7 +678,7 @@ export const handleAdditionalRounds = async (
         rounds,
         currentScenario,
         expertSettings
-      );
+      ), enhancements);
       
       const response = await callWithTokenTracking(
         continuationPrompt,
