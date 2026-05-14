@@ -797,14 +797,14 @@ export const handleUserFollowUp = async (
   if (numberOfAgents === 2) return;
   
   // Agent C responds
-  const agentCPrompt = createResponseToUserPrompt(
+  const agentCPrompt = applyEnhancements(createResponseToUserPrompt(
     originalPrompt,
     userMessage,
     [...currentConversation, agentAMessage, agentBMessage],
     'Agent C',
     currentScenario,
     agentCPersona
-  );
+  ), enhancements);
   
   const agentCResponse = await callWithTokenTracking(
     agentCPrompt,
