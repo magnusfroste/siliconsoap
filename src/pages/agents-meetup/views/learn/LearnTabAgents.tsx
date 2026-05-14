@@ -5,7 +5,8 @@ import {
   Users, Network, Target, ArrowRight, 
   GitBranch, MessageSquare, Shield, Sparkles, 
   Code, Search, FileText, Headphones,
-  Zap, CheckCircle2, AlertTriangle, Brain, Database
+  Zap, CheckCircle2, AlertTriangle, Brain, Database,
+  ExternalLink, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -215,6 +216,91 @@ export const LearnTabAgents = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Real Open-Source Agents in the Wild */}
+      <Card className="border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-background">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Rocket className="h-5 w-5 text-primary" />
+            Open-Source Agents in the Wild
+          </CardTitle>
+          <CardDescription>
+            The theory above is no longer theory — these autonomous agents are being run on real servers, today
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            A new wave of <strong>open-source autonomous agents</strong> emerged in late 2025 / early 2026.
+            Unlike chatbots, these run as background services with real credentials, persistent memory and
+            the ability to act on your behalf — locally or on your own server.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* OpenClaw */}
+            <div className="p-5 rounded-lg border-2 border-primary/20 bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">🦞</span>
+                <h4 className="font-bold text-lg">OpenClaw</h4>
+                <Badge className="bg-primary/20 text-primary border-0 text-xs">Personal Assistant</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Originally <em>Clawdbot</em>, then <em>Moltbot</em>, now OpenClaw — a free, MIT-licensed
+                personal AI agent built by Peter Steinberger. Runs on any OS, talks to your files, browser
+                and messaging apps, and famously "keeps building upon itself" via Discord chat. Bring-your-own
+                model (Claude, GPT, local LLMs).
+              </p>
+              <div className="flex flex-wrap gap-1 mb-3">
+                <Badge variant="secondary" className="text-xs">TypeScript</Badge>
+                <Badge variant="secondary" className="text-xs">Own-your-data</Badge>
+                <Badge variant="secondary" className="text-xs">MIT</Badge>
+              </div>
+              <a
+                href="https://openclaw.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                openclaw.ai <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+
+            {/* Hermes Agent */}
+            <div className="p-5 rounded-lg border-2 border-secondary/30 bg-card">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">🪽</span>
+                <h4 className="font-bold text-lg">Hermes Agent</h4>
+                <Badge variant="secondary" className="text-xs">Grows With You</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Built by <strong>Nous Research</strong> — the same crew behind the Hermes model series.
+                Not a coding copilot, not a chat wrapper: an autonomous agent that lives on your server,
+                <strong> remembers what it learns</strong> (Honcho memory), and gets more capable the longer
+                it runs. Multi-platform messaging gateway, MCP client, voice mode, plugin architecture.
+              </p>
+              <div className="flex flex-wrap gap-1 mb-3">
+                <Badge variant="secondary" className="text-xs">Python</Badge>
+                <Badge variant="secondary" className="text-xs">MCP</Badge>
+                <Badge variant="secondary" className="text-xs">Persistent Memory</Badge>
+                <Badge variant="secondary" className="text-xs">MIT</Badge>
+              </div>
+              <a
+                href="https://hermes-agent.nousresearch.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                hermes-agent.nousresearch.com <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-accent/10 border border-accent/20 text-sm">
+            <strong>Why it matters:</strong> Both projects prove that the autonomous-agent pattern is
+            shifting from research demos to <em>self-hostable infrastructure</em> — the same direction
+            SiliconSoap pushes for multi-agent debate.
           </div>
         </CardContent>
       </Card>
