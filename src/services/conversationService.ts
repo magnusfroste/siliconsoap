@@ -418,12 +418,15 @@ export const handleInitialRound = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<{
   conversationMessages: ConversationMessage[],
   agentAResponse: string,
   agentBResponse: string
 }> => {
+  // Apply persona template flag for the whole run
+  setUsePersonaTemplate(!!enhancements?.usePersonaTemplate);
   // Clear name cache at start of new conversation to ensure unique names
   clearAgentNameCache();
   
