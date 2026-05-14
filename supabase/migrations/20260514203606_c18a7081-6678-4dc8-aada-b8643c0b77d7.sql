@@ -1,0 +1,1 @@
+ALTER TABLE public.curated_models ADD COLUMN IF NOT EXISTS disable_reasoning boolean NOT NULL DEFAULT false;
