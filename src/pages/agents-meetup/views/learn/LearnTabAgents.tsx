@@ -7,7 +7,8 @@ import {
   Code, Search, FileText, Headphones,
   Zap, CheckCircle2, AlertTriangle, Brain, Database,
   ExternalLink, Rocket,
-  Building2, Globe, Server
+  Building2, Globe, Server,
+  HelpCircle, ChevronDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
