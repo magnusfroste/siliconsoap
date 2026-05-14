@@ -300,7 +300,8 @@ export const ChatView = () => {
           settings.temperature, // temperature from settings
           settings.turnOrder || 'sequential',
           onTokenUsage,
-          expertSettings
+          expertSettings,
+          enhancements
         );
 
         if (!isMounted.current) return;
