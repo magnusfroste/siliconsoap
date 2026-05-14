@@ -121,7 +121,43 @@ serve(async (req) => {
     const content = data.choices?.[0]?.message?.content;
     if (!content || content.trim() === '') {
       console.warn(`Empty response from model ${model}, possibly rate limited`);
-      
+
+      // Reasoning models (e.g. deepseek-r1, o1) can consume the entire token
+      // budget on hidden reasoning, leaving content empty. Detect & retry
+      // the SAME model with a much larger max_tokens before falling back.
+      const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+      const looksLikeReasoningModel = reasoningTokens > 0 || /r1|o1|reason|think/i.test(model);
+      if (looksLikeReasoningModel) {
+        const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
+        console.log(`Reasoning model detected (reasoning_tokens=${reasoningTokens}). Retrying ${model} with max_tokens=${boostedMaxTokens}`);
+        const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': req.headers.get('referer') || 'https://lovable.dev',
+            'X-Title': 'Magnus Froste Labs'
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: boostedMaxTokens,
+            temperature,
+            top_p,
+            stream: false,
+            usage: { include: true }
+          }),
+        });
+        const retryData = await retryResponse.json();
+        if (retryResponse.ok && retryData.choices?.[0]?.message?.content?.trim()) {
+          console.log('Reasoning-model retry succeeded');
+          return new Response(JSON.stringify(retryData), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        console.warn('Reasoning-model retry still empty, falling back');
+      }
+
       // Try fallback model if the original returned empty
       const fallbackModel = 'mistralai/mixtral-8x7b-instruct';
       if (model !== fallbackModel) {
