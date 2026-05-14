@@ -76,10 +76,10 @@ export const parseMarkdown = (markdown: string) => {
     '<pre class="bg-gray-100 p-3 rounded-md my-3 overflow-x-auto"><code>$2</code></pre>');
   
   // Parse blockquotes
-  parsed = parsed.replace(/^\> (.*$)/gim, '<blockquote class="pl-4 border-l-4 border-gray-300 italic text-gray-700">$1</blockquote>');
+  parsed = parsed.replace(/^> (.*$)/gim, '<blockquote class="pl-4 border-l-4 border-gray-300 italic text-gray-700">$1</blockquote>');
   
   // Parse horizontal rules
-  parsed = parsed.replace(/^\-\-\-+$/gim, '<hr class="my-4 border-t border-gray-300">');
+  parsed = parsed.replace(/^-{3,}$/gim, '<hr class="my-4 border-t border-gray-300">');
   
   // Parse links
   parsed = parsed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
