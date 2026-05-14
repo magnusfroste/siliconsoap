@@ -916,6 +916,7 @@ graph TD
 - [ ] Workflow templates and sharing
 - [ ] Team workspaces and collaboration
 - [ ] Analytics dashboard
+- [ ] **Mid-debate web search (agentic tool-calling)** — Allow agents to issue web search calls mid-turn instead of only a single pre-debate research pass. Requires OpenRouter tool-calling loop, per-persona `can_search` gating, and per-turn result caching. *Trade-off: adds latency (extra round-trip per search) and token cost; current pre-debate single-shot search is sufficient for most scenarios. Revisit when agents need fresh facts during long debates.*
 
 ---
 
