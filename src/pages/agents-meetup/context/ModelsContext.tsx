@@ -1,17 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepository";
 
-// Fallback pool used only before curated models load (or if DB returns empty)
+// Fallback pool used only before curated models load (or if DB returns empty).
+// Mixed snapshot from curated_models: open-weight + closed, multiple providers, varied tiers.
 const FALLBACK_POOL = [
+  "openai/gpt-4o-mini",
   "openai/gpt-oss-20b",
-  "z-ai/glm-4.7",
+  "google/gemini-2.5-flash",
+  "google/gemma-3-12b-it",
+  "deepseek/deepseek-chat-v3-0324",
+  "deepseek/deepseek-r1-distill-llama-70b",
   "meta-llama/llama-3.3-70b-instruct",
   "meta-llama/llama-4-scout",
-  "deepseek/deepseek-chat-v3-0324",
-  "google/gemini-2.5-flash",
-  "openai/gpt-4o-mini",
+  "qwen/qwen3-32b",
   "x-ai/grok-3-mini",
-  "meta-llama/llama-4-maverick",
+  "z-ai/glm-4.6",
+  "mistralai/mistral-large-2411",
 ];
 
 // Pick 3 unique random models from a given pool (falls back to FALLBACK_POOL if too few)
