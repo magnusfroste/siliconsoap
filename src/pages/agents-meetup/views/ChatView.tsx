@@ -762,6 +762,11 @@ export const ChatView = () => {
                     personalityIntensity: settings.personalityIntensity ?? 'moderate'
                   } : undefined;
 
+                  const enhancements: EnhancementOptions = {
+                    enableScratchpad: scratchpadEnabled,
+                    usePersonaTemplate: personaTemplateEnabled
+                  };
+
                   await handleSingleRound(
                     chat.prompt,
                     scenario,
@@ -785,7 +790,8 @@ export const ChatView = () => {
                     settings.temperature,
                     settings.turnOrder || 'sequential',
                     onTokenUsage,
-                    expertSettings
+                    expertSettings,
+                    enhancements
                   );
                   
                   setCurrentAgent(null);
