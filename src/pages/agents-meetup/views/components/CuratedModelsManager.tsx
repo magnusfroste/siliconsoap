@@ -649,6 +649,23 @@ export const CuratedModelsManager = () => {
                               )}
                               {hasContent ? 'Regenerate' : 'Generate'} Info
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleToggleDisableReasoning(model)}
+                              title={
+                                model.disable_reasoning
+                                  ? 'Reasoning DISABLED — fast responses (no hidden thinking)'
+                                  : 'Reasoning enabled — model may use hidden thinking tokens'
+                              }
+                              className={cn(
+                                'gap-1 text-xs',
+                                model.disable_reasoning && 'text-amber-500 hover:text-amber-500'
+                              )}
+                            >
+                              <Brain className={cn('h-3.5 w-3.5', model.disable_reasoning && 'opacity-60')} />
+                              {model.disable_reasoning ? 'No-think' : 'Think'}
+                            </Button>
                             <Switch
                               checked={model.is_enabled}
                               onCheckedChange={() => handleToggleEnabled(model)}
