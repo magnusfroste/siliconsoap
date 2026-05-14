@@ -6,7 +6,8 @@ import {
   GitBranch, MessageSquare, Shield, Sparkles, 
   Code, Search, FileText, Headphones,
   Zap, CheckCircle2, AlertTriangle, Brain, Database,
-  ExternalLink, Rocket
+  ExternalLink, Rocket,
+  Building2, Globe, Server
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -305,7 +306,7 @@ export const LearnTabAgents = () => {
         </CardContent>
       </Card>
 
-      {/* Future Tech: RAG, CAG, Enterprise AI */}
+      {/* Future Tech: Enterprise AI, MCP Skills, Self-Hosting */}
       <Card className="border-2 border-secondary/30 bg-gradient-to-br from-secondary/5 to-background">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -313,32 +314,78 @@ export const LearnTabAgents = () => {
             What's Coming Next?
           </CardTitle>
           <CardDescription>
-            Techniques that extend what AI agents can do
+            The shift from AI as a chat interface to AI as an operating system for business
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            We are moving from "ask an AI for help" to "agents run the business while you approve."
+            Enterprise SaaS is becoming a set of <strong>claws</strong> — pluggable endpoints that autonomous
+            agents grip, manipulate and orchestrate. The AI Agentic Handbook calls this the
+            "clawable enterprise" — every business process exposed as an agent-callable skill.
+          </p>
+
           <div className="grid md:grid-cols-3 gap-4">
+            {/* Clawable Enterprise */}
             <div className="p-4 rounded-lg border bg-card">
-              <Database className="h-8 w-8 text-primary mb-3" />
-              <h4 className="font-semibold mb-2">RAG</h4>
-              <p className="text-sm text-muted-foreground">
-                Retrieval-Augmented Generation — connecting models to external knowledge bases in real-time
+              <Building2 className="h-8 w-8 text-primary mb-3" />
+              <h4 className="font-semibold mb-2">The Clawable Enterprise</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                CRM, ERP, HRIS and accounting systems are no longer human-first dashboards.
+                They become agent-callable APIs — <em>claws</em> — that autonomous workers grip
+                to execute workflows end-to-end.
               </p>
+              <a
+                href="https://www.clawable.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                AI Agentic Handbook <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
+
+            {/* Flowwink MCP Skills */}
             <div className="p-4 rounded-lg border bg-card">
-              <Zap className="h-8 w-8 text-primary mb-3" />
-              <h4 className="font-semibold mb-2">CAG</h4>
-              <p className="text-sm text-muted-foreground">
-                Cache-Augmented Generation — intelligent caching for faster, more efficient responses
+              <Globe className="h-8 w-8 text-primary mb-3" />
+              <h4 className="font-semibold mb-2">200+ MCP Skills</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Platforms like <strong>Flowwink</strong> expose hundreds of business skills via
+                the Model Context Protocol (MCP). Agents discover, invoke and chain these skills
+                without human assistance — only approvals.
               </p>
+              <a
+                href="https://www.flowwink.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+              >
+                flowwink.com <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
+
+            {/* Token Tsunami & Self-Hosting */}
             <div className="p-4 rounded-lg border bg-card">
-              <Brain className="h-8 w-8 text-primary mb-3" />
-              <h4 className="font-semibold mb-2">Enterprise AI</h4>
-              <p className="text-sm text-muted-foreground">
-                Soon, entire enterprise systems can reside inside an LLM — without retraining for each transaction
+              <Server className="h-8 w-8 text-primary mb-3" />
+              <h4 className="font-semibold mb-2">The Token Tsunami</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Autonomous agents run 24/7, consuming <strong>hundreds of millions of tokens</strong>
+                per day. Cloud API bills become unsustainable. Self-hosting open-weight models
+                — exactly what SiliconSoap lets you benchmark — is no longer optional.
               </p>
+              <div className="flex flex-wrap gap-1">
+                <Badge variant="secondary" className="text-xs">24/7 Operation</Badge>
+                <Badge variant="secondary" className="text-xs">Open-Weight</Badge>
+                <Badge variant="secondary" className="text-xs">On-Premise</Badge>
+              </div>
             </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-accent/10 border border-accent/20 text-sm">
+            <strong>Why it matters for SiliconSoap:</strong> Before you let agents run your
+            enterprise, you need to <em>know</em> which models are reliable, fast and cost-effective.
+            Our multi-agent debates are the proving ground — test models under pressure before
+            giving them the keys to your business.
           </div>
         </CardContent>
       </Card>
