@@ -249,6 +249,7 @@ export type Database = {
           created_at: string
           default_for_agent: string | null
           description: string | null
+          disable_reasoning: boolean
           display_name: string
           id: string
           is_enabled: boolean
@@ -274,6 +275,7 @@ export type Database = {
           created_at?: string
           default_for_agent?: string | null
           description?: string | null
+          disable_reasoning?: boolean
           display_name: string
           id?: string
           is_enabled?: boolean
@@ -299,6 +301,7 @@ export type Database = {
           created_at?: string
           default_for_agent?: string | null
           description?: string | null
+          disable_reasoning?: boolean
           display_name?: string
           id?: string
           is_enabled?: boolean
