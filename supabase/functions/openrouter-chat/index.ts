@@ -126,10 +126,12 @@ serve(async (req) => {
       // budget on hidden reasoning, leaving content empty. Detect & retry
       // the SAME model with a much larger max_tokens before falling back.
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-      const looksLikeReasoningModel = reasoningTokens > 0 || /r1|o1|reason|think/i.test(model);
-      if (looksLikeReasoningModel) {
+      // Always retry the same model once with a much larger token budget before
+      // falling back. Reasoning models (deepseek-r1, o1) and some others (kimi)
+      // can silently consume the entire budget on hidden tokens.
+      {
         const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
-        console.log(`Reasoning model detected (reasoning_tokens=${reasoningTokens}). Retrying ${model} with max_tokens=${boostedMaxTokens}`);
+        console.log(`Empty response (reasoning_tokens=${reasoningTokens}). Retrying ${model} with max_tokens=${boostedMaxTokens}`);
         const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
