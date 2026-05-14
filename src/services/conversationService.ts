@@ -727,17 +727,18 @@ export const handleUserFollowUp = async (
   responseLength: ResponseLength,
   onMessageReceived?: (message: ConversationMessage) => Promise<void>,
   temperature?: number,
-  onTokenUsage?: TokenUsageCallback
+  onTokenUsage?: TokenUsageCallback,
+  enhancements?: EnhancementOptions
 ): Promise<void> => {
   // Agent A responds
-  const agentAPrompt = createResponseToUserPrompt(
+  const agentAPrompt = applyEnhancements(createResponseToUserPrompt(
     originalPrompt,
     userMessage,
     currentConversation,
     'Agent A',
     currentScenario,
     agentAPersona
-  );
+  ), enhancements);
   
   const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
