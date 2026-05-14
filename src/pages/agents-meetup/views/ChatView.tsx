@@ -496,17 +496,40 @@ export const ChatView = () => {
             );
           })()}
         </div>
-        {!isGuest && messages.length > 0 && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleShareClick}
-            className="gap-2 shrink-0"
-          >
-            <Share2 className="h-4 w-4" />
-            Share
-          </Button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {scratchpadEnabled && messages.length > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showInnerThoughts ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShowInnerThoughts(v => !v)}
+                    className="gap-2"
+                    aria-pressed={showInnerThoughts}
+                  >
+                    <Brain className="h-4 w-4" />
+                    {showInnerThoughts ? 'Hide thoughts' : 'Show thoughts'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p>Reveal each agent's private inner monologue (Hermes-style scratchpad).</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {!isGuest && messages.length > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleShareClick}
+              className="gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
