@@ -1,29 +1,29 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepository";
 
-// Pool of 10 budget/standard tier models - balanced for speed and reasoning
-const MODEL_POOL = [
-  // Budget tier - solid performers
+// Fallback pool used only before curated models load (or if DB returns empty)
+const FALLBACK_POOL = [
   "openai/gpt-oss-20b",
   "z-ai/glm-4.7",
   "meta-llama/llama-3.3-70b-instruct",
   "meta-llama/llama-4-scout",
-  // Standard tier - proven reliable
   "deepseek/deepseek-chat-v3-0324",
   "google/gemini-2.5-flash",
   "openai/gpt-4o-mini",
-  "mistralai/mixtral-8x7b-instruct",
   "x-ai/grok-3-mini",
   "meta-llama/llama-4-maverick",
 ];
 
-// Pick 3 unique random models from the pool
-const pickRandomModels = (): { agentA: string; agentB: string; agentC: string } => {
-  const shuffled = [...MODEL_POOL].sort(() => Math.random() - 0.5);
+// Pick 3 unique random models from a given pool (falls back to FALLBACK_POOL if too few)
+const pickRandomModels = (
+  pool: string[] = FALLBACK_POOL
+): { agentA: string; agentB: string; agentC: string } => {
+  const source = pool.length >= 3 ? pool : FALLBACK_POOL;
+  const shuffled = [...source].sort(() => Math.random() - 0.5);
   return {
     agentA: shuffled[0],
     agentB: shuffled[1],
-    agentC: shuffled[2],
+    agentC: shuffled[2 % shuffled.length],
   };
 };
 
