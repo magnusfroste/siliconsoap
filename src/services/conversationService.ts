@@ -437,7 +437,7 @@ export const handleInitialRound = async (
     : getAgentOrder(turnOrder, numberOfAgents, 1);
   
   // Agent A always starts
-  const agentAPrompt = createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona, expertSettings);
+  const agentAPrompt = applyEnhancements(createAgentAInitialPrompt(currentPrompt, currentScenario, turnOrder, agentAPersona, expertSettings), enhancements);
   
   const agentAResponse = await callWithTokenTracking(
     agentAPrompt,
