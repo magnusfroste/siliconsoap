@@ -567,7 +567,8 @@ export const handleSingleRound = async (
   temperature?: number,
   turnOrder: TurnOrder = 'sequential',
   onTokenUsage?: TokenUsageCallback,
-  expertSettings?: ExpertSettings
+  expertSettings?: ExpertSettings,
+  enhancements?: EnhancementOptions
 ): Promise<ConversationMessage[]> => {
   const allMessages: ConversationMessage[] = [...conversation];
   
