@@ -109,7 +109,7 @@ export const useChatHistory = (userId: string | undefined) => {
       
       if (success) {
         toast.success('Chat deleted');
-        userId ? loadChats() : loadGuestChats();
+        if (userId) { loadChats(); } else { loadGuestChats(); }
       } else {
         toast.error('Failed to delete chat');
       }
