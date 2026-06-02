@@ -44,6 +44,7 @@ interface OpenRouterModel {
     image?: string;
   };
   context_length?: number;
+  hugging_face_id?: string | null;
 }
 
 interface OpenRouterResponse {
