@@ -148,6 +148,8 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
         </svg>
         <span className="hidden sm:inline">Copy</span>
       </Button>
+      </div>
     </div>
   );
+
 };
