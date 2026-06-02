@@ -223,11 +223,6 @@ export default function ExploreView() {
           </Button>
         </div>
 
-        {/* Hall of Shame */}
-        <div className="mb-8">
-          <HallOfShame />
-        </div>
-
         <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); trackExploreView(val); }} className="mb-6">
           <TabsList>
             <TabsTrigger value="recent" className="gap-2">
