@@ -412,15 +412,39 @@ export const SharedChatView = () => {
                           <SheetHeader>
                             <SheetTitle>Debate settings</SheetTitle>
                           </SheetHeader>
-                          <div className="py-4">{badges}</div>
+                          <div className="py-4 space-y-3 text-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Participation</span>
+                              <span className="font-medium text-right">{config.label}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Tone</span>
+                              <span className="font-medium text-right">{toneInfo.label}</span>
+                            </div>
+                            {bias !== 50 && (
+                              <div className="flex items-start justify-between gap-3">
+                                <span className="text-muted-foreground">Agreement bias</span>
+                                <span className="font-medium text-right">{biasLabel} ({bias}%)</span>
+                              </div>
+                            )}
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Rounds</span>
+                              <span className="font-medium text-right">{settings?.rounds || 2}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Response length</span>
+                              <span className="font-medium text-right capitalize">{settings?.responseLength || 'medium'}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Agents</span>
+                              <span className="font-medium text-right">{settings?.numberOfAgents || 2}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Turn order</span>
+                              <span className="font-medium text-right capitalize">{settings?.turnOrder || 'sequential'}</span>
+                            </div>
+                          </div>
                         </SheetContent>
-                      </Sheet>
-                    </>
-                  );
-
-                })()}
-              </div>
-            </div>
             
             <div className="flex items-center gap-3 flex-wrap">
               {/* Social Share Buttons */}
