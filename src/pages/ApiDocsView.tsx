@@ -156,9 +156,13 @@ curl ${API_BASE}/debates/abc-123 \\
                 <code className="font-mono text-sm">/debates</code>
               </div>
               <p className="text-sm text-muted-foreground">
-                Create and run a debate. <strong>Synchronous</strong> — the response includes
-                the full transcript. Costs 1 credit.
+                Queue a debate. Returns <strong>202 Accepted instantly</strong> with an{' '}
+                <code>id</code> — orchestration runs in the background so long debates never
+                timeout. Poll <code>/debates/:id/status</code> for progress. Costs 1 credit.
+                Append <code>?sync=true</code> to block until done (legacy behavior, can hit
+                edge-function timeouts on long runs).
               </p>
+
 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Body parameters</h4>
