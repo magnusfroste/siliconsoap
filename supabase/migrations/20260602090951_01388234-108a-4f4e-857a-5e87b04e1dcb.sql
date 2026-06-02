@@ -1,0 +1,1 @@
+UPDATE public.feature_flags SET enabled = false WHERE key = 'enable_scratchpad';
