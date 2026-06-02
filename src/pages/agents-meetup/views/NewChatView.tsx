@@ -345,6 +345,7 @@ export const NewChatView = () => {
               )}
             </Button>
           </div>
+          </div>
         </form>
 
         {!user && (
