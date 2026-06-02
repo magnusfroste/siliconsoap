@@ -136,7 +136,7 @@ const callWithTokenTracking = async (
   }
 
   return {
-    content: result.content,
+    content: replaceAgentMentions(result.content),
     fallbackUsed: result.fallbackUsed,
     originalModel: result.originalModel
   };
