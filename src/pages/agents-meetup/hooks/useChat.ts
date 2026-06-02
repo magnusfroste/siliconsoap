@@ -255,6 +255,7 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     refreshChat, 
     saveMessage, 
     setMessages, 
-    shareChat 
+    shareChat,
+    unshareChat
   };
 };
