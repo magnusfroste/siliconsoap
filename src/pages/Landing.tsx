@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
+import { MessageSquare, Users, Trophy, ArrowRight, Droplets, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FeaturedDebates } from '@/components/FeaturedDebates';
 import { 
