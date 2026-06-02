@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Copy, Plus, Loader2, Key, ExternalLink, Trash2 } from 'lucide-react';
+import { Copy, Plus, Loader2, Key, ExternalLink, Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
