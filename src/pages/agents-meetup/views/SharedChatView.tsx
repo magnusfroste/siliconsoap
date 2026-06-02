@@ -210,8 +210,9 @@ export const SharedChatView = () => {
                   const bias = settings?.agreementBias ?? 50;
                   const biasLabel = bias < 30 ? "Devil's Advocate" : bias > 70 ? "Agreeable" : "Balanced";
                   
-                  return (
+                  const badges = (
                     <div className="flex items-center gap-2 flex-wrap">
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
