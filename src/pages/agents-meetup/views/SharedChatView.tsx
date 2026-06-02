@@ -23,6 +23,19 @@ export const SharedChatView = () => {
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
   const viewTrackedRef = useRef(false);
+  const [showCta, setShowCta] = useState(false);
+
+  // Reveal the sticky CTA only after the reader scrolls past the first answer
+  useEffect(() => {
+    const viewport = document.querySelector(
+      '[data-radix-scroll-area-viewport]'
+    ) as HTMLElement | null;
+    if (!viewport) return;
+    const onScroll = () => setShowCta(viewport.scrollTop > 320);
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => viewport.removeEventListener('scroll', onScroll);
+  }, [messages.length]);
 
   // Track view count once
   useEffect(() => {
