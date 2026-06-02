@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeatureFlag {
@@ -13,112 +14,57 @@ interface FeatureFlag {
   updated_at: string;
 }
 
-// Module-level cache to prevent redundant fetches across hook instances
-let flagsCache: FeatureFlag[] | null = null;
-let fetchPromise: Promise<FeatureFlag[]> | null = null;
+const QUERY_KEY = ['feature-flags'];
 
 export const useFeatureFlags = () => {
-  const [flags, setFlags] = useState<FeatureFlag[]>(flagsCache || []);
-  const [loading, setLoading] = useState(flagsCache === null);
-  const isMounted = useRef(true);
+  const queryClient = useQueryClient();
 
-  const fetchFlags = useCallback(async (): Promise<FeatureFlag[]> => {
-    // If already fetching, return the existing promise
-    if (fetchPromise) {
-      return fetchPromise;
-    }
+  const { data: flags = [], isLoading: loading, refetch: rqRefetch } = useQuery<FeatureFlag[]>({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('feature_flags')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
 
-    fetchPromise = (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('feature_flags')
-          .select('*')
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-        const newFlags = data || [];
-        flagsCache = newFlags;
-        return newFlags;
-      } catch (error) {
-        console.error('Error fetching feature flags:', error);
-        return flagsCache || [];
-      } finally {
-        fetchPromise = null;
-      }
-    })();
-
-    return fetchPromise;
-  }, []);
-
+  // Realtime invalidation
   useEffect(() => {
-    isMounted.current = true;
-    
-    const loadFlags = async () => {
-      // Use cache if available
-      if (flagsCache) {
-        setFlags(flagsCache);
-        setLoading(false);
-        return;
-      }
-
-      const newFlags = await fetchFlags();
-      if (isMounted.current) {
-        setFlags(newFlags);
-        setLoading(false);
-      }
-    };
-
-    loadFlags();
-
-    // Subscribe to realtime updates
     const channel = supabase
       .channel('feature-flags-changes')
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'feature_flags'
-        },
-        async () => {
-          // Invalidate cache and refetch
-          flagsCache = null;
-          const newFlags = await fetchFlags();
-          if (isMounted.current) {
-            setFlags(newFlags);
-          }
-        }
+        { event: '*', schema: 'public', table: 'feature_flags' },
+        () => queryClient.invalidateQueries({ queryKey: QUERY_KEY })
       )
       .subscribe();
-
     return () => {
-      isMounted.current = false;
       supabase.removeChannel(channel);
     };
-  }, [fetchFlags]);
+  }, [queryClient]);
 
-  const isEnabled = useCallback((key: string): boolean => {
-    const flag = flags.find(f => f.key === key);
-    return flag?.enabled ?? false;
-  }, [flags]);
+  const isEnabled = useCallback(
+    (key: string): boolean => flags.find(f => f.key === key)?.enabled ?? false,
+    [flags]
+  );
 
-  const getNumericValue = useCallback((key: string): number | null => {
-    const flag = flags.find(f => f.key === key);
-    return flag?.numeric_value ?? null;
-  }, [flags]);
+  const getNumericValue = useCallback(
+    (key: string): number | null => flags.find(f => f.key === key)?.numeric_value ?? null,
+    [flags]
+  );
 
-  const getTextValue = useCallback((key: string): string | null => {
-    const flag = flags.find(f => f.key === key);
-    return flag?.text_value ?? null;
-  }, [flags]);
+  const getTextValue = useCallback(
+    (key: string): string | null => flags.find(f => f.key === key)?.text_value ?? null,
+    [flags]
+  );
 
   const refetch = useCallback(async () => {
-    flagsCache = null;
-    const newFlags = await fetchFlags();
-    if (isMounted.current) {
-      setFlags(newFlags);
-    }
-  }, [fetchFlags]);
+    await rqRefetch();
+  }, [rqRefetch]);
 
   return { flags, isEnabled, getNumericValue, getTextValue, loading, refetch };
 };

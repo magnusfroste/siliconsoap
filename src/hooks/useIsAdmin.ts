@@ -1,51 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+const QUERY_KEY = ['is-admin'];
+
 export const useIsAdmin = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
+  const { data: isAdmin = false, isLoading: loading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
 
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data);
-        }
-      } catch (error) {
+      if (error) {
         console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
+        return false;
       }
-    };
+      return !!data;
+    },
+    staleTime: 5 * 60_000,
+  });
 
-    checkAdminStatus();
-
-    // Listen for auth changes
+  // Re-check on auth state changes
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkAdminStatus();
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     });
-
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   return { isAdmin, loading };
 };
