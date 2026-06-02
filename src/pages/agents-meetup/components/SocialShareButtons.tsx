@@ -64,8 +64,38 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
     }
   };
 
+  const handleNativeShare = async () => {
+    try {
+      await navigator.share({ title, text: description, url: shareUrl });
+      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'native_share' });
+    } catch (err) {
+      // User cancelled or share failed silently — no toast needed
+      if ((err as Error)?.name !== 'AbortError') {
+        console.warn('Native share failed', err);
+      }
+    }
+  };
+
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
+      {/* Mobile: single native share button when available */}
+      {canNativeShare && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNativeShare}
+          className="gap-2 sm:hidden"
+        >
+          <Share2 className="h-4 w-4" />
+          Share
+        </Button>
+      )}
+
+      {/* Desktop (and mobile fallback when native share unavailable): per-platform buttons */}
+      <div className={`flex items-center gap-2 flex-wrap ${canNativeShare ? 'hidden sm:flex' : 'flex'}`}>
+
       {/* Twitter/X */}
       <Button
         variant="outline"
