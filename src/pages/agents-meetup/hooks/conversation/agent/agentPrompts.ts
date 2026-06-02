@@ -101,6 +101,7 @@ const usedFirstNames = new Set<string>();
 export const clearAgentNameCache = (): void => {
   agentNameCache.clear();
   usedFirstNames.clear();
+  clearActiveAgentNames();
 };
 
 /**
@@ -117,6 +118,7 @@ const getCachedAgentName = (agentLetter: string, persona: string): string => {
   const firstName = soapName.split(' ')[0];
   usedFirstNames.add(firstName);
   agentNameCache.set(cacheKey, soapName);
+  setActiveAgentName(agentLetter, soapName);
   
   return soapName;
 };
