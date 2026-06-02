@@ -44,6 +44,7 @@ interface OpenRouterModel {
     image?: string;
   };
   context_length?: number;
+  hugging_face_id?: string | null;
 }
 
 interface OpenRouterResponse {
@@ -91,18 +92,29 @@ serve(async (req) => {
     const openRouterData: OpenRouterResponse = await openRouterResponse.json();
     console.log(`Fetched ${openRouterData.data?.length || 0} models from OpenRouter`);
 
-    // Create a map of model_id -> pricing for quick lookup
-    const pricingMap = new Map<string, { priceInput: number; priceOutput: number }>();
+    // Create a map of model_id -> full metadata for quick lookup
+    const metaMap = new Map<string, {
+      priceInput: number;
+      priceOutput: number;
+      contextLength: number | null;
+      huggingFaceId: string | null;
+    }>();
     for (const model of openRouterData.data || []) {
       const priceInput = parseFloat(model.pricing?.prompt || '0') || 0;
       const priceOutput = parseFloat(model.pricing?.completion || '0') || 0;
-      pricingMap.set(model.id, { priceInput, priceOutput });
+      const hfRaw = (model.hugging_face_id ?? '').trim();
+      metaMap.set(model.id, {
+        priceInput,
+        priceOutput,
+        contextLength: model.context_length ?? null,
+        huggingFaceId: hfRaw.length > 0 ? hfRaw : null,
+      });
     }
 
     // Fetch all curated models from our database
     const { data: curatedModels, error: fetchError } = await supabase
       .from('curated_models')
-      .select('id, model_id, display_name');
+      .select('id, model_id, display_name, license_type');
 
     if (fetchError) {
       console.error('Error fetching curated models:', fetchError);
@@ -115,27 +127,36 @@ serve(async (req) => {
     let notFoundCount = 0;
     const notFoundModels: string[] = [];
 
-    // Update each curated model with pricing info
     for (const model of curatedModels || []) {
-      const pricing = pricingMap.get(model.model_id);
-      
-      if (pricing) {
-        const priceTier = calculatePriceTier(pricing.priceInput, pricing.priceOutput);
-        
+      const meta = metaMap.get(model.model_id);
+
+      if (meta) {
+        const priceTier = calculatePriceTier(meta.priceInput, meta.priceOutput);
+        // OpenRouter's own hugging_face_id is the authoritative open-weight signal.
+        // If present → open-weight. If absent → closed (Cloud API only).
+        // Note: this may briefly mark a model as "closed" if HF weights aren't published yet.
+        const licenseType: 'open-weight' | 'closed' = meta.huggingFaceId ? 'open-weight' : 'closed';
+
+        const update: Record<string, unknown> = {
+          price_input: meta.priceInput,
+          price_output: meta.priceOutput,
+          price_tier: priceTier,
+          license_type: licenseType,
+          pricing_updated_at: new Date().toISOString(),
+        };
+        if (meta.contextLength && meta.contextLength > 0) {
+          update.context_window = meta.contextLength;
+        }
+
         const { error: updateError } = await supabase
           .from('curated_models')
-          .update({
-            price_input: pricing.priceInput,
-            price_output: pricing.priceOutput,
-            price_tier: priceTier,
-            pricing_updated_at: new Date().toISOString(),
-          })
+          .update(update)
           .eq('id', model.id);
 
         if (updateError) {
           console.error(`Error updating model ${model.model_id}:`, updateError);
         } else {
-          console.log(`Updated ${model.display_name}: tier=${priceTier}, input=$${pricing.priceInput}/token, output=$${pricing.priceOutput}/token`);
+          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}`);
           updatedCount++;
         }
       } else {
