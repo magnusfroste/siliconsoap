@@ -70,7 +70,8 @@ const ApiDocsView = () => {
               <li>Use it in the <code className="text-xs bg-muted px-1 rounded">Authorization</code> header.</li>
             </ol>
             <CodeBlock
-              code={`curl -X POST ${API_BASE}/debates \\
+              code={`# 1. Queue a debate (returns instantly with 202)
+curl -X POST ${API_BASE}/debates \\
   -H "Authorization: Bearer sk_silicon_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -78,8 +79,19 @@ const ApiDocsView = () => {
     "models": ["qwen/qwen3-235b-a22b", "deepseek/deepseek-chat-v3.1"],
     "rounds": 2,
     "conversation_tone": "heated"
-  }'`}
+  }'
+# => { "id": "abc-123", "status": "queued", "poll_url": "..." }
+
+# 2. Poll status every 2-3s
+curl ${API_BASE}/debates/abc-123/status \\
+  -H "Authorization: Bearer sk_silicon_YOUR_KEY"
+# => { "status": "running", "current_round": 1, "messages_so_far": 2 }
+
+# 3. When status === "completed", fetch the transcript
+curl ${API_BASE}/debates/abc-123 \\
+  -H "Authorization: Bearer sk_silicon_YOUR_KEY"`}
             />
+
           </CardContent>
         </Card>
 
