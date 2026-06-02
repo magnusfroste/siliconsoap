@@ -95,13 +95,21 @@ export const chatService = {
     }
   },
 
-  // Share a chat
+  // Share a chat (re-share if previously unshared)
   async shareChat(chatId: string, userId: string): Promise<string | null> {
     if (!userId) {
       throw new Error('Must be logged in to share chats');
     }
 
     return chatRepository.shareChat(chatId);
+  },
+
+  // Unshare a chat (make it private)
+  async unshareChat(chatId: string, userId: string): Promise<boolean> {
+    if (!userId) {
+      throw new Error('Must be logged in to unshare chats');
+    }
+    return chatRepository.unshareChat(chatId);
   },
 
   // Update chat title
