@@ -196,7 +196,13 @@ export const ApiKeysTab = () => {
                 {keys.map((k) => (
                   <TableRow key={k.id}>
                     <TableCell className="font-medium">{k.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{k.key_prefix}…</TableCell>
+                    <TableCell className="font-mono text-xs max-w-[320px]">
+                      {k.key_plaintext && shownIds.has(k.id) ? (
+                        <span className="break-all">{k.key_plaintext}</span>
+                      ) : (
+                        <span>{k.key_prefix}…</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {k.last_used_at
                         ? new Date(k.last_used_at).toLocaleString()
@@ -210,15 +216,42 @@ export const ApiKeysTab = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {!k.revoked_at && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmRevokeId(k.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {k.key_plaintext && !k.revoked_at && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleShown(k.id)}
+                              title={shownIds.has(k.id) ? 'Hide' : 'Reveal'}
+                            >
+                              {shownIds.has(k.id) ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyKey(k.key_plaintext!)}
+                              title="Copy key"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {!k.revoked_at && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmRevokeId(k.id)}
+                            title="Revoke"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
