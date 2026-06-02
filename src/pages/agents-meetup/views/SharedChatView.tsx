@@ -445,6 +445,14 @@ export const SharedChatView = () => {
                             </div>
                           </div>
                         </SheetContent>
+                      </Sheet>
+                    </>
+                  );
+
+                })()}
+              </div>
+            </div>
+
             
             <div className="flex items-center gap-3 flex-wrap">
               {/* Social Share Buttons */}
