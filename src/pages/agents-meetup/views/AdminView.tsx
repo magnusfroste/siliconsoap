@@ -4,7 +4,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3, Zap, Users, MessageCircleQuestion, Volume2 } from 'lucide-react';
+import { Bot, MessageSquare, Settings2, Sparkles, PanelLeft, BarChart3, Zap, Users, MessageCircleQuestion, Volume2, Key } from 'lucide-react';
 import { 
   AdminHeader, 
   useAdminFlags, 
@@ -17,7 +17,8 @@ import {
   SeedingTab,
   UsersTab,
   QuickPromptsTab,
-  ElevenLabsTab
+  ElevenLabsTab,
+  ApiKeysTab
 } from './admin';
 
 export const AdminView = () => {
@@ -60,7 +61,7 @@ export const AdminView = () => {
       <AdminHeader />
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-10 h-12">
+        <TabsList className="grid w-full grid-cols-11 h-12">
           <TabsTrigger value="users" className="gap-2 text-sm">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
@@ -100,6 +101,10 @@ export const AdminView = () => {
           <TabsTrigger value="elevenlabs" className="gap-2 text-sm">
             <Volume2 className="h-4 w-4" />
             <span className="hidden sm:inline">Audio</span>
+          </TabsTrigger>
+          <TabsTrigger value="api-keys" className="gap-2 text-sm">
+            <Key className="h-4 w-4" />
+            <span className="hidden sm:inline">API</span>
           </TabsTrigger>
         </TabsList>
 
@@ -158,6 +163,10 @@ export const AdminView = () => {
 
           <TabsContent value="elevenlabs" className="m-0">
             <ElevenLabsTab />
+          </TabsContent>
+
+          <TabsContent value="api-keys" className="m-0">
+            <ApiKeysTab />
           </TabsContent>
         </div>
       </Tabs>
