@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { chatRepository } from '@/repositories';
 import { chatService } from '@/services';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,104 +13,63 @@ export interface ChatHistoryItem {
   is_shared: boolean;
 }
 
+const mapGuestChats = (): ChatHistoryItem[] => {
+  const guestChats = chatRepository.getGuestChats();
+  return guestChats
+    .map((chat) => ({
+      id: chat.id,
+      title: chat.title,
+      created_at: chat.created_at || '',
+      updated_at: chat.updated_at || '',
+      is_shared: false,
+    }))
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+};
+
+const mapUserChats = async (userId: string): Promise<ChatHistoryItem[]> => {
+  const chatData = await chatRepository.getChatsByUserId(userId);
+  return chatData.map((chat) => ({
+    id: chat.id,
+    title: chat.title,
+    created_at: chat.created_at || '',
+    updated_at: chat.updated_at || '',
+    is_shared: chat.is_public === true && !!chat.share_id,
+  }));
+};
+
 export const useChatHistory = (userId: string | undefined) => {
-  const [chats, setChats] = useState<ChatHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const isMounted = useRef(true);
-  const isLoading = useRef(false);
+  const queryClient = useQueryClient();
+  const queryKey = ['chatHistory', userId ?? 'guest'];
 
-  const loadGuestChats = useCallback(() => {
-    try {
-      const guestChats = chatRepository.getGuestChats();
-      const chatList: ChatHistoryItem[] = guestChats.map((chat) => ({
-        id: chat.id,
-        title: chat.title,
-        created_at: chat.created_at || '',
-        updated_at: chat.updated_at || '',
-        is_shared: false
-      }));
+  const { data: chats = [], isLoading: loading, refetch } = useQuery({
+    queryKey,
+    queryFn: async () => (userId ? mapUserChats(userId) : mapGuestChats()),
+    staleTime: 30_000,
+  });
 
-      // Sort by updated_at descending
-      chatList.sort((a, b) => 
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
-      
-      if (isMounted.current) {
-        setChats(chatList);
-      }
-    } catch (error) {
-      console.error('Error loading guest chats:', error);
-      if (isMounted.current) {
-        setChats([]);
-      }
-    }
-  }, []);
-
-  const loadChats = useCallback(async () => {
-    if (!userId || isLoading.current) return;
-    
-    isLoading.current = true;
-
-    try {
-      const chatData = await chatRepository.getChatsByUserId(userId);
-      const chatList: ChatHistoryItem[] = chatData.map((chat) => ({
-        id: chat.id,
-        title: chat.title,
-        created_at: chat.created_at || '',
-        updated_at: chat.updated_at || '',
-        is_shared: chat.is_public === true && !!chat.share_id
-      }));
-      
-      if (isMounted.current) {
-        setChats(chatList);
-      }
-    } catch (error) {
-      console.error('Error loading chats:', error);
-      toast.error('Failed to load chat history');
-    } finally {
-      isLoading.current = false;
-      if (isMounted.current) {
-        setLoading(false);
-      }
-    }
-  }, [userId]);
-
+  // Realtime subscription (logged-in users) + guest update events
   useEffect(() => {
-    isMounted.current = true;
-    
     if (!userId) {
-      loadGuestChats();
-      setLoading(false);
-      
-      // Listen for guest chat updates
-      const handleChatsUpdated = () => loadGuestChats();
-      window.addEventListener('chatsUpdated', handleChatsUpdated);
-      return () => {
-        isMounted.current = false;
-        window.removeEventListener('chatsUpdated', handleChatsUpdated);
-      };
+      const handler = () => queryClient.invalidateQueries({ queryKey });
+      window.addEventListener('chatsUpdated', handler);
+      return () => window.removeEventListener('chatsUpdated', handler);
     }
 
-    loadChats();
-
-    // Set up realtime subscription using repository
     const channel = chatRepository.subscribeToChats(userId, () => {
-      loadChats();
+      queryClient.invalidateQueries({ queryKey });
     });
-
     return () => {
-      isMounted.current = false;
       supabase.removeChannel(channel);
     };
-  }, [userId, loadChats, loadGuestChats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
-  const deleteChat = useCallback(async (chatId: string) => {
+  const deleteChat = async (chatId: string) => {
     try {
       const success = await chatService.deleteChat(chatId, !userId);
-      
       if (success) {
         toast.success('Chat deleted');
-        if (userId) { loadChats(); } else { loadGuestChats(); }
+        queryClient.invalidateQueries({ queryKey });
       } else {
         toast.error('Failed to delete chat');
       }
@@ -117,12 +77,12 @@ export const useChatHistory = (userId: string | undefined) => {
       console.error('Error deleting chat:', error);
       toast.error('Failed to delete chat');
     }
-  }, [userId, loadChats, loadGuestChats]);
+  };
 
-  return { 
-    chats, 
-    loading, 
-    deleteChat, 
-    refreshChats: userId ? loadChats : loadGuestChats 
+  return {
+    chats,
+    loading,
+    deleteChat,
+    refreshChats: () => refetch(),
   };
 };

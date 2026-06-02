@@ -13,11 +13,11 @@ import { Landing } from "./pages/Landing";
 import { AgentsMeetupLayout } from "./pages/agents-meetup/layout/AgentsMeetupLayout";
 import { NewChatView } from "./pages/agents-meetup/views/NewChatView";
 import { ChatView } from "./pages/agents-meetup/views/ChatView";
-import { SharedChatView } from "./pages/agents-meetup/views/SharedChatView";
-import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded views for better initial load performance
+const SharedChatView = lazy(() => import("./pages/agents-meetup/views/SharedChatView").then(m => ({ default: m.SharedChatView })));
+const Auth = lazy(() => import("./pages/Auth"));
 const ProfileView = lazy(() => import("./pages/agents-meetup/views/ProfileView").then(m => ({ default: m.ProfileView })));
 const AgentProfilesView = lazy(() => import("./pages/agents-meetup/views/AgentProfilesView").then(m => ({ default: m.AgentProfilesView })));
 const LearnView = lazy(() => import("./pages/agents-meetup/views/LearnView").then(m => ({ default: m.LearnView })));
