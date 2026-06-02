@@ -1,6 +1,6 @@
 
 import { ScenarioType } from '../../../types';
-import { getAgentSoapName } from '../../../utils/agentNameGenerator';
+import { getAgentSoapName, setActiveAgentName, clearActiveAgentNames } from '../../../utils/agentNameGenerator';
 
 // Expert settings type for prompt generation
 export interface ExpertSettings {
