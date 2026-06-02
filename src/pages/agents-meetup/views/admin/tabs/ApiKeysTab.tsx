@@ -273,7 +273,7 @@ export const ApiKeysTab = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Your new API key</AlertDialogTitle>
             <AlertDialogDescription>
-              Copy this now — it won't be shown again. Treat it like a password.
+              Copy it now or reveal it later from the table below (eye icon).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="bg-muted rounded p-3 font-mono text-xs break-all border">
