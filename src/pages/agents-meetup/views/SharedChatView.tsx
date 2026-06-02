@@ -146,12 +146,12 @@ export const SharedChatView = () => {
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <Droplets className="h-5 w-5 text-primary" />
-              <div className="flex items-center gap-2">
-                <div>
-                  <h1 className="text-lg font-semibold">{chat.title}</h1>
+          <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <Droplets className="h-5 w-5 text-primary shrink-0 mt-1" />
+              <div className="flex flex-col gap-2 min-w-0 flex-1">
+                <div className="min-w-0">
+                  <h1 className="text-lg font-semibold break-words">{chat.title}</h1>
                   <p className="text-xs text-muted-foreground flex items-center gap-2">
                     <span>Shared via SiliconSoap</span>
                     {chat.view_count !== undefined && chat.view_count > 0 && (
