@@ -23,23 +23,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (!id.includes('node_modules')) return;
-          // Order matters — check scoped packages first so they don't match the generic /react/ regex below
-          if (id.includes('@radix-ui')) return 'vendor-radix';
-          if (id.includes('@supabase')) return 'vendor-supabase';
-          if (id.includes('@tanstack')) return 'vendor-react';
-          if (id.includes('@hookform') || id.includes('react-hook-form') || id.includes('/zod/')) return 'vendor-forms';
-          if (id.includes('lucide-react')) return 'vendor-icons';
-          if (id.includes('recharts') || id.includes('@xyflow')) return 'vendor-charts';
-          // React core last — generic match
-          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) {
-            return 'vendor-react';
-          }
-        }
-      }
-    }
+    // NOTE: Do NOT add manualChunks here. Splitting libraries like recharts
+    // (and its d3-* deps) into separate vendor chunks reliably triggers
+    // "Cannot access 'X' before initialization" in production due to
+    // circular dependencies across chunks → blank live site.
   }
 }));
