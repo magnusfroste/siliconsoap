@@ -45,7 +45,7 @@ const applyEnhancements = (prompt: string, opts?: EnhancementOptions): string =>
   if (opts.enableScratchpad) result = withScratchpad(result, true);
   return result;
 };
-import { getAgentSoapName } from '@/pages/agents-meetup/utils/agentNameGenerator';
+import { getAgentSoapName, replaceAgentMentions } from '@/pages/agents-meetup/utils/agentNameGenerator';
 import { tokenService } from './tokenService';
 import { getCuratedModelById } from '@/repositories/curatedModelsRepository';
 
@@ -136,7 +136,7 @@ const callWithTokenTracking = async (
   }
 
   return {
-    content: result.content,
+    content: replaceAgentMentions(result.content),
     fallbackUsed: result.fallbackUsed,
     originalModel: result.originalModel
   };

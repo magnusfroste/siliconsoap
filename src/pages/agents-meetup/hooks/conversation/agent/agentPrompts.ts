@@ -1,6 +1,6 @@
 
 import { ScenarioType } from '../../../types';
-import { getAgentSoapName } from '../../../utils/agentNameGenerator';
+import { getAgentSoapName, setActiveAgentName, clearActiveAgentNames } from '../../../utils/agentNameGenerator';
 
 // Expert settings type for prompt generation
 export interface ExpertSettings {
@@ -12,7 +12,9 @@ export interface ExpertSettings {
 // Language instruction for all agents
 export const LANGUAGE_INSTRUCTION = `
 
-IMPORTANT: Respond in the same language as the user's question/prompt. If the language cannot be detected, default to English.`;
+IMPORTANT: Respond in the same language as the user's question/prompt. If the language cannot be detected, default to English.
+
+NAMING RULE (strict): Never refer to other participants as "Agent A", "Agent B" or "Agent C". Always address them by the real first name shown earlier in the conversation. Do not invent the label "Agent X" anywhere in your reply.`;
 
 // Inner monologue / scratchpad instruction (Hermes / Nous-style).
 // When prepended to an agent prompt, the model first reasons privately
@@ -101,6 +103,7 @@ const usedFirstNames = new Set<string>();
 export const clearAgentNameCache = (): void => {
   agentNameCache.clear();
   usedFirstNames.clear();
+  clearActiveAgentNames();
 };
 
 /**
@@ -117,6 +120,7 @@ const getCachedAgentName = (agentLetter: string, persona: string): string => {
   const firstName = soapName.split(' ')[0];
   usedFirstNames.add(firstName);
   agentNameCache.set(cacheKey, soapName);
+  setActiveAgentName(agentLetter, soapName);
   
   return soapName;
 };
