@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Terminal, Key, Zap } from 'lucide-react';
+import { Copy, Terminal, Key, Zap, Bot } from 'lucide-react';
 import { toast } from 'sonner';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -51,6 +51,29 @@ const ApiDocsView = () => {
             Claude Cowork, n8n, Zapier, and curious tinkerers.
           </p>
         </div>
+
+        {/* Agent-friendly discovery */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Using this API with an AI agent?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p>
+              Just paste <strong>this page's URL</strong> into Claude, ChatGPT, Cowork, or any
+              agent with web access — they read the full table below and figure out the
+              options on their own.
+            </p>
+            <p>For machine consumption, two no-auth endpoints exist:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs font-mono">
+              <li><code>GET {API_BASE}/schema</code> — full JSON Schema of every endpoint + field</li>
+              <li><code>GET {API_BASE}/llms.txt</code> — plain-text docs optimized for LLM ingestion</li>
+            </ul>
+            <CodeBlock code={`curl ${API_BASE}/schema\ncurl ${API_BASE}/llms.txt`} />
+          </CardContent>
+        </Card>
 
         {/* Quick start */}
         <Card>
@@ -207,9 +230,18 @@ curl ${API_BASE}/debates/abc-123 \\
                 lang="json"
               />
 
-              <p className="text-xs text-muted-foreground">
-                Returns 202: <code>{`{ id, status: "queued", poll_url, total_rounds, credits_remaining }`}</code>
-              </p>
+              <p className="text-xs text-muted-foreground font-semibold">Example response (202 Accepted):</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "id": "7a978df5-b45a-4e5d-86f9-f8d968f028e6",
+  "status": "queued",
+  "total_rounds": 3,
+  "credits_remaining": 42,
+  "poll_url": "/debates-api/debates/7a978df5-.../status",
+  "message": "Debate queued. Poll GET /debates/:id/status every 2-3s..."
+}`}
+              />
             </section>
 
             {/* GET /debates/:id/status */}
@@ -226,10 +258,22 @@ curl ${API_BASE}/debates/abc-123 \\
                 code={`curl ${API_BASE}/debates/abc-123/status \\
   -H "Authorization: Bearer sk_silicon_..."`}
               />
-              <p className="text-xs text-muted-foreground">
-                Returns: <code>{`{ id, status: "queued"|"running"|"completed"|"failed", current_round, total_rounds, messages_so_far, error }`}</code>
-              </p>
+              <p className="text-xs text-muted-foreground font-semibold">Example response:</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "id": "7a978df5-...",
+  "status": "running",
+  "current_round": 2,
+  "total_rounds": 3,
+  "messages_so_far": 4,
+  "error": null,
+  "started_at": "2026-06-02T10:14:22Z",
+  "completed_at": null
+}`}
+              />
             </section>
+
 
 
             {/* GET /debates */}
@@ -260,7 +304,40 @@ curl ${API_BASE}/debates/abc-123 \\
                 code={`curl ${API_BASE}/debates/abc-123 \\
   -H "Authorization: Bearer sk_silicon_..."`}
               />
+              <p className="text-xs text-muted-foreground font-semibold">Example response:</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "status": "completed",
+  "debate": {
+    "id": "7a978df5-...",
+    "title": "Should AI replace middle management?",
+    "prompt": "Should AI replace middle management?",
+    "scenario_id": "ethical-dilemma",
+    "share_id": "a1b2c3d4",
+    "is_public": true,
+    "settings": { "rounds": 3, "conversationTone": "heated", ... }
+  },
+  "messages": [
+    {
+      "agent": "Agent A",
+      "persona": "analytical",
+      "model": "openai/gpt-5-mini",
+      "message": "From an efficiency standpoint...",
+      "created_at": "2026-06-02T10:14:25Z"
+    },
+    {
+      "agent": "Agent B",
+      "persona": "creative",
+      "model": "anthropic/claude-3.5-sonnet",
+      "message": "But humans bring something machines can't...",
+      "created_at": "2026-06-02T10:14:31Z"
+    }
+  ]
+}`}
+              />
             </section>
+
 
           </CardContent>
         </Card>
