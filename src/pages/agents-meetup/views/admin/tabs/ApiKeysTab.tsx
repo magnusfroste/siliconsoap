@@ -93,6 +93,7 @@ export const ApiKeysTab = () => {
         name: newName.trim(),
         key_prefix: prefix,
         key_hash: hash,
+        key_plaintext: plaintext,
       });
       if (error) throw error;
 
