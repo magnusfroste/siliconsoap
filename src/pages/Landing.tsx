@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, Trophy, ArrowRight, Droplets } from 'lucide-react';
+import { MessageSquare, Users, Trophy, ArrowRight, Droplets, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FeaturedDebates } from '@/components/FeaturedDebates';
 import { 
@@ -77,7 +77,7 @@ export const Landing = () => {
             The multi-agent AI debate platform. Pick a topic, choose open-source models like Llama, DeepSeek or Gemma, assign dramatic personas — and watch them argue, collaborate and surprise you.
           </p>
 
-          <div className="pt-4">
+          <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
               className="text-lg px-8 py-6 rounded-full group hover-scale"
@@ -85,6 +85,15 @@ export const Landing = () => {
             >
               Start a Conversation
               <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 py-6 rounded-full group hover-scale"
+              onClick={() => navigate('/explore')}
+            >
+              Explore Debates
+              <Compass className="ml-2 h-5 w-5 transition-transform group-hover:rotate-45" />
             </Button>
           </div>
         </div>
