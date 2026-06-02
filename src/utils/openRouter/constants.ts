@@ -20,16 +20,22 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to create system prompt based on persona
 export const createSystemPrompt = async (persona: string, responseLength: string): Promise<string> => {
-  // Fetch the persona profile from database
+  // The caller may have appended extra instructions (e.g. LANGUAGE_INSTRUCTION) to the
+  // persona string. The actual DB slug is only the first token; strip the suffix for
+  // the lookup, then re-append it to the resolved instructions.
+  const trimmed = persona.trim();
+  const slugMatch = trimmed.match(/^([a-z0-9_-]+)/i);
+  const slug = slugMatch ? slugMatch[1] : trimmed.split(/\s/)[0];
+  const suffix = trimmed.slice(slug.length); // preserves language directive etc.
+
   const { data: profile } = await supabase
     .from('agent_profiles')
     .select('instructions')
-    .eq('slug', persona)
+    .eq('slug', slug)
     .maybeSingle();
-  
+
   let systemPrompt = profile?.instructions || "You are an AI assistant analyzing text.";
 
-  // Add response length instruction to the system prompt
   switch (responseLength) {
     case "short":
       systemPrompt += " Keep your response to 1-2 sentences. Be direct and to the point.";
@@ -41,6 +47,8 @@ export const createSystemPrompt = async (persona: string, responseLength: string
       systemPrompt += " Provide a comprehensive, detailed response. Elaborate on key points and provide thorough analysis.";
       break;
   }
-  
+
+  if (suffix) systemPrompt += suffix;
+
   return systemPrompt;
 };
