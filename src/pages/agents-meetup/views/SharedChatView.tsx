@@ -6,12 +6,14 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn, SlidersHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+
 
 const BASE_URL = 'https://siliconsoap.com';
 const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
@@ -142,7 +144,7 @@ export const SharedChatView = () => {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen min-h-screen [@supports(height:100dvh)]:h-[100dvh] [@supports(height:100dvh)]:min-h-[100dvh] bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
@@ -166,6 +168,8 @@ export const SharedChatView = () => {
                   </p>
                 </div>
                 {(() => {
+                  // ---- Build badges once, reuse for desktop inline + mobile sheet ----
+
                   const settings = chat.settings as any;
                   const mode = settings?.participationMode || 'jump-in';
                   const modeConfig = {
@@ -206,8 +210,9 @@ export const SharedChatView = () => {
                   const bias = settings?.agreementBias ?? 50;
                   const biasLabel = bias < 30 ? "Devil's Advocate" : bias > 70 ? "Agreeable" : "Balanced";
                   
-                  return (
+                  const badges = (
                     <div className="flex items-center gap-2 flex-wrap">
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -380,6 +385,26 @@ export const SharedChatView = () => {
                       })()}
                     </div>
                   );
+                  return (
+                    <>
+                      <div className="hidden sm:block w-full">{badges}</div>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button variant="outline" size="sm" className="sm:hidden gap-1.5 self-start">
+                            <SlidersHorizontal className="h-3 w-3" />
+                            Debate settings
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+                          <SheetHeader>
+                            <SheetTitle>Debate settings</SheetTitle>
+                          </SheetHeader>
+                          <div className="py-4">{badges}</div>
+                        </SheetContent>
+                      </Sheet>
+                    </>
+                  );
+
                 })()}
               </div>
             </div>
