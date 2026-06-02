@@ -56,6 +56,15 @@ export const ApiKeysTab = () => {
   const [creating, setCreating] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
+  const [shownIds, setShownIds] = useState<Set<string>>(new Set());
+
+  const toggleShown = (id: string) => {
+    setShownIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   const fetchKeys = async () => {
     const { data, error } = await supabase
