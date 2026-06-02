@@ -11,3 +11,4 @@ export { SeedingTab } from './tabs/SeedingTab';
 export { UsersTab } from './tabs/UsersTab';
 export { QuickPromptsTab } from './tabs/QuickPromptsTab';
 export { ElevenLabsTab } from './tabs/ElevenLabsTab';
+export { ApiKeysTab } from './tabs/ApiKeysTab';

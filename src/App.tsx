@@ -29,6 +29,7 @@ const AdminView = lazy(() => import("./pages/agents-meetup/views/AdminView").the
 const ExploreView = lazy(() => import("./pages/agents-meetup/views/ExploreView"));
 const LeaderboardView = lazy(() => import("./pages/agents-meetup/views/LeaderboardView"));
 const PaymentSuccessView = lazy(() => import("./pages/agents-meetup/views/PaymentSuccessView").then(m => ({ default: m.PaymentSuccessView })));
+const ApiDocsView = lazy(() => import("./pages/ApiDocsView"));
 
 // Google Analytics page view tracking + dynamic GA ID from feature flags
 const PageTracker = () => {
@@ -97,6 +98,7 @@ const App = () => {
                 </Route>
                 <Route path="/shared/:shareId" element={<ErrorBoundary><SharedChatView /></ErrorBoundary>} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/api-docs" element={<ErrorBoundary><ApiDocsView /></ErrorBoundary>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -50,3 +50,7 @@ verify_jwt = false
 
 [functions.generate-trending-topics]
 verify_jwt = false
+
+[functions.debates-api]
+verify_jwt = false
+
