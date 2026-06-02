@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Globe, Lock } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
@@ -314,7 +314,18 @@ export const NewChatView = () => {
             </CardContent>
           </Card>
           
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-primary-foreground">
+              <Globe className="h-4 w-4 text-primary" />
+              <span>Your debate will be <strong>public</strong> and shareable via link.</span>
+              {isGuest && (
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Lock className="h-3 w-3" />
+                  <a href="/login" className="underline hover:text-primary transition-colors">Sign in</a> to keep it private.
+                </span>
+              )}
+            </div>
+            <div className="flex justify-center">
             <Button
               type="submit"
               size="lg"
