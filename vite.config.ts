@@ -27,20 +27,17 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return;
-          // React core — needed everywhere, separate so it caches across deploys
-          if (/react|react-dom|react-router-dom|@tanstack\/react-query/.test(id)) {
+          // Order matters — check scoped packages first so they don't match the generic /react/ regex below
+          if (id.includes('@radix-ui')) return 'vendor-radix';
+          if (id.includes('@supabase')) return 'vendor-supabase';
+          if (id.includes('@tanstack')) return 'vendor-react';
+          if (id.includes('@hookform') || id.includes('react-hook-form') || id.includes('/zod/')) return 'vendor-forms';
+          if (id.includes('lucide-react')) return 'vendor-icons';
+          if (id.includes('recharts') || id.includes('@xyflow')) return 'vendor-charts';
+          // React core last — generic match
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) {
             return 'vendor-react';
           }
-          // Radix UI primitives — large, only used by shadcn components
-          if (id.includes('@radix-ui')) return 'vendor-radix';
-          // Icon library — tree-shaken but still chunky
-          if (id.includes('lucide-react')) return 'vendor-icons';
-          // Supabase client — only loaded when DB calls happen
-          if (id.includes('@supabase')) return 'vendor-supabase';
-          // Charts / flow — heavy, only on a few admin pages
-          if (id.includes('recharts') || id.includes('@xyflow')) return 'vendor-charts';
-          // Forms + validation
-          if (/react-hook-form|@hookform|zod/.test(id)) return 'vendor-forms';
         }
       }
     }
