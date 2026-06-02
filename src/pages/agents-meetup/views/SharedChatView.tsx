@@ -385,6 +385,26 @@ export const SharedChatView = () => {
                       })()}
                     </div>
                   );
+                  return (
+                    <>
+                      <div className="hidden sm:block w-full">{badges}</div>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button variant="outline" size="sm" className="sm:hidden gap-1.5 self-start">
+                            <SlidersHorizontal className="h-3 w-3" />
+                            Debate settings
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
+                          <SheetHeader>
+                            <SheetTitle>Debate settings</SheetTitle>
+                          </SheetHeader>
+                          <div className="py-4">{badges}</div>
+                        </SheetContent>
+                      </Sheet>
+                    </>
+                  );
+
                 })()}
               </div>
             </div>
