@@ -168,6 +168,8 @@ export const SharedChatView = () => {
                   </p>
                 </div>
                 {(() => {
+                  // ---- Build badges once, reuse for desktop inline + mobile sheet ----
+
                   const settings = chat.settings as any;
                   const mode = settings?.participationMode || 'jump-in';
                   const modeConfig = {
