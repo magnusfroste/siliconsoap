@@ -140,7 +140,31 @@ serve(async (req) => {
     // Handle rate limit errors
     if (!response.ok) {
       console.error('OpenRouter API error:', response.status, data);
-      
+
+      // Some endpoints (e.g. stepfun reasoning models) require reasoning to be
+      // explicitly enabled. Detect that error and retry once with reasoning on.
+      const errMsg: string = data?.error?.message || '';
+      if (
+        response.status === 400 &&
+        /reasoning is mandatory/i.test(errMsg) &&
+        requestBody.reasoning === undefined
+      ) {
+        console.log(`[reasoning] Endpoint requires reasoning. Retrying ${model} with reasoning.enabled=true`);
+        const retryBody = { ...requestBody, reasoning: { enabled: true } };
+        const retry = await fetch(openRouterUrl, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: JSON.stringify(retryBody),
+        });
+        const retryJson = await retry.json();
+        if (retry.ok) {
+          return new Response(JSON.stringify(retryJson), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        console.error('[reasoning] Retry also failed:', retry.status, retryJson?.error);
+      }
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ 
