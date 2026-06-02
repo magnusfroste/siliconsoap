@@ -208,9 +208,29 @@ curl ${API_BASE}/debates/abc-123 \\
               />
 
               <p className="text-xs text-muted-foreground">
-                Returns: <code>{`{ debate: {...}, messages: [...], credits_remaining: N }`}</code>
+                Returns 202: <code>{`{ id, status: "queued", poll_url, total_rounds, credits_remaining }`}</code>
               </p>
             </section>
+
+            {/* GET /debates/:id/status */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge>GET</Badge>
+                <code className="font-mono text-sm">/debates/:id/status</code>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Lightweight polling endpoint. Returns current run status without the full
+                transcript. Poll every 2–3 seconds.
+              </p>
+              <CodeBlock
+                code={`curl ${API_BASE}/debates/abc-123/status \\
+  -H "Authorization: Bearer sk_silicon_..."`}
+              />
+              <p className="text-xs text-muted-foreground">
+                Returns: <code>{`{ id, status: "queued"|"running"|"completed"|"failed", current_round, total_rounds, messages_so_far, error }`}</code>
+              </p>
+            </section>
+
 
             {/* GET /debates */}
             <section className="space-y-3">
