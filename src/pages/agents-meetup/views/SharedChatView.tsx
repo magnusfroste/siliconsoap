@@ -6,12 +6,14 @@ import { RoundSeparator } from '../components/RoundSeparator';
 import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn } from 'lucide-react';
+import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn, SlidersHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+
 
 const BASE_URL = 'https://siliconsoap.com';
 const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
