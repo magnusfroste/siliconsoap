@@ -59,6 +59,12 @@ export type Database = {
           id: string
           is_public: boolean | null
           prompt: string
+          run_completed_at: string | null
+          run_current_round: number | null
+          run_error: string | null
+          run_started_at: string | null
+          run_status: string | null
+          run_total_rounds: number | null
           scenario_id: string
           settings: Json | null
           share_id: string | null
@@ -73,6 +79,12 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           prompt: string
+          run_completed_at?: string | null
+          run_current_round?: number | null
+          run_error?: string | null
+          run_started_at?: string | null
+          run_status?: string | null
+          run_total_rounds?: number | null
           scenario_id: string
           settings?: Json | null
           share_id?: string | null
@@ -87,6 +99,12 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           prompt?: string
+          run_completed_at?: string | null
+          run_current_round?: number | null
+          run_error?: string | null
+          run_started_at?: string | null
+          run_status?: string | null
+          run_total_rounds?: number | null
           scenario_id?: string
           settings?: Json | null
           share_id?: string | null
