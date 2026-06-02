@@ -54,6 +54,34 @@ export function getAgentGender(agent: string): AgentGender {
  * Get a deterministic soap opera name for an agent based on agent letter and persona
  * The gender is determined by the agent letter to match TTS voices
  */
+/**
+ * Module-level map of currently active agent letter -> soap name.
+ * Set by the prompt builder at the start of each conversation so we can
+ * post-process model output and replace any "Agent A/B/C" mentions
+ * that the model produces despite being told to use real names.
+ */
+let activeAgentNames: Record<string, string> = {};
+
+export function setActiveAgentName(letter: string, name: string): void {
+  activeAgentNames[letter.toUpperCase()] = name;
+}
+
+export function clearActiveAgentNames(): void {
+  activeAgentNames = {};
+}
+
+/**
+ * Replace any "Agent A", "Agent B", "Agent C", "Agents A and B" etc.
+ * mentions in `text` with the active soap names. No-op if no map is set.
+ */
+export function replaceAgentMentions(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  if (Object.keys(activeAgentNames).length === 0) return text;
+  return text.replace(/\bAgents?\s+([ABC])\b/g, (match, letter: string) => {
+    return activeAgentNames[letter.toUpperCase()] || match;
+  });
+}
+
 export function getAgentSoapName(agent: string, persona: string, usedFirstNames: Set<string> = new Set()): string {
   const gender = getAgentGender(agent);
   const combinedKey = `${agent}-${persona}`;
