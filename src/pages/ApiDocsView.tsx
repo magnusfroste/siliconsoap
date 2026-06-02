@@ -52,6 +52,29 @@ const ApiDocsView = () => {
           </p>
         </div>
 
+        {/* Agent-friendly discovery */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Using this API with an AI agent?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p>
+              Just paste <strong>this page's URL</strong> into Claude, ChatGPT, Cowork, or any
+              agent with web access — they read the full table below and figure out the
+              options on their own.
+            </p>
+            <p>For machine consumption, two no-auth endpoints exist:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs font-mono">
+              <li><code>GET {API_BASE}/schema</code> — full JSON Schema of every endpoint + field</li>
+              <li><code>GET {API_BASE}/llms.txt</code> — plain-text docs optimized for LLM ingestion</li>
+            </ul>
+            <CodeBlock code={`curl ${API_BASE}/schema\ncurl ${API_BASE}/llms.txt`} />
+          </CardContent>
+        </Card>
+
         {/* Quick start */}
         <Card>
           <CardHeader>
