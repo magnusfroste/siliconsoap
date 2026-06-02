@@ -667,6 +667,9 @@ Deno.serve(async (req) => {
             .update({ run_status: "running" })
             .eq("id", chat.id);
 
+          let messagesInserted = 0;
+          let lastSoftError: string | null = null;
+
           for (let r = 1; r <= rounds; r++) {
             await supabase
               .from("agent_chats")
@@ -680,13 +683,38 @@ Deno.serve(async (req) => {
               const disableReasoning =
                 curatedMap.get(agent.model)?.disable_reasoning === true;
 
-              const { content, usage, modelUsed } = await callOpenRouter(
-                OPENROUTER_KEY,
-                agent.model,
-                sys,
-                usr,
-                disableReasoning,
-              );
+              // Retry once on empty/transient errors before giving up on this turn.
+              let content = "";
+              let usage: any = undefined;
+              let modelUsed: string | undefined;
+              let turnError: string | null = null;
+              for (let attempt = 1; attempt <= 2; attempt++) {
+                try {
+                  const result = await callOpenRouter(
+                    OPENROUTER_KEY,
+                    agent.model,
+                    sys,
+                    usr,
+                    disableReasoning,
+                  );
+                  content = result.content;
+                  usage = result.usage;
+                  modelUsed = result.modelUsed;
+                  turnError = null;
+                  break;
+                } catch (err: any) {
+                  turnError = err?.message ?? "unknown error";
+                  console.warn(
+                    `Debate ${chat.id} round ${r} agent ${agent.letter} attempt ${attempt} failed: ${turnError}`,
+                  );
+                }
+              }
+
+              if (turnError) {
+                // Skip this turn but keep the debate going.
+                lastSoftError = turnError;
+                continue;
+              }
 
               const { error: insertErr } = await supabase
                 .from("agent_chat_messages")
@@ -698,6 +726,7 @@ Deno.serve(async (req) => {
                   model: agent.model,
                 });
               if (insertErr) throw new Error(insertErr.message);
+              messagesInserted++;
               history.push({ agent_name: agent.name, message: content });
 
               if (usage) {
@@ -715,11 +744,18 @@ Deno.serve(async (req) => {
             }
           }
 
+          // If we produced at least one message, treat as completed even if some
+          // turns were skipped due to upstream model errors.
+          if (messagesInserted === 0) {
+            throw new Error(lastSoftError ?? "No messages produced");
+          }
+
           await supabase
             .from("agent_chats")
             .update({
               run_status: "completed",
               run_completed_at: new Date().toISOString(),
+              run_error: lastSoftError, // null if everything was clean
             })
             .eq("id", chat.id);
         } catch (e: any) {
@@ -734,6 +770,7 @@ Deno.serve(async (req) => {
             .eq("id", chat.id);
         }
       };
+
 
       // ----- Sync mode (opt-in via ?sync=true) — kept for back-compat -----
       if (wantSync) {
