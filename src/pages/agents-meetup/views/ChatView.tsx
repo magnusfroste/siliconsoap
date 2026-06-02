@@ -33,7 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const ChatView = () => {
   const { chatId } = useParams();
   const { user } = useAuth();
-  const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
+  const { chat, messages, loading, saveMessage, setMessages, shareChat, unshareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
   const { hasCredits, creditsRemaining, refreshCredits, loading: creditsLoading } = useCredits(user?.id);
