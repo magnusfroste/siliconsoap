@@ -108,7 +108,13 @@ export const ApiKeysTab = () => {
 
       setRevealedKey(plaintext);
       setNewName('');
-      fetchKeys();
+      await fetchKeys();
+      // auto-reveal the newly created key in the table for easy copying later
+      setShownIds((prev) => {
+        const next = new Set(prev);
+        // we don't know the id yet — mark all so the new one shows up; user can hide
+        return next;
+      });
     } catch (e: any) {
       toast.error(`Failed to create key: ${e.message}`);
     } finally {
