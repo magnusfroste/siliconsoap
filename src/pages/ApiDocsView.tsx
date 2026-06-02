@@ -230,9 +230,18 @@ curl ${API_BASE}/debates/abc-123 \\
                 lang="json"
               />
 
-              <p className="text-xs text-muted-foreground">
-                Returns 202: <code>{`{ id, status: "queued", poll_url, total_rounds, credits_remaining }`}</code>
-              </p>
+              <p className="text-xs text-muted-foreground font-semibold">Example response (202 Accepted):</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "id": "7a978df5-b45a-4e5d-86f9-f8d968f028e6",
+  "status": "queued",
+  "total_rounds": 3,
+  "credits_remaining": 42,
+  "poll_url": "/debates-api/debates/7a978df5-.../status",
+  "message": "Debate queued. Poll GET /debates/:id/status every 2-3s..."
+}`}
+              />
             </section>
 
             {/* GET /debates/:id/status */}
@@ -249,10 +258,22 @@ curl ${API_BASE}/debates/abc-123 \\
                 code={`curl ${API_BASE}/debates/abc-123/status \\
   -H "Authorization: Bearer sk_silicon_..."`}
               />
-              <p className="text-xs text-muted-foreground">
-                Returns: <code>{`{ id, status: "queued"|"running"|"completed"|"failed", current_round, total_rounds, messages_so_far, error }`}</code>
-              </p>
+              <p className="text-xs text-muted-foreground font-semibold">Example response:</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "id": "7a978df5-...",
+  "status": "running",
+  "current_round": 2,
+  "total_rounds": 3,
+  "messages_so_far": 4,
+  "error": null,
+  "started_at": "2026-06-02T10:14:22Z",
+  "completed_at": null
+}`}
+              />
             </section>
+
 
 
             {/* GET /debates */}
