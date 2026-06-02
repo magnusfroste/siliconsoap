@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { trackShare } from '@/utils/analytics';
+import { Share2 } from 'lucide-react';
+
 
 interface SocialShareButtonsProps {
   url: string;
