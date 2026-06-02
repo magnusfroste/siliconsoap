@@ -106,19 +106,26 @@ export const ChatView = () => {
     }
   }, [currentMessageIndex, isPlaying]);
 
-  // Handle share button click
-  const handleShareClick = async () => {
-    if (!chatId || isGuest) {
-      toast.error('You must be logged in to share chats');
-      return;
+  // Copy public share link (chats are auto-shared on creation)
+  const handleCopyShareClick = async () => {
+    if (!chatId) return;
+    let shareId = chat?.share_id;
+    if (!shareId) {
+      // Re-share previously unshared chat
+      shareId = (await shareChat(chatId)) ?? undefined;
     }
-
-    const shareId = await shareChat(chatId);
     if (shareId) {
       const shareUrl = `${window.location.origin}/shared/${shareId}`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied! Anyone with the link can view this chat.');
     }
+  };
+
+  // Make chat private
+  const handleUnshareClick = async () => {
+    if (!chatId || isGuest) return;
+    const ok = await unshareChat(chatId);
+    if (ok) toast.success('Chat is now private. The share link no longer works.');
   };
 
   // Detect if chat is already complete when loading
