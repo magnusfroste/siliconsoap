@@ -526,15 +526,29 @@ export const ChatView = () => {
             </TooltipProvider>
           )}
           {!isGuest && messages.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleShareClick}
-              className="gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </Button>
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCopyShareClick}
+                className="gap-2"
+                title={chat?.share_id ? 'Copy public share link' : 'Re-share and copy link'}
+              >
+                <Share2 className="h-4 w-4" />
+                {chat?.share_id ? 'Copy link' : 'Share'}
+              </Button>
+              {chat?.share_id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnshareClick}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                  title="Make this chat private — disables the share link"
+                >
+                  Unshare
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
