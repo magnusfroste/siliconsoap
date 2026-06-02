@@ -122,11 +122,11 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Agent Personas Showcase */}
-      <AgentPersonasShowcase />
-
       {/* Featured Debates Section */}
       {isEnabled('show_landing_trending_debates') && <FeaturedDebates />}
+
+      {/* Agent Personas Showcase */}
+      <AgentPersonasShowcase />
 
       {/* Hall of Shame */}
       {isEnabled('show_landing_hall_of_shame') && <LandingHallOfShame />}
