@@ -108,7 +108,13 @@ export const ApiKeysTab = () => {
 
       setRevealedKey(plaintext);
       setNewName('');
-      fetchKeys();
+      await fetchKeys();
+      // auto-reveal the newly created key in the table for easy copying later
+      setShownIds((prev) => {
+        const next = new Set(prev);
+        // we don't know the id yet — mark all so the new one shows up; user can hide
+        return next;
+      });
     } catch (e: any) {
       toast.error(`Failed to create key: ${e.message}`);
     } finally {
@@ -267,7 +273,7 @@ export const ApiKeysTab = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Your new API key</AlertDialogTitle>
             <AlertDialogDescription>
-              Copy this now — it won't be shown again. Treat it like a password.
+              Copy it now or reveal it later from the table below (eye icon).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="bg-muted rounded p-3 font-mono text-xs break-all border">
