@@ -294,6 +294,11 @@ export default function ExploreView() {
             </Button>
           </div>
         )}
+
+        {/* Hall of Shame */}
+        <div className="mt-12">
+          <HallOfShame />
+        </div>
       </div>
     </div>
   );
