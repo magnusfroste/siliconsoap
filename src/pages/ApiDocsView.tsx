@@ -304,7 +304,40 @@ curl ${API_BASE}/debates/abc-123 \\
                 code={`curl ${API_BASE}/debates/abc-123 \\
   -H "Authorization: Bearer sk_silicon_..."`}
               />
+              <p className="text-xs text-muted-foreground font-semibold">Example response:</p>
+              <CodeBlock
+                lang="json"
+                code={`{
+  "status": "completed",
+  "debate": {
+    "id": "7a978df5-...",
+    "title": "Should AI replace middle management?",
+    "prompt": "Should AI replace middle management?",
+    "scenario_id": "ethical-dilemma",
+    "share_id": "a1b2c3d4",
+    "is_public": true,
+    "settings": { "rounds": 3, "conversationTone": "heated", ... }
+  },
+  "messages": [
+    {
+      "agent": "Agent A",
+      "persona": "analytical",
+      "model": "openai/gpt-5-mini",
+      "message": "From an efficiency standpoint...",
+      "created_at": "2026-06-02T10:14:25Z"
+    },
+    {
+      "agent": "Agent B",
+      "persona": "creative",
+      "model": "anthropic/claude-3.5-sonnet",
+      "message": "But humans bring something machines can't...",
+      "created_at": "2026-06-02T10:14:31Z"
+    }
+  ]
+}`}
+              />
             </section>
+
 
           </CardContent>
         </Card>
