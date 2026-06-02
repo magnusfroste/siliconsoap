@@ -142,7 +142,7 @@ export const SharedChatView = () => {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen min-h-screen [@supports(height:100dvh)]:h-[100dvh] [@supports(height:100dvh)]:min-h-[100dvh] bg-background">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
