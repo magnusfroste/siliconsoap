@@ -27,6 +27,196 @@ const json = (body: unknown, status = 200) =>
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+// ----- Public machine-readable schema (for agents without MCP) -----
+const API_SCHEMA = {
+  name: "SiliconSoap Debates API",
+  version: "1.0",
+  base_url: "https://apfrjuomozdvdeondzaz.supabase.co/functions/v1/debates-api",
+  auth: {
+    type: "bearer",
+    header: "Authorization: Bearer sk_silicon_<your-key>",
+    obtain: "https://www.siliconsoap.com (Admin -> API Keys)",
+  },
+  endpoints: {
+    "GET /schema": { auth: false, description: "This document. JSON schema of the API." },
+    "GET /llms.txt": { auth: false, description: "Plain-text docs optimized for LLM ingestion." },
+    "GET /models": { auth: true, description: "List curated models usable in `models[]`." },
+    "POST /debates": {
+      auth: true,
+      description: "Queue a debate. Returns 202 with poll_url. Costs 1 credit.",
+      query: { sync: "Optional. `true` = block until done (may timeout for long debates)." },
+      body_schema: {
+        type: "object",
+        required: ["topic", "models"],
+        properties: {
+          topic: { type: "string", maxLength: 2000, description: "Debate topic / question." },
+          models: {
+            type: "array",
+            minItems: 2,
+            maxItems: 3,
+            items: { type: "string" },
+            description: "Model IDs from GET /models. 2 or 3 agents.",
+          },
+          rounds: { type: "integer", minimum: 1, maximum: 5, default: 2 },
+          scenario_id: {
+            type: "string",
+            enum: ["general-problem", "ethical-dilemma", "future-prediction"],
+            default: "general-problem",
+          },
+          personas: {
+            type: "array",
+            items: { enum: ["analytical", "creative", "strategic", "empathetic"] },
+            description: "One persona per agent. Defaults to analytical/creative/strategic.",
+          },
+          agent_names: {
+            type: "array",
+            items: { type: "string" },
+            description: "Display names. Defaults to Agent A/B/C.",
+          },
+          response_length: { enum: ["short", "medium", "long"], default: "medium" },
+          conversation_tone: {
+            enum: ["formal", "casual", "heated", "collaborative"],
+            default: "casual",
+          },
+          agreement_bias: {
+            type: "integer",
+            minimum: 0,
+            maximum: 100,
+            default: 50,
+            description: "0 = combative, 100 = agreeable.",
+          },
+          personality_intensity: {
+            enum: ["mild", "moderate", "extreme"],
+            default: "moderate",
+          },
+        },
+      },
+      response_202: {
+        id: "uuid",
+        status: "queued",
+        total_rounds: "integer",
+        credits_remaining: "integer",
+        poll_url: "/debates-api/debates/{id}/status",
+      },
+    },
+    "GET /debates": {
+      auth: true,
+      description: "List your debates (latest first).",
+      query: { limit: "1-100, default 20" },
+    },
+    "GET /debates/:id/status": {
+      auth: true,
+      description: "Lightweight poll. Status is queued | running | completed | failed.",
+      response: {
+        id: "uuid",
+        status: "queued|running|completed|failed",
+        current_round: "integer",
+        total_rounds: "integer",
+        messages_so_far: "integer",
+        error: "string|null",
+      },
+    },
+    "GET /debates/:id": {
+      auth: true,
+      description: "Full transcript + chat metadata after completion.",
+      response: {
+        debate: "agent_chats row (settings, prompt, share_id, ...)",
+        messages: "array of { agent, persona, message, model, created_at }",
+        status: "queued|running|completed|failed",
+      },
+    },
+  },
+  errors: {
+    "400": "Validation error in body",
+    "401": "Missing / invalid / revoked API key",
+    "402": "Out of credits",
+    "404": "Resource not found or not yours",
+    "502": "Upstream model failure mid-debate",
+  },
+  recommended_flow: [
+    "POST /debates -> get { id, poll_url }",
+    "Poll GET /debates/{id}/status every 2-3s until status === 'completed'",
+    "GET /debates/{id} for full transcript",
+  ],
+};
+
+const LLMS_TXT = `# SiliconSoap Debates API
+
+Run multi-agent AI debates programmatically. Each debate = 2 or 3 LLM agents (different models, different personas) debating a topic across N rounds.
+
+## Base URL
+https://apfrjuomozdvdeondzaz.supabase.co/functions/v1/debates-api
+
+## Auth
+Authorization: Bearer sk_silicon_<your-key>
+Get a key at https://www.siliconsoap.com (Admin -> API Keys). 1 debate = 1 credit.
+
+## Discovery (no auth)
+GET /schema     -> Full JSON schema of every endpoint and field.
+GET /llms.txt   -> This document.
+
+## Endpoints
+
+### GET /models
+List model_ids you can pass to \`models\`. Returns { models: [{ model_id, display_name, provider, ... }] }.
+
+### POST /debates
+Queue a debate. Returns 202 immediately with a poll_url.
+
+Body (JSON):
+- topic            string, required, <=2000 chars
+- models           string[2..3], required, model_ids from /models
+- rounds           1-5 (default 2)
+- scenario_id      "general-problem" | "ethical-dilemma" | "future-prediction"
+- personas         ("analytical"|"creative"|"strategic"|"empathetic")[]
+- agent_names      string[] (display names)
+- response_length  "short" | "medium" | "long"
+- conversation_tone "formal" | "casual" | "heated" | "collaborative"
+- agreement_bias   0 (combative) - 100 (agreeable)
+- personality_intensity "mild" | "moderate" | "extreme"
+
+Example request:
+{
+  "topic": "Should AI agents have legal rights?",
+  "models": ["openai/gpt-5-mini", "anthropic/claude-3.5-sonnet"],
+  "personas": ["analytical", "creative"],
+  "rounds": 2,
+  "conversation_tone": "heated",
+  "agreement_bias": 20,
+  "personality_intensity": "extreme"
+}
+
+Example 202 response:
+{
+  "id": "7a978df5-b45a-4e5d-86f9-f8d968f028e6",
+  "status": "queued",
+  "total_rounds": 2,
+  "credits_remaining": 42,
+  "poll_url": "/debates-api/debates/7a978df5-.../status"
+}
+
+### GET /debates/:id/status
+{ "id": "...", "status": "running", "current_round": 1, "total_rounds": 2, "messages_so_far": 2, "error": null }
+
+### GET /debates/:id
+{ "debate": { ... }, "messages": [{ "agent": "Agent A", "persona": "analytical", "message": "...", "model": "openai/gpt-5-mini", "created_at": "..." }], "status": "completed" }
+
+### GET /debates?limit=20
+List caller's debates, newest first.
+
+## Errors
+400 validation | 401 bad key | 402 out of credits | 404 not yours | 502 upstream model failure
+
+## Recommended agent flow
+1. POST /debates -> get { id, poll_url }
+2. Poll /status every 2-3s until status === "completed"
+3. GET /debates/{id} for transcript
+
+Debates created via API are public + shareable (share_id is included in the response).
+`;
+
+
+
 // ----- Hashing helper (SHA-256 hex of API key string) -----
 async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
