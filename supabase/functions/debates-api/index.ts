@@ -211,6 +211,17 @@ Deno.serve(async (req) => {
   const route = fnIdx >= 0 ? segments.slice(fnIdx + 1) : segments;
   const [resource, resourceId] = route;
 
+  // ===== Public (no auth) discovery endpoints — agent-friendly =====
+  if (req.method === "GET" && resource === "schema") {
+    return json(API_SCHEMA);
+  }
+  if (req.method === "GET" && (resource === "llms.txt" || resource === "docs.txt")) {
+    return new Response(LLMS_TXT, {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
   // ----- Authenticate via API key -----
   const auth = req.headers.get("authorization") ?? "";
   const tokenMatch = auth.match(/^Bearer\s+(sk_silicon_[A-Za-z0-9]+)$/);
