@@ -481,13 +481,18 @@ export const SharedChatView = () => {
         </div>
       </ScrollArea>
 
-      {/* CTA Footer */}
-      <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-5xl mx-auto px-4 py-6 text-center">
-          <p className="text-muted-foreground mb-3">
+      {/* CTA Footer — slides in after the reader scrolls past the first answer */}
+      <div
+        className={`border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ease-out motion-reduce:transition-none ${
+          showCta ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        aria-hidden={!showCta}
+      >
+        <div className="container max-w-5xl mx-auto px-4 py-3 sm:py-6 flex items-center justify-center gap-3 flex-wrap text-center">
+          <p className="text-sm text-muted-foreground hidden sm:block">
             Want to create your own multi-agent conversations?
           </p>
-          <Button onClick={() => navigate('/')} size="lg" className="gap-2">
+          <Button onClick={() => navigate('/')} size="sm" className="gap-2 sm:size-lg">
             <Droplets className="h-4 w-4" />
             Start Free Conversation
           </Button>
