@@ -70,7 +70,8 @@ const ApiDocsView = () => {
               <li>Use it in the <code className="text-xs bg-muted px-1 rounded">Authorization</code> header.</li>
             </ol>
             <CodeBlock
-              code={`curl -X POST ${API_BASE}/debates \\
+              code={`# 1. Queue a debate (returns instantly with 202)
+curl -X POST ${API_BASE}/debates \\
   -H "Authorization: Bearer sk_silicon_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -78,8 +79,19 @@ const ApiDocsView = () => {
     "models": ["qwen/qwen3-235b-a22b", "deepseek/deepseek-chat-v3.1"],
     "rounds": 2,
     "conversation_tone": "heated"
-  }'`}
+  }'
+# => { "id": "abc-123", "status": "queued", "poll_url": "..." }
+
+# 2. Poll status every 2-3s
+curl ${API_BASE}/debates/abc-123/status \\
+  -H "Authorization: Bearer sk_silicon_YOUR_KEY"
+# => { "status": "running", "current_round": 1, "messages_so_far": 2 }
+
+# 3. When status === "completed", fetch the transcript
+curl ${API_BASE}/debates/abc-123 \\
+  -H "Authorization: Bearer sk_silicon_YOUR_KEY"`}
             />
+
           </CardContent>
         </Card>
 
@@ -144,9 +156,13 @@ const ApiDocsView = () => {
                 <code className="font-mono text-sm">/debates</code>
               </div>
               <p className="text-sm text-muted-foreground">
-                Create and run a debate. <strong>Synchronous</strong> — the response includes
-                the full transcript. Costs 1 credit.
+                Queue a debate. Returns <strong>202 Accepted instantly</strong> with an{' '}
+                <code>id</code> — orchestration runs in the background so long debates never
+                timeout. Poll <code>/debates/:id/status</code> for progress. Costs 1 credit.
+                Append <code>?sync=true</code> to block until done (legacy behavior, can hit
+                edge-function timeouts on long runs).
               </p>
+
 
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Body parameters</h4>
@@ -192,9 +208,29 @@ const ApiDocsView = () => {
               />
 
               <p className="text-xs text-muted-foreground">
-                Returns: <code>{`{ debate: {...}, messages: [...], credits_remaining: N }`}</code>
+                Returns 202: <code>{`{ id, status: "queued", poll_url, total_rounds, credits_remaining }`}</code>
               </p>
             </section>
+
+            {/* GET /debates/:id/status */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge>GET</Badge>
+                <code className="font-mono text-sm">/debates/:id/status</code>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Lightweight polling endpoint. Returns current run status without the full
+                transcript. Poll every 2–3 seconds.
+              </p>
+              <CodeBlock
+                code={`curl ${API_BASE}/debates/abc-123/status \\
+  -H "Authorization: Bearer sk_silicon_..."`}
+              />
+              <p className="text-xs text-muted-foreground">
+                Returns: <code>{`{ id, status: "queued"|"running"|"completed"|"failed", current_round, total_rounds, messages_so_far, error }`}</code>
+              </p>
+            </section>
+
 
             {/* GET /debates */}
             <section className="space-y-3">

@@ -276,7 +276,43 @@ Deno.serve(async (req) => {
       return json({ debates: data ?? [] });
     }
 
-    // ===== GET /debates/:id =====
+    // ===== GET /debates/:id/status  (lightweight polling) =====
+    if (
+      req.method === "GET" &&
+      resource === "debates" &&
+      resourceId &&
+      route[2] === "status"
+    ) {
+      const { data: chat, error: chatErr } = await supabase
+        .from("agent_chats")
+        .select(
+          "id, run_status, run_error, run_current_round, run_total_rounds, run_started_at, run_completed_at",
+        )
+        .eq("id", resourceId)
+        .eq("user_id", userId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (chatErr) return json({ error: chatErr.message }, 500);
+      if (!chat) return json({ error: "Debate not found." }, 404);
+
+      const { count } = await supabase
+        .from("agent_chat_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("chat_id", resourceId);
+
+      return json({
+        id: chat.id,
+        status: chat.run_status ?? "completed",
+        error: chat.run_error,
+        current_round: chat.run_current_round,
+        total_rounds: chat.run_total_rounds,
+        messages_so_far: count ?? 0,
+        started_at: chat.run_started_at,
+        completed_at: chat.run_completed_at,
+      });
+    }
+
+    // ===== GET /debates/:id  (full transcript) =====
     if (req.method === "GET" && resource === "debates" && resourceId) {
       const { data: chat, error: chatErr } = await supabase
         .from("agent_chats")
@@ -295,10 +331,14 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: true });
       if (msgErr) return json({ error: msgErr.message }, 500);
 
-      return json({ debate: chat, messages: messages ?? [] });
+      return json({
+        debate: chat,
+        messages: messages ?? [],
+        status: chat.run_status ?? "completed",
+      });
     }
 
-    // ===== POST /debates  (create + run) =====
+    // ===== POST /debates  (create + run async) =====
     if (req.method === "POST" && resource === "debates") {
       if (!OPENROUTER_KEY) {
         return json({ error: "Server missing OPENROUTER_API_KEY." }, 500);
@@ -320,6 +360,7 @@ Deno.serve(async (req) => {
       }
       const rounds = Math.min(Math.max(input.rounds ?? 2, 1), 5);
       const scenario = input.scenario_id ?? "general-problem";
+      const wantSync = url.searchParams.get("sync") === "true";
 
       // ----- Validate models against curated_models -----
       const { data: curated } = await supabase
@@ -402,6 +443,10 @@ Deno.serve(async (req) => {
           scenario_id: scenario,
           prompt: input.topic,
           settings,
+          run_status: "queued",
+          run_total_rounds: rounds,
+          run_current_round: 0,
+          run_started_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -412,75 +457,122 @@ Deno.serve(async (req) => {
         );
       }
 
-      // ----- Run orchestration (synchronous, sequential turns) -----
-      const history: PriorMessage[] = [];
-      const savedMessages: any[] = [];
+      // ----- Orchestration (runs either inline or in background) -----
+      const runOrchestration = async () => {
+        const history: PriorMessage[] = [];
+        try {
+          await supabase
+            .from("agent_chats")
+            .update({ run_status: "running" })
+            .eq("id", chat.id);
 
-      try {
-        for (let r = 1; r <= rounds; r++) {
-          for (const agent of agents) {
-            (agent as any).__totalRounds = rounds;
-            const sys = buildSystemPrompt(agent, input);
-            const usr = buildUserPrompt(agent, input.topic, history, r);
-            const disableReasoning =
-              curatedMap.get(agent.model)?.disable_reasoning === true;
+          for (let r = 1; r <= rounds; r++) {
+            await supabase
+              .from("agent_chats")
+              .update({ run_current_round: r })
+              .eq("id", chat.id);
 
-            const { content, usage, modelUsed } = await callOpenRouter(
-              OPENROUTER_KEY,
-              agent.model,
-              sys,
-              usr,
-              disableReasoning,
-            );
+            for (const agent of agents) {
+              (agent as any).__totalRounds = rounds;
+              const sys = buildSystemPrompt(agent, input);
+              const usr = buildUserPrompt(agent, input.topic, history, r);
+              const disableReasoning =
+                curatedMap.get(agent.model)?.disable_reasoning === true;
 
-            const { data: inserted, error: insertErr } = await supabase
-              .from("agent_chat_messages")
-              .insert({
-                chat_id: chat.id,
-                agent: `Agent ${agent.letter}`,
-                persona: agent.persona,
-                message: content,
-                model: agent.model,
-              })
-              .select()
-              .single();
-            if (insertErr) throw new Error(insertErr.message);
-            savedMessages.push(inserted);
-            history.push({ agent_name: agent.name, message: content });
+              const { content, usage, modelUsed } = await callOpenRouter(
+                OPENROUTER_KEY,
+                agent.model,
+                sys,
+                usr,
+                disableReasoning,
+              );
 
-            // Log token usage
-            if (usage) {
-              await supabase.from("user_token_usage").insert({
-                user_id: userId,
-                chat_id: chat.id,
-                model_id: modelUsed ?? agent.model,
-                requested_model_id: agent.model,
-                prompt_tokens: usage.prompt_tokens ?? 0,
-                completion_tokens: usage.completion_tokens ?? 0,
-                total_tokens: usage.total_tokens ?? 0,
-                estimated_cost: 0,
-              });
+              const { error: insertErr } = await supabase
+                .from("agent_chat_messages")
+                .insert({
+                  chat_id: chat.id,
+                  agent: `Agent ${agent.letter}`,
+                  persona: agent.persona,
+                  message: content,
+                  model: agent.model,
+                });
+              if (insertErr) throw new Error(insertErr.message);
+              history.push({ agent_name: agent.name, message: content });
+
+              if (usage) {
+                await supabase.from("user_token_usage").insert({
+                  user_id: userId,
+                  chat_id: chat.id,
+                  model_id: modelUsed ?? agent.model,
+                  requested_model_id: agent.model,
+                  prompt_tokens: usage.prompt_tokens ?? 0,
+                  completion_tokens: usage.completion_tokens ?? 0,
+                  total_tokens: usage.total_tokens ?? 0,
+                  estimated_cost: 0,
+                });
+              }
             }
           }
+
+          await supabase
+            .from("agent_chats")
+            .update({
+              run_status: "completed",
+              run_completed_at: new Date().toISOString(),
+            })
+            .eq("id", chat.id);
+        } catch (e: any) {
+          console.error(`Debate ${chat.id} failed:`, e);
+          await supabase
+            .from("agent_chats")
+            .update({
+              run_status: "failed",
+              run_error: e?.message ?? "unknown error",
+              run_completed_at: new Date().toISOString(),
+            })
+            .eq("id", chat.id);
         }
-      } catch (e: any) {
+      };
+
+      // ----- Sync mode (opt-in via ?sync=true) — kept for back-compat -----
+      if (wantSync) {
+        await runOrchestration();
+        const { data: messages } = await supabase
+          .from("agent_chat_messages")
+          .select("id, agent, persona, message, model, created_at")
+          .eq("chat_id", chat.id)
+          .order("created_at", { ascending: true });
+        const { data: finalChat } = await supabase
+          .from("agent_chats")
+          .select("*")
+          .eq("id", chat.id)
+          .single();
         return json(
           {
-            error: `Debate failed mid-run: ${e?.message ?? "unknown error"}`,
-            debate_id: chat.id,
-            partial_messages: savedMessages.length,
+            debate: finalChat,
+            messages: messages ?? [],
+            status: finalChat?.run_status ?? "completed",
+            credits_remaining: result.new_remaining,
           },
-          502,
+          201,
         );
       }
 
+      // ----- Async mode (default): return immediately, run in background -----
+      // @ts-ignore EdgeRuntime is available in Supabase edge runtime
+      EdgeRuntime.waitUntil(runOrchestration());
+
       return json(
         {
-          debate: chat,
-          messages: savedMessages,
+          id: chat.id,
+          status: "queued",
+          total_rounds: rounds,
           credits_remaining: result.new_remaining,
+          poll_url: `/debates-api/debates/${chat.id}/status`,
+          message:
+            "Debate queued. Poll GET /debates/:id/status every 2-3s, then GET /debates/:id when status is 'completed'.",
         },
-        201,
+        202,
       );
     }
 
