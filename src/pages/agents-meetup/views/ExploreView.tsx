@@ -170,7 +170,7 @@ export default function ExploreView() {
           };
         })
       );
-      setDebates(debatesWithCounts);
+      setDebates(debatesWithCounts.filter(d => (d.message_count ?? 0) > 0));
     } else {
       setDebates([]);
     }
