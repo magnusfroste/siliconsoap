@@ -142,15 +142,16 @@ export const ChatMessage = ({
       {/* Message Card */}
       <Card className={`border-2 ${style.borderClass} shadow-sm hover:shadow-md transition-all duration-300 ${isPlaying ? 'ring-2 ring-primary shadow-xl scale-[1.02]' : ''}`}>
         <CardHeader className="pb-2 px-4 pt-3">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
             <AgentAvatar agentLetter={agentLetter} iconBgClass={style.iconBgClass} name={soapName} />
-            <span className="font-semibold">{soapName}</span>
+            <span className="font-semibold text-sm sm:text-base">{soapName}</span>
             
             <Badge variant="outline" className="text-xs">
               #{messageIndex + 1}
             </Badge>
             
-            <span className="text-xs text-muted-foreground">· {message.model}</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground break-all min-w-0">· {message.model}</span>
+            
             
             {message.fallbackUsed && (
               <TooltipProvider>
