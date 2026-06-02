@@ -177,11 +177,33 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
 
     try {
       const shareId = await chatService.shareChat(chatId, userId);
+      if (shareId) {
+        setChat(prev => prev ? { ...prev, share_id: shareId } : prev);
+      }
       return shareId;
     } catch (error) {
       console.error('Error sharing chat:', error);
       toast.error('Failed to share chat');
       return null;
+    }
+  };
+
+  const unshareChat = async (chatId: string): Promise<boolean> => {
+    if (!userId) {
+      toast.error('You must be logged in to manage sharing');
+      return false;
+    }
+
+    try {
+      const ok = await chatService.unshareChat(chatId, userId);
+      if (ok) {
+        setChat(prev => prev ? { ...prev, share_id: undefined } : prev);
+      }
+      return ok;
+    } catch (error) {
+      console.error('Error unsharing chat:', error);
+      toast.error('Failed to unshare chat');
+      return false;
     }
   };
 
@@ -233,6 +255,7 @@ export const useChat = (chatId: string | undefined, userId: string | undefined) 
     refreshChat, 
     saveMessage, 
     setMessages, 
-    shareChat 
+    shareChat,
+    unshareChat
   };
 };

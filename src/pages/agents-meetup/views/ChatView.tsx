@@ -33,7 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const ChatView = () => {
   const { chatId } = useParams();
   const { user } = useAuth();
-  const { chat, messages, loading, saveMessage, setMessages, shareChat } = useChat(chatId, user?.id);
+  const { chat, messages, loading, saveMessage, setMessages, shareChat, unshareChat } = useChat(chatId, user?.id);
   const [state] = useLabsState();
   const { isEnabled } = useFeatureFlags();
   const { hasCredits, creditsRemaining, refreshCredits, loading: creditsLoading } = useCredits(user?.id);
@@ -106,19 +106,26 @@ export const ChatView = () => {
     }
   }, [currentMessageIndex, isPlaying]);
 
-  // Handle share button click
-  const handleShareClick = async () => {
-    if (!chatId || isGuest) {
-      toast.error('You must be logged in to share chats');
-      return;
+  // Copy public share link (chats are auto-shared on creation)
+  const handleCopyShareClick = async () => {
+    if (!chatId) return;
+    let shareId = chat?.share_id;
+    if (!shareId) {
+      // Re-share previously unshared chat
+      shareId = (await shareChat(chatId)) ?? undefined;
     }
-
-    const shareId = await shareChat(chatId);
     if (shareId) {
       const shareUrl = `${window.location.origin}/shared/${shareId}`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied! Anyone with the link can view this chat.');
     }
+  };
+
+  // Make chat private
+  const handleUnshareClick = async () => {
+    if (!chatId || isGuest) return;
+    const ok = await unshareChat(chatId);
+    if (ok) toast.success('Chat is now private. The share link no longer works.');
   };
 
   // Detect if chat is already complete when loading
@@ -519,15 +526,29 @@ export const ChatView = () => {
             </TooltipProvider>
           )}
           {!isGuest && messages.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleShareClick}
-              className="gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </Button>
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleCopyShareClick}
+                className="gap-2"
+                title={chat?.share_id ? 'Copy public share link' : 'Re-share and copy link'}
+              >
+                <Share2 className="h-4 w-4" />
+                {chat?.share_id ? 'Copy link' : 'Share'}
+              </Button>
+              {chat?.share_id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnshareClick}
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                  title="Make this chat private — disables the share link"
+                >
+                  Unshare
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

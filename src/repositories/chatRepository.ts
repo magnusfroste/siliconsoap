@@ -12,6 +12,12 @@ export const chatRepository = {
 
   // Create a new chat in the database
   async createChat(input: CreateChatInput): Promise<Chat | null> {
+    // Auto-generate share_id so every new chat is shareable by default.
+    // Users can later unshare via unshareChat() to make it private.
+    const shareId = Array.from({ length: 8 }, () =>
+      'abcdefghijklmnopqrstuvwxyz0123456789'.charAt(Math.floor(Math.random() * 36))
+    ).join('');
+
     const { data, error } = await supabase
       .from('agent_chats')
       .insert({
@@ -19,7 +25,9 @@ export const chatRepository = {
         title: input.title,
         scenario_id: input.scenario_id,
         prompt: input.prompt,
-        settings: input.settings as any
+        settings: input.settings as any,
+        is_public: true,
+        share_id: shareId,
       })
       .select()
       .single();
@@ -33,6 +41,20 @@ export const chatRepository = {
       ...data,
       settings: data.settings as unknown as ChatSettings
     } : null;
+  },
+
+  // Unshare a chat (make it private again)
+  async unshareChat(chatId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('agent_chats')
+      .update({ share_id: null, is_public: false })
+      .eq('id', chatId);
+
+    if (error) {
+      console.error('Error unsharing chat:', error);
+      return false;
+    }
+    return true;
   },
 
   // Get a chat by ID

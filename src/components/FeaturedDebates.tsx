@@ -61,7 +61,7 @@ export const FeaturedDebates = () => {
             })
           );
 
-          setDebates(debatesWithCounts);
+          setDebates(debatesWithCounts.filter(d => d.message_count > 0));
         }
       } catch (error) {
         console.error('Error fetching featured debates:', error);
