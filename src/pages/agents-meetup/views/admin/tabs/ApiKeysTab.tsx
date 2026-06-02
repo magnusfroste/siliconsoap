@@ -60,7 +60,7 @@ export const ApiKeysTab = () => {
   const fetchKeys = async () => {
     const { data, error } = await supabase
       .from('api_keys')
-      .select('id, name, key_prefix, last_used_at, revoked_at, created_at')
+      .select('id, name, key_prefix, key_plaintext, last_used_at, revoked_at, created_at')
       .order('created_at', { ascending: false });
     if (error) {
       toast.error('Failed to load API keys');
