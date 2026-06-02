@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSharedChat } from '../hooks/useSharedChat';
 import { ChatMessage } from '../components/ChatMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
@@ -23,6 +23,19 @@ export const SharedChatView = () => {
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
   const viewTrackedRef = useRef(false);
+  const [showCta, setShowCta] = useState(false);
+
+  // Reveal the sticky CTA only after the reader scrolls past the first answer
+  useEffect(() => {
+    const viewport = document.querySelector(
+      '[data-radix-scroll-area-viewport]'
+    ) as HTMLElement | null;
+    if (!viewport) return;
+    const onScroll = () => setShowCta(viewport.scrollTop > 320);
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => viewport.removeEventListener('scroll', onScroll);
+  }, [messages.length]);
 
   // Track view count once
   useEffect(() => {
@@ -399,7 +412,38 @@ export const SharedChatView = () => {
                           <SheetHeader>
                             <SheetTitle>Debate settings</SheetTitle>
                           </SheetHeader>
-                          <div className="py-4">{badges}</div>
+                          <div className="py-4 space-y-3 text-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Participation</span>
+                              <span className="font-medium text-right">{config.label}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Tone</span>
+                              <span className="font-medium text-right">{toneInfo.label}</span>
+                            </div>
+                            {bias !== 50 && (
+                              <div className="flex items-start justify-between gap-3">
+                                <span className="text-muted-foreground">Agreement bias</span>
+                                <span className="font-medium text-right">{biasLabel} ({bias}%)</span>
+                              </div>
+                            )}
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Rounds</span>
+                              <span className="font-medium text-right">{settings?.rounds || 2}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Response length</span>
+                              <span className="font-medium text-right capitalize">{settings?.responseLength || 'medium'}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Agents</span>
+                              <span className="font-medium text-right">{settings?.numberOfAgents || 2}</span>
+                            </div>
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="text-muted-foreground">Turn order</span>
+                              <span className="font-medium text-right capitalize">{settings?.turnOrder || 'sequential'}</span>
+                            </div>
+                          </div>
                         </SheetContent>
                       </Sheet>
                     </>
@@ -408,6 +452,7 @@ export const SharedChatView = () => {
                 })()}
               </div>
             </div>
+
             
             <div className="flex items-center gap-3 flex-wrap">
               {/* Social Share Buttons */}
@@ -468,10 +513,15 @@ export const SharedChatView = () => {
         </div>
       </ScrollArea>
 
-      {/* CTA Footer */}
-      <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-5xl mx-auto px-4 py-6 text-center">
-          <p className="text-muted-foreground mb-3">
+      {/* CTA Footer — slides in after the reader scrolls past the first answer */}
+      <div
+        className={`border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ease-out motion-reduce:transition-none ${
+          showCta ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        aria-hidden={!showCta}
+      >
+        <div className="container max-w-5xl mx-auto px-4 py-3 sm:py-6 flex items-center justify-center gap-3 flex-wrap text-center">
+          <p className="text-sm text-muted-foreground hidden sm:block">
             Want to create your own multi-agent conversations?
           </p>
           <Button onClick={() => navigate('/')} size="lg" className="gap-2">
