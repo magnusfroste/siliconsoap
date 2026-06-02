@@ -12,11 +12,13 @@ interface NavItem {
 }
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [
+  { key: 'explore', label: 'Explore' },
+  { key: 'leaderboard', label: 'Leaderboard' },
   { key: 'models', label: 'Models' },
   { key: 'learn', label: 'Learn' },
+  { key: 'about', label: 'About' },
   { key: 'profile', label: 'Profile' },
   { key: 'agent-profiles', label: 'Agent Profiles' },
-  { key: 'api-settings', label: 'API Settings' },
   { key: 'settings', label: 'Settings' },
   { key: 'admin', label: 'Admin' },
 ];
