@@ -67,7 +67,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   const handleNativeShare = async () => {
     try {
       await navigator.share({ title, text: description, url: shareUrl });
-      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'native_share' });
+      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'copy_link' });
     } catch (err) {
       // User cancelled or share failed silently — no toast needed
       if ((err as Error)?.name !== 'AbortError') {
