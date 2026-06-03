@@ -257,6 +257,50 @@ const LENGTH_INSTRUCTIONS: Record<string, string> = {
   long: "Respond with a detailed paragraph (6-10 sentences).",
 };
 
+// ----- Soap-opera name generator (mirrors frontend agentNameGenerator.ts) -----
+const MALE_FIRST_NAMES = [
+  "J.R.","Blake","Ridge","Eric","Victor","Jack","Tad","Luke","Sonny","Jason",
+  "Bo","John","Stefano","Ross","Chandler","Big","Don","Roger","Chuck","Nate","Dan",
+];
+const FEMALE_FIRST_NAMES = [
+  "Alexis","Krystle","Fallon","Brooke","Stephanie","Taylor","Nikki","Erica","Laura","Carly",
+  "Hope","Marlena","Rachel","Monica","Phoebe","Carrie","Samantha","Charlotte","Miranda",
+  "Peggy","Betty","Joan","Serena","Blair",
+];
+const SOAP_LAST_NAMES = [
+  "Ewing","Carrington","Colby","Forrester","Newman","Abbott","Chancellor","Kane","Martin","Quartermaine",
+  "Spencer","Corinthos","Brady","DiMera","Horton","Buchanan","Chandler","Santos","Montgomery","Hayward",
+  "van der Woodsen","Waldorf","Bass","Archibald","Humphrey","Bradshaw","York","Hobbes","Sterling","Draper",
+];
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+function buildSoapName(letter: string, persona: string, usedFirst: Set<string>): string {
+  const gender = letter === "B" ? "female" : "male";
+  const firstNames = gender === "male" ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
+  const hash = hashString(`Agent ${letter}-${persona}`);
+  let idx = hash % firstNames.length;
+  let first = firstNames[idx];
+  let attempts = 0;
+  while (usedFirst.has(first) && attempts < firstNames.length) {
+    idx = (idx + 1) % firstNames.length;
+    first = firstNames[idx];
+    attempts++;
+  }
+  usedFirst.add(first);
+  const last = SOAP_LAST_NAMES[(hash >> 4) % SOAP_LAST_NAMES.length];
+  return `${first} ${last}`;
+}
+function replaceAgentMentions(text: string, map: Record<string, string>): string {
+  if (!text || Object.keys(map).length === 0) return text;
+  return text.replace(/\bAgents?\s+([ABC])\b/g, (_m, l: string) => map[l.toUpperCase()] ?? _m);
+}
+
 interface DebateAgent {
   letter: string; // "A" | "B" | "C"
   name: string;
@@ -297,13 +341,13 @@ function buildSystemPrompt(
         : "Balance agreement and disagreement based on the merits of the arguments.";
 
   return [
-    `You are ${agent.name} (Agent ${agent.letter}).`,
+    `You are ${agent.name}.`,
     personaText,
     `Tone: ${tone}`,
     `Stance: ${stance}`,
     `Expression: ${intensity}`,
     `Length: ${length}`,
-    `Refer to other participants by name when relevant. Stay in character.`,
+    `Refer to other participants by their real first name (never as "Agent A", "Agent B" or "Agent C"). Stay in character.`,
     `Respond in the same language as the debate topic. Default to English.`,
   ].join("\n");
 }
@@ -598,14 +642,20 @@ Deno.serve(async (req) => {
       }
 
       // ----- Build agents -----
+      // Generate soap-opera names server-side (matching the UI) so models
+      // address each other by real names instead of "Agent A/B/C".
       const personas = input.personas ?? ["analytical", "creative", "strategic"];
-      const defaultNames = ["Agent A", "Agent B", "Agent C"];
-      const agents: DebateAgent[] = input.models.map((model, i) => ({
-        letter: ["A", "B", "C"][i],
-        name: input.agent_names?.[i] ?? defaultNames[i],
-        persona: personas[i] ?? "analytical",
-        model,
-      }));
+      const usedFirst = new Set<string>();
+      const agents: DebateAgent[] = input.models.map((model, i) => {
+        const letter = ["A", "B", "C"][i];
+        const persona = personas[i] ?? "analytical";
+        const name =
+          input.agent_names?.[i] ?? buildSoapName(letter, persona, usedFirst);
+        return { letter, name, persona, model };
+      });
+      // Map of letter -> soap name for post-processing model output.
+      const nameMap: Record<string, string> = {};
+      for (const a of agents) nameMap[a.letter] = a.name;
 
       // ----- Build settings + create chat row -----
       const settings = {
@@ -715,6 +765,10 @@ Deno.serve(async (req) => {
                 lastSoftError = turnError;
                 continue;
               }
+
+              // Safety net: replace any "Agent A/B/C" mentions the model
+              // produced despite the naming rule with real soap names.
+              content = replaceAgentMentions(content, nameMap);
 
               const { error: insertErr } = await supabase
                 .from("agent_chat_messages")
