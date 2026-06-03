@@ -642,14 +642,20 @@ Deno.serve(async (req) => {
       }
 
       // ----- Build agents -----
+      // Generate soap-opera names server-side (matching the UI) so models
+      // address each other by real names instead of "Agent A/B/C".
       const personas = input.personas ?? ["analytical", "creative", "strategic"];
-      const defaultNames = ["Agent A", "Agent B", "Agent C"];
-      const agents: DebateAgent[] = input.models.map((model, i) => ({
-        letter: ["A", "B", "C"][i],
-        name: input.agent_names?.[i] ?? defaultNames[i],
-        persona: personas[i] ?? "analytical",
-        model,
-      }));
+      const usedFirst = new Set<string>();
+      const agents: DebateAgent[] = input.models.map((model, i) => {
+        const letter = ["A", "B", "C"][i];
+        const persona = personas[i] ?? "analytical";
+        const name =
+          input.agent_names?.[i] ?? buildSoapName(letter, persona, usedFirst);
+        return { letter, name, persona, model };
+      });
+      // Map of letter -> soap name for post-processing model output.
+      const nameMap: Record<string, string> = {};
+      for (const a of agents) nameMap[a.letter] = a.name;
 
       // ----- Build settings + create chat row -----
       const settings = {
