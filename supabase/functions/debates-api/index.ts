@@ -257,6 +257,50 @@ const LENGTH_INSTRUCTIONS: Record<string, string> = {
   long: "Respond with a detailed paragraph (6-10 sentences).",
 };
 
+// ----- Soap-opera name generator (mirrors frontend agentNameGenerator.ts) -----
+const MALE_FIRST_NAMES = [
+  "J.R.","Blake","Ridge","Eric","Victor","Jack","Tad","Luke","Sonny","Jason",
+  "Bo","John","Stefano","Ross","Chandler","Big","Don","Roger","Chuck","Nate","Dan",
+];
+const FEMALE_FIRST_NAMES = [
+  "Alexis","Krystle","Fallon","Brooke","Stephanie","Taylor","Nikki","Erica","Laura","Carly",
+  "Hope","Marlena","Rachel","Monica","Phoebe","Carrie","Samantha","Charlotte","Miranda",
+  "Peggy","Betty","Joan","Serena","Blair",
+];
+const SOAP_LAST_NAMES = [
+  "Ewing","Carrington","Colby","Forrester","Newman","Abbott","Chancellor","Kane","Martin","Quartermaine",
+  "Spencer","Corinthos","Brady","DiMera","Horton","Buchanan","Chandler","Santos","Montgomery","Hayward",
+  "van der Woodsen","Waldorf","Bass","Archibald","Humphrey","Bradshaw","York","Hobbes","Sterling","Draper",
+];
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+function buildSoapName(letter: string, persona: string, usedFirst: Set<string>): string {
+  const gender = letter === "B" ? "female" : "male";
+  const firstNames = gender === "male" ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
+  const hash = hashString(`Agent ${letter}-${persona}`);
+  let idx = hash % firstNames.length;
+  let first = firstNames[idx];
+  let attempts = 0;
+  while (usedFirst.has(first) && attempts < firstNames.length) {
+    idx = (idx + 1) % firstNames.length;
+    first = firstNames[idx];
+    attempts++;
+  }
+  usedFirst.add(first);
+  const last = SOAP_LAST_NAMES[(hash >> 4) % SOAP_LAST_NAMES.length];
+  return `${first} ${last}`;
+}
+function replaceAgentMentions(text: string, map: Record<string, string>): string {
+  if (!text || Object.keys(map).length === 0) return text;
+  return text.replace(/\bAgents?\s+([ABC])\b/g, (_m, l: string) => map[l.toUpperCase()] ?? _m);
+}
+
 interface DebateAgent {
   letter: string; // "A" | "B" | "C"
   name: string;
