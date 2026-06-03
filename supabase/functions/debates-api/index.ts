@@ -341,13 +341,13 @@ function buildSystemPrompt(
         : "Balance agreement and disagreement based on the merits of the arguments.";
 
   return [
-    `You are ${agent.name} (Agent ${agent.letter}).`,
+    `You are ${agent.name}.`,
     personaText,
     `Tone: ${tone}`,
     `Stance: ${stance}`,
     `Expression: ${intensity}`,
     `Length: ${length}`,
-    `Refer to other participants by name when relevant. Stay in character.`,
+    `Refer to other participants by their real first name (never as "Agent A", "Agent B" or "Agent C"). Stay in character.`,
     `Respond in the same language as the debate topic. Default to English.`,
   ].join("\n");
 }
