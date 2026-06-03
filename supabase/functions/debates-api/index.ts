@@ -766,6 +766,10 @@ Deno.serve(async (req) => {
                 continue;
               }
 
+              // Safety net: replace any "Agent A/B/C" mentions the model
+              // produced despite the naming rule with real soap names.
+              content = replaceAgentMentions(content, nameMap);
+
               const { error: insertErr } = await supabase
                 .from("agent_chat_messages")
                 .insert({
