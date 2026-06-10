@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { generateSpeech, playBase64Audio, stopAudio, PlaybackControls } from '@/utils/elevenlabs/ttsService';
 import { ConversationMessage } from '../types';
+import { parseAgentResponse } from '../utils/parseAgentResponse';
 import { toast } from 'sonner';
 
 export const useConversationPlayback = (messages: ConversationMessage[]) => {
@@ -70,7 +71,9 @@ export const useConversationPlayback = (messages: ConversationMessage[]) => {
 
         setIsGenerating(true);
         try {
-          const base64Audio = await generateSpeech(message.message, message.agent);
+          // Strip private <thinking> scratchpad so TTS never reads it aloud.
+          const { publicMessage } = parseAgentResponse(message.message);
+          const base64Audio = await generateSpeech(publicMessage, message.agent);
           setIsGenerating(false);
 
           if (abortControllerRef.current?.signal.aborted) {
