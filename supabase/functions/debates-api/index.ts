@@ -770,6 +770,12 @@ Deno.serve(async (req) => {
               // produced despite the naming rule with real soap names.
               content = replaceAgentMentions(content, nameMap);
 
+              // Strip private <thinking> scratchpad before persisting / exposing
+              // via the public API. Falls back to original content if stripping
+              // would leave the message empty.
+              const stripped = content.replace(/<thinking>[\s\S]*?<\/thinking>/gi, "").trim();
+              if (stripped) content = stripped;
+
               const { error: insertErr } = await supabase
                 .from("agent_chat_messages")
                 .insert({
@@ -792,7 +798,7 @@ Deno.serve(async (req) => {
                   prompt_tokens: usage.prompt_tokens ?? 0,
                   completion_tokens: usage.completion_tokens ?? 0,
                   total_tokens: usage.total_tokens ?? 0,
-                  estimated_cost: 0,
+                  estimated_cost: usage.cost ?? 0,
                 });
               }
             }
