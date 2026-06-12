@@ -933,23 +933,22 @@ export const ChatView = () => {
           onPlayTheater={playTheater}
           onPause={pause}
           onStop={stop}
-          canAnalyze={!isGuest}
+          canAnalyze={judgeBotEnabled && !isGuest}
           isAnalyzing={isAnalyzing}
           onAnalyze={() => setShowAnalysisDrawer(true)}
         />
       )}
 
       {/* Analysis Drawer */}
-      <AnalysisDrawer
-        open={showAnalysisDrawer}
-        onOpenChange={setShowAnalysisDrawer}
-        isAnalyzing={isAnalyzing}
-        analysisResults={analysisResults}
-        conversation={messages}
-        onAnalyze={() => handleAnalyzeConversation()}
-        isGuest={isGuest}
-        isSaved={isAnalysisSaved}
-      />
-    </div>
-  );
-};
+      {judgeBotEnabled && (
+        <AnalysisDrawer
+          open={showAnalysisDrawer}
+          onOpenChange={setShowAnalysisDrawer}
+          isAnalyzing={isAnalyzing}
+          analysisResults={analysisResults}
+          conversation={messages}
+          onAnalyze={() => handleAnalyzeConversation()}
+          isGuest={isGuest}
+          isSaved={isAnalysisSaved}
+        />
+      )}
