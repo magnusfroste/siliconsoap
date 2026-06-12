@@ -54,6 +54,7 @@ export const ChatView = () => {
   const generationStartTime = useRef<number | null>(null);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
+  const judgeBotEnabled = isEnabled('enable_judge_bot');
   const scratchpadEnabled = isEnabled('enable_scratchpad');
   const webSearchEnabled = isEnabled('web_search_enabled');
   const personaTemplateEnabled = isEnabled('use_persona_template');
@@ -932,23 +933,25 @@ export const ChatView = () => {
           onPlayTheater={playTheater}
           onPause={pause}
           onStop={stop}
-          canAnalyze={!isGuest}
+          canAnalyze={judgeBotEnabled && !isGuest}
           isAnalyzing={isAnalyzing}
           onAnalyze={() => setShowAnalysisDrawer(true)}
         />
       )}
 
       {/* Analysis Drawer */}
-      <AnalysisDrawer
-        open={showAnalysisDrawer}
-        onOpenChange={setShowAnalysisDrawer}
-        isAnalyzing={isAnalyzing}
-        analysisResults={analysisResults}
-        conversation={messages}
-        onAnalyze={() => handleAnalyzeConversation()}
-        isGuest={isGuest}
-        isSaved={isAnalysisSaved}
-      />
+      {judgeBotEnabled && (
+        <AnalysisDrawer
+          open={showAnalysisDrawer}
+          onOpenChange={setShowAnalysisDrawer}
+          isAnalyzing={isAnalyzing}
+          analysisResults={analysisResults}
+          conversation={messages}
+          onAnalyze={() => handleAnalyzeConversation()}
+          isGuest={isGuest}
+          isSaved={isAnalysisSaved}
+        />
+      )}
     </div>
   );
 };
