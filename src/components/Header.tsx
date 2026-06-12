@@ -39,7 +39,7 @@ const Header = () => {
   return (
     <header 
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm' : 'bg-transparent'
+        scrolled ? 'bg-background/80 backdrop-blur-md shadow-sm border-b border-border/50' : 'bg-transparent'
       }`}
     >
       <div className="container mx-auto px-4">
