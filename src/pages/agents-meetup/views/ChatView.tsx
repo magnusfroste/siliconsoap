@@ -952,3 +952,6 @@ export const ChatView = () => {
           isSaved={isAnalysisSaved}
         />
       )}
+    </div>
+  );
+};
