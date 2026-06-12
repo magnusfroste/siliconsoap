@@ -167,7 +167,7 @@ serve(async (req) => {
 
       if (response.status === 429) {
         // Try a fallback free model before surfacing the rate-limit error
-        const rateLimitFallback = 'mistralai/mixtral-8x7b-instruct-v0.1';
+        const rateLimitFallback = 'openai/gpt-4o-mini';
         if (model !== rateLimitFallback) {
           console.log(`[rate-limit] ${model} rate-limited. Retrying with ${rateLimitFallback}`);
           const fbResp = await fetch(openRouterUrl, {
