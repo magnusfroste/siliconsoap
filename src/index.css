@@ -98,10 +98,10 @@
   body {
     @apply bg-background text-foreground;
   }
-  body:not(.dark) {
+  html:not(.dark) body {
     background: linear-gradient(to bottom, #F8F9FB, #F0F4F8);
   }
-  .dark body {
+  html.dark body {
     background: linear-gradient(to bottom, hsl(222.2 84% 4.9%), hsl(217.2 32.6% 12%));
   }
   html {
