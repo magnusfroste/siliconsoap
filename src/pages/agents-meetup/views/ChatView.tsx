@@ -54,6 +54,7 @@ export const ChatView = () => {
   const generationStartTime = useRef<number | null>(null);
   
   const audioPlaybackEnabled = isEnabled('enable_audio_playback');
+  const judgeBotEnabled = isEnabled('enable_judge_bot');
   const scratchpadEnabled = isEnabled('enable_scratchpad');
   const webSearchEnabled = isEnabled('web_search_enabled');
   const personaTemplateEnabled = isEnabled('use_persona_template');
