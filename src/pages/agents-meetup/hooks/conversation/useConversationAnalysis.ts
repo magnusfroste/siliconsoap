@@ -4,6 +4,7 @@ import { ConversationMessage } from '../../types';
 import { useAnalysisState } from './analysis/useAnalysisState';
 import { analyzeConversation } from './analysis/analyzerService';
 import { chatRepository } from '@/repositories/chatRepository';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const useConversationAnalysis = (
   savedApiKey: string | null, 
@@ -24,9 +25,11 @@ export const useConversationAnalysis = (
     setAnalyzerModel
   } = useAnalysisState();
 
+  const { getTextValue } = useFeatureFlags();
   const [isSaved, setIsSaved] = React.useState(false);
+  const [modelInitialized, setModelInitialized] = React.useState(false);
 
-  // Load initial analysis from saved chat
+  // Load initial analysis from saved chat, or admin-configured default judge model
   React.useEffect(() => {
     if (initialAnalysis && !analysisResults) {
       setAnalysisResults(initialAnalysis);
@@ -34,8 +37,15 @@ export const useConversationAnalysis = (
     }
     if (initialAnalyzerModel) {
       setAnalyzerModel(initialAnalyzerModel);
+      setModelInitialized(true);
+    } else if (!modelInitialized) {
+      const adminDefault = getTextValue('default_judge_model');
+      if (adminDefault) {
+        setAnalyzerModel(adminDefault);
+        setModelInitialized(true);
+      }
     }
-  }, [initialAnalysis, initialAnalyzerModel]);
+  }, [initialAnalysis, initialAnalyzerModel, getTextValue, modelInitialized]);
 
   const handleAnalyzeConversation = async (model?: string, prompt?: string) => {
     // Always use shared key mode (edge function with server-side API key)
