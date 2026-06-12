@@ -7,8 +7,8 @@ import { useState } from 'react';
 export const useAnalysisState = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<string>('');
-  // Default to Llama 3.3 70B
-  const [analyzerModel, setAnalyzerModel] = useState<string>('meta-llama/llama-3.3-70b-instruct:free');
+  // Default to paid Gemini Flash (admin can override via 'default_judge_model' flag)
+  const [analyzerModel, setAnalyzerModel] = useState<string>('google/gemini-2.5-flash');
 
   return {
     isAnalyzing,
