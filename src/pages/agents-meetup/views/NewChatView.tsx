@@ -253,66 +253,74 @@ export const NewChatView = () => {
             suggestedTopics={suggestedTopics}
           />
 
-          {/* Configuration Card */}
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {/* Agent Configuration */}
-              <AgentGridSection
-                numberOfAgents={state.numberOfAgents}
-                agentAModel={state.agentAModel}
-                setAgentAModel={actions.setAgentAModel}
-                agentBModel={state.agentBModel}
-                setAgentBModel={actions.setAgentBModel}
-                agentCModel={state.agentCModel}
-                setAgentCModel={actions.setAgentCModel}
-                agentAPersona={state.agentAPersona}
-                agentBPersona={state.agentBPersona}
-                agentCPersona={state.agentCPersona}
-                handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
-                handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
-                handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
-                profiles={profiles}
-                formA={state.formA}
-                formB={state.formB}
-                formC={state.formC}
-                modelsByProvider={modelsByProvider}
-                loadingModels={state.loadingModels}
-                conversationTone={state.conversationTone}
-                agreementBias={state.agreementBias}
-                temperature={state.temperature}
-                personalityIntensity={state.personalityIntensity}
-                onShuffleModels={actions.shuffleModels}
-              />
+          {/* Configuration Card — subtly dimmed until interacted with */}
+          <div className="group relative transition-all duration-500 md:opacity-50 md:hover:opacity-100 md:focus-within:opacity-100">
+            {/* Hint overlay shown when dimmed on desktop */}
+            <div className="hidden md:flex pointer-events-none absolute inset-0 z-10 items-center justify-center opacity-100 group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-300">
+              <span className="text-sm text-muted-foreground bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-sm">
+                Configure your cast & settings — hover to reveal
+              </span>
+            </div>
+            <Card className="md:group-hover:shadow-lg md:group-focus-within:shadow-lg transition-shadow duration-500">
+              <CardContent className="pt-6 space-y-4">
+                {/* Agent Configuration */}
+                <AgentGridSection
+                  numberOfAgents={state.numberOfAgents}
+                  agentAModel={state.agentAModel}
+                  setAgentAModel={actions.setAgentAModel}
+                  agentBModel={state.agentBModel}
+                  setAgentBModel={actions.setAgentBModel}
+                  agentCModel={state.agentCModel}
+                  setAgentCModel={actions.setAgentCModel}
+                  agentAPersona={state.agentAPersona}
+                  agentBPersona={state.agentBPersona}
+                  agentCPersona={state.agentCPersona}
+                  handleAgentAPersonaChange={actions.handleAgentAPersonaChange}
+                  handleAgentBPersonaChange={actions.handleAgentBPersonaChange}
+                  handleAgentCPersonaChange={actions.handleAgentCPersonaChange}
+                  profiles={profiles}
+                  formA={state.formA}
+                  formB={state.formB}
+                  formC={state.formC}
+                  modelsByProvider={modelsByProvider}
+                  loadingModels={state.loadingModels}
+                  conversationTone={state.conversationTone}
+                  agreementBias={state.agreementBias}
+                  temperature={state.temperature}
+                  personalityIntensity={state.personalityIntensity}
+                  onShuffleModels={actions.shuffleModels}
+                />
 
-              <Separator className="my-4" />
+                <Separator className="my-4" />
 
-              {/* Conversation Settings + Advanced */}
-              <ConversationSettings
-                numberOfAgents={state.numberOfAgents}
-                setNumberOfAgents={actions.setNumberOfAgents}
-                rounds={state.rounds}
-                setRounds={actions.setRounds}
-                responseLength={state.responseLength}
-                setResponseLength={actions.setResponseLength}
-                participationMode={state.participationMode}
-                setParticipationMode={actions.setParticipationMode}
-                turnOrder={state.turnOrder}
-                setTurnOrder={actions.setTurnOrder}
-                responseLengthOptions={responseLengthOptions}
-              />
-              
-              <ExpertSettings
-                conversationTone={state.conversationTone}
-                setConversationTone={actions.setConversationTone}
-                agreementBias={state.agreementBias}
-                setAgreementBias={actions.setAgreementBias}
-                temperature={state.temperature}
-                setTemperature={actions.setTemperature}
-                personalityIntensity={state.personalityIntensity}
-                setPersonalityIntensity={actions.setPersonalityIntensity}
-              />
-            </CardContent>
-          </Card>
+                {/* Conversation Settings + Advanced */}
+                <ConversationSettings
+                  numberOfAgents={state.numberOfAgents}
+                  setNumberOfAgents={actions.setNumberOfAgents}
+                  rounds={state.rounds}
+                  setRounds={actions.setRounds}
+                  responseLength={state.responseLength}
+                  setResponseLength={actions.setResponseLength}
+                  participationMode={state.participationMode}
+                  setParticipationMode={actions.setParticipationMode}
+                  turnOrder={state.turnOrder}
+                  setTurnOrder={actions.setTurnOrder}
+                  responseLengthOptions={responseLengthOptions}
+                />
+                
+                <ExpertSettings
+                  conversationTone={state.conversationTone}
+                  setConversationTone={actions.setConversationTone}
+                  agreementBias={state.agreementBias}
+                  setAgreementBias={actions.setAgreementBias}
+                  temperature={state.temperature}
+                  setTemperature={actions.setTemperature}
+                  personalityIntensity={state.personalityIntensity}
+                  setPersonalityIntensity={actions.setPersonalityIntensity}
+                />
+              </CardContent>
+            </Card>
+          </div>
           
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-primary-foreground">

@@ -35,7 +35,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   const currentScenario = scenarioTypes.find(s => s.id === activeScenario);
 
   return (
-    <div className="border rounded-xl bg-card p-5 space-y-3 focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
+    <div className="border rounded-xl bg-card p-6 md:p-8 space-y-4 focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-md ring-1 ring-primary/5">
       {/* Pill-style scenario buttons */}
       <div className="flex justify-center gap-2 pb-3 border-b border-border/40">
         {scenarioTypes.map(scenario => (
