@@ -166,29 +166,54 @@ serve(async (req) => {
       }
 
       if (response.status === 429) {
+        // Try a fallback free model before surfacing the rate-limit error
+        const rateLimitFallback = 'mistralai/mixtral-8x7b-instruct-v0.1';
+        if (model !== rateLimitFallback) {
+          console.log(`[rate-limit] ${model} rate-limited. Retrying with ${rateLimitFallback}`);
+          const fbResp = await fetch(openRouterUrl, {
+            method: 'POST',
+            headers: requestHeaders,
+            body: JSON.stringify({ ...requestBody, model: rateLimitFallback }),
+          });
+          const fbData = await fbResp.json();
+          const fbContent = extractMessageContent(fbData);
+          if (fbResp.ok && fbContent) {
+            console.log('[rate-limit] Fallback model succeeded');
+            fbData.fallback_used = true;
+            fbData.original_model = model;
+            return new Response(JSON.stringify(fbData), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          console.error('[rate-limit] Fallback also failed:', fbResp.status, fbData?.error);
+        }
+
+        // Return 200 so the client can read the body and show a friendly toast.
+        // (supabase.functions.invoke hides the body on non-2xx responses.)
         return new Response(
-          JSON.stringify({ 
-            error: 'Rate limit exceeded',
+          JSON.stringify({
+            error: userApiKey
+              ? 'Your API key has hit rate limits. Please try again later.'
+              : 'The model is rate-limited right now. Try again in a few seconds, or pick a different model.',
             code: 'RATE_LIMIT',
-            message: userApiKey 
-              ? 'Your API key has hit rate limits. Please try again later.' 
-              : 'Shared API key rate limit reached. Please add your own API key to continue.',
-            shouldPromptBYOK: !userApiKey
+            shouldPromptBYOK: !userApiKey,
           }),
           {
-            status: 429,
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       }
-      
+
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: data.error?.message || 'Failed to get response from AI model.',
           code: 'API_ERROR'
         }),
         {
-          status: response.status,
+          // Return 200 so the client surfaces the friendly message instead of
+          // a generic "Edge Function returned a non-2xx status code".
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
