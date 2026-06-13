@@ -155,6 +155,7 @@ export const CuratedModelsManager = () => {
         model_id: model.model_id,
         display_name: model.display_name,
         provider: model.provider,
+        supports_reasoning: model.supports_reasoning,
       });
 
       // Update the model with generated content
@@ -653,18 +654,26 @@ export const CuratedModelsManager = () => {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleToggleDisableReasoning(model)}
+                              disabled={!model.supports_reasoning}
                               title={
-                                model.disable_reasoning
-                                  ? 'Reasoning DISABLED — fast responses (no hidden thinking)'
-                                  : 'Reasoning enabled — model may use hidden thinking tokens'
+                                !model.supports_reasoning
+                                  ? "This model doesn't support a reasoning parameter (per OpenRouter). Toggle has no effect."
+                                  : model.disable_reasoning
+                                    ? 'Reasoning DISABLED — fast responses (no hidden thinking)'
+                                    : 'Reasoning enabled — model may use hidden thinking tokens'
                               }
                               className={cn(
                                 'gap-1 text-xs',
-                                model.disable_reasoning && 'text-amber-500 hover:text-amber-500'
+                                model.supports_reasoning && model.disable_reasoning && 'text-amber-500 hover:text-amber-500',
+                                !model.supports_reasoning && 'opacity-40 cursor-not-allowed'
                               )}
                             >
                               <Brain className={cn('h-3.5 w-3.5', model.disable_reasoning && 'opacity-60')} />
-                              {model.disable_reasoning ? 'No-think' : 'Think'}
+                              {!model.supports_reasoning
+                                ? 'No thinking'
+                                : model.disable_reasoning
+                                  ? 'No-think'
+                                  : 'Think'}
                             </Button>
                             <Switch
                               checked={model.is_enabled}

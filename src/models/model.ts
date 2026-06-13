@@ -29,6 +29,8 @@ export interface CuratedModel {
   pricing_updated_at: string | null;
   // Per-model toggle to disable hidden reasoning/thinking mode (e.g. Qwen3) for latency
   disable_reasoning: boolean;
+  // Whether the model actually supports a reasoning/thinking parameter (from OpenRouter's supported_parameters)
+  supports_reasoning: boolean;
 }
 
 export interface CuratedModelInsert {

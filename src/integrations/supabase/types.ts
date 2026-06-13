@@ -318,6 +318,7 @@ export type Database = {
           provider: string
           sort_order: number
           speed_rating: string | null
+          supports_reasoning: boolean
           updated_at: string
           use_cases: string[] | null
         }
@@ -344,6 +345,7 @@ export type Database = {
           provider: string
           sort_order?: number
           speed_rating?: string | null
+          supports_reasoning?: boolean
           updated_at?: string
           use_cases?: string[] | null
         }
@@ -370,6 +372,7 @@ export type Database = {
           provider?: string
           sort_order?: number
           speed_rating?: string | null
+          supports_reasoning?: boolean
           updated_at?: string
           use_cases?: string[] | null
         }

@@ -45,6 +45,7 @@ interface OpenRouterModel {
   };
   context_length?: number;
   hugging_face_id?: string | null;
+  supported_parameters?: string[] | null;
 }
 
 interface OpenRouterResponse {
@@ -98,16 +99,20 @@ serve(async (req) => {
       priceOutput: number;
       contextLength: number | null;
       huggingFaceId: string | null;
+      supportsReasoning: boolean;
     }>();
     for (const model of openRouterData.data || []) {
       const priceInput = parseFloat(model.pricing?.prompt || '0') || 0;
       const priceOutput = parseFloat(model.pricing?.completion || '0') || 0;
       const hfRaw = (model.hugging_face_id ?? '').trim();
+      const params = (model.supported_parameters ?? []).map((p) => p.toLowerCase());
+      const supportsReasoning = params.includes('reasoning') || params.includes('include_reasoning');
       metaMap.set(model.id, {
         priceInput,
         priceOutput,
         contextLength: model.context_length ?? null,
         huggingFaceId: hfRaw.length > 0 ? hfRaw : null,
+        supportsReasoning,
       });
     }
 
@@ -142,6 +147,7 @@ serve(async (req) => {
           price_output: meta.priceOutput,
           price_tier: priceTier,
           license_type: licenseType,
+          supports_reasoning: meta.supportsReasoning,
           pricing_updated_at: new Date().toISOString(),
         };
         if (meta.contextLength && meta.contextLength > 0) {
@@ -156,7 +162,7 @@ serve(async (req) => {
         if (updateError) {
           console.error(`Error updating model ${model.model_id}:`, updateError);
         } else {
-          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}`);
+          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}, reasoning=${meta.supportsReasoning}`);
           updatedCount++;
         }
       } else {

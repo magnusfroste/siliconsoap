@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { model_id, display_name, provider } = await req.json();
+    const { model_id, display_name, provider, supports_reasoning } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -22,17 +22,22 @@ serve(async (req) => {
       throw new Error("model_id is required");
     }
 
-    console.log(`Generating info for model: ${model_id}`);
+    console.log(`Generating info for model: ${model_id} (supports_reasoning=${supports_reasoning})`);
 
     const systemPrompt = `You are an AI model expert. Generate educational content about AI models for a learning platform.
 Your responses should be accurate, helpful, and suitable for developers and AI enthusiasts.
 Always respond with valid JSON matching the exact structure requested.`;
 
+    const reasoningFact =
+      typeof supports_reasoning === 'boolean'
+        ? `\nVerified fact (from OpenRouter): this model ${supports_reasoning ? 'SUPPORTS' : 'does NOT support'} a reasoning/thinking parameter. Reflect this in pros/cons/category when relevant — do not contradict it.`
+        : '';
+
     const userPrompt = `Generate educational information about this AI model:
 
 Model ID: ${model_id}
 Display Name: ${display_name || model_id}
-Provider: ${provider || 'Unknown'}
+Provider: ${provider || 'Unknown'}${reasoningFact}
 
 Respond with a JSON object containing:
 {

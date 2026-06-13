@@ -4,6 +4,7 @@ export interface ModelInfoParams {
   model_id: string;
   display_name: string;
   provider: string;
+  supports_reasoning?: boolean;
 }
 
 export interface ModelInfoResult {
