@@ -261,7 +261,7 @@ serve(async (req) => {
         error: retryData?.error,
       });
 
-      const fallbackModel = 'mistralai/mixtral-8x7b-instruct-v0.1';
+      const fallbackModel = 'openai/gpt-4o-mini';
       if (model !== fallbackModel) {
         console.log(`Retrying with fallback model: ${fallbackModel}`);
         
