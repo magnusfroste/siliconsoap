@@ -103,10 +103,20 @@ serve(async (req) => {
       console.warn('[reasoning] Lookup failed, defaulting to enabled:', lookupErr);
     }
 
+    // Auto-add a reasoning buffer for models that may emit hidden <thinking>
+    // or reasoning tokens. Without this, low max_tokens budgets get fully
+    // consumed inside the private monologue and the public reply is truncated
+    // (we've seen this with stepfun, qwen-thinking, etc.).
+    const REASONING_BUFFER = 600;
+    const baseMaxTokens = typeof max_tokens === 'number' ? max_tokens : 700;
+    const effectiveMaxTokens = disableReasoning
+      ? baseMaxTokens
+      : baseMaxTokens + REASONING_BUFFER;
+
     const requestBody: Record<string, unknown> = {
       model,
       messages,
-      max_tokens,
+      max_tokens: effectiveMaxTokens,
       temperature,
       top_p,
       stream: false,
@@ -116,6 +126,8 @@ serve(async (req) => {
     if (disableReasoning) {
       requestBody.reasoning = { enabled: false };
       console.log(`[reasoning] Disabled for ${model} (admin toggle)`);
+    } else {
+      console.log(`[reasoning] Buffer added for ${model}: ${baseMaxTokens} -> ${effectiveMaxTokens}`);
     }
 
 
