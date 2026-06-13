@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Copy, Plus, Loader2, Key, ExternalLink, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Copy, Plus, Loader2, Key, ExternalLink, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +23,6 @@ interface ApiKey {
   id: string;
   name: string;
   key_prefix: string;
-  key_plaintext: string | null;
   last_used_at: string | null;
   revoked_at: string | null;
   created_at: string;
@@ -56,20 +55,11 @@ export const ApiKeysTab = () => {
   const [creating, setCreating] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
-  const [shownIds, setShownIds] = useState<Set<string>>(new Set());
-
-  const toggleShown = (id: string) => {
-    setShownIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
 
   const fetchKeys = async () => {
     const { data, error } = await supabase
       .from('api_keys')
-      .select('id, name, key_prefix, key_plaintext, last_used_at, revoked_at, created_at')
+      .select('id, name, key_prefix, last_used_at, revoked_at, created_at')
       .order('created_at', { ascending: false });
     if (error) {
       toast.error('Failed to load API keys');
@@ -102,19 +92,12 @@ export const ApiKeysTab = () => {
         name: newName.trim(),
         key_prefix: prefix,
         key_hash: hash,
-        key_plaintext: plaintext,
       });
       if (error) throw error;
 
       setRevealedKey(plaintext);
       setNewName('');
       await fetchKeys();
-      // auto-reveal the newly created key in the table for easy copying later
-      setShownIds((prev) => {
-        const next = new Set(prev);
-        // we don't know the id yet — mark all so the new one shows up; user can hide
-        return next;
-      });
     } catch (e: any) {
       toast.error(`Failed to create key: ${e.message}`);
     } finally {
@@ -153,7 +136,8 @@ export const ApiKeysTab = () => {
               </CardTitle>
               <CardDescription>
                 Generate keys to let external agents (Claude Cowork, n8n, scripts) create
-                debates programmatically via the REST API.
+                debates programmatically via the REST API. For your security, the full key
+                is shown only once at creation — store it somewhere safe.
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
@@ -203,11 +187,7 @@ export const ApiKeysTab = () => {
                   <TableRow key={k.id}>
                     <TableCell className="font-medium">{k.name}</TableCell>
                     <TableCell className="font-mono text-xs max-w-[320px]">
-                      {k.key_plaintext && shownIds.has(k.id) ? (
-                        <span className="break-all">{k.key_plaintext}</span>
-                      ) : (
-                        <span>{k.key_prefix}…</span>
-                      )}
+                      <span>{k.key_prefix}…</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {k.last_used_at
@@ -223,30 +203,6 @@ export const ApiKeysTab = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {k.key_plaintext && !k.revoked_at && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleShown(k.id)}
-                              title={shownIds.has(k.id) ? 'Hide' : 'Reveal'}
-                            >
-                              {shownIds.has(k.id) ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyKey(k.key_plaintext!)}
-                              title="Copy key"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
                         {!k.revoked_at && (
                           <Button
                             variant="ghost"
@@ -273,7 +229,8 @@ export const ApiKeysTab = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Your new API key</AlertDialogTitle>
             <AlertDialogDescription>
-              Copy it now or reveal it later from the table below (eye icon).
+              Copy it now — for security, this key cannot be shown again. If you lose it,
+              revoke it and create a new one.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="bg-muted rounded p-3 font-mono text-xs break-all border">
