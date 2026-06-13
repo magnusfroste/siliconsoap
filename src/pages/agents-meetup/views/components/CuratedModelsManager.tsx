@@ -155,6 +155,7 @@ export const CuratedModelsManager = () => {
         model_id: model.model_id,
         display_name: model.display_name,
         provider: model.provider,
+        supports_reasoning: model.supports_reasoning,
       });
 
       // Update the model with generated content
