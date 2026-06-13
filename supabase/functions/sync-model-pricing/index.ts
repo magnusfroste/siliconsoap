@@ -99,16 +99,20 @@ serve(async (req) => {
       priceOutput: number;
       contextLength: number | null;
       huggingFaceId: string | null;
+      supportsReasoning: boolean;
     }>();
     for (const model of openRouterData.data || []) {
       const priceInput = parseFloat(model.pricing?.prompt || '0') || 0;
       const priceOutput = parseFloat(model.pricing?.completion || '0') || 0;
       const hfRaw = (model.hugging_face_id ?? '').trim();
+      const params = (model.supported_parameters ?? []).map((p) => p.toLowerCase());
+      const supportsReasoning = params.includes('reasoning') || params.includes('include_reasoning');
       metaMap.set(model.id, {
         priceInput,
         priceOutput,
         contextLength: model.context_length ?? null,
         huggingFaceId: hfRaw.length > 0 ? hfRaw : null,
+        supportsReasoning,
       });
     }
 
