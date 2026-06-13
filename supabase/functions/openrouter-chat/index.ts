@@ -220,9 +220,19 @@ serve(async (req) => {
     }
 
     // Check for empty content (silent rate limiting or model issues)
+    // OR an unclosed <thinking> block (model ran out of tokens inside its
+    // private monologue and never produced a public reply).
     const content = extractMessageContent(data);
-    if (!content || content.trim() === '') {
-      console.warn(`Empty response from model ${model}, possibly rate limited`);
+    const hasUnclosedThinking =
+      !!content &&
+      /<thinking>/i.test(content) &&
+      !/<\/thinking>/i.test(content);
+    if (!content || content.trim() === '' || hasUnclosedThinking) {
+      if (hasUnclosedThinking) {
+        console.warn(`Model ${model} returned unclosed <thinking> block, retrying with more tokens`);
+      } else {
+        console.warn(`Empty response from model ${model}, possibly rate limited`);
+      }
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
 
       const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
@@ -239,7 +249,11 @@ serve(async (req) => {
       const retryData = await retryResponse.json();
       const retryContent = extractMessageContent(retryData);
 
-      if (retryResponse.ok && retryContent) {
+      const retryHasUnclosedThinking =
+        !!retryContent &&
+        /<thinking>/i.test(retryContent) &&
+        !/<\/thinking>/i.test(retryContent);
+      if (retryResponse.ok && retryContent && !retryHasUnclosedThinking) {
         console.log('Retry successful.');
         return new Response(JSON.stringify(retryData), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -251,7 +265,7 @@ serve(async (req) => {
         error: retryData?.error,
       });
 
-      const fallbackModel = 'mistralai/mixtral-8x7b-instruct-v0.1';
+      const fallbackModel = 'openai/gpt-4o-mini';
       if (model !== fallbackModel) {
         console.log(`Retrying with fallback model: ${fallbackModel}`);
         
