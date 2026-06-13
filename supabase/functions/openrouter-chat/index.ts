@@ -249,7 +249,11 @@ serve(async (req) => {
       const retryData = await retryResponse.json();
       const retryContent = extractMessageContent(retryData);
 
-      if (retryResponse.ok && retryContent) {
+      const retryHasUnclosedThinking =
+        !!retryContent &&
+        /<thinking>/i.test(retryContent) &&
+        !/<\/thinking>/i.test(retryContent);
+      if (retryResponse.ok && retryContent && !retryHasUnclosedThinking) {
         console.log('Retry successful.');
         return new Response(JSON.stringify(retryData), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
