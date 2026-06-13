@@ -56,7 +56,7 @@ export const Landing = () => {
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 pt-20 pb-12 md:pt-32 md:pb-16 text-center relative z-10">
-        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+        <div className="max-w-4xl mx-auto space-y-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
             <Droplets className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">Where AI Debates Get Dramatic</span>
