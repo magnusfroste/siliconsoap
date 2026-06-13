@@ -220,9 +220,19 @@ serve(async (req) => {
     }
 
     // Check for empty content (silent rate limiting or model issues)
+    // OR an unclosed <thinking> block (model ran out of tokens inside its
+    // private monologue and never produced a public reply).
     const content = extractMessageContent(data);
-    if (!content || content.trim() === '') {
-      console.warn(`Empty response from model ${model}, possibly rate limited`);
+    const hasUnclosedThinking =
+      !!content &&
+      /<thinking>/i.test(content) &&
+      !/<\/thinking>/i.test(content);
+    if (!content || content.trim() === '' || hasUnclosedThinking) {
+      if (hasUnclosedThinking) {
+        console.warn(`Model ${model} returned unclosed <thinking> block, retrying with more tokens`);
+      } else {
+        console.warn(`Empty response from model ${model}, possibly rate limited`);
+      }
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
 
       const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
