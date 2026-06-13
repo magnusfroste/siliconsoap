@@ -162,7 +162,7 @@ serve(async (req) => {
         if (updateError) {
           console.error(`Error updating model ${model.model_id}:`, updateError);
         } else {
-          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}`);
+          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}, reasoning=${meta.supportsReasoning}`);
           updatedCount++;
         }
       } else {
