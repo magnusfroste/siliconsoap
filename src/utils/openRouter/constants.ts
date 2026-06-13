@@ -2,17 +2,19 @@
 export const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
-// Helper function to get token count based on response length
+// Helper function to get token count based on response length.
+// Note: edge function auto-adds a reasoning buffer (+600) for models that
+// emit hidden <thinking>/reasoning tokens, so these are "public reply" budgets.
 export const getMaxTokens = (responseLength: string): number => {
   switch (responseLength) {
     case "short":
-      return 200;
+      return 400;
     case "medium":
-      return 500;
+      return 700;
     case "long":
-      return 1000;
+      return 1200;
     default:
-      return 500;
+      return 700;
   }
 };
 
