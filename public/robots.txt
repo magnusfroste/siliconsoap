@@ -16,7 +16,7 @@ Disallow: /settings
 Disallow: /admin
 Disallow: /auth
 
-Sitemap: https://apfrjuomozdvdeondzaz.supabase.co/functions/v1/dynamic-sitemap
+Sitemap: https://siliconsoap.com/sitemap.xml
 
 # AI Crawlers - Answer Engine Optimization (AEO)
 User-agent: GPTBot

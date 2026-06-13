@@ -69,7 +69,7 @@ export function ExpertSettings({
               <Label className="text-sm font-medium">Conversation Tone</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                  <button type="button" aria-label="About conversation tone" className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                     <Settings className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
@@ -101,7 +101,7 @@ export function ExpertSettings({
               <Label className="text-sm font-medium">Personality Intensity</Label>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                  <button type="button" aria-label="About personality intensity" className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                     <Settings className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
