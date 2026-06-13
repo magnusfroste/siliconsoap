@@ -115,7 +115,7 @@ export const Landing = () => {
                 <feature.icon className="h-7 w-7 text-primary" />
               </div>
               
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+              <h2 className="text-xl font-semibold mb-3">{feature.title}</h2>
               <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
             </div>
           ))}

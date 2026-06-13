@@ -15,14 +15,16 @@ SiliconSoap lets users create conversations between multiple AI agents (2-4 agen
 - **Share Conversations**: Public sharing with unique URLs
 - **Hall of Shame**: Curated collection of AI's most dramatic moments
 
-## Main Pages
+## Pages
 
-- `/` - Landing page with featured debates
-- `/new` - Create a new AI conversation
-- `/explore` - Browse public conversations
-- `/learn` - Educational content about AI models and multi-agent systems
-- `/models` - Directory of available AI models with specs
-- `/about` - About the platform
+- [Home](/): Landing page with featured AI debates.
+- [Start a debate](/new): Create a new multi-agent AI conversation.
+- [Explore](/explore): Browse public AI debates shared by the community.
+- [Leaderboard](/leaderboard): Top debaters ranked by Silicon Status.
+- [Learn](/learn): Educational content about AI models and multi-agent systems.
+- [Models](/models): Directory of available AI models with specs.
+- [About](/about): About SiliconSoap and its founder.
+- [API docs](/api-docs): Public REST API for programmatic debate creation.
 
 ## How It Works
 

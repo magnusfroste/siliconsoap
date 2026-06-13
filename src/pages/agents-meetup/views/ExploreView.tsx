@@ -219,6 +219,7 @@ export default function ExploreView() {
           </Button>
         </div>
 
+        <h2 className="sr-only">Browse public debates</h2>
         <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); trackExploreView(val); }} className="mb-6">
           <TabsList>
             <TabsTrigger value="recent" className="gap-2">

@@ -153,6 +153,7 @@ export const LeaderboardView = () => {
         </div>
 
         {/* Rank Legend */}
+        <h2 className="sr-only">Silicon ranks and top debaters</h2>
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
