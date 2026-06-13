@@ -147,6 +147,7 @@ serve(async (req) => {
           price_output: meta.priceOutput,
           price_tier: priceTier,
           license_type: licenseType,
+          supports_reasoning: meta.supportsReasoning,
           pricing_updated_at: new Date().toISOString(),
         };
         if (meta.contextLength && meta.contextLength > 0) {
