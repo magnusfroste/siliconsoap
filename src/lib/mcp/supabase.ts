@@ -180,7 +180,7 @@ export async function logAgentAction(
 /**
  * Runs an admin write and records it in the audit log, whatever the outcome.
  */
-export async function audited<T extends { isError?: boolean }>(
+export async function audited<T>(
   ctx: ToolContext,
   meta: { tool_name: string; action?: string; target_type?: string; target_id?: string | null; input?: unknown },
   run: () => Promise<T>,
@@ -188,7 +188,7 @@ export async function audited<T extends { isError?: boolean }>(
   const startedAt = Date.now();
   try {
     const result = await run();
-    const failed = result?.isError === true;
+    const failed = (result as { isError?: boolean } | null)?.isError === true;
     await logAgentAction(ctx, {
       ...meta,
       success: !failed,
