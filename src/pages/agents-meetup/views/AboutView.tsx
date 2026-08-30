@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { LearnAgentBlocks } from "@/components/learn/LearnAgentBlocks";
 import { useEffect } from "react";
 
 const FAQ_SCHEMA_ID = "about-faq-schema";
@@ -198,7 +199,11 @@ export const AboutView = () => {
           </CardContent>
         </Card>
 
+        {/* Agent-maintained blocks (written over MCP) */}
+        <LearnAgentBlocks tab="about" />
+
         {/* CTAs */}
+
         <div className="text-center py-8">
           <h3 className="text-xl font-semibold mb-6">Ready to explore?</h3>
           <div className="flex flex-wrap justify-center gap-4">

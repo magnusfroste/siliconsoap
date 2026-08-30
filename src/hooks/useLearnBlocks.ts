@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type LearnBlockKind = 'note' | 'callout' | 'term' | 'section' | 'link';
-export type LearnTab = 'models' | 'privacy' | 'local' | 'agents' | 'glossary';
+export type LearnTab = 'models' | 'privacy' | 'local' | 'agents' | 'glossary' | 'about';
 
 export interface LearnBlock {
   id: string;

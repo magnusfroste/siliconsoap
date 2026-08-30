@@ -6,12 +6,12 @@ export default defineTool({
   name: "list_learn_blocks",
   title: "List Learn section blocks",
   description:
-    "Read the agent-maintained content blocks shown in the /learn crash course. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
+    "Read the agent-maintained content blocks shown in the /learn crash course and on the /about page. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
   inputSchema: {
     tab: z
-      .enum(["models", "privacy", "local", "agents", "glossary"])
+      .enum(["models", "privacy", "local", "agents", "glossary", "about"])
       .optional()
-      .describe("Which Learn tab to read."),
+      .describe("Which section to read: a Learn tab, or 'about' for the /about page."),
     status: z.enum(["draft", "review", "published"]).optional(),
     limit: z.number().int().optional().describe("1-100, default 50."),
   },
@@ -39,7 +39,7 @@ export default defineTool({
 
     return ok({
       scope: admin ? "all_blocks" : "published_only",
-      tabs: ["models", "privacy", "local", "agents", "glossary"],
+      tabs: ["models", "privacy", "local", "agents", "glossary", "about"],
       count: data?.length ?? 0,
       blocks: data ?? [],
     });
