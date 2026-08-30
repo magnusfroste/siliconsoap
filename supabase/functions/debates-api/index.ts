@@ -456,39 +456,49 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ----- Authenticate via API key -----
+  // ----- Authenticate: `sk_silicon_...` API key OR a Supabase user JWT -----
   const auth = req.headers.get("authorization") ?? "";
-  const tokenMatch = auth.match(/^Bearer\s+(sk_silicon_[A-Za-z0-9]+)$/);
-  if (!tokenMatch) {
+  const bearer = auth.match(/^Bearer\s+(.+)$/)?.[1]?.trim() ?? "";
+  if (!bearer) {
     return json(
       {
         error: "Missing or malformed Authorization header.",
-        hint: "Use `Authorization: Bearer sk_silicon_...`",
+        hint: "Use `Authorization: Bearer sk_silicon_...` (API key) or a Supabase user access token.",
       },
       401,
     );
   }
-  const presentedKey = tokenMatch[1];
-  const keyHash = await sha256Hex(presentedKey);
 
-  const { data: keyRow, error: keyErr } = await supabase
-    .from("api_keys")
-    .select("id, user_id, revoked_at")
-    .eq("key_hash", keyHash)
-    .maybeSingle();
+  let userId: string;
 
-  if (keyErr || !keyRow || keyRow.revoked_at) {
-    return json({ error: "Invalid or revoked API key." }, 401);
+  if (/^sk_silicon_[A-Za-z0-9]+$/.test(bearer)) {
+    const keyHash = await sha256Hex(bearer);
+    const { data: keyRow, error: keyErr } = await supabase
+      .from("api_keys")
+      .select("id, user_id, revoked_at")
+      .eq("key_hash", keyHash)
+      .maybeSingle();
+
+    if (keyErr || !keyRow || keyRow.revoked_at) {
+      return json({ error: "Invalid or revoked API key." }, 401);
+    }
+    userId = keyRow.user_id;
+
+    // Touch last_used_at (fire-and-forget)
+    supabase
+      .from("api_keys")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", keyRow.id)
+      .then(() => {});
+  } else {
+    // Supabase user access token (used by the MCP server, which acts as the user)
+    const { data: userData, error: userErr } = await supabase.auth.getUser(bearer);
+    if (userErr || !userData?.user) {
+      return json({ error: "Invalid or expired access token." }, 401);
+    }
+    userId = userData.user.id;
   }
 
-  const userId: string = keyRow.user_id;
-
-  // Touch last_used_at (fire-and-forget)
-  supabase
-    .from("api_keys")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", keyRow.id)
-    .then(() => {});
 
   try {
     // ===== GET /models =====

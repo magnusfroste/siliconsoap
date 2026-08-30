@@ -21,17 +21,28 @@ const Auth = () => {
   const [checking, setChecking] = useState(true);
   const guestChatCount = guestMigrationService.getGuestChats().length;
 
+  // `?next=/relative/path` — used by the OAuth consent flow so the user returns
+  // to the pending authorization instead of landing on /new.
+  const nextParam = new URLSearchParams(location.search).get('next');
+  const safeNext =
+    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null;
+
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        if (safeNext) {
+          window.location.replace(safeNext);
+          return;
+        }
         const from = (location.state as any)?.from?.pathname || '/new';
         navigate(from, { replace: true });
       } else {
         setChecking(false);
       }
     });
-  }, [navigate, location]);
+  }, [navigate, location, safeNext]);
+
 
   // Listen for auth state changes to trigger migration
   useEffect(() => {
@@ -57,6 +68,10 @@ const Auth = () => {
           }
           
           // Navigate after migration
+          if (safeNext) {
+            window.location.replace(safeNext);
+            return;
+          }
           const from = (location.state as any)?.from?.pathname || '/new';
           navigate(from, { replace: true });
         }
@@ -64,7 +79,8 @@ const Auth = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [navigate, location, safeNext]);
+
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +90,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/new`
+        emailRedirectTo: `${window.location.origin}${safeNext ?? '/new'}`
       }
     });
 

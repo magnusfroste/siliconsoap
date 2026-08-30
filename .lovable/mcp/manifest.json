@@ -1,0 +1,554 @@
+{
+  "version": 1,
+  "sdk_version": "0.28.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://apfrjuomozdvdeondzaz.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "siliconsoap",
+      "version": "1.0.0",
+      "title": "siliconsoap"
+    },
+    "tools": [
+      {
+        "name": "site_stats",
+        "title": "Site statistics",
+        "description": "Live SiliconSoap platform stats: public debate count, total views, model counts and the most viewed debates.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_models",
+        "title": "List curated models",
+        "description": "List the LLMs curated for SiliconSoap debates, with provider, pricing, reasoning support and whether they are enabled.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "include_disabled": {
+              "description": "Include models that are currently disabled in the app.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_debates",
+        "title": "List public debates",
+        "description": "List public SiliconSoap debates (newest or most viewed first), optionally filtered by a text search on the topic.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "search": {
+              "description": "Free-text filter on debate title/prompt.",
+              "type": "string"
+            },
+            "order": {
+              "description": "Sort order. Defaults to newest.",
+              "type": "string",
+              "enum": [
+                "newest",
+                "most_viewed"
+              ]
+            },
+            "limit": {
+              "description": "1-50, default 20.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_debate",
+        "title": "Get debate transcript",
+        "description": "Fetch a debate and its full transcript by debate id or public share id. Signed-in callers can also read their own private debates.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Debate UUID.",
+              "type": "string"
+            },
+            "share_id": {
+              "description": "Public share id, as in /shared/<share_id>.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_quick_prompts",
+        "title": "List quick prompts",
+        "description": "List the suggested debate topics shown on the new-debate page. Admin callers also see disabled prompts.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "scenario_id": {
+              "description": "Filter by scenario id.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_feature_flags",
+        "title": "List feature flags",
+        "description": "List every SiliconSoap feature flag and configuration value (enabled state, text value, numeric value). This is the platform's configuration source of truth.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_agent_profiles",
+        "title": "List agent personas",
+        "description": "List the agent personas available for debates (system personas, plus the caller's own when signed in).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_hall_of_shame",
+        "title": "List Hall of Shame moments",
+        "description": "List the most dramatic extracted moments from SiliconSoap debates (quote, agent, shame type, severity).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "1-50, default 20.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "whoami",
+        "title": "Who am I",
+        "description": "Report the signed-in SiliconSoap identity behind this MCP connection: user id, email, display name, admin role and remaining credits.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_debates",
+        "title": "List my debates",
+        "description": "List the signed-in user's own debates, newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "1-50, default 20.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_debate",
+        "title": "Create a debate",
+        "description": "Queue a new multi-agent debate on SiliconSoap as the signed-in user. Costs 1 credit. Returns immediately with a debate id — poll `get_debate_status` until it is completed, then read it with `get_debate`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "The debate topic or question (max 2000 chars)."
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "2 or 3 model ids from `list_models` — one per agent."
+            },
+            "rounds": {
+              "description": "1-5, default 2.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "scenario_id": {
+              "type": "string",
+              "enum": [
+                "general-problem",
+                "ethical-dilemma",
+                "future-prediction"
+              ]
+            },
+            "personas": {
+              "description": "One persona per agent.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "analytical",
+                  "creative",
+                  "strategic",
+                  "empathetic"
+                ]
+              }
+            },
+            "agent_names": {
+              "description": "Display names per agent.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "response_length": {
+              "type": "string",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ]
+            },
+            "conversation_tone": {
+              "type": "string",
+              "enum": [
+                "formal",
+                "casual",
+                "heated",
+                "collaborative"
+              ]
+            },
+            "agreement_bias": {
+              "description": "0 = combative, 100 = agreeable. Default 50.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "personality_intensity": {
+              "type": "string",
+              "enum": [
+                "mild",
+                "moderate",
+                "extreme"
+              ]
+            }
+          },
+          "required": [
+            "topic",
+            "models"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_debate_status",
+        "title": "Get debate run status",
+        "description": "Poll the run status of one of your debates: queued | running | completed | failed, with round progress and message count.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Debate UUID returned by `create_debate`."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_openrouter_models",
+        "title": "Browse OpenRouter catalog",
+        "description": "Browse the live OpenRouter model catalog to discover newly released models, and see which of them are not yet curated on SiliconSoap. Use before `upsert_curated_model`.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "search": {
+              "description": "Filter on model id or name, e.g. 'claude', 'qwen', 'free'.",
+              "type": "string"
+            },
+            "only_new": {
+              "description": "Only return models that are not already curated on SiliconSoap.",
+              "type": "boolean"
+            },
+            "limit": {
+              "description": "1-60, default 30.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "upsert_curated_model",
+        "title": "Add or update a curated model",
+        "description": "Admin only. Add a new model to SiliconSoap's curated roster, or update an existing one (enabled state, reasoning toggle, metadata, pricing tier, sort order). Use `list_openrouter_models` first to get the exact model id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "model_id": {
+              "type": "string",
+              "description": "OpenRouter model id, e.g. 'anthropic/claude-sonnet-4.5'."
+            },
+            "display_name": {
+              "description": "Name shown in the UI. Required for new models.",
+              "type": "string"
+            },
+            "provider": {
+              "description": "Provider label. Required for new models.",
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "license_type": {
+              "description": "e.g. 'open-weights' or 'proprietary'.",
+              "type": "string"
+            },
+            "speed_rating": {
+              "type": "string"
+            },
+            "price_tier": {
+              "type": "string"
+            },
+            "context_window": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "is_free": {
+              "type": "boolean"
+            },
+            "is_enabled": {
+              "description": "Whether users can select this model.",
+              "type": "boolean"
+            },
+            "supports_reasoning": {
+              "description": "Whether the model supports reasoning at all (from OpenRouter).",
+              "type": "boolean"
+            },
+            "disable_reasoning": {
+              "description": "Turn hidden thinking OFF for this model in debates.",
+              "type": "boolean"
+            },
+            "sort_order": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "model_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "sync_model_pricing",
+        "title": "Sync model pricing & capabilities",
+        "description": "Admin only. Refresh pricing, context windows and reasoning support for every curated model from the live OpenRouter catalog.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "manage_quick_prompts",
+        "title": "Manage quick prompts",
+        "description": "Admin only. Keep SiliconSoap's suggested debate topics fresh: add new prompts, enable/disable or delete existing ones, and reshuffle their display order.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "add",
+                "set_enabled",
+                "delete",
+                "shuffle"
+              ],
+              "description": "What to do. 'shuffle' randomizes sort_order for all prompts."
+            },
+            "topic": {
+              "description": "For 'add': the prompt text.",
+              "type": "string"
+            },
+            "scenario_id": {
+              "description": "For 'add': scenario id. Defaults to 'general-problem'.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Prompt id for 'set_enabled' and 'delete'.",
+              "type": "string"
+            },
+            "is_enabled": {
+              "description": "For 'set_enabled'.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "set_feature_flag",
+        "title": "Set a feature flag",
+        "description": "Admin only. Update an existing SiliconSoap feature flag or configuration value (enabled state, text value, numeric value). This changes live platform behaviour immediately.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Flag key from `list_feature_flags`, e.g. 'enable_judge_bot'."
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "text_value": {
+              "description": "For config flags such as 'default_judge_model'.",
+              "type": "string"
+            },
+            "numeric_value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
