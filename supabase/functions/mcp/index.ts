@@ -112,6 +112,51 @@ async function isAdmin(ctx) {
   if (error) return false;
   return data === true;
 }
+async function logAgentAction(ctx, entry) {
+  try {
+    const userId = ctx.getUserId();
+    if (!userId) return;
+    await supabaseForUser(ctx).from("agent_activity_log").insert({
+      actor_user_id: userId,
+      actor_label: ctx.getUserEmail?.() ?? null,
+      client_id: ctx.getClientId?.() ?? null,
+      source: "mcp",
+      tool_name: entry.tool_name,
+      action: entry.action ?? "write",
+      target_type: entry.target_type ?? null,
+      target_id: entry.target_id ?? null,
+      success: entry.success,
+      error_message: entry.error_message ?? null,
+      input: entry.input ?? {},
+      result: entry.result ?? {},
+      duration_ms: entry.duration_ms ?? null
+    });
+  } catch {
+  }
+}
+async function audited(ctx, meta, run) {
+  const startedAt = Date.now();
+  try {
+    const result = await run();
+    const failed = result?.isError === true;
+    await logAgentAction(ctx, {
+      ...meta,
+      success: !failed,
+      error_message: failed ? "tool returned an error" : null,
+      result: result?.structuredContent ?? {},
+      duration_ms: Date.now() - startedAt
+    });
+    return result;
+  } catch (err) {
+    await logAgentAction(ctx, {
+      ...meta,
+      success: false,
+      error_message: err instanceof Error ? err.message : String(err),
+      duration_ms: Date.now() - startedAt
+    });
+    throw err;
+  }
+}
 
 // src/lib/mcp/tools/create-debate.ts
 var create_debate_default = defineTool({
@@ -476,14 +521,26 @@ var set_feature_flag_default = defineTool13({
     if (enabled === void 0 && text_value === void 0 && numeric_value === void 0) {
       return fail("Provide at least one of `enabled`, `text_value` or `numeric_value`.");
     }
-    const patch = { updated_at: (/* @__PURE__ */ new Date()).toISOString() };
-    if (enabled !== void 0) patch.enabled = enabled;
-    if (text_value !== void 0) patch.text_value = text_value;
-    if (numeric_value !== void 0) patch.numeric_value = numeric_value;
-    const { data, error } = await supabaseForUser(ctx).from("feature_flags").update(patch).eq("key", key).select("key, name, enabled, text_value, numeric_value").maybeSingle();
-    if (error) return fail(error.message);
-    if (!data) return fail(`No feature flag with key '${key}'.`);
-    return ok({ flag: data });
+    return audited(
+      ctx,
+      {
+        tool_name: "set_feature_flag",
+        action: "update",
+        target_type: "feature_flag",
+        target_id: key,
+        input: { key, enabled, text_value, numeric_value }
+      },
+      async () => {
+        const patch = { updated_at: (/* @__PURE__ */ new Date()).toISOString() };
+        if (enabled !== void 0) patch.enabled = enabled;
+        if (text_value !== void 0) patch.text_value = text_value;
+        if (numeric_value !== void 0) patch.numeric_value = numeric_value;
+        const { data, error } = await supabaseForUser(ctx).from("feature_flags").update(patch).eq("key", key).select("key, name, enabled, text_value, numeric_value").maybeSingle();
+        if (error) return fail(error.message);
+        if (!data) return fail(`No feature flag with key '${key}'.`);
+        return ok({ flag: data });
+      }
+    );
   }
 });
 
@@ -582,23 +639,35 @@ var upsert_curated_model_default = defineTool16({
     requireAuth(ctx);
     if (!await isAdmin(ctx)) return fail("Admin role required.");
     const supabase = supabaseForUser(ctx);
-    const { data: existing, error: readErr } = await supabase.from("curated_models").select("id, model_id").eq("model_id", input.model_id).maybeSingle();
-    if (readErr) return fail(readErr.message);
-    const patch = {};
-    for (const [key, value] of Object.entries(input)) {
-      if (key !== "model_id" && value !== void 0) patch[key] = value;
-    }
-    if (existing) {
-      const { data: data2, error: error2 } = await supabase.from("curated_models").update(patch).eq("id", existing.id).select().maybeSingle();
-      if (error2) return fail(error2.message);
-      return ok({ action: "updated", model: data2 });
-    }
-    if (!input.display_name || !input.provider) {
-      return fail("New models require both `display_name` and `provider`.");
-    }
-    const { data, error } = await supabase.from("curated_models").insert({ model_id: input.model_id, ...patch }).select().maybeSingle();
-    if (error) return fail(error.message);
-    return ok({ action: "created", model: data });
+    return audited(
+      ctx,
+      {
+        tool_name: "upsert_curated_model",
+        action: "upsert",
+        target_type: "curated_model",
+        target_id: input.model_id,
+        input
+      },
+      async () => {
+        const { data: existing, error: readErr } = await supabase.from("curated_models").select("id, model_id").eq("model_id", input.model_id).maybeSingle();
+        if (readErr) return fail(readErr.message);
+        const patch = {};
+        for (const [key, value] of Object.entries(input)) {
+          if (key !== "model_id" && value !== void 0) patch[key] = value;
+        }
+        if (existing) {
+          const { data: data2, error: error2 } = await supabase.from("curated_models").update(patch).eq("id", existing.id).select().maybeSingle();
+          if (error2) return fail(error2.message);
+          return ok({ action: "updated", model: data2 });
+        }
+        if (!input.display_name || !input.provider) {
+          return fail("New models require both `display_name` and `provider`.");
+        }
+        const { data, error } = await supabase.from("curated_models").insert({ model_id: input.model_id, ...patch }).select().maybeSingle();
+        if (error) return fail(error.message);
+        return ok({ action: "created", model: data });
+      }
+    );
   }
 });
 
