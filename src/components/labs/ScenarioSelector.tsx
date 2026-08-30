@@ -53,35 +53,47 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
           </Button>
         ))}
       </div>
-      
-      {/* Large, prominent textarea */}
-      <Textarea 
-        placeholder={currentScenario?.placeholder || "Enter your topic..."}
-        value={promptInputs[activeScenario] || ''}
-        onChange={(e) => handleInputChange(activeScenario, e.target.value)}
-        className="w-full min-h-[3.5rem] resize-none text-base border-0 focus-visible:ring-0 bg-transparent px-0"
-        rows={2}
-        onInput={(e) => {
-          const target = e.target as HTMLTextAreaElement;
-          target.style.height = 'auto';
-          target.style.height = `${target.scrollHeight}px`;
-        }}
-      />
 
-      {/* Suggested Topics */}
+      {/* Large, prominent topic field */}
+      <div className="space-y-1.5">
+        <label
+          htmlFor="debate-topic"
+          className="block text-xs font-medium uppercase tracking-wide text-muted-foreground"
+        >
+          Your question
+        </label>
+        <Textarea
+          id="debate-topic"
+          placeholder={currentScenario?.placeholder || "Enter your topic..."}
+          value={promptInputs[activeScenario] || ''}
+          onChange={(e) => handleInputChange(activeScenario, e.target.value)}
+          className="w-full min-h-[4rem] resize-none text-lg md:text-xl font-medium leading-snug border-0 focus-visible:ring-0 bg-transparent px-0 placeholder:text-muted-foreground/60 placeholder:font-normal placeholder:text-base"
+          rows={2}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = `${target.scrollHeight}px`;
+          }}
+        />
+      </div>
+
+      {/* Suggested Topics — clickable chips */}
       {suggestedTopics && suggestedTopics.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2 pt-3 border-t border-border/20">
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-border/20">
+          <span className="text-xs text-muted-foreground/70 mr-1">Try one:</span>
           {suggestedTopics.map((topic, idx) => (
-            <span
+            <button
               key={idx}
-              className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50"
+              type="button"
               onClick={() => handleInputChange(activeScenario, topic)}
+              className="max-w-full text-left text-xs rounded-full border border-border bg-muted/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               {topic}
-            </span>
+            </button>
           ))}
         </div>
       )}
     </div>
+
   );
 };

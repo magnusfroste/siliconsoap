@@ -253,15 +253,19 @@ export const NewChatView = () => {
             suggestedTopics={suggestedTopics}
           />
 
-          {/* Configuration Card — subtly dimmed until interacted with */}
-          <div className="group relative transition-all duration-500 md:opacity-50 md:hover:opacity-100 md:focus-within:opacity-100">
-            {/* Hint overlay shown when dimmed on desktop */}
-            <div className="hidden md:flex pointer-events-none absolute inset-0 z-10 items-center justify-center opacity-100 group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-300">
-              <span className="text-sm text-muted-foreground bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-sm">
-                Configure your cast & settings — hover to reveal
-              </span>
-            </div>
+          {/* Configuration Card — de-emphasised until the user engages with it.
+              The dimming is applied via an overlay veil instead of opacity on the
+              content, so nothing sits on top of (and obscures) the agent cards. */}
+          <div className="group relative">
+            <p className="hidden md:block text-center text-xs text-muted-foreground mb-2 transition-opacity duration-300 group-hover:opacity-0 group-focus-within:opacity-0">
+              Defaults are ready to go — hover to fine-tune your cast &amp; settings
+            </p>
+            <div
+              aria-hidden="true"
+              className="hidden md:block pointer-events-none absolute inset-x-0 bottom-0 top-6 z-10 rounded-xl bg-background/55 transition-opacity duration-500 group-hover:opacity-0 group-focus-within:opacity-0"
+            />
             <Card className="md:group-hover:shadow-lg md:group-focus-within:shadow-lg transition-shadow duration-500">
+
               <CardContent className="pt-6 space-y-4">
                 {/* Agent Configuration */}
                 <AgentGridSection
@@ -323,7 +327,7 @@ export const NewChatView = () => {
           </div>
           
           <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-primary-foreground">
+            <div className="flex flex-wrap justify-center items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-foreground">
               <Globe className="h-4 w-4 text-primary" />
               <span>Your debate will be <strong>public</strong> and shareable via link.</span>
               {isGuest && (
@@ -333,27 +337,33 @@ export const NewChatView = () => {
                 </span>
               )}
             </div>
-            <div className="flex justify-center">
-            <Button
-              type="submit"
-              size="lg"
-              className="gap-2"
-              disabled={!currentPrompt.trim() || isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                   <Sparkles className="h-4 w-4" />
-                   Start Debate
-                </>
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                type="submit"
+                size="lg"
+                className="gap-2 px-8 text-base shadow-md"
+                disabled={!currentPrompt.trim() || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Start Debate
+                  </>
+                )}
+              </Button>
+              {!currentPrompt.trim() && !isGenerating && (
+                <p className="text-xs text-muted-foreground">
+                  Enter your question above to start
+                </p>
               )}
-            </Button>
+            </div>
           </div>
-          </div>
+
         </form>
 
         {!user && (
