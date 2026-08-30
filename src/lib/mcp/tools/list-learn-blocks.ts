@@ -11,7 +11,7 @@ export default defineTool({
     tab: z
       .enum(["models", "privacy", "local", "agents", "glossary", "about"])
       .optional()
-      .describe("Which section to read (Learn tabs, or "about" for the /about page)."),
+      .describe("Which section to read: a Learn tab, or 'about' for the /about page."),
     status: z.enum(["draft", "review", "published"]).optional(),
     limit: z.number().int().optional().describe("1-100, default 50."),
   },
