@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { LearnAgentBlocks } from "@/components/learn/LearnAgentBlocks";
 import { useEffect } from "react";
 
 const FAQ_SCHEMA_ID = "about-faq-schema";
