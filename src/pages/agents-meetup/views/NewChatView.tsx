@@ -327,7 +327,7 @@ export const NewChatView = () => {
           </div>
           
           <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-primary-foreground">
+            <div className="flex flex-wrap justify-center items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-foreground">
               <Globe className="h-4 w-4 text-primary" />
               <span>Your debate will be <strong>public</strong> and shareable via link.</span>
               {isGuest && (
@@ -337,27 +337,33 @@ export const NewChatView = () => {
                 </span>
               )}
             </div>
-            <div className="flex justify-center">
-            <Button
-              type="submit"
-              size="lg"
-              className="gap-2"
-              disabled={!currentPrompt.trim() || isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                   <Sparkles className="h-4 w-4" />
-                   Start Debate
-                </>
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                type="submit"
+                size="lg"
+                className="gap-2 px-8 text-base shadow-md"
+                disabled={!currentPrompt.trim() || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Start Debate
+                  </>
+                )}
+              </Button>
+              {!currentPrompt.trim() && !isGenerating && (
+                <p className="text-xs text-muted-foreground">
+                  Enter your question above to start
+                </p>
               )}
-            </Button>
+            </div>
           </div>
-          </div>
+
         </form>
 
         {!user && (
