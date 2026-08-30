@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_activity_log: {
+        Row: {
+          action: string
+          actor_label: string | null
+          actor_user_id: string | null
+          client_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          input: Json
+          result: Json
+          source: string
+          success: boolean
+          target_id: string | null
+          target_type: string | null
+          tool_name: string
+        }
+        Insert: {
+          action?: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input?: Json
+          result?: Json
+          source?: string
+          success?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          tool_name: string
+        }
+        Update: {
+          action?: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          input?: Json
+          result?: Json
+          source?: string
+          success?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          tool_name?: string
+        }
+        Relationships: []
+      }
       agent_chat_messages: {
         Row: {
           agent: string
@@ -288,6 +342,51 @@ export type Database = {
           id?: string
           share_id?: string
           visitor_id?: string | null
+        }
+        Relationships: []
+      }
+      content_drafts: {
+        Row: {
+          author_label: string | null
+          author_user_id: string | null
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          source_chat_ids: string[]
+          status: string
+          summary: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_label?: string | null
+          author_user_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          source_chat_ids?: string[]
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_label?: string | null
+          author_user_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          source_chat_ids?: string[]
+          status?: string
+          summary?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
+import { audited, fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
 
 export default defineTool({
   name: "upsert_curated_model",
@@ -35,38 +35,51 @@ export default defineTool({
     if (!(await isAdmin(ctx))) return fail("Admin role required.");
     const supabase = supabaseForUser(ctx);
 
-    const { data: existing, error: readErr } = await supabase
-      .from("curated_models")
-      .select("id, model_id")
-      .eq("model_id", input.model_id)
-      .maybeSingle();
-    if (readErr) return fail(readErr.message);
+    return audited(
+      ctx,
+      {
+        tool_name: "upsert_curated_model",
+        action: "upsert",
+        target_type: "curated_model",
+        target_id: input.model_id,
+        input,
+      },
+      async () => {
 
-    const patch: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(input)) {
-      if (key !== "model_id" && value !== undefined) patch[key] = value;
-    }
+        const { data: existing, error: readErr } = await supabase
+          .from("curated_models")
+          .select("id, model_id")
+          .eq("model_id", input.model_id)
+          .maybeSingle();
+        if (readErr) return fail(readErr.message);
 
-    if (existing) {
-      const { data, error } = await supabase
-        .from("curated_models")
-        .update(patch)
-        .eq("id", existing.id)
-        .select()
-        .maybeSingle();
-      if (error) return fail(error.message);
-      return ok({ action: "updated", model: data });
-    }
+        const patch: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(input)) {
+          if (key !== "model_id" && value !== undefined) patch[key] = value;
+        }
 
-    if (!input.display_name || !input.provider) {
-      return fail("New models require both `display_name` and `provider`.");
-    }
-    const { data, error } = await supabase
-      .from("curated_models")
-      .insert({ model_id: input.model_id, ...patch })
-      .select()
-      .maybeSingle();
-    if (error) return fail(error.message);
-    return ok({ action: "created", model: data });
+        if (existing) {
+          const { data, error } = await supabase
+            .from("curated_models")
+            .update(patch)
+            .eq("id", existing.id)
+            .select()
+            .maybeSingle();
+          if (error) return fail(error.message);
+          return ok({ action: "updated", model: data });
+        }
+
+        if (!input.display_name || !input.provider) {
+          return fail("New models require both `display_name` and `provider`.");
+        }
+        const { data, error } = await supabase
+          .from("curated_models")
+          .insert({ model_id: input.model_id, ...patch })
+          .select()
+          .maybeSingle();
+        if (error) return fail(error.message);
+        return ok({ action: "created", model: data });
+      },
+    );
   },
 });

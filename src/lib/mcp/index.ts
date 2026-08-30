@@ -3,7 +3,9 @@ import { auth, defineMcp } from "@lovable.dev/mcp-js";
 import createDebate from "./tools/create-debate";
 import getDebate from "./tools/get-debate";
 import getDebateStatus from "./tools/get-debate-status";
+import listAgentActivity from "./tools/list-agent-activity";
 import listAgentProfiles from "./tools/list-agent-profiles";
+import listContentDrafts from "./tools/list-content-drafts";
 import listDebates from "./tools/list-debates";
 import listFeatureFlags from "./tools/list-feature-flags";
 import listHallOfShame from "./tools/list-hall-of-shame";
@@ -11,10 +13,13 @@ import listModels from "./tools/list-models";
 import listMyDebates from "./tools/list-my-debates";
 import listOpenRouterModels from "./tools/list-openrouter-models";
 import listQuickPrompts from "./tools/list-quick-prompts";
+import manageContentDrafts from "./tools/manage-content-drafts";
 import manageQuickPrompts from "./tools/manage-quick-prompts";
+import seedFeaturedDebate from "./tools/seed-featured-debate";
 import setFeatureFlag from "./tools/set-feature-flag";
 import siteStats from "./tools/site-stats";
 import syncModelPricing from "./tools/sync-model-pricing";
+import upsertAgentProfile from "./tools/upsert-agent-profile";
 import upsertCuratedModel from "./tools/upsert-curated-model";
 import whoami from "./tools/whoami";
 
@@ -40,7 +45,17 @@ export default defineMcp({
     "released models, `upsert_curated_model` to add/update the roster, `sync_model_pricing` to",
     "refresh pricing and reasoning support, `manage_quick_prompts` to keep suggested topics fresh,",
     "and `set_feature_flag` to change live configuration (feature flags are the source of truth).",
+    "",
+    "Editorial / creative work (admin role required): `manage_content_drafts` to write and revise",
+    "blog posts, weekly recaps, social snippets and SEO copy sourced from real debates,",
+    "`list_content_drafts` to read them, `seed_featured_debate` to publish a showcase debate on",
+    "/explore, and `upsert_agent_profile` to extend the persona roster.",
+    "",
+    "Accountability: every write over MCP is recorded in an append-only audit log. Read it with",
+    "`list_agent_activity` (filter by tool, failures only, or a time window) before and after a",
+    "maintenance run so your work is verifiable. Log entries can never be edited or deleted.",
     "Always read current state before writing, and report what you changed.",
+
   ].join("\n"),
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
@@ -64,5 +79,10 @@ export default defineMcp({
     syncModelPricing,
     manageQuickPrompts,
     setFeatureFlag,
+    upsertAgentProfile,
+    seedFeaturedDebate,
+    manageContentDrafts,
+    listContentDrafts,
+    listAgentActivity,
   ],
 });

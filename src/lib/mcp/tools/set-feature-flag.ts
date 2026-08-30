@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
+import { audited, fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
 
 export default defineTool({
   name: "set_feature_flag",
@@ -20,19 +20,31 @@ export default defineTool({
     if (enabled === undefined && text_value === undefined && numeric_value === undefined) {
       return fail("Provide at least one of `enabled`, `text_value` or `numeric_value`.");
     }
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (enabled !== undefined) patch.enabled = enabled;
-    if (text_value !== undefined) patch.text_value = text_value;
-    if (numeric_value !== undefined) patch.numeric_value = numeric_value;
+    return audited(
+      ctx,
+      {
+        tool_name: "set_feature_flag",
+        action: "update",
+        target_type: "feature_flag",
+        target_id: key,
+        input: { key, enabled, text_value, numeric_value },
+      },
+      async () => {
+        const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (enabled !== undefined) patch.enabled = enabled;
+        if (text_value !== undefined) patch.text_value = text_value;
+        if (numeric_value !== undefined) patch.numeric_value = numeric_value;
 
-    const { data, error } = await supabaseForUser(ctx)
-      .from("feature_flags")
-      .update(patch)
-      .eq("key", key)
-      .select("key, name, enabled, text_value, numeric_value")
-      .maybeSingle();
-    if (error) return fail(error.message);
-    if (!data) return fail(`No feature flag with key '${key}'.`);
-    return ok({ flag: data });
+        const { data, error } = await supabaseForUser(ctx)
+          .from("feature_flags")
+          .update(patch)
+          .eq("key", key)
+          .select("key, name, enabled, text_value, numeric_value")
+          .maybeSingle();
+        if (error) return fail(error.message);
+        if (!data) return fail(`No feature flag with key '${key}'.`);
+        return ok({ flag: data });
+      },
+    );
   },
 });

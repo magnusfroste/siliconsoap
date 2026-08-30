@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
+import { audited, fail, isAdmin, ok, requireAuth, supabaseForUser } from "../supabase";
 
 export default defineTool({
   name: "manage_quick_prompts",
@@ -25,58 +25,71 @@ export default defineTool({
     if (!(await isAdmin(ctx))) return fail("Admin role required.");
     const supabase = supabaseForUser(ctx);
 
-    if (action === "add") {
-      if (!topic?.trim()) return fail("`topic` is required for action 'add'.");
-      const { data, error } = await supabase
-        .from("quick_prompts")
-        .insert({
-          topic: topic.trim(),
-          scenario_id: scenario_id ?? "general-problem",
-          is_enabled: true,
-          sort_order: Math.floor(Math.random() * 1000),
-        })
-        .select()
-        .maybeSingle();
-      if (error) return fail(error.message);
-      return ok({ action: "added", prompt: data });
-    }
+    return audited(
+      ctx,
+      {
+        tool_name: "manage_quick_prompts",
+        action,
+        target_type: "quick_prompt",
+        target_id: id ?? topic ?? null,
+        input: { action, topic, scenario_id, id, is_enabled },
+      },
+      async () => {
 
-    if (action === "set_enabled") {
-      if (!id) return fail("`id` is required.");
-      if (is_enabled === undefined) return fail("`is_enabled` is required.");
-      const { data, error } = await supabase
-        .from("quick_prompts")
-        .update({ is_enabled })
-        .eq("id", id)
-        .select()
-        .maybeSingle();
-      if (error) return fail(error.message);
-      if (!data) return fail("Prompt not found.");
-      return ok({ action: "updated", prompt: data });
-    }
+        if (action === "add") {
+          if (!topic?.trim()) return fail("`topic` is required for action 'add'.");
+          const { data, error } = await supabase
+            .from("quick_prompts")
+            .insert({
+              topic: topic.trim(),
+              scenario_id: scenario_id ?? "general-problem",
+              is_enabled: true,
+              sort_order: Math.floor(Math.random() * 1000),
+            })
+            .select()
+            .maybeSingle();
+          if (error) return fail(error.message);
+          return ok({ action: "added", prompt: data });
+        }
 
-    if (action === "delete") {
-      if (!id) return fail("`id` is required.");
-      const { error } = await supabase.from("quick_prompts").delete().eq("id", id);
-      if (error) return fail(error.message);
-      return ok({ action: "deleted", id });
-    }
+        if (action === "set_enabled") {
+          if (!id) return fail("`id` is required.");
+          if (is_enabled === undefined) return fail("`is_enabled` is required.");
+          const { data, error } = await supabase
+            .from("quick_prompts")
+            .update({ is_enabled })
+            .eq("id", id)
+            .select()
+            .maybeSingle();
+          if (error) return fail(error.message);
+          if (!data) return fail("Prompt not found.");
+          return ok({ action: "updated", prompt: data });
+        }
 
-    // shuffle
-    const { data: prompts, error: readErr } = await supabase
-      .from("quick_prompts")
-      .select("id");
-    if (readErr) return fail(readErr.message);
-    const ids = (prompts ?? []).map((p) => p.id);
-    const order = ids.map((_, i) => i).sort(() => Math.random() - 0.5);
-    let updated = 0;
-    for (let i = 0; i < ids.length; i++) {
-      const { error } = await supabase
-        .from("quick_prompts")
-        .update({ sort_order: order[i] })
-        .eq("id", ids[i]);
-      if (!error) updated++;
-    }
-    return ok({ action: "shuffled", updated });
+        if (action === "delete") {
+          if (!id) return fail("`id` is required.");
+          const { error } = await supabase.from("quick_prompts").delete().eq("id", id);
+          if (error) return fail(error.message);
+          return ok({ action: "deleted", id });
+        }
+
+        // shuffle
+        const { data: prompts, error: readErr } = await supabase
+          .from("quick_prompts")
+          .select("id");
+        if (readErr) return fail(readErr.message);
+        const ids = (prompts ?? []).map((p) => p.id);
+        const order = ids.map((_, i) => i).sort(() => Math.random() - 0.5);
+        let updated = 0;
+        for (let i = 0; i < ids.length; i++) {
+          const { error } = await supabase
+            .from("quick_prompts")
+            .update({ sort_order: order[i] })
+            .eq("id", ids[i]);
+          if (!error) updated++;
+        }
+        return ok({ action: "shuffled", updated });
+      },
+    );
   },
 });

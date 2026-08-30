@@ -548,6 +548,285 @@
           ]
         },
         "outputSchema": null
+      },
+      {
+        "name": "upsert_agent_profile",
+        "title": "Add or update an agent persona",
+        "description": "Admin only. Create or update an agent persona used in debates (name, description, system instructions, icon). Read `list_agent_profiles` first so you extend the roster instead of duplicating it.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "description": "Stable identifier, e.g. 'contrarian-economist'."
+            },
+            "name": {
+              "description": "Display name. Required for new personas.",
+              "type": "string"
+            },
+            "description": {
+              "description": "One line shown in the UI. Required for new personas.",
+              "type": "string"
+            },
+            "instructions": {
+              "description": "System instructions that shape how this persona argues. Required for new personas.",
+              "type": "string"
+            },
+            "icon_name": {
+              "description": "Lucide icon name, e.g. 'Brain'. Defaults to 'Sparkles'.",
+              "type": "string"
+            },
+            "is_premium": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "seed_featured_debate",
+        "title": "Seed a featured debate",
+        "description": "Admin only. Generate a complete public showcase debate on SiliconSoap (visible on /explore) with the given topic, agents and a realistic view count. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account and is meant for editorial/featured content, not personal debates.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "Short headline for the debate."
+            },
+            "prompt": {
+              "description": "Full question the agents debate. Defaults to `topic`.",
+              "type": "string"
+            },
+            "models": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "2 or 3 model ids from `list_models`."
+            },
+            "agent_names": {
+              "description": "Display names, one per agent.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "personas": {
+              "description": "One persona per agent. Defaults cycle through the four personas.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "analytical",
+                  "creative",
+                  "strategic",
+                  "empathetic"
+                ]
+              }
+            },
+            "scenario_id": {
+              "description": "Defaults to 'general-problem'.",
+              "type": "string",
+              "enum": [
+                "general-problem",
+                "ethical-dilemma",
+                "future-prediction"
+              ]
+            },
+            "target_date": {
+              "description": "ISO date to backdate the debate to. Defaults to now.",
+              "type": "string"
+            },
+            "view_count_min": {
+              "description": "Default 40.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "view_count_max": {
+              "description": "Default 400.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "reaction_count": {
+              "description": "Number of seeded emoji reactions. Default 6.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "topic",
+            "models"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "manage_content_drafts",
+        "title": "Write and manage content drafts",
+        "description": "Admin only. Save editorial content an agent has written about SiliconSoap — blog posts, weekly recaps, social snippets, SEO copy — as a draft, then update its status ('draft' | 'review' | 'published') or delete it. Use `list_debates` / `get_debate` / `site_stats` as source material and cite the debates in `source_chat_ids`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "update",
+                "delete"
+              ]
+            },
+            "id": {
+              "description": "Draft id for 'update' and 'delete'.",
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "description": "Markdown body of the draft.",
+              "type": "string"
+            },
+            "summary": {
+              "description": "One or two sentence teaser.",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Content type. Defaults to 'blog_post'.",
+              "type": "string",
+              "enum": [
+                "blog_post",
+                "weekly_recap",
+                "social_snippet",
+                "seo_copy",
+                "note"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "source_chat_ids": {
+              "description": "Debate UUIDs used as source material.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "review",
+                "published"
+              ]
+            }
+          },
+          "required": [
+            "action"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_content_drafts",
+        "title": "List content drafts",
+        "description": "List editorial content written for SiliconSoap. Admins see every draft; everyone else sees only published pieces. Use `include_body` to read the full markdown.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "review",
+                "published"
+              ]
+            },
+            "kind": {
+              "description": "Filter on content type, e.g. 'blog_post'.",
+              "type": "string"
+            },
+            "include_body": {
+              "description": "Include the full markdown body.",
+              "type": "boolean"
+            },
+            "limit": {
+              "description": "1-50, default 20.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_agent_activity",
+        "title": "List agent activity log",
+        "description": "Read the append-only audit log of every maintenance action agents performed over MCP (tool, target, input, result, success, duration). Admins see all activity; other callers see only their own. Use this for follow-up, verification and weekly reports.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "tool_name": {
+              "description": "Filter on a single tool, e.g. 'set_feature_flag'.",
+              "type": "string"
+            },
+            "only_failures": {
+              "description": "Only return actions that failed.",
+              "type": "boolean"
+            },
+            "since": {
+              "description": "ISO timestamp — only entries created after this.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "1-100, default 30.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
       }
     ]
   }

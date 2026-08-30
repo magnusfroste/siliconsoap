@@ -132,3 +132,78 @@ export async function isAdmin(ctx: ToolContext): Promise<boolean> {
   if (error) return false;
   return data === true;
 }
+
+/**
+ * Append an immutable entry to `agent_activity_log` so every write an agent
+ * performs over MCP is verifiable afterwards. Never throws — a logging failure
+ * must not fail the tool call itself.
+ */
+export async function logAgentAction(
+  ctx: ToolContext,
+  entry: {
+    tool_name: string;
+    action?: string;
+    target_type?: string;
+    target_id?: string | null;
+    success: boolean;
+    error_message?: string | null;
+    input?: unknown;
+    result?: unknown;
+    duration_ms?: number;
+  },
+): Promise<void> {
+  try {
+    const userId = ctx.getUserId();
+    if (!userId) return;
+    await supabaseForUser(ctx)
+      .from("agent_activity_log")
+      .insert({
+        actor_user_id: userId,
+        actor_label: ctx.getUserEmail?.() ?? null,
+        client_id: ctx.getClientId?.() ?? null,
+        source: "mcp",
+        tool_name: entry.tool_name,
+        action: entry.action ?? "write",
+        target_type: entry.target_type ?? null,
+        target_id: entry.target_id ?? null,
+        success: entry.success,
+        error_message: entry.error_message ?? null,
+        input: (entry.input ?? {}) as Record<string, unknown>,
+        result: (entry.result ?? {}) as Record<string, unknown>,
+        duration_ms: entry.duration_ms ?? null,
+      });
+  } catch {
+    // logging is best-effort
+  }
+}
+
+/**
+ * Runs an admin write and records it in the audit log, whatever the outcome.
+ */
+export async function audited<T>(
+  ctx: ToolContext,
+  meta: { tool_name: string; action?: string; target_type?: string; target_id?: string | null; input?: unknown },
+  run: () => Promise<T>,
+): Promise<T> {
+  const startedAt = Date.now();
+  try {
+    const result = await run();
+    const failed = (result as { isError?: boolean } | null)?.isError === true;
+    await logAgentAction(ctx, {
+      ...meta,
+      success: !failed,
+      error_message: failed ? "tool returned an error" : null,
+      result: (result as { structuredContent?: unknown })?.structuredContent ?? {},
+      duration_ms: Date.now() - startedAt,
+    });
+    return result;
+  } catch (err) {
+    await logAgentAction(ctx, {
+      ...meta,
+      success: false,
+      error_message: err instanceof Error ? err.message : String(err),
+      duration_ms: Date.now() - startedAt,
+    });
+    throw err;
+  }
+}

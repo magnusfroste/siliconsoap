@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, invokeFunction, ok, requireAuth } from "../supabase";
+import { audited, fail, invokeFunction, ok, requireAuth } from "../supabase";
 
 export default defineTool({
   name: "create_debate",
@@ -39,16 +39,28 @@ export default defineTool({
     if (input.models.length < 2 || input.models.length > 3) {
       return fail("`models` must contain 2 or 3 model ids (see `list_models`).");
     }
-    const { status, body } = await invokeFunction(ctx, "debates-api", {
-      method: "POST",
-      path: "/debates",
-      body: input,
-    });
-    if (status >= 400) {
-      const message =
-        (body as { error?: string })?.error ?? `Debate creation failed (${status}).`;
-      return fail(message);
-    }
-    return ok(body as Record<string, unknown>);
+    return audited(
+      ctx,
+      {
+        tool_name: "create_debate",
+        action: "create",
+        target_type: "debate",
+        target_id: input.topic.slice(0, 120),
+        input,
+      },
+      async () => {
+        const { status, body } = await invokeFunction(ctx, "debates-api", {
+          method: "POST",
+          path: "/debates",
+          body: input,
+        });
+        if (status >= 400) {
+          const message =
+            (body as { error?: string })?.error ?? `Debate creation failed (${status}).`;
+          return fail(message);
+        }
+        return ok(body as Record<string, unknown>);
+      },
+    );
   },
 });

@@ -1,5 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-import { fail, invokeFunction, isAdmin, ok, requireAuth } from "../supabase";
+import { audited, fail, invokeFunction, isAdmin, ok, requireAuth } from "../supabase";
 
 export default defineTool({
   name: "sync_model_pricing",
@@ -11,19 +11,25 @@ export default defineTool({
   handler: async (_input, ctx) => {
     requireAuth(ctx);
     if (!(await isAdmin(ctx))) return fail("Admin role required.");
-    const { status, body } = await invokeFunction(ctx, "sync-model-pricing", {
-      method: "POST",
-      body: {},
-    });
-    if (status >= 400) {
-      const message =
-        (body as { error?: string })?.error ?? `Pricing sync failed (${status}).`;
-      return fail(message);
-    }
-    return ok(
-      typeof body === "object" && body !== null
-        ? (body as Record<string, unknown>)
-        : { result: body },
+    return audited(
+      ctx,
+      { tool_name: "sync_model_pricing", action: "sync", target_type: "curated_model" },
+      async () => {
+        const { status, body } = await invokeFunction(ctx, "sync-model-pricing", {
+          method: "POST",
+          body: {},
+        });
+        if (status >= 400) {
+          const message =
+            (body as { error?: string })?.error ?? `Pricing sync failed (${status}).`;
+          return fail(message);
+        }
+        return ok(
+          typeof body === "object" && body !== null
+            ? (body as Record<string, unknown>)
+            : { result: body },
+        );
+      },
     );
   },
 });
