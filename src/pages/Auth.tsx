@@ -68,6 +68,10 @@ const Auth = () => {
           }
           
           // Navigate after migration
+          if (safeNext) {
+            window.location.replace(safeNext);
+            return;
+          }
           const from = (location.state as any)?.from?.pathname || '/new';
           navigate(from, { replace: true });
         }
@@ -75,7 +79,8 @@ const Auth = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [navigate, location, safeNext]);
+
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +90,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/new`
+        emailRedirectTo: `${window.location.origin}${safeNext ?? '/new'}`
       }
     });
 
