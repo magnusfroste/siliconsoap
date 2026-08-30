@@ -20,7 +20,7 @@ export default defineTool({
     title: z.string().optional(),
     body: z.string().optional().describe("Plain text / light markdown. Blank lines separate paragraphs, lines starting with '- ' render as bullets."),
     meta: z
-      .record(z.any())
+      .record(z.string(), z.any())
       .optional()
       .describe("Optional extras: { url, url_label, example, source } — `example` is shown for glossary terms."),
     position: z.number().int().optional().describe("Sort order within the tab, lower first."),

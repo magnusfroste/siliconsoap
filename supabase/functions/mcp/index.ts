@@ -1041,7 +1041,7 @@ var upsert_learn_block_default = defineTool23({
     kind: z19.enum(["note", "callout", "term", "section", "link"]).optional(),
     title: z19.string().optional(),
     body: z19.string().optional().describe("Plain text / light markdown. Blank lines separate paragraphs, lines starting with '- ' render as bullets."),
-    meta: z19.record(z19.any()).optional().describe("Optional extras: { url, url_label, example, source } \u2014 `example` is shown for glossary terms."),
+    meta: z19.record(z19.string(), z19.any()).optional().describe("Optional extras: { url, url_label, example, source } \u2014 `example` is shown for glossary terms."),
     position: z19.number().int().optional().describe("Sort order within the tab, lower first."),
     status: z19.enum(["draft", "review", "published"]).optional()
   },
