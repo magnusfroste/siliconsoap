@@ -9,6 +9,7 @@ import listContentDrafts from "./tools/list-content-drafts";
 import listDebates from "./tools/list-debates";
 import listFeatureFlags from "./tools/list-feature-flags";
 import listHallOfShame from "./tools/list-hall-of-shame";
+import listLearnBlocks from "./tools/list-learn-blocks";
 import listModels from "./tools/list-models";
 import listMyDebates from "./tools/list-my-debates";
 import listOpenRouterModels from "./tools/list-openrouter-models";
@@ -21,6 +22,7 @@ import siteStats from "./tools/site-stats";
 import syncModelPricing from "./tools/sync-model-pricing";
 import upsertAgentProfile from "./tools/upsert-agent-profile";
 import upsertCuratedModel from "./tools/upsert-curated-model";
+import upsertLearnBlock from "./tools/upsert-learn-block";
 import whoami from "./tools/whoami";
 
 // The OAuth issuer must be the direct Supabase host, built from the project ref
@@ -51,6 +53,11 @@ export default defineMcp({
     "`list_content_drafts` to read them, `seed_featured_debate` to publish a showcase debate on",
     "/explore, and `upsert_agent_profile` to extend the persona roster.",
     "",
+    "The /learn crash course is agent-maintainable: `list_learn_blocks` reads the live blocks per",
+    "tab (models, privacy, local, agents, glossary) and `upsert_learn_block` creates or revises one,",
+    "keyed by a stable slug. New blocks start as drafts and only appear on the site once published,",
+    "so write -> review -> publish. Keep blocks short, factual and sourced; do not duplicate a slug.",
+    "",
     "Accountability: every write over MCP is recorded in an append-only audit log. Read it with",
     "`list_agent_activity` (filter by tool, failures only, or a time window) before and after a",
     "maintenance run so your work is verifiable. Log entries can never be edited or deleted.",
@@ -70,12 +77,14 @@ export default defineMcp({
     listFeatureFlags,
     listAgentProfiles,
     listHallOfShame,
+    listLearnBlocks,
     whoami,
     listMyDebates,
     createDebate,
     getDebateStatus,
     listOpenRouterModels,
     upsertCuratedModel,
+    upsertLearnBlock,
     syncModelPricing,
     manageQuickPrompts,
     setFeatureFlag,

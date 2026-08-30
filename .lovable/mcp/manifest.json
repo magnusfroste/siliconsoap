@@ -190,6 +190,48 @@
         "outputSchema": null
       },
       {
+        "name": "list_learn_blocks",
+        "title": "List Learn section blocks",
+        "description": "Read the agent-maintained content blocks shown in the /learn crash course. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "tab": {
+              "description": "Which Learn tab to read.",
+              "type": "string",
+              "enum": [
+                "models",
+                "privacy",
+                "local",
+                "agents",
+                "glossary"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "review",
+                "published"
+              ]
+            },
+            "limit": {
+              "description": "1-100, default 50.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
         "name": "whoami",
         "title": "Who am I",
         "description": "Report the signed-in SiliconSoap identity behind this MCP connection: user id, email, display name, admin role and remaining credits.",
@@ -449,6 +491,91 @@
           },
           "required": [
             "model_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "upsert_learn_block",
+        "title": "Write a Learn section block",
+        "description": "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course. Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "publish",
+                "unpublish",
+                "delete"
+              ],
+              "description": "Defaults to 'upsert'."
+            },
+            "slug": {
+              "type": "string",
+              "description": "Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."
+            },
+            "tab": {
+              "description": "Required when creating a new block.",
+              "type": "string",
+              "enum": [
+                "models",
+                "privacy",
+                "local",
+                "agents",
+                "glossary"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "note",
+                "callout",
+                "term",
+                "section",
+                "link"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "description": "Plain text / light markdown. Blank lines separate paragraphs, lines starting with '- ' render as bullets.",
+              "type": "string"
+            },
+            "meta": {
+              "description": "Optional extras: { url, url_label, example, source } — `example` is shown for glossary terms.",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "position": {
+              "description": "Sort order within the tab, lower first.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "review",
+                "published"
+              ]
+            }
+          },
+          "required": [
+            "action",
+            "slug"
           ]
         },
         "outputSchema": null
