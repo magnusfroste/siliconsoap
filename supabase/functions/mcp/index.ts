@@ -426,7 +426,7 @@ var list_learn_blocks_default = defineTool10({
   title: "List Learn section blocks",
   description: "Read the agent-maintained content blocks shown in the /learn crash course. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
   inputSchema: {
-    tab: z8.enum(["models", "privacy", "local", "agents", "glossary"]).optional().describe("Which Learn tab to read."),
+    tab: z8.enum(["models", "privacy", "local", "agents", "glossary", "about"]).optional().describe("Which Learn tab to read."),
     status: z8.enum(["draft", "review", "published"]).optional(),
     limit: z8.number().int().optional().describe("1-100, default 50.")
   },
@@ -445,7 +445,7 @@ var list_learn_blocks_default = defineTool10({
     if (error) return fail(error.message);
     return ok({
       scope: admin ? "all_blocks" : "published_only",
-      tabs: ["models", "privacy", "local", "agents", "glossary"],
+      tabs: ["models", "privacy", "local", "agents", "glossary", "about"],
       count: data?.length ?? 0,
       blocks: data ?? []
     });
@@ -1037,7 +1037,7 @@ var upsert_learn_block_default = defineTool23({
   inputSchema: {
     action: z19.enum(["upsert", "publish", "unpublish", "delete"]).describe("Defaults to 'upsert'."),
     slug: z19.string().describe("Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."),
-    tab: z19.enum(["models", "privacy", "local", "agents", "glossary"]).optional().describe("Required when creating a new block."),
+    tab: z19.enum(["models", "privacy", "local", "agents", "glossary", "about"]).optional().describe("Required when creating a new block."),
     kind: z19.enum(["note", "callout", "term", "section", "link"]).optional(),
     title: z19.string().optional(),
     body: z19.string().optional().describe("Plain text / light markdown. Blank lines separate paragraphs, lines starting with '- ' render as bullets."),

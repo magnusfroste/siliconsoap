@@ -13,7 +13,7 @@ export default defineTool({
     action: z.enum(["upsert", "publish", "unpublish", "delete"]).describe("Defaults to 'upsert'."),
     slug: z.string().describe("Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."),
     tab: z
-      .enum(["models", "privacy", "local", "agents", "glossary"])
+      .enum(["models", "privacy", "local", "agents", "glossary", "about"])
       .optional()
       .describe("Required when creating a new block."),
     kind: z.enum(["note", "callout", "term", "section", "link"]).optional(),

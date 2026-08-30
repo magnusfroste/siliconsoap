@@ -210,7 +210,8 @@
                 "privacy",
                 "local",
                 "agents",
-                "glossary"
+                "glossary",
+                "about"
               ]
             },
             "status": {
@@ -530,7 +531,8 @@
                 "privacy",
                 "local",
                 "agents",
-                "glossary"
+                "glossary",
+                "about"
               ]
             },
             "kind": {
