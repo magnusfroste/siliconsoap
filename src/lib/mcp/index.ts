@@ -3,7 +3,9 @@ import { auth, defineMcp } from "@lovable.dev/mcp-js";
 import createDebate from "./tools/create-debate";
 import getDebate from "./tools/get-debate";
 import getDebateStatus from "./tools/get-debate-status";
+import listAgentActivity from "./tools/list-agent-activity";
 import listAgentProfiles from "./tools/list-agent-profiles";
+import listContentDrafts from "./tools/list-content-drafts";
 import listDebates from "./tools/list-debates";
 import listFeatureFlags from "./tools/list-feature-flags";
 import listHallOfShame from "./tools/list-hall-of-shame";
@@ -11,10 +13,13 @@ import listModels from "./tools/list-models";
 import listMyDebates from "./tools/list-my-debates";
 import listOpenRouterModels from "./tools/list-openrouter-models";
 import listQuickPrompts from "./tools/list-quick-prompts";
+import manageContentDrafts from "./tools/manage-content-drafts";
 import manageQuickPrompts from "./tools/manage-quick-prompts";
+import seedFeaturedDebate from "./tools/seed-featured-debate";
 import setFeatureFlag from "./tools/set-feature-flag";
 import siteStats from "./tools/site-stats";
 import syncModelPricing from "./tools/sync-model-pricing";
+import upsertAgentProfile from "./tools/upsert-agent-profile";
 import upsertCuratedModel from "./tools/upsert-curated-model";
 import whoami from "./tools/whoami";
 
@@ -64,5 +69,10 @@ export default defineMcp({
     syncModelPricing,
     manageQuickPrompts,
     setFeatureFlag,
+    upsertAgentProfile,
+    seedFeaturedDebate,
+    manageContentDrafts,
+    listContentDrafts,
+    listAgentActivity,
   ],
 });
