@@ -97,7 +97,7 @@ export const LearnAgentBlocks = ({ tab }: { tab: LearnTab }) => {
         </span>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className={`grid gap-4 ${blocks.length > 1 ? 'md:grid-cols-2' : ''}`}>
         {blocks.map((block) => (
           <BlockCard key={block.id} block={block} />
         ))}
