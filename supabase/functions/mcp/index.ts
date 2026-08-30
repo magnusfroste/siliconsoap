@@ -424,9 +424,9 @@ import { z as z8 } from "npm:zod@^4.5.4";
 var list_learn_blocks_default = defineTool10({
   name: "list_learn_blocks",
   title: "List Learn section blocks",
-  description: "Read the agent-maintained content blocks shown in the /learn crash course. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
+  description: "Read the agent-maintained content blocks shown in the /learn crash course and on the /about page. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
   inputSchema: {
-    tab: z8.enum(["models", "privacy", "local", "agents", "glossary", "about"]).optional().describe("Which Learn tab to read."),
+    tab: z8.enum(["models", "privacy", "local", "agents", "glossary", "about"]).optional().describe("Which section to read: a Learn tab, or 'about' for the /about page."),
     status: z8.enum(["draft", "review", "published"]).optional(),
     limit: z8.number().int().optional().describe("1-100, default 50.")
   },
@@ -1033,7 +1033,7 @@ var SLUG_RE = /^[a-z0-9][a-z0-9-]{1,60}$/;
 var upsert_learn_block_default = defineTool23({
   name: "upsert_learn_block",
   title: "Write a Learn section block",
-  description: "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course. Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
+  description: "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course or on the /about page (use tab 'about'). Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
   inputSchema: {
     action: z19.enum(["upsert", "publish", "unpublish", "delete"]).describe("Defaults to 'upsert'."),
     slug: z19.string().describe("Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."),

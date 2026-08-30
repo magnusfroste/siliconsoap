@@ -8,7 +8,7 @@ export default defineTool({
   name: "upsert_learn_block",
   title: "Write a Learn section block",
   description:
-    "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course or on the /about page (tab: "about"). Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
+    "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course or on the /about page (use tab 'about'). Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
   inputSchema: {
     action: z.enum(["upsert", "publish", "unpublish", "delete"]).describe("Defaults to 'upsert'."),
     slug: z.string().describe("Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."),
