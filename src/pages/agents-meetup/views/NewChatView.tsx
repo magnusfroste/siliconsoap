@@ -253,15 +253,19 @@ export const NewChatView = () => {
             suggestedTopics={suggestedTopics}
           />
 
-          {/* Configuration Card — subtly dimmed until interacted with */}
-          <div className="group relative transition-all duration-500 md:opacity-50 md:hover:opacity-100 md:focus-within:opacity-100">
-            {/* Hint overlay shown when dimmed on desktop */}
-            <div className="hidden md:flex pointer-events-none absolute inset-0 z-10 items-center justify-center opacity-100 group-hover:opacity-0 group-focus-within:opacity-0 transition-opacity duration-300">
-              <span className="text-sm text-muted-foreground bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border shadow-sm">
-                Configure your cast & settings — hover to reveal
-              </span>
-            </div>
+          {/* Configuration Card — de-emphasised until the user engages with it.
+              The dimming is applied via an overlay veil instead of opacity on the
+              content, so nothing sits on top of (and obscures) the agent cards. */}
+          <div className="group relative">
+            <p className="hidden md:block text-center text-xs text-muted-foreground mb-2 transition-opacity duration-300 group-hover:opacity-0 group-focus-within:opacity-0">
+              Defaults are ready to go — hover to fine-tune your cast &amp; settings
+            </p>
+            <div
+              aria-hidden="true"
+              className="hidden md:block pointer-events-none absolute inset-x-0 bottom-0 top-6 z-10 rounded-xl bg-background/55 transition-opacity duration-500 group-hover:opacity-0 group-focus-within:opacity-0"
+            />
             <Card className="md:group-hover:shadow-lg md:group-focus-within:shadow-lg transition-shadow duration-500">
+
               <CardContent className="pt-6 space-y-4">
                 {/* Agent Configuration */}
                 <AgentGridSection
