@@ -182,16 +182,28 @@ var create_debate_default = defineTool({
     if (input.models.length < 2 || input.models.length > 3) {
       return fail("`models` must contain 2 or 3 model ids (see `list_models`).");
     }
-    const { status, body } = await invokeFunction(ctx, "debates-api", {
-      method: "POST",
-      path: "/debates",
-      body: input
-    });
-    if (status >= 400) {
-      const message = body?.error ?? `Debate creation failed (${status}).`;
-      return fail(message);
-    }
-    return ok(body);
+    return audited(
+      ctx,
+      {
+        tool_name: "create_debate",
+        action: "create",
+        target_type: "debate",
+        target_id: input.topic.slice(0, 120),
+        input
+      },
+      async () => {
+        const { status, body } = await invokeFunction(ctx, "debates-api", {
+          method: "POST",
+          path: "/debates",
+          body: input
+        });
+        if (status >= 400) {
+          const message = body?.error ?? `Debate creation failed (${status}).`;
+          return fail(message);
+        }
+        return ok(body);
+      }
+    );
   }
 });
 
@@ -463,41 +475,53 @@ var manage_quick_prompts_default = defineTool12({
     requireAuth(ctx);
     if (!await isAdmin(ctx)) return fail("Admin role required.");
     const supabase = supabaseForUser(ctx);
-    if (action === "add") {
-      if (!topic?.trim()) return fail("`topic` is required for action 'add'.");
-      const { data, error } = await supabase.from("quick_prompts").insert({
-        topic: topic.trim(),
-        scenario_id: scenario_id ?? "general-problem",
-        is_enabled: true,
-        sort_order: Math.floor(Math.random() * 1e3)
-      }).select().maybeSingle();
-      if (error) return fail(error.message);
-      return ok({ action: "added", prompt: data });
-    }
-    if (action === "set_enabled") {
-      if (!id) return fail("`id` is required.");
-      if (is_enabled === void 0) return fail("`is_enabled` is required.");
-      const { data, error } = await supabase.from("quick_prompts").update({ is_enabled }).eq("id", id).select().maybeSingle();
-      if (error) return fail(error.message);
-      if (!data) return fail("Prompt not found.");
-      return ok({ action: "updated", prompt: data });
-    }
-    if (action === "delete") {
-      if (!id) return fail("`id` is required.");
-      const { error } = await supabase.from("quick_prompts").delete().eq("id", id);
-      if (error) return fail(error.message);
-      return ok({ action: "deleted", id });
-    }
-    const { data: prompts, error: readErr } = await supabase.from("quick_prompts").select("id");
-    if (readErr) return fail(readErr.message);
-    const ids = (prompts ?? []).map((p) => p.id);
-    const order = ids.map((_, i) => i).sort(() => Math.random() - 0.5);
-    let updated = 0;
-    for (let i = 0; i < ids.length; i++) {
-      const { error } = await supabase.from("quick_prompts").update({ sort_order: order[i] }).eq("id", ids[i]);
-      if (!error) updated++;
-    }
-    return ok({ action: "shuffled", updated });
+    return audited(
+      ctx,
+      {
+        tool_name: "manage_quick_prompts",
+        action,
+        target_type: "quick_prompt",
+        target_id: id ?? topic ?? null,
+        input: { action, topic, scenario_id, id, is_enabled }
+      },
+      async () => {
+        if (action === "add") {
+          if (!topic?.trim()) return fail("`topic` is required for action 'add'.");
+          const { data, error } = await supabase.from("quick_prompts").insert({
+            topic: topic.trim(),
+            scenario_id: scenario_id ?? "general-problem",
+            is_enabled: true,
+            sort_order: Math.floor(Math.random() * 1e3)
+          }).select().maybeSingle();
+          if (error) return fail(error.message);
+          return ok({ action: "added", prompt: data });
+        }
+        if (action === "set_enabled") {
+          if (!id) return fail("`id` is required.");
+          if (is_enabled === void 0) return fail("`is_enabled` is required.");
+          const { data, error } = await supabase.from("quick_prompts").update({ is_enabled }).eq("id", id).select().maybeSingle();
+          if (error) return fail(error.message);
+          if (!data) return fail("Prompt not found.");
+          return ok({ action: "updated", prompt: data });
+        }
+        if (action === "delete") {
+          if (!id) return fail("`id` is required.");
+          const { error } = await supabase.from("quick_prompts").delete().eq("id", id);
+          if (error) return fail(error.message);
+          return ok({ action: "deleted", id });
+        }
+        const { data: prompts, error: readErr } = await supabase.from("quick_prompts").select("id");
+        if (readErr) return fail(readErr.message);
+        const ids = (prompts ?? []).map((p) => p.id);
+        const order = ids.map((_, i) => i).sort(() => Math.random() - 0.5);
+        let updated = 0;
+        for (let i = 0; i < ids.length; i++) {
+          const { error } = await supabase.from("quick_prompts").update({ sort_order: order[i] }).eq("id", ids[i]);
+          if (!error) updated++;
+        }
+        return ok({ action: "shuffled", updated });
+      }
+    );
   }
 });
 
@@ -597,16 +621,22 @@ var sync_model_pricing_default = defineTool15({
   handler: async (_input, ctx) => {
     requireAuth(ctx);
     if (!await isAdmin(ctx)) return fail("Admin role required.");
-    const { status, body } = await invokeFunction(ctx, "sync-model-pricing", {
-      method: "POST",
-      body: {}
-    });
-    if (status >= 400) {
-      const message = body?.error ?? `Pricing sync failed (${status}).`;
-      return fail(message);
-    }
-    return ok(
-      typeof body === "object" && body !== null ? body : { result: body }
+    return audited(
+      ctx,
+      { tool_name: "sync_model_pricing", action: "sync", target_type: "curated_model" },
+      async () => {
+        const { status, body } = await invokeFunction(ctx, "sync-model-pricing", {
+          method: "POST",
+          body: {}
+        });
+        if (status >= 400) {
+          const message = body?.error ?? `Pricing sync failed (${status}).`;
+          return fail(message);
+        }
+        return ok(
+          typeof body === "object" && body !== null ? body : { result: body }
+        );
+      }
     );
   }
 });
