@@ -1042,6 +1042,15 @@ var mcp_default = defineMcp({
     "released models, `upsert_curated_model` to add/update the roster, `sync_model_pricing` to",
     "refresh pricing and reasoning support, `manage_quick_prompts` to keep suggested topics fresh,",
     "and `set_feature_flag` to change live configuration (feature flags are the source of truth).",
+    "",
+    "Editorial / creative work (admin role required): `manage_content_drafts` to write and revise",
+    "blog posts, weekly recaps, social snippets and SEO copy sourced from real debates,",
+    "`list_content_drafts` to read them, `seed_featured_debate` to publish a showcase debate on",
+    "/explore, and `upsert_agent_profile` to extend the persona roster.",
+    "",
+    "Accountability: every write over MCP is recorded in an append-only audit log. Read it with",
+    "`list_agent_activity` (filter by tool, failures only, or a time window) before and after a",
+    "maintenance run so your work is verifiable. Log entries can never be edited or deleted.",
     "Always read current state before writing, and report what you changed."
   ].join("\n"),
   auth: auth.oauth.issuer({
