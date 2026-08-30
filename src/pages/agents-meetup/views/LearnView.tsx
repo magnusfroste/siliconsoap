@@ -6,6 +6,7 @@ import { LearnTabPrivacy } from './learn/LearnTabPrivacy';
 import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
 import { LearnTabAgents } from './learn/LearnTabAgents';
 import { LearnTabGlossary } from './learn/LearnTabGlossary';
+import { LearnAgentBlocks } from '@/components/learn/LearnAgentBlocks';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const VALID_TABS = ['models', 'privacy', 'local', 'agents', 'glossary'];
@@ -74,18 +75,23 @@ export const LearnView = () => {
         </TabsList>
 
         <TabsContent value="models">
+          <LearnAgentBlocks tab="models" />
           <LearnTabModels />
         </TabsContent>
         <TabsContent value="privacy">
+          <LearnAgentBlocks tab="privacy" />
           <LearnTabPrivacy />
         </TabsContent>
         <TabsContent value="local">
+          <LearnAgentBlocks tab="local" />
           <LearnTabSelfHosting />
         </TabsContent>
         <TabsContent value="agents">
+          <LearnAgentBlocks tab="agents" />
           <LearnTabAgents />
         </TabsContent>
         <TabsContent value="glossary">
+          <LearnAgentBlocks tab="glossary" />
           <LearnTabGlossary />
         </TabsContent>
       </Tabs>

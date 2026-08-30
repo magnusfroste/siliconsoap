@@ -418,15 +418,49 @@ var list_hall_of_shame_default = defineTool9({
   }
 });
 
-// src/lib/mcp/tools/list-models.ts
+// src/lib/mcp/tools/list-learn-blocks.ts
 import { defineTool as defineTool10 } from "npm:@lovable.dev/mcp-js@0.28.0";
 import { z as z8 } from "npm:zod@^4.5.4";
-var list_models_default = defineTool10({
+var list_learn_blocks_default = defineTool10({
+  name: "list_learn_blocks",
+  title: "List Learn section blocks",
+  description: "Read the agent-maintained content blocks shown in the /learn crash course. Admins see drafts too; everyone else sees only published blocks. Always call this before writing so you can reuse an existing `slug` instead of creating a duplicate.",
+  inputSchema: {
+    tab: z8.enum(["models", "privacy", "local", "agents", "glossary"]).optional().describe("Which Learn tab to read."),
+    status: z8.enum(["draft", "review", "published"]).optional(),
+    limit: z8.number().int().optional().describe("1-100, default 50.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ tab, status, limit }, ctx) => {
+    const authed = ctx.isAuthenticated();
+    const admin = authed ? await isAdmin(ctx) : false;
+    const supabase = authed ? supabaseForUser(ctx) : supabaseAnon();
+    let query = supabase.from("learn_blocks").select(
+      "id, tab, slug, kind, title, body, meta, position, status, updated_by_label, created_at, updated_at"
+    ).order("tab", { ascending: true }).order("position", { ascending: true }).limit(Math.min(Math.max(limit ?? 50, 1), 100));
+    if (tab) query = query.eq("tab", tab);
+    if (status) query = query.eq("status", status);
+    else if (!admin) query = query.eq("status", "published");
+    const { data, error } = await query;
+    if (error) return fail(error.message);
+    return ok({
+      scope: admin ? "all_blocks" : "published_only",
+      tabs: ["models", "privacy", "local", "agents", "glossary"],
+      count: data?.length ?? 0,
+      blocks: data ?? []
+    });
+  }
+});
+
+// src/lib/mcp/tools/list-models.ts
+import { defineTool as defineTool11 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z9 } from "npm:zod@^4.5.4";
+var list_models_default = defineTool11({
   name: "list_models",
   title: "List curated models",
   description: "List the LLMs curated for SiliconSoap debates, with provider, pricing, reasoning support and whether they are enabled.",
   inputSchema: {
-    include_disabled: z8.boolean().optional().describe("Include models that are currently disabled in the app.")
+    include_disabled: z9.boolean().optional().describe("Include models that are currently disabled in the app.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ include_disabled }) => {
@@ -442,13 +476,13 @@ var list_models_default = defineTool10({
 });
 
 // src/lib/mcp/tools/list-my-debates.ts
-import { defineTool as defineTool11 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z9 } from "npm:zod@^4.5.4";
-var list_my_debates_default = defineTool11({
+import { defineTool as defineTool12 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z10 } from "npm:zod@^4.5.4";
+var list_my_debates_default = defineTool12({
   name: "list_my_debates",
   title: "List my debates",
   description: "List the signed-in user's own debates, newest first.",
-  inputSchema: { limit: z9.number().int().optional().describe("1-50, default 20.") },
+  inputSchema: { limit: z10.number().int().optional().describe("1-50, default 20.") },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
     const userId = requireAuth(ctx);
@@ -461,16 +495,16 @@ var list_my_debates_default = defineTool11({
 });
 
 // src/lib/mcp/tools/list-openrouter-models.ts
-import { defineTool as defineTool12 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z10 } from "npm:zod@^4.5.4";
-var list_openrouter_models_default = defineTool12({
+import { defineTool as defineTool13 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z11 } from "npm:zod@^4.5.4";
+var list_openrouter_models_default = defineTool13({
   name: "list_openrouter_models",
   title: "Browse OpenRouter catalog",
   description: "Browse the live OpenRouter model catalog to discover newly released models, and see which of them are not yet curated on SiliconSoap. Use before `upsert_curated_model`.",
   inputSchema: {
-    search: z10.string().optional().describe("Filter on model id or name, e.g. 'claude', 'qwen', 'free'."),
-    only_new: z10.boolean().optional().describe("Only return models that are not already curated on SiliconSoap."),
-    limit: z10.number().int().optional().describe("1-60, default 30.")
+    search: z11.string().optional().describe("Filter on model id or name, e.g. 'claude', 'qwen', 'free'."),
+    only_new: z11.boolean().optional().describe("Only return models that are not already curated on SiliconSoap."),
+    limit: z11.number().int().optional().describe("1-60, default 30.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   handler: async ({ search, only_new, limit }) => {
@@ -508,14 +542,14 @@ var list_openrouter_models_default = defineTool12({
 });
 
 // src/lib/mcp/tools/list-quick-prompts.ts
-import { defineTool as defineTool13 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z11 } from "npm:zod@^4.5.4";
-var list_quick_prompts_default = defineTool13({
+import { defineTool as defineTool14 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z12 } from "npm:zod@^4.5.4";
+var list_quick_prompts_default = defineTool14({
   name: "list_quick_prompts",
   title: "List quick prompts",
   description: "List the suggested debate topics shown on the new-debate page. Admin callers also see disabled prompts.",
   inputSchema: {
-    scenario_id: z11.string().optional().describe("Filter by scenario id.")
+    scenario_id: z12.string().optional().describe("Filter by scenario id.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ scenario_id }, ctx) => {
@@ -529,22 +563,22 @@ var list_quick_prompts_default = defineTool13({
 });
 
 // src/lib/mcp/tools/manage-content-drafts.ts
-import { defineTool as defineTool14 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z12 } from "npm:zod@^4.5.4";
-var manage_content_drafts_default = defineTool14({
+import { defineTool as defineTool15 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z13 } from "npm:zod@^4.5.4";
+var manage_content_drafts_default = defineTool15({
   name: "manage_content_drafts",
   title: "Write and manage content drafts",
   description: "Admin only. Save editorial content an agent has written about SiliconSoap \u2014 blog posts, weekly recaps, social snippets, SEO copy \u2014 as a draft, then update its status ('draft' | 'review' | 'published') or delete it. Use `list_debates` / `get_debate` / `site_stats` as source material and cite the debates in `source_chat_ids`.",
   inputSchema: {
-    action: z12.enum(["create", "update", "delete"]),
-    id: z12.string().optional().describe("Draft id for 'update' and 'delete'."),
-    title: z12.string().optional(),
-    body: z12.string().optional().describe("Markdown body of the draft."),
-    summary: z12.string().optional().describe("One or two sentence teaser."),
-    kind: z12.enum(["blog_post", "weekly_recap", "social_snippet", "seo_copy", "note"]).optional().describe("Content type. Defaults to 'blog_post'."),
-    tags: z12.array(z12.string()).optional(),
-    source_chat_ids: z12.array(z12.string()).optional().describe("Debate UUIDs used as source material."),
-    status: z12.enum(["draft", "review", "published"]).optional()
+    action: z13.enum(["create", "update", "delete"]),
+    id: z13.string().optional().describe("Draft id for 'update' and 'delete'."),
+    title: z13.string().optional(),
+    body: z13.string().optional().describe("Markdown body of the draft."),
+    summary: z13.string().optional().describe("One or two sentence teaser."),
+    kind: z13.enum(["blog_post", "weekly_recap", "social_snippet", "seo_copy", "note"]).optional().describe("Content type. Defaults to 'blog_post'."),
+    tags: z13.array(z13.string()).optional(),
+    source_chat_ids: z13.array(z13.string()).optional().describe("Debate UUIDs used as source material."),
+    status: z13.enum(["draft", "review", "published"]).optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
   handler: async (input, ctx) => {
@@ -603,18 +637,18 @@ var manage_content_drafts_default = defineTool14({
 });
 
 // src/lib/mcp/tools/manage-quick-prompts.ts
-import { defineTool as defineTool15 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z13 } from "npm:zod@^4.5.4";
-var manage_quick_prompts_default = defineTool15({
+import { defineTool as defineTool16 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z14 } from "npm:zod@^4.5.4";
+var manage_quick_prompts_default = defineTool16({
   name: "manage_quick_prompts",
   title: "Manage quick prompts",
   description: "Admin only. Keep SiliconSoap's suggested debate topics fresh: add new prompts, enable/disable or delete existing ones, and reshuffle their display order.",
   inputSchema: {
-    action: z13.enum(["add", "set_enabled", "delete", "shuffle"]).describe("What to do. 'shuffle' randomizes sort_order for all prompts."),
-    topic: z13.string().optional().describe("For 'add': the prompt text."),
-    scenario_id: z13.string().optional().describe("For 'add': scenario id. Defaults to 'general-problem'."),
-    id: z13.string().optional().describe("Prompt id for 'set_enabled' and 'delete'."),
-    is_enabled: z13.boolean().optional().describe("For 'set_enabled'.")
+    action: z14.enum(["add", "set_enabled", "delete", "shuffle"]).describe("What to do. 'shuffle' randomizes sort_order for all prompts."),
+    topic: z14.string().optional().describe("For 'add': the prompt text."),
+    scenario_id: z14.string().optional().describe("For 'add': scenario id. Defaults to 'general-problem'."),
+    id: z14.string().optional().describe("Prompt id for 'set_enabled' and 'delete'."),
+    is_enabled: z14.boolean().optional().describe("For 'set_enabled'.")
   },
   annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
   handler: async ({ action, topic, scenario_id, id, is_enabled }, ctx) => {
@@ -672,29 +706,29 @@ var manage_quick_prompts_default = defineTool15({
 });
 
 // src/lib/mcp/tools/seed-featured-debate.ts
-import { defineTool as defineTool16 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z14 } from "npm:zod@^4.5.4";
+import { defineTool as defineTool17 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z15 } from "npm:zod@^4.5.4";
 var PERSONA_INSTRUCTIONS = {
   analytical: "You are rigorously analytical: evidence, trade-offs and precise reasoning.",
   creative: "You are creative and provocative: unexpected angles and vivid framing.",
   strategic: "You are strategic: incentives, second-order effects and long-term power dynamics.",
   empathetic: "You are empathetic: human impact, fairness and lived consequences."
 };
-var seed_featured_debate_default = defineTool16({
+var seed_featured_debate_default = defineTool17({
   name: "seed_featured_debate",
   title: "Seed a featured debate",
   description: "Admin only. Generate a complete public showcase debate on SiliconSoap (visible on /explore) with the given topic, agents and a realistic view count. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account and is meant for editorial/featured content, not personal debates.",
   inputSchema: {
-    topic: z14.string().describe("Short headline for the debate."),
-    prompt: z14.string().optional().describe("Full question the agents debate. Defaults to `topic`."),
-    models: z14.array(z14.string()).describe("2 or 3 model ids from `list_models`."),
-    agent_names: z14.array(z14.string()).optional().describe("Display names, one per agent."),
-    personas: z14.array(z14.enum(["analytical", "creative", "strategic", "empathetic"])).optional().describe("One persona per agent. Defaults cycle through the four personas."),
-    scenario_id: z14.enum(["general-problem", "ethical-dilemma", "future-prediction"]).optional().describe("Defaults to 'general-problem'."),
-    target_date: z14.string().optional().describe("ISO date to backdate the debate to. Defaults to now."),
-    view_count_min: z14.number().int().optional().describe("Default 40."),
-    view_count_max: z14.number().int().optional().describe("Default 400."),
-    reaction_count: z14.number().int().optional().describe("Number of seeded emoji reactions. Default 6.")
+    topic: z15.string().describe("Short headline for the debate."),
+    prompt: z15.string().optional().describe("Full question the agents debate. Defaults to `topic`."),
+    models: z15.array(z15.string()).describe("2 or 3 model ids from `list_models`."),
+    agent_names: z15.array(z15.string()).optional().describe("Display names, one per agent."),
+    personas: z15.array(z15.enum(["analytical", "creative", "strategic", "empathetic"])).optional().describe("One persona per agent. Defaults cycle through the four personas."),
+    scenario_id: z15.enum(["general-problem", "ethical-dilemma", "future-prediction"]).optional().describe("Defaults to 'general-problem'."),
+    target_date: z15.string().optional().describe("ISO date to backdate the debate to. Defaults to now."),
+    view_count_min: z15.number().int().optional().describe("Default 40."),
+    view_count_max: z15.number().int().optional().describe("Default 400."),
+    reaction_count: z15.number().int().optional().describe("Number of seeded emoji reactions. Default 6.")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   handler: async (input, ctx) => {
@@ -753,17 +787,17 @@ var seed_featured_debate_default = defineTool16({
 });
 
 // src/lib/mcp/tools/set-feature-flag.ts
-import { defineTool as defineTool17 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z15 } from "npm:zod@^4.5.4";
-var set_feature_flag_default = defineTool17({
+import { defineTool as defineTool18 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z16 } from "npm:zod@^4.5.4";
+var set_feature_flag_default = defineTool18({
   name: "set_feature_flag",
   title: "Set a feature flag",
   description: "Admin only. Update an existing SiliconSoap feature flag or configuration value (enabled state, text value, numeric value). This changes live platform behaviour immediately.",
   inputSchema: {
-    key: z15.string().describe("Flag key from `list_feature_flags`, e.g. 'enable_judge_bot'."),
-    enabled: z15.boolean().optional(),
-    text_value: z15.string().optional().describe("For config flags such as 'default_judge_model'."),
-    numeric_value: z15.number().optional()
+    key: z16.string().describe("Flag key from `list_feature_flags`, e.g. 'enable_judge_bot'."),
+    enabled: z16.boolean().optional(),
+    text_value: z16.string().optional().describe("For config flags such as 'default_judge_model'."),
+    numeric_value: z16.number().optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
   handler: async ({ key, enabled, text_value, numeric_value }, ctx) => {
@@ -796,8 +830,8 @@ var set_feature_flag_default = defineTool17({
 });
 
 // src/lib/mcp/tools/site-stats.ts
-import { defineTool as defineTool18 } from "npm:@lovable.dev/mcp-js@0.28.0";
-var site_stats_default = defineTool18({
+import { defineTool as defineTool19 } from "npm:@lovable.dev/mcp-js@0.28.0";
+var site_stats_default = defineTool19({
   name: "site_stats",
   title: "Site statistics",
   description: "Live SiliconSoap platform stats: public debate count, total views, model counts and the most viewed debates.",
@@ -838,8 +872,8 @@ var site_stats_default = defineTool18({
 });
 
 // src/lib/mcp/tools/sync-model-pricing.ts
-import { defineTool as defineTool19 } from "npm:@lovable.dev/mcp-js@0.28.0";
-var sync_model_pricing_default = defineTool19({
+import { defineTool as defineTool20 } from "npm:@lovable.dev/mcp-js@0.28.0";
+var sync_model_pricing_default = defineTool20({
   name: "sync_model_pricing",
   title: "Sync model pricing & capabilities",
   description: "Admin only. Refresh pricing, context windows and reasoning support for every curated model from the live OpenRouter catalog.",
@@ -869,19 +903,19 @@ var sync_model_pricing_default = defineTool19({
 });
 
 // src/lib/mcp/tools/upsert-agent-profile.ts
-import { defineTool as defineTool20 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z16 } from "npm:zod@^4.5.4";
-var upsert_agent_profile_default = defineTool20({
+import { defineTool as defineTool21 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z17 } from "npm:zod@^4.5.4";
+var upsert_agent_profile_default = defineTool21({
   name: "upsert_agent_profile",
   title: "Add or update an agent persona",
   description: "Admin only. Create or update an agent persona used in debates (name, description, system instructions, icon). Read `list_agent_profiles` first so you extend the roster instead of duplicating it.",
   inputSchema: {
-    slug: z16.string().describe("Stable identifier, e.g. 'contrarian-economist'."),
-    name: z16.string().optional().describe("Display name. Required for new personas."),
-    description: z16.string().optional().describe("One line shown in the UI. Required for new personas."),
-    instructions: z16.string().optional().describe("System instructions that shape how this persona argues. Required for new personas."),
-    icon_name: z16.string().optional().describe("Lucide icon name, e.g. 'Brain'. Defaults to 'Sparkles'."),
-    is_premium: z16.boolean().optional()
+    slug: z17.string().describe("Stable identifier, e.g. 'contrarian-economist'."),
+    name: z17.string().optional().describe("Display name. Required for new personas."),
+    description: z17.string().optional().describe("One line shown in the UI. Required for new personas."),
+    instructions: z17.string().optional().describe("System instructions that shape how this persona argues. Required for new personas."),
+    icon_name: z17.string().optional().describe("Lucide icon name, e.g. 'Brain'. Defaults to 'Sparkles'."),
+    is_premium: z17.boolean().optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
@@ -933,27 +967,27 @@ var upsert_agent_profile_default = defineTool20({
 });
 
 // src/lib/mcp/tools/upsert-curated-model.ts
-import { defineTool as defineTool21 } from "npm:@lovable.dev/mcp-js@0.28.0";
-import { z as z17 } from "npm:zod@^4.5.4";
-var upsert_curated_model_default = defineTool21({
+import { defineTool as defineTool22 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z18 } from "npm:zod@^4.5.4";
+var upsert_curated_model_default = defineTool22({
   name: "upsert_curated_model",
   title: "Add or update a curated model",
   description: "Admin only. Add a new model to SiliconSoap's curated roster, or update an existing one (enabled state, reasoning toggle, metadata, pricing tier, sort order). Use `list_openrouter_models` first to get the exact model id.",
   inputSchema: {
-    model_id: z17.string().describe("OpenRouter model id, e.g. 'anthropic/claude-sonnet-4.5'."),
-    display_name: z17.string().optional().describe("Name shown in the UI. Required for new models."),
-    provider: z17.string().optional().describe("Provider label. Required for new models."),
-    description: z17.string().optional(),
-    category: z17.string().optional(),
-    license_type: z17.string().optional().describe("e.g. 'open-weights' or 'proprietary'."),
-    speed_rating: z17.string().optional(),
-    price_tier: z17.string().optional(),
-    context_window: z17.number().int().optional(),
-    is_free: z17.boolean().optional(),
-    is_enabled: z17.boolean().optional().describe("Whether users can select this model."),
-    supports_reasoning: z17.boolean().optional().describe("Whether the model supports reasoning at all (from OpenRouter)."),
-    disable_reasoning: z17.boolean().optional().describe("Turn hidden thinking OFF for this model in debates."),
-    sort_order: z17.number().int().optional()
+    model_id: z18.string().describe("OpenRouter model id, e.g. 'anthropic/claude-sonnet-4.5'."),
+    display_name: z18.string().optional().describe("Name shown in the UI. Required for new models."),
+    provider: z18.string().optional().describe("Provider label. Required for new models."),
+    description: z18.string().optional(),
+    category: z18.string().optional(),
+    license_type: z18.string().optional().describe("e.g. 'open-weights' or 'proprietary'."),
+    speed_rating: z18.string().optional(),
+    price_tier: z18.string().optional(),
+    context_window: z18.number().int().optional(),
+    is_free: z18.boolean().optional(),
+    is_enabled: z18.boolean().optional().describe("Whether users can select this model."),
+    supports_reasoning: z18.boolean().optional().describe("Whether the model supports reasoning at all (from OpenRouter)."),
+    disable_reasoning: z18.boolean().optional().describe("Turn hidden thinking OFF for this model in debates."),
+    sort_order: z18.number().int().optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (input, ctx) => {
@@ -992,9 +1026,88 @@ var upsert_curated_model_default = defineTool21({
   }
 });
 
+// src/lib/mcp/tools/upsert-learn-block.ts
+import { defineTool as defineTool23 } from "npm:@lovable.dev/mcp-js@0.28.0";
+import { z as z19 } from "npm:zod@^4.5.4";
+var SLUG_RE = /^[a-z0-9][a-z0-9-]{1,60}$/;
+var upsert_learn_block_default = defineTool23({
+  name: "upsert_learn_block",
+  title: "Write a Learn section block",
+  description: "Admin only. Create, update, publish or delete a content block rendered in the /learn crash course. Blocks are keyed by `slug`, so writing the same slug twice updates it rather than duplicating. `kind` controls rendering: 'callout' = highlighted box, 'note'/'section' = titled prose, 'term' = glossary entry (use the term as `title`), 'link' = titled prose with `meta.url` as a button. Status starts as 'draft' and is only visible on the site once set to 'published'. Read `list_learn_blocks` first, keep prose short and factual, and never invent benchmark numbers.",
+  inputSchema: {
+    action: z19.enum(["upsert", "publish", "unpublish", "delete"]).describe("Defaults to 'upsert'."),
+    slug: z19.string().describe("Stable identifier, lowercase kebab-case, e.g. 'why-open-weights-2026'."),
+    tab: z19.enum(["models", "privacy", "local", "agents", "glossary"]).optional().describe("Required when creating a new block."),
+    kind: z19.enum(["note", "callout", "term", "section", "link"]).optional(),
+    title: z19.string().optional(),
+    body: z19.string().optional().describe("Plain text / light markdown. Blank lines separate paragraphs, lines starting with '- ' render as bullets."),
+    meta: z19.record(z19.any()).optional().describe("Optional extras: { url, url_label, example, source } \u2014 `example` is shown for glossary terms."),
+    position: z19.number().int().optional().describe("Sort order within the tab, lower first."),
+    status: z19.enum(["draft", "review", "published"]).optional()
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+  handler: async (input, ctx) => {
+    requireAuth(ctx);
+    if (!await isAdmin(ctx)) return fail("Admin role required.");
+    const slug = input.slug?.trim().toLowerCase();
+    if (!slug || !SLUG_RE.test(slug)) {
+      return fail("`slug` must be lowercase kebab-case, 2-61 chars, e.g. 'agentic-ops-2026'.");
+    }
+    const supabase = supabaseForUser(ctx);
+    const action = input.action ?? "upsert";
+    return audited(
+      ctx,
+      {
+        tool_name: "upsert_learn_block",
+        action,
+        target_type: "learn_block",
+        target_id: slug,
+        input
+      },
+      async () => {
+        const { data: existing, error: readError } = await supabase.from("learn_blocks").select("id, tab, slug, kind, title, status, position").eq("slug", slug).maybeSingle();
+        if (readError) return fail(readError.message);
+        if (action === "delete") {
+          if (!existing) return fail(`No learn block with slug '${slug}'.`);
+          const { error: error2 } = await supabase.from("learn_blocks").delete().eq("slug", slug);
+          if (error2) return fail(error2.message);
+          return ok({ action: "deleted", slug });
+        }
+        if (action === "publish" || action === "unpublish") {
+          if (!existing) return fail(`No learn block with slug '${slug}'.`);
+          const status = action === "publish" ? "published" : "draft";
+          const { data: data2, error: error2 } = await supabase.from("learn_blocks").update({ status, updated_by: ctx.getUserId(), updated_by_label: ctx.getUserEmail?.() ?? null }).eq("slug", slug).select().maybeSingle();
+          if (error2) return fail(error2.message);
+          return ok({ action, block: data2 });
+        }
+        const patch = {
+          updated_by: ctx.getUserId(),
+          updated_by_label: ctx.getUserEmail?.() ?? null
+        };
+        for (const key of ["tab", "kind", "title", "body", "meta", "position", "status"]) {
+          const value = input[key];
+          if (value !== void 0) patch[key] = value;
+        }
+        if (!existing) {
+          if (!input.tab) return fail("`tab` is required when creating a new block.");
+          if (!input.title?.trim() || !input.body?.trim()) {
+            return fail("`title` and `body` are required when creating a new block.");
+          }
+          const { data: data2, error: error2 } = await supabase.from("learn_blocks").insert({ slug, kind: input.kind ?? "note", status: input.status ?? "draft", ...patch }).select().maybeSingle();
+          if (error2) return fail(error2.message);
+          return ok({ action: "created", block: data2 }, `Created learn block '${slug}' (status: ${data2?.status}).`);
+        }
+        const { data, error } = await supabase.from("learn_blocks").update(patch).eq("slug", slug).select().maybeSingle();
+        if (error) return fail(error.message);
+        return ok({ action: "updated", previous: existing, block: data });
+      }
+    );
+  }
+});
+
 // src/lib/mcp/tools/whoami.ts
-import { defineTool as defineTool22 } from "npm:@lovable.dev/mcp-js@0.28.0";
-var whoami_default = defineTool22({
+import { defineTool as defineTool24 } from "npm:@lovable.dev/mcp-js@0.28.0";
+var whoami_default = defineTool24({
   name: "whoami",
   title: "Who am I",
   description: "Report the signed-in SiliconSoap identity behind this MCP connection: user id, email, display name, admin role and remaining credits.",
@@ -1048,6 +1161,11 @@ var mcp_default = defineMcp({
     "`list_content_drafts` to read them, `seed_featured_debate` to publish a showcase debate on",
     "/explore, and `upsert_agent_profile` to extend the persona roster.",
     "",
+    "The /learn crash course is agent-maintainable: `list_learn_blocks` reads the live blocks per",
+    "tab (models, privacy, local, agents, glossary) and `upsert_learn_block` creates or revises one,",
+    "keyed by a stable slug. New blocks start as drafts and only appear on the site once published,",
+    "so write -> review -> publish. Keep blocks short, factual and sourced; do not duplicate a slug.",
+    "",
     "Accountability: every write over MCP is recorded in an append-only audit log. Read it with",
     "`list_agent_activity` (filter by tool, failures only, or a time window) before and after a",
     "maintenance run so your work is verifiable. Log entries can never be edited or deleted.",
@@ -1066,12 +1184,14 @@ var mcp_default = defineMcp({
     list_feature_flags_default,
     list_agent_profiles_default,
     list_hall_of_shame_default,
+    list_learn_blocks_default,
     whoami_default,
     list_my_debates_default,
     create_debate_default,
     get_debate_status_default,
     list_openrouter_models_default,
     upsert_curated_model_default,
+    upsert_learn_block_default,
     sync_model_pricing_default,
     manage_quick_prompts_default,
     set_feature_flag_default,
