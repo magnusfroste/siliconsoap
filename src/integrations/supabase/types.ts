@@ -554,6 +554,54 @@ export type Database = {
           },
         ]
       }
+      learn_blocks: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          meta: Json
+          position: number
+          slug: string
+          status: string
+          tab: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          updated_by_label: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json
+          position?: number
+          slug: string
+          status?: string
+          tab: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_label?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          meta?: Json
+          position?: number
+          slug?: string
+          status?: string
+          tab?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_label?: string | null
+        }
+        Relationships: []
+      }
       quick_prompts: {
         Row: {
           created_at: string | null
