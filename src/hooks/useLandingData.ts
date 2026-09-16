@@ -31,6 +31,8 @@ export interface Showdown {
 
 export interface ArchiveDebate {
   shareId: string;
+  /** Curated card headline (the raw prompt is often too long or unbalanced). */
+  headline: string;
   prompt: string;
   modelIds: string[];
 }
@@ -240,13 +242,14 @@ export function useLandingData(): LandingData {
         };
       }
 
-      const archive: ArchiveDebate[] = ARCHIVE_SHARE_IDS.map((shareId) => {
+      const archive: ArchiveDebate[] = ARCHIVE_DEBATES.map(({ shareId, headline }) => {
         const row = (archiveRows ?? []).find((r) => r.share_id === shareId);
         if (!row) return null;
         const settings = (row.settings ?? {}) as { models?: Record<string, string> };
         const modelIds = Object.values(settings.models ?? {}).filter(Boolean) as string[];
         return {
           shareId,
+          headline,
           prompt: row.prompt || row.title || '',
           modelIds,
         };
