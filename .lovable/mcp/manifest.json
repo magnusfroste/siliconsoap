@@ -485,6 +485,16 @@
               "description": "Turn hidden thinking OFF for this model in debates.",
               "type": "boolean"
             },
+            "origin_region": {
+              "description": "Where the model comes from: US, CN, EU or OTHER.",
+              "type": "string",
+              "enum": [
+                "US",
+                "CN",
+                "EU",
+                "OTHER"
+              ]
+            },
             "sort_order": {
               "type": "integer",
               "minimum": -9007199254740991,
