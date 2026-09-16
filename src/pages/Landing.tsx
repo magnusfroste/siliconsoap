@@ -452,7 +452,7 @@ export const Landing = () => {
                         {speed}
                       </Chip>
                     )}
-                    {model.category && (
+                    {model.category && capitalize(model.category) !== speed && (
                       <Chip bg="#EFEDE8" color="#3F3D48">
                         {capitalize(model.category)}
                       </Chip>
