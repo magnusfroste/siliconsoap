@@ -137,10 +137,18 @@ serve(async (req) => {
 
       if (meta) {
         const priceTier = calculatePriceTier(meta.priceInput, meta.priceOutput);
-        // OpenRouter's own hugging_face_id is the authoritative open-weight signal.
-        // If present → open-weight. If absent → closed (Cloud API only).
-        // Note: this may briefly mark a model as "closed" if HF weights aren't published yet.
-        const licenseType: 'open-weight' | 'closed' = meta.huggingFaceId ? 'open-weight' : 'closed';
+        // A non-empty hugging_face_id from OpenRouter is evidence of published
+        // weights → open-weight. A missing/empty one is NOT evidence of closed
+        // weights (OpenRouter leaves it blank for some open-weight models),
+        // so keep the model's existing license_type; fall back to 'closed'
+        // only when the existing value is null/empty. Never downgrade an
+        // existing 'open-weight' to 'closed'.
+        const licenseType: 'open-weight' | 'closed' = meta.huggingFaceId
+          ? 'open-weight'
+          : (model.license_type === 'open-weight' || model.license_type === 'closed'
+              ? model.license_type as 'open-weight' | 'closed'
+              : 'closed');
+        const licenseKept = !meta.huggingFaceId && licenseType === 'open-weight';
 
         const update: Record<string, unknown> = {
           price_input: meta.priceInput,
@@ -162,7 +170,9 @@ serve(async (req) => {
         if (updateError) {
           console.error(`Error updating model ${model.model_id}:`, updateError);
         } else {
-          console.log(`Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}, reasoning=${meta.supportsReasoning}`);
+          console.log(
+            `Updated ${model.display_name}: tier=${priceTier}, license=${licenseType}${licenseKept ? ' (kept — no hugging_face_id)' : ''}, ctx=${meta.contextLength}, hf=${meta.huggingFaceId || '-'}, reasoning=${meta.supportsReasoning}`,
+          );
           updatedCount++;
         }
       } else {
