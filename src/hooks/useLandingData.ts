@@ -261,7 +261,11 @@ export function useLandingData(): LandingData {
         totalModels: enabled.length,
         openWeightsCount: enabled.filter((m) => isOpenWeights(m.license_type)).length,
         originCounts: [...byOrigin.entries()]
-          .map(([label, count]) => ({ label, count }))
+          .map(([region, count]) => ({
+            label: originLabel(region) ?? region,
+            sentenceLabel: originSentenceLabel(region) ?? originLabel(region) ?? region,
+            count,
+          }))
           .sort((a, b) => b.count - a.count),
         newestAddedAt: enabled[0]?.created_at ?? null,
         showdown,
