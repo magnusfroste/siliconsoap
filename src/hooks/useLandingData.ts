@@ -35,7 +35,25 @@ export interface ArchiveDebate {
   modelIds: string[];
 }
 
-export const ARCHIVE_SHARE_IDS = ['49pierlo', 'pd2leq5r', 'w41zkk3r'];
+/** Fixed archive debates with curated, balanced headlines. */
+export const ARCHIVE_DEBATES: { shareId: string; headline: string }[] = [
+  {
+    shareId: '49pierlo',
+    headline:
+      'Should Swedish companies ban American AI providers after the US government shut down Fable 5?',
+  },
+  {
+    shareId: 'pd2leq5r',
+    headline: 'Will Flash models make large reasoning models economically obsolete?',
+  },
+  {
+    shareId: 'w41zkk3r',
+    headline:
+      'Are AI agents going to change business processes in 2026 — and how much productivity will they gain?',
+  },
+];
+
+export const ARCHIVE_SHARE_IDS = ARCHIVE_DEBATES.map((d) => d.shareId);
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -49,6 +67,22 @@ export function originLabel(region: string | null | undefined): string | null {
       return 'European Union';
     case 'OTHER':
       return 'Other';
+    default:
+      return null;
+  }
+}
+
+/** Origin wording for use inside a sentence, e.g. "8 from the United States". */
+export function originSentenceLabel(region: string | null | undefined): string | null {
+  switch (region) {
+    case 'US':
+      return 'the United States';
+    case 'CN':
+      return 'China';
+    case 'EU':
+      return 'the European Union';
+    case 'OTHER':
+      return 'other regions';
     default:
       return null;
   }
