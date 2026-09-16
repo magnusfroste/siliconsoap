@@ -25,6 +25,7 @@ interface SeedRequest {
   viewCountMax: number;
   reactionCount: number;
   scenarioId: string;
+  featured?: boolean;
 }
 
 const EMOJIS = ['🔥', '😂', '🤔', '🤯'];
@@ -150,7 +151,8 @@ serve(async (req) => {
       viewCountMin,
       viewCountMax,
       reactionCount,
-      scenarioId
+      scenarioId,
+      featured
     } = body;
 
     console.log(`Seeding debate: "${topic}" for date ${targetDate}`);
@@ -186,6 +188,7 @@ serve(async (req) => {
         is_public: true,
         share_id: shareId,
         view_count: viewCount,
+        featured_at: featured === true ? new Date().toISOString() : null,
         created_at: baseDate.toISOString(),
         updated_at: baseDate.toISOString()
       })

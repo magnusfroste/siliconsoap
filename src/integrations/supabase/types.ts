@@ -110,6 +110,7 @@ export type Database = {
         Row: {
           created_at: string | null
           deleted_at: string | null
+          featured_at: string | null
           id: string
           is_public: boolean | null
           prompt: string
@@ -130,6 +131,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           deleted_at?: string | null
+          featured_at?: string | null
           id?: string
           is_public?: boolean | null
           prompt: string
@@ -150,6 +152,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           deleted_at?: string | null
+          featured_at?: string | null
           id?: string
           is_public?: boolean | null
           prompt?: string
@@ -406,6 +409,7 @@ export type Database = {
           is_free: boolean
           license_type: string | null
           model_id: string
+          origin_region: string | null
           price_input: number | null
           price_output: number | null
           price_tier: string | null
@@ -433,6 +437,7 @@ export type Database = {
           is_free?: boolean
           license_type?: string | null
           model_id: string
+          origin_region?: string | null
           price_input?: number | null
           price_output?: number | null
           price_tier?: string | null
@@ -460,6 +465,7 @@ export type Database = {
           is_free?: boolean
           license_type?: string | null
           model_id?: string
+          origin_region?: string | null
           price_input?: number | null
           price_output?: number | null
           price_tier?: string | null

@@ -27,6 +27,10 @@ export default defineTool({
       .boolean()
       .optional()
       .describe("Turn hidden thinking OFF for this model in debates."),
+    origin_region: z
+      .enum(["US", "CN", "EU", "OTHER"])
+      .optional()
+      .describe("Where the model comes from: US, CN, EU or OTHER."),
     sort_order: z.number().int().optional(),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },

@@ -618,6 +618,11 @@ Deno.serve(async (req) => {
       const wantSync = url.searchParams.get("sync") === "true";
 
       // ----- Validate models against curated_models -----
+      // Admins may smoke-test models that are not enabled for users yet.
+      const { data: isAdminCaller } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
       const { data: curated } = await supabase
         .from("curated_models")
         .select("model_id, disable_reasoning, is_enabled")
@@ -626,7 +631,10 @@ Deno.serve(async (req) => {
         (curated ?? []).map((m) => [m.model_id, m]),
       );
       for (const m of input.models) {
-        if (!curatedMap.has(m) || curatedMap.get(m)!.is_enabled === false) {
+        if (
+          !curatedMap.has(m) ||
+          (curatedMap.get(m)!.is_enabled === false && isAdminCaller !== true)
+        ) {
           return json(
             { error: `Model "${m}" is not available. GET /models for the list.` },
             400,

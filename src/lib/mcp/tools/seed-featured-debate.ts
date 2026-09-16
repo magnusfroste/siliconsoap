@@ -73,6 +73,7 @@ export default defineTool({
             viewCountMax: input.view_count_max ?? 400,
             reactionCount: input.reaction_count ?? 6,
             scenarioId: input.scenario_id ?? "general-problem",
+            featured: true,
           },
         });
         if (status >= 400) {
@@ -85,8 +86,10 @@ export default defineTool({
             ? (body as Record<string, unknown>)
             : { result: body };
         const shareId = payload.shareId ?? payload.share_id;
+        const chatId = payload.chatId ?? payload.chat_id ?? payload.id ?? null;
         return ok({
           ...payload,
+          chatId,
           share_url: typeof shareId === "string" ? `https://siliconsoap.com/shared/${shareId}` : null,
         });
       },
