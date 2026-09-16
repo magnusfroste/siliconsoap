@@ -90,6 +90,13 @@ serve(async (req) => {
           .eq('chat_id', chatId)
           .eq('user_id', userId)
           .is('completed_at', null));
+      } else if (analyticsId && UUID_RE.test(analyticsId) && userId) {
+        ({ error } = await admin
+          .from('chat_analytics')
+          .update(patch)
+          .eq('id', analyticsId)
+          .eq('user_id', userId)
+          .is('completed_at', null));
       } else if (sessionId) {
         ({ error } = await admin
           .from('chat_analytics')
