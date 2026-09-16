@@ -127,6 +127,8 @@ export function excerpt(text: string, maxLength = 220): string {
 
 interface RosterCount {
   label: string;
+  /** Wording for use inside a sentence, e.g. "the United States". */
+  sentenceLabel: string;
   count: number;
 }
 
@@ -184,8 +186,8 @@ export function useLandingData(): LandingData {
       const enabled = (models ?? []) as LandingModel[];
       const byOrigin = new Map<string, number>();
       enabled.forEach((m) => {
-        const label = originLabel(m.origin_region);
-        if (label) byOrigin.set(label, (byOrigin.get(label) ?? 0) + 1);
+        const region = m.origin_region;
+        if (region && originLabel(region)) byOrigin.set(region, (byOrigin.get(region) ?? 0) + 1);
       });
 
       // Showdown
