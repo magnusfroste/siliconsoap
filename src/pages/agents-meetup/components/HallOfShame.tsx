@@ -126,7 +126,7 @@ export function HallOfShame() {
                   
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="font-medium">
-                      — {getAgentSoapName(moment.agent_name, 'analytical')} ({getAgentLetter(moment.agent_name)})
+                      Flagged: {moment.agent_name}
                     </span>
                     <span>
                       {formatDistanceToNow(new Date(moment.created_at), { addSuffix: true })}
