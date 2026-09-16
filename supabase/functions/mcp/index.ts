@@ -1173,7 +1173,10 @@ var mcp_default = defineMcp({
   ].join("\n"),
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
-    acceptedAudiences: "authenticated"
+    acceptedAudiences: "authenticated",
+    // Also accept first-party Supabase session tokens (e.g. minted by the
+    // `mcp-token` edge function from a personal `sk_silicon_...` API key).
+    requireOAuthClientClaim: false
   }),
   tools: [
     site_stats_default,
