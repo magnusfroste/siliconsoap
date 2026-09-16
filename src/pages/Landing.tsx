@@ -501,7 +501,7 @@ export const Landing = () => {
                   ·
                 </span>
                 <span>
-                  {origin.count} from {origin.label}
+                  {origin.count} from {origin.sentenceLabel}
                 </span>
               </span>
             ))}
@@ -756,10 +756,10 @@ export const Landing = () => {
                   style={{ background: '#FFFFFF', borderColor: '#E2DED6', color: '#17161C' }}
                 >
                   <span
-                    className="text-[21px] font-semibold leading-snug md:text-[25px]"
+                    className="line-clamp-4 text-[21px] font-semibold leading-snug md:text-[25px]"
                     style={{ fontFamily: FONT_HEAD }}
                   >
-                    {debate.prompt}
+                    {debate.headline}
                   </span>
                   <div className="mt-auto flex flex-wrap gap-1.5">
                     {debate.modelIds.map((id) => (

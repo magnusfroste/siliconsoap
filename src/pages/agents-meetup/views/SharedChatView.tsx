@@ -462,8 +462,11 @@ export const SharedChatView = () => {
                 description={chat.prompt}
               />
               
-              <Button onClick={() => navigate('/')} className="gap-2">
-                Start Your Own
+              <Button
+                onClick={() => navigate(`/new?prompt=${encodeURIComponent(chat.prompt)}`)}
+                className="gap-2"
+              >
+                Rerun with your own cast
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
