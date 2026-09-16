@@ -138,6 +138,11 @@ export const ApiKeysTab = () => {
                 Generate keys to let external agents (Claude Cowork, n8n, scripts) create
                 debates programmatically via the REST API. For your security, the full key
                 is shown only once at creation — store it somewhere safe.
+                <span className="mt-2 block">
+                  The same key also works with the MCP server: exchange it at{' '}
+                  <code className="font-mono text-xs">POST /functions/v1/mcp-token</code>{' '}
+                  for a 1-hour access token.
+                </span>
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>

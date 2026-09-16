@@ -5,6 +5,7 @@
   "auth": {
     "type": "oauth",
     "issuer": "https://apfrjuomozdvdeondzaz.supabase.co/auth/v1",
+    "require_oauth_client_claim": false,
     "accepted_audiences": [
       "authenticated"
     ]
