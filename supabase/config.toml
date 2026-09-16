@@ -54,3 +54,6 @@ verify_jwt = false
 [functions.debates-api]
 verify_jwt = false
 
+
+[functions.mcp-token]
+verify_jwt = false
