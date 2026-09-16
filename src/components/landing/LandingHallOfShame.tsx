@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
-import { RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ShameMoment {
   id: string;
@@ -17,38 +14,23 @@ interface ShameMoment {
   created_at: string;
 }
 
-const shameTypeConfig = {
-  backstab: { 
-    emoji: '🗡️', 
-    label: 'Backstab', 
-    color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30' 
-  },
-  diva: { 
-    emoji: '👑', 
-    label: 'Diva Moment', 
-    color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' 
-  },
-  trust_issue: { 
-    emoji: '💔', 
-    label: 'Trust Issue', 
-    color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' 
-  },
+const FONT_HEAD = "'Fraunces', Georgia, serif";
+const FONT_BODY = "'IBM Plex Sans', system-ui, sans-serif";
+
+const shameTypeLabels: Record<ShameMoment['shame_type'], string> = {
+  backstab: 'Backstab',
+  diva: 'Diva moment',
+  trust_issue: 'Trust issue',
 };
 
 const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+const MAX_SEVERITY = 5;
 
 export function LandingHallOfShame() {
   const [moments, setMoments] = useState<ShameMoment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
-  const navigate = useNavigate();
 
-  const fetchShameMoments = useCallback(async (isAutoRefresh = false) => {
-    if (isAutoRefresh) {
-      setIsRefreshing(true);
-    }
-
+  const fetchShameMoments = useCallback(async () => {
     const { data, error } = await supabase
       .from('hall_of_shame')
       .select('*')
@@ -58,55 +40,29 @@ export function LandingHallOfShame() {
     if (error) {
       console.error('Error fetching shame moments:', error);
     } else {
-      const newMoments = (data as ShameMoment[]) || [];
-      
-      // Find new moments that weren't in the previous list
-      if (isAutoRefresh && moments.length > 0) {
-        const existingIds = new Set(moments.map(m => m.id));
-        const newIds = newMoments.filter(m => !existingIds.has(m.id)).map(m => m.id);
-        
-        if (newIds.length > 0) {
-          setAnimatingIds(new Set(newIds));
-          // Clear animation state after animation completes
-          setTimeout(() => setAnimatingIds(new Set()), 600);
-        }
-      }
-      
-      setMoments(newMoments);
+      setMoments((data as ShameMoment[]) || []);
     }
-    
+
     setLoading(false);
-    if (isAutoRefresh) {
-      setTimeout(() => setIsRefreshing(false), 500);
-    }
-  }, [moments]);
+  }, []);
 
   useEffect(() => {
     fetchShameMoments();
-  }, []);
-
-  // Auto-refresh interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchShameMoments(true);
-    }, AUTO_REFRESH_INTERVAL);
-
+    const interval = setInterval(fetchShameMoments, AUTO_REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [fetchShameMoments]);
 
   if (loading) {
     return (
-      <section className="container mx-auto px-4 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <Skeleton className="h-8 w-64 mx-auto mb-2" />
-            <Skeleton className="h-4 w-48 mx-auto" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
-          </div>
+      <section className="mx-auto max-w-[1280px] px-4 py-11 md:px-10 md:py-24">
+        <div className="mb-8 flex flex-col gap-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3 md:gap-5">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-36 rounded-[16px]" />
+          ))}
         </div>
       </section>
     );
@@ -117,76 +73,90 @@ export function LandingHallOfShame() {
   }
 
   return (
-    <section className="container mx-auto px-4 pb-16 relative z-10">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-            <span>🎭</span>
+    <section
+      className="mx-auto max-w-[1280px] px-4 py-11 md:px-10 md:py-24"
+      style={{ fontFamily: FONT_BODY, color: '#17161C' }}
+    >
+      <div className="flex flex-col gap-5 md:gap-8">
+        <div className="flex flex-col gap-2 md:gap-2.5">
+          <span
+            className="text-[12px] font-semibold uppercase tracking-[0.08em] md:text-sm"
+            style={{ color: '#5B35C9' }}
+          >
             Hall of Shame
-            <RefreshCw 
-              className={`h-4 w-4 text-muted-foreground transition-all duration-500 ${
-                isRefreshing ? 'animate-spin text-primary' : 'opacity-0'
-              }`}
-            />
-          </h3>
-          <p className="text-sm text-muted-foreground italic">
-            Can you trust an AI? Spoiler: no.
+          </span>
+          <h2
+            className="m-0 text-[30px] font-semibold leading-[1.1] tracking-[-0.02em] md:text-[48px] md:leading-[1.05]"
+            style={{ fontFamily: FONT_HEAD }}
+          >
+            Where the arguments fall apart.
+          </h2>
+          <p className="m-0 max-w-[720px] text-[16px] leading-relaxed md:text-[19px]" style={{ color: '#55535E' }}>
+            Contradictions, dodges and diva moments — flagged automatically in real debates.
           </p>
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-3">
-          {moments.map((moment, index) => {
-            const config = shameTypeConfig[moment.shame_type] || shameTypeConfig.backstab;
-            const isNew = animatingIds.has(moment.id);
-            
-            return (
-              <Card 
-                key={moment.id} 
-                className={`group bg-card/50 hover:bg-card/80 transition-all duration-300 border-border/50 hover:border-primary/30 hover:-translate-y-2 hover:shadow-lg hover:shadow-primary/5 cursor-pointer relative overflow-hidden ${
-                  isNew 
-                    ? 'animate-scale-in ring-2 ring-primary/50 ring-offset-2 ring-offset-background' 
-                    : 'animate-fade-in'
-                }`}
-                style={{ animationDelay: isNew ? '0s' : `${index * 0.1}s` }}
-                onClick={() => moment.share_id && navigate(`/shared/${moment.share_id}`)}
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
+          {moments.map((moment) => {
+            const label = shameTypeLabels[moment.shame_type] ?? shameTypeLabels.backstab;
+            const severity = Math.max(1, Math.min(MAX_SEVERITY, moment.severity || 1));
+
+            const card = (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className="rounded-md px-2 py-[3px] text-xs font-semibold"
+                    style={{ background: '#E9E7EE', color: '#3F3D48' }}
+                  >
+                    {label}
+                  </span>
+                  <span
+                    className="flex items-center gap-[3px]"
+                    aria-label={`Severity ${severity} of ${MAX_SEVERITY}`}
+                  >
+                    {Array.from({ length: MAX_SEVERITY }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="h-3 w-[3px] rounded-full"
+                        style={{ background: i < severity ? '#5B35C9' : '#DAD5CB' }}
+                      />
+                    ))}
+                  </span>
+                </div>
+
+                <p
+                  className="m-0 line-clamp-4 text-[15px] leading-relaxed md:text-[17px]"
+                  style={{ color: '#3F3D48' }}
+                >
+                  {moment.quote}
+                </p>
+
+                <div className="mt-auto flex items-center justify-between gap-3 text-[13px]">
+                  <span className="font-semibold">Flagged: {moment.agent_name}</span>
+                  <span style={{ color: '#55535E' }}>
+                    {formatDistanceToNow(new Date(moment.created_at), { addSuffix: true })}
+                  </span>
+                </div>
+              </>
+            );
+
+            const cardClass =
+              'flex flex-col gap-3.5 rounded-[16px] border p-5 md:rounded-[18px] md:p-7';
+            const cardStyle = { background: '#FFFFFF', borderColor: '#E2DED6', color: '#17161C' };
+
+            return moment.share_id ? (
+              <Link
+                key={moment.id}
+                to={`/shared/${moment.share_id}`}
+                className={`${cardClass} transition-colors hover:border-[#5B35C9]`}
+                style={cardStyle}
               >
-                {/* New indicator pulse */}
-                {isNew && (
-                  <div className="absolute inset-0 bg-primary/10 animate-pulse" />
-                )}
-                
-                {/* Shimmer effect on hover */}
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-                
-                <CardContent className="p-4 relative">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge 
-                      variant="outline" 
-                      className={`${config.color} text-xs transition-transform duration-300 group-hover:scale-105`}
-                    >
-                      {config.emoji} {config.label}
-                    </Badge>
-                    <div className="flex">
-                      {[...Array(moment.severity)].map((_, i) => (
-                        <span key={i} className="text-xs">🔥</span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm font-medium mb-2 line-clamp-3 italic group-hover:text-foreground/90 transition-colors">
-                    "{moment.quote}"
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-medium">
-                      — Agent {moment.agent_name.split('-')[1]?.toUpperCase() || 'A'}
-                    </span>
-                    <span>
-                      {formatDistanceToNow(new Date(moment.created_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+                {card}
+              </Link>
+            ) : (
+              <div key={moment.id} className={cardClass} style={cardStyle}>
+                {card}
+              </div>
             );
           })}
         </div>

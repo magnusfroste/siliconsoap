@@ -462,8 +462,11 @@ export const SharedChatView = () => {
                 description={chat.prompt}
               />
               
-              <Button onClick={() => navigate('/')} className="gap-2">
-                Start Your Own
+              <Button
+                onClick={() => navigate(`/new?prompt=${encodeURIComponent(chat.prompt)}`)}
+                className="gap-2"
+              >
+                Rerun with your own cast
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -524,9 +527,13 @@ export const SharedChatView = () => {
           <p className="text-sm text-muted-foreground hidden sm:block">
             Want to create your own multi-agent conversations?
           </p>
-          <Button onClick={() => navigate('/')} size="lg" className="gap-2">
+          <Button
+            onClick={() => navigate(`/new?prompt=${encodeURIComponent(chat.prompt)}`)}
+            size="lg"
+            className="gap-2"
+          >
             <Droplets className="h-4 w-4" />
-            Start Free Conversation
+            Rerun this question with your own cast
           </Button>
         </div>
       </div>

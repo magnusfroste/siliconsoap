@@ -31,11 +31,31 @@ export interface Showdown {
 
 export interface ArchiveDebate {
   shareId: string;
+  /** Curated card headline (the raw prompt is often too long or unbalanced). */
+  headline: string;
   prompt: string;
   modelIds: string[];
 }
 
-export const ARCHIVE_SHARE_IDS = ['49pierlo', 'pd2leq5r', 'w41zkk3r'];
+/** Fixed archive debates with curated, balanced headlines. */
+export const ARCHIVE_DEBATES: { shareId: string; headline: string }[] = [
+  {
+    shareId: '49pierlo',
+    headline:
+      'Should Swedish companies ban American AI providers after the US government shut down Fable 5?',
+  },
+  {
+    shareId: 'pd2leq5r',
+    headline: 'Will Flash models make large reasoning models economically obsolete?',
+  },
+  {
+    shareId: 'w41zkk3r',
+    headline:
+      'Are AI agents going to change business processes in 2026 — and how much productivity will they gain?',
+  },
+];
+
+export const ARCHIVE_SHARE_IDS = ARCHIVE_DEBATES.map((d) => d.shareId);
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -49,6 +69,22 @@ export function originLabel(region: string | null | undefined): string | null {
       return 'European Union';
     case 'OTHER':
       return 'Other';
+    default:
+      return null;
+  }
+}
+
+/** Origin wording for use inside a sentence, e.g. "8 from the United States". */
+export function originSentenceLabel(region: string | null | undefined): string | null {
+  switch (region) {
+    case 'US':
+      return 'the United States';
+    case 'CN':
+      return 'China';
+    case 'EU':
+      return 'the European Union';
+    case 'OTHER':
+      return 'other regions';
     default:
       return null;
   }
@@ -93,6 +129,8 @@ export function excerpt(text: string, maxLength = 220): string {
 
 interface RosterCount {
   label: string;
+  /** Wording for use inside a sentence, e.g. "the United States". */
+  sentenceLabel: string;
   count: number;
 }
 
@@ -150,8 +188,8 @@ export function useLandingData(): LandingData {
       const enabled = (models ?? []) as LandingModel[];
       const byOrigin = new Map<string, number>();
       enabled.forEach((m) => {
-        const label = originLabel(m.origin_region);
-        if (label) byOrigin.set(label, (byOrigin.get(label) ?? 0) + 1);
+        const region = m.origin_region;
+        if (region && originLabel(region)) byOrigin.set(region, (byOrigin.get(region) ?? 0) + 1);
       });
 
       // Showdown
@@ -204,13 +242,14 @@ export function useLandingData(): LandingData {
         };
       }
 
-      const archive: ArchiveDebate[] = ARCHIVE_SHARE_IDS.map((shareId) => {
+      const archive: ArchiveDebate[] = ARCHIVE_DEBATES.map(({ shareId, headline }) => {
         const row = (archiveRows ?? []).find((r) => r.share_id === shareId);
         if (!row) return null;
         const settings = (row.settings ?? {}) as { models?: Record<string, string> };
         const modelIds = Object.values(settings.models ?? {}).filter(Boolean) as string[];
         return {
           shareId,
+          headline,
           prompt: row.prompt || row.title || '',
           modelIds,
         };
@@ -222,7 +261,11 @@ export function useLandingData(): LandingData {
         totalModels: enabled.length,
         openWeightsCount: enabled.filter((m) => isOpenWeights(m.license_type)).length,
         originCounts: [...byOrigin.entries()]
-          .map(([label, count]) => ({ label, count }))
+          .map(([region, count]) => ({
+            label: originLabel(region) ?? region,
+            sentenceLabel: originSentenceLabel(region) ?? originLabel(region) ?? region,
+            count,
+          }))
           .sort((a, b) => b.count - a.count),
         newestAddedAt: enabled[0]?.created_at ?? null,
         showdown,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Globe, Lock } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
@@ -356,7 +356,7 @@ export const NewChatView = () => {
               {isGuest && (
                 <span className="flex items-center gap-1 text-muted-foreground">
                   <Lock className="h-3 w-3" />
-                  <a href="/login" className="underline hover:text-primary transition-colors">Sign in</a> to keep it private.
+                  <Link to="/auth" className="underline hover:text-primary transition-colors">Sign in</Link> to keep it private.
                 </span>
               )}
             </div>
