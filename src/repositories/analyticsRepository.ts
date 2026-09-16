@@ -149,6 +149,8 @@ export const analyticsRepository = {
     };
   },
 
+  // Writes go through the log-battle-start edge function (service role);
+  // clients have no INSERT/UPDATE access to chat_analytics.
   async logChatStart(params: {
     chatId?: string;
     userId?: string;
@@ -160,82 +162,61 @@ export const analyticsRepository = {
     numRounds: number;
     sessionId?: string;
   }): Promise<string | null> {
-    // Only use chat_id if it's a valid UUID (not guest session IDs like "guest_123")
-    const isValidUuid = params.chatId && !params.chatId.startsWith('guest_');
-    const sessionId = params.sessionId || params.chatId || null;
-    
-    const { data, error } = await supabase
-      .from('chat_analytics')
-      .insert({
-        chat_id: isValidUuid ? params.chatId : null,
-        user_id: params.isGuest ? null : (params.userId || null),
-        is_guest: params.isGuest,
-        prompt_preview: params.promptPreview.slice(0, 200),
-        scenario_id: params.scenarioId,
-        models_used: params.modelsUsed,
-        num_agents: params.numAgents,
-        num_rounds: params.numRounds,
-        user_agent: navigator.userAgent,
-        started_at: new Date().toISOString(),
-        session_id: sessionId
-      })
-      .select('id')
-      .single();
+    try {
+      const { data, error } = await supabase.functions.invoke('log-battle-start', {
+        body: {
+          chatId: params.chatId,
+          sessionId: params.sessionId || params.chatId,
+          promptPreview: params.promptPreview,
+          scenarioId: params.scenarioId,
+          modelsUsed: params.modelsUsed,
+          numAgents: params.numAgents,
+          numRounds: params.numRounds
+        }
+      });
 
-    if (error) {
-      console.error('Error logging chat start:', error);
+      if (error) {
+        console.warn('Failed to log chat start (non-critical):', error);
+        return null;
+      }
+
+      return (data as { analyticsId?: string } | null)?.analyticsId ?? null;
+    } catch (err) {
+      console.warn('Failed to log chat start (non-critical):', err);
       return null;
     }
-
-    const analyticsId = data?.id || null;
-
-    // Fire and forget: capture IP address via edge function
-    if (analyticsId || sessionId) {
-      supabase.functions.invoke('log-battle-start', {
-        body: { analyticsId, sessionId }
-      }).catch(err => {
-        console.warn('Failed to log IP (non-critical):', err);
-      });
-    }
-
-    return analyticsId;
   },
 
-  async logChatComplete(analyticsId: string, totalMessages: number, durationMs: number): Promise<void> {
-    const { error } = await supabase
-      .from('chat_analytics')
-      .update({
-        total_messages: totalMessages,
-        generation_duration_ms: durationMs,
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', analyticsId);
-
-    if (error) {
-      console.error('Error logging chat complete:', error);
+  async logChatComplete(
+    analyticsId: string,
+    totalMessages: number,
+    durationMs: number,
+    sessionId?: string
+  ): Promise<void> {
+    try {
+      await supabase.functions.invoke('log-battle-start', {
+        body: { action: 'complete', analyticsId, sessionId, totalMessages, durationMs }
+      });
+    } catch (err) {
+      console.warn('Failed to log chat complete (non-critical):', err);
     }
   },
 
   async logChatCompleteByChartId(chatId: string, totalMessages: number, durationMs: number): Promise<void> {
-    // For guest chats, use session_id instead of chat_id (which is UUID only)
+    // Guest chats are matched by session_id, logged-in chats by chat_id (ownership checked server-side)
     const isGuestChat = chatId.startsWith('guest_');
-    
-    const query = supabase
-      .from('chat_analytics')
-      .update({
-        total_messages: totalMessages,
-        generation_duration_ms: durationMs,
-        completed_at: new Date().toISOString()
-      })
-      .is('completed_at', null);
-
-    // Use appropriate column based on chat type
-    const { error } = isGuestChat 
-      ? await query.eq('session_id', chatId)
-      : await query.eq('chat_id', chatId);
-
-    if (error) {
-      console.error('Error logging chat complete by chat_id:', error);
+    try {
+      await supabase.functions.invoke('log-battle-start', {
+        body: {
+          action: 'complete',
+          sessionId: isGuestChat ? chatId : undefined,
+          chatId: isGuestChat ? undefined : chatId,
+          totalMessages,
+          durationMs
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to log chat complete (non-critical):', err);
     }
   },
 
