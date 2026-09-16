@@ -19,7 +19,7 @@ export default defineTool({
     let query = supabase
       .from("curated_models")
       .select(
-        "model_id, display_name, provider, category, is_enabled, is_free, disable_reasoning, supports_reasoning, price_input, price_output, price_tier, speed_rating, context_window, license_type, default_for_agent, sort_order, description, pricing_updated_at",
+        "model_id, display_name, provider, origin_region, category, is_enabled, is_free, disable_reasoning, supports_reasoning, price_input, price_output, price_tier, speed_rating, context_window, license_type, default_for_agent, sort_order, description, pricing_updated_at",
       )
       .order("sort_order", { ascending: true });
     if (!include_disabled) query = query.eq("is_enabled", true);

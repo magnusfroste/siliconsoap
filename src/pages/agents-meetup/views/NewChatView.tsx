@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Globe, Lock } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
@@ -61,6 +61,29 @@ export const NewChatView = () => {
   }, {} as Record<string, typeof state.availableModels>);
 
   const currentPrompt = state.promptInputs[state.activeScenario] || '';
+
+  // Honour ?model= and ?prompt= deep links (e.g. from the landing page).
+  const [searchParams] = useSearchParams();
+  const appliedDeepLink = useRef({ prompt: false, model: false });
+
+  useEffect(() => {
+    const promptParam = searchParams.get('prompt');
+    if (promptParam && !appliedDeepLink.current.prompt) {
+      appliedDeepLink.current.prompt = true;
+      actions.handleInputChange(state.activeScenario, promptParam.slice(0, 1000));
+    }
+  }, [searchParams, state.activeScenario, actions]);
+
+  useEffect(() => {
+    const modelParam = searchParams.get('model');
+    if (!modelParam || appliedDeepLink.current.model || state.availableModels.length === 0) return;
+    const match = state.availableModels.find(
+      (m) => m.model_id === modelParam && m.is_enabled !== false,
+    );
+    if (!match) return;
+    appliedDeepLink.current.model = true;
+    actions.setAgentAModel(match.model_id);
+  }, [searchParams, state.availableModels, actions]);
 
 
   // Build chat settings from current state

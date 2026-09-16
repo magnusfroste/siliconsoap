@@ -466,7 +466,7 @@ var list_models_default = defineTool11({
   handler: async ({ include_disabled }) => {
     const supabase = supabaseAnon();
     let query = supabase.from("curated_models").select(
-      "model_id, display_name, provider, category, is_enabled, is_free, disable_reasoning, supports_reasoning, price_input, price_output, price_tier, speed_rating, context_window, license_type, default_for_agent, sort_order, description, pricing_updated_at"
+      "model_id, display_name, provider, origin_region, category, is_enabled, is_free, disable_reasoning, supports_reasoning, price_input, price_output, price_tier, speed_rating, context_window, license_type, default_for_agent, sort_order, description, pricing_updated_at"
     ).order("sort_order", { ascending: true });
     if (!include_disabled) query = query.eq("is_enabled", true);
     const { data, error } = await query;
@@ -768,7 +768,8 @@ var seed_featured_debate_default = defineTool17({
             viewCountMin: input.view_count_min ?? 40,
             viewCountMax: input.view_count_max ?? 400,
             reactionCount: input.reaction_count ?? 6,
-            scenarioId: input.scenario_id ?? "general-problem"
+            scenarioId: input.scenario_id ?? "general-problem",
+            featured: true
           }
         });
         if (status >= 400) {
@@ -777,8 +778,10 @@ var seed_featured_debate_default = defineTool17({
         }
         const payload = typeof body === "object" && body !== null ? body : { result: body };
         const shareId = payload.shareId ?? payload.share_id;
+        const chatId = payload.chatId ?? payload.chat_id ?? payload.id ?? null;
         return ok({
           ...payload,
+          chatId,
           share_url: typeof shareId === "string" ? `https://siliconsoap.com/shared/${shareId}` : null
         });
       }
@@ -987,6 +990,7 @@ var upsert_curated_model_default = defineTool22({
     is_enabled: z18.boolean().optional().describe("Whether users can select this model."),
     supports_reasoning: z18.boolean().optional().describe("Whether the model supports reasoning at all (from OpenRouter)."),
     disable_reasoning: z18.boolean().optional().describe("Turn hidden thinking OFF for this model in debates."),
+    origin_region: z18.enum(["US", "CN", "EU", "OTHER"]).optional().describe("Where the model comes from: US, CN, EU or OTHER."),
     sort_order: z18.number().int().optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
