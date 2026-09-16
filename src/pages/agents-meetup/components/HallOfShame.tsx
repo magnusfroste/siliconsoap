@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HallOfShameSkeleton } from '@/components/skeletons';
 import { formatDistanceToNow } from 'date-fns';
-import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
+
 
 interface ShameMoment {
   id: string;
