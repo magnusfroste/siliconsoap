@@ -34,8 +34,8 @@ export const analyticsService = {
     return analyticsRepository.logChatStart(params);
   },
 
-  async logChatComplete(analyticsId: string, totalMessages: number, durationMs: number): Promise<void> {
-    return analyticsRepository.logChatComplete(analyticsId, totalMessages, durationMs);
+  async logChatComplete(analyticsId: string, totalMessages: number, durationMs: number, sessionId?: string): Promise<void> {
+    return analyticsRepository.logChatComplete(analyticsId, totalMessages, durationMs, sessionId);
   },
 
   async logChatCompleteByChartId(chatId: string, totalMessages: number, durationMs: number): Promise<void> {
