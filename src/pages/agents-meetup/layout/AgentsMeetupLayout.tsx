@@ -52,7 +52,7 @@ export const AgentsMeetupLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <ChatHeader 
           onMenuClick={() => setSidebarOpen(true)}
         />
