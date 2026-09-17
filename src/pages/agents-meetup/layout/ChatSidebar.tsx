@@ -12,6 +12,7 @@ import { ChatHistorySkeleton, CreditsBadgeSkeleton, CreditsDisplaySkeleton } fro
 import { cn } from '@/lib/utils';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { Progress } from '@/components/ui/progress';
 
 interface ChatSidebarProps {
   onClose?: () => void;
@@ -238,7 +239,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
                   {creditsRemaining}
                 </Badge>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.max(0, (creditsRemaining / 3) * 100))}%` }} /></div>
+              <Progress value={Math.min(100, Math.max(0, (creditsRemaining / 3) * 100))} className="h-1.5" />
               {isGuest && creditsRemaining > 0 && (
                 <p className="text-xs text-muted-foreground">
                   Sign up for more
