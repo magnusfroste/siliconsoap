@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Settings, Droplets, Ticket, Shield, BookOpen, Cpu, Info, Compass, Trophy } from 'lucide-react';
+import { Plus, LogIn, PanelLeftClose, PanelLeft, User as UserIcon, Bot, Settings, Ticket, Shield, BookOpen, Cpu, Info, Compass, Trophy } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useCredits } from '../hooks/useCredits';
@@ -28,10 +28,10 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const location = useLocation();
 
   const navItems = [
-    { key: 'explore', icon: Compass, label: 'Explore', path: '/explore', requiresAuth: false },
-    { key: 'leaderboard', icon: Trophy, label: 'Leaderboard', path: '/leaderboard', requiresAuth: false },
+    { key: 'explore', icon: Compass, label: 'Explore debates', path: '/explore', requiresAuth: false },
     { key: 'models', icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
     { key: 'learn', icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },
+    { key: 'leaderboard', icon: Trophy, label: 'Leaderboard', path: '/leaderboard', requiresAuth: false },
     { key: 'about', icon: Info, label: 'About', path: '/about', requiresAuth: false },
     { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
     { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
@@ -78,7 +78,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
   if (collapsed) {
     return (
-      <div className="flex flex-col h-full bg-muted/30 border-r items-center py-4 gap-2">
+      <div className="flex flex-col h-full bg-card border-r items-center py-4 gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -91,7 +91,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
         <div className="h-px w-8 bg-border my-2" />
         
         <Link to="/new" onClick={onClose}>
-          <Button variant="ghost" size="icon" title="New Chat">
+          <Button variant="default" size="icon" title="New debate">
             <Plus className="h-4 w-4" />
           </Button>
         </Link>
@@ -137,13 +137,12 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   }
 
   return (
-    <div className="flex flex-col h-full bg-muted/30 border-r">
+    <div className="flex flex-col h-full bg-card border-r">
       {/* Branding */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <Link to="/new" className="flex items-center gap-2" onClick={onClose}>
-            <Droplets className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            <span className="font-display text-2xl font-semibold">
               SiliconSoap
             </span>
           </Link>
@@ -162,12 +161,13 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
 
       {/* Chat History */}
       <ScrollArea className="flex-1 p-2">
-        <Link to="/new" className="block mb-3">
-          <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground" onClick={onClose}>
+        <Link to="/new" className="block mb-5">
+          <Button variant="default" className="w-full justify-start gap-2 bg-foreground text-background hover:bg-foreground/90" onClick={onClose}>
             <Plus className="h-4 w-4" />
-            <span className="text-sm">New Chat</span>
+            <span className="text-sm">New debate</span>
           </Button>
         </Link>
+        <h2 className="mb-3 px-2 text-xs font-semibold uppercase text-muted-foreground">Your debates</h2>
         {user ? (
           <>
             {loading ? (
@@ -214,16 +214,14 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
             )}
           </>
         ) : (
-          <div className="text-sm text-muted-foreground text-center py-8 px-4">
-            Sign in to save and access your conversation history
-          </div>
+          <Link to="/auth" className="block rounded-md border border-dashed p-4 text-sm text-muted-foreground hover:border-primary hover:text-foreground">Sign in to keep your debates and make them private</Link>
         )}
       </ScrollArea>
 
       {/* Footer Navigation */}
       <div className="border-t">
         {/* Credits Display */}
-        <div className="p-3 border-b">
+        <div className="p-4 border-b">
           {creditsLoading ? (
             <CreditsDisplaySkeleton />
           ) : (
@@ -231,18 +229,19 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm">
                   <Ticket className="h-4 w-4 text-primary" />
-                  <span className="text-muted-foreground">Credits</span>
+                  <span className="text-muted-foreground">Free debates · {creditsRemaining} left</span>
                 </div>
-                <Badge 
+                <Badge className="sr-only"
                   variant={creditsRemaining > 3 ? "secondary" : creditsRemaining > 0 ? "outline" : "destructive"}
                   className="font-semibold"
                 >
                   {creditsRemaining}
                 </Badge>
               </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.max(0, (creditsRemaining / 3) * 100))}%` }} /></div>
               {isGuest && creditsRemaining > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Sign up for more credits
+                  Sign up for more
                 </p>
               )}
               {creditsRemaining === 0 && (
