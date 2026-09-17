@@ -1,8 +1,7 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Zap } from 'lucide-react';
-import { ResponseLength } from '@/pages/agents-meetup/types';
+import { Minus, Plus } from 'lucide-react';
 
 interface ConversationSettingsProps {
   numberOfAgents: number;
@@ -16,182 +15,33 @@ interface ConversationSettingsProps {
   turnOrder: string;
   setTurnOrder: (order: string) => void;
   responseLengthOptions: { value: string; label: string; icon: React.ReactNode }[];
+  compact?: boolean;
 }
 
-export const ConversationSettings: React.FC<ConversationSettingsProps> = ({
-  numberOfAgents,
-  setNumberOfAgents,
-  rounds,
-  setRounds,
-  responseLength,
-  setResponseLength,
-  participationMode,
-  setParticipationMode,
-  turnOrder,
-  setTurnOrder,
-  responseLengthOptions,
-}) => {
-  const agentLabels: Record<string, { short: string; full: string }> = {
-    '1': { short: '1 Agent', full: '1 Agent (Solo Analysis)' },
-    '2': { short: '2 Agents', full: '2 Agents (Discussion)' },
-    '3': { short: '3 Agents', full: '3 Agents (Multi-perspective)' }
-  };
-
-  const roundLabels: Record<string, { short: string; full: string }> = {
-    '1': { short: '1 Round', full: '1 Round (Initial responses)' },
-    '2': { short: '2 Rounds', full: '2 Rounds (With follow-up)' },
-    '3': { short: '3 Rounds', full: '3 Rounds (Extended dialogue)' },
-    '4': { short: '4 Rounds', full: '4 Rounds (Deep discussion)' },
-    '5': { short: '5 Rounds', full: '5 Rounds (Thorough debate)' },
-    '6': { short: '6 Rounds', full: '6 Rounds (Comprehensive)' },
-    '7': { short: '7 Rounds', full: '7 Rounds (Extensive)' },
-    '8': { short: '8 Rounds', full: '8 Rounds (In-depth)' },
-    '9': { short: '9 Rounds', full: '9 Rounds (Detailed)' },
-    '10': { short: '10 Rounds', full: '10 Rounds (Maximum depth)' }
-  };
-
-  const participationLabels: Record<string, { short: string; full: string }> = {
-    'spectator': { short: 'Spectator', full: 'Spectator (Watch Only)' },
-    'jump-in': { short: 'Jump In', full: 'Jump In (Comment After)' },
-    'round-by-round': { short: 'Round-by-Round', full: 'Round-by-Round (Interactive)' }
-  };
-
-  const responseLengthLabels: Record<string, string> = {
-    'short': 'Short',
-    'medium': 'Medium',
-    'long': 'Long'
-  };
-
-  const turnOrderLabels: Record<string, { short: string; full: string }> = {
-    'sequential': { short: 'Sequential', full: 'Sequential (A→B→C)' },
-    'random': { short: 'Random', full: 'Random (Shuffled)' },
-    'popcorn': { short: 'Popcorn', full: 'Popcorn (AI-driven)' }
-  };
+export const ConversationSettings = ({ rounds, setRounds, responseLength, setResponseLength, participationMode, setParticipationMode, turnOrder, setTurnOrder, compact = false }: ConversationSettingsProps) => {
+  if (compact) return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Select value={participationMode} onValueChange={setParticipationMode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="spectator">Spectator</SelectItem><SelectItem value="jump-in">Jump in</SelectItem><SelectItem value="round-by-round">Round by round</SelectItem></SelectContent></Select>
+      <Select value={turnOrder} onValueChange={setTurnOrder}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="sequential">Fixed turn order</SelectItem><SelectItem value="random">Random turns</SelectItem><SelectItem value="popcorn">Popcorn turns</SelectItem></SelectContent></Select>
+    </div>
+  );
 
   return (
-    <TooltipProvider>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Select value={numberOfAgents.toString()} onValueChange={(value) => setNumberOfAgents(parseInt(value))}>
-                <SelectTrigger className="h-10 text-sm">
-                  <span>{agentLabels[numberOfAgents.toString()]?.short || 'Number of agents'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">{agentLabels['1'].full}</SelectItem>
-                  <SelectItem value="2">{agentLabels['2'].full}</SelectItem>
-                  <SelectItem value="3">{agentLabels['3'].full}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p>Choose how many AI agents will participate in the conversation. More agents provide diverse perspectives but take longer to complete.</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Select 
-                value={rounds.toString()} 
-                onValueChange={(value) => setRounds(parseInt(value))}
-                disabled={numberOfAgents === 1}
-              >
-                <SelectTrigger className="h-10 text-sm">
-                  <span>{roundLabels[rounds.toString()]?.short || 'Exchange rounds'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {roundLabels[num.toString()]?.full || `${num} Rounds`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {numberOfAgents === 1 && (
-                <p className="text-xs text-muted-foreground mt-1">Only one round available with one agent</p>
-              )}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p>Number of back-and-forth exchanges between agents. More rounds create deeper discussions as agents build on each other's insights.</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Select value={responseLength} onValueChange={(value) => setResponseLength(value)}>
-                <SelectTrigger className="h-10 text-sm">
-                  <span>{responseLengthLabels[responseLength] || 'Response length'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {responseLengthOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value} className="flex items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        {option.icon}
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p>Control how verbose agent responses are. Short responses are concise, medium provides balanced detail, and long offers comprehensive analysis.</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Select value={participationMode} onValueChange={(value) => setParticipationMode(value)}>
-                <SelectTrigger className="h-10 text-sm">
-                  <span>{participationLabels[participationMode]?.short || 'Participation'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="spectator">{participationLabels['spectator'].full}</SelectItem>
-                  <SelectItem value="jump-in">{participationLabels['jump-in'].full}</SelectItem>
-                  <SelectItem value="round-by-round">{participationLabels['round-by-round'].full}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p>Choose your interaction level: watch agents discuss without interruption, comment after all rounds complete, or participate between each round of discussion.</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div>
-              <Select 
-                value={turnOrder} 
-                onValueChange={(value) => setTurnOrder(value)}
-                disabled={numberOfAgents === 1}
-              >
-                <SelectTrigger className="h-10 text-sm">
-                  <span>{turnOrderLabels[turnOrder]?.short || 'Turn Order'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sequential">{turnOrderLabels['sequential'].full}</SelectItem>
-                  <SelectItem value="random">{turnOrderLabels['random'].full}</SelectItem>
-                  <SelectItem value="popcorn">{turnOrderLabels['popcorn'].full}</SelectItem>
-                </SelectContent>
-              </Select>
-              {numberOfAgents === 1 && (
-                <p className="text-xs text-muted-foreground mt-1">Turn order only applies with multiple agents</p>
-              )}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p>Control agent speaking order: Sequential follows A→B→C pattern, Random shuffles each round, and Popcorn uses AI to select the most relevant speaker based on context.</p>
-          </TooltipContent>
-        </Tooltip>
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="space-y-2">
+        <span className="text-sm font-medium">Rounds</span>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="outline" size="icon" className="h-11 w-11" onClick={() => setRounds(Math.max(1, rounds - 1))} disabled={rounds <= 1} aria-label="Decrease rounds"><Minus className="h-4 w-4" /></Button>
+          <span className="min-w-10 text-center font-mono text-lg font-medium">{rounds}</span>
+          <Button type="button" variant="outline" size="icon" className="h-11 w-11" onClick={() => setRounds(Math.min(10, rounds + 1))} disabled={rounds >= 10} aria-label="Increase rounds"><Plus className="h-4 w-4" /></Button>
+        </div>
       </div>
-    </TooltipProvider>
+      <div className="space-y-2">
+        <span className="text-sm font-medium">Answer length</span>
+        <div className="grid grid-cols-3 rounded-md bg-muted p-1">
+          {[['short', 'Brief'], ['medium', 'Medium'], ['long', 'Detailed']].map(([value, label]) => <Button key={value} type="button" size="sm" variant={responseLength === value ? 'default' : 'ghost'} onClick={() => setResponseLength(value)}>{label}</Button>)}
+        </div>
+      </div>
+    </div>
   );
 };
