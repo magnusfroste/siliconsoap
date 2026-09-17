@@ -173,8 +173,8 @@ function SharedMessage({ entry, index, total, chatUrl, flagged }: { entry: Round
   const letter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
   const long = parsed.publicMessage.length > 600;
   const visible = long && !expanded ? `${parsed.publicMessage.slice(0, 600).trim()}…` : parsed.publicMessage;
-  const sentences = splitSentences(visible);
-  const hasFlag = sentences.some((sentence) => flagged.has(sentence.trim()));
+  const paragraphs = splitParagraphs(visible);
+  const hasFlag = paragraphs.some((paragraph) => splitSentences(paragraph).some((sentence) => flagged.has(sentence.trim())));
 
   return <article className="group border-b border-border pb-8"><div className="flex gap-4">
     {isUser
