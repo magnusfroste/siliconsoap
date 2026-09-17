@@ -61,7 +61,7 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   onShuffleModels,
 }) => {
   return (
-    <section className="space-y-5 rounded-lg border bg-card p-5 md:p-7">
+    <section className="min-w-0 max-w-full overflow-hidden space-y-5 rounded-lg border bg-card p-5 md:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">2</span><h2 className="font-display text-2xl font-semibold">Cast the agents</h2></div>
         <div className="flex min-w-0 flex-wrap items-center gap-2">

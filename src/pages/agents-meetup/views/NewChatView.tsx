@@ -272,8 +272,8 @@ export const NewChatView = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid items-start gap-8 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-8">
+        <form onSubmit={handleSubmit} className="grid min-w-0 items-start gap-8 lg:grid-cols-12">
+          <div className="min-w-0 space-y-6 lg:col-span-8">
             <ScenarioSelector
             scenarioTypes={scenarioTypes}
             activeScenario={state.activeScenario}

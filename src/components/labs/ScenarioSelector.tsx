@@ -34,7 +34,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   const currentScenario = scenarioTypes.find(s => s.id === activeScenario);
 
   return (
-    <section className="rounded-lg border bg-card p-5 md:p-7 space-y-5">
+    <section className="min-w-0 max-w-full overflow-hidden rounded-lg border bg-card p-5 md:p-7 space-y-5">
       <div className="flex items-center gap-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">1</span>
         <h2 className="font-display text-2xl font-semibold">Ask a hard question</h2>
