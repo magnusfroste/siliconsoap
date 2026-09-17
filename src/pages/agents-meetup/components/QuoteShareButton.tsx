@@ -75,9 +75,10 @@ export const QuoteShareButton = ({ message, chatUrl }: QuoteShareButtonProps) =>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-8 gap-1.5 px-2 text-muted-foreground"
         >
           <Share2 className="h-3.5 w-3.5" />
+          Quote
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">

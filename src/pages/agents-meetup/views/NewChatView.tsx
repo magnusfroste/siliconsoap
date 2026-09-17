@@ -2,13 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Globe, Lock } from 'lucide-react';
+import { ArrowRight, Loader2, Lock } from 'lucide-react';
 import { ScenarioSelector } from '@/components/labs/ScenarioSelector';
 import { ConversationSettings } from '@/components/labs/agent-config/ConversationSettings';
 import { AgentGridSection } from '@/components/labs/agent-config/AgentGridSection';
 import { ExpertSettings } from '@/components/labs/agent-config/ExpertSettings';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { scenarioTypes, responseLengthOptions } from '../constants';
 import { useLabsState } from '../hooks/useLabsState';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
@@ -22,12 +20,14 @@ import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
 import { getRandomTopics } from '../constants/suggestedTopics';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import type { ChatSettings } from '@/models/chat';
+import { getAgentSoapName } from '../utils/agentNameGenerator';
+import { getAgreementLabel } from '@/components/labs/agent-config/ExpertSettings';
 
 export const NewChatView = () => {
   const isMounted = useRef(true);
 
   usePageMeta({
-    title: 'Set the Stage for AI Drama',
+    title: 'Start a debate | SiliconSoap',
     description: 'Watch AI agents clash, collaborate, and surprise you in dramatic debates. Choose your cast, set the scene, and let the drama unfold.',
     canonicalPath: '/new',
     breadcrumbs: [
@@ -255,44 +255,36 @@ export const NewChatView = () => {
   }, []);
 
   const suggestedTopics = randomizedTopics[state.activeScenario] || [];
+  const selectedModels = [state.agentAModel, state.agentBModel, state.agentCModel]
+    .slice(0, state.numberOfAgents)
+    .map((id) => state.availableModels.find((model) => model.model_id === id));
+  const personas = [state.agentAPersona, state.agentBPersona, state.agentCPersona];
+  const answerLabel = state.responseLength === 'short' ? 'Brief' : state.responseLength === 'long' ? 'Detailed' : 'Medium';
+  const rulesLine = `${state.rounds} ${state.rounds === 1 ? 'round' : 'rounds'} · ${answerLabel} answers · ${state.conversationTone[0].toUpperCase()}${state.conversationTone.slice(1)} · ${getAgreementLabel(state.agreementBias)}`;
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-start p-4 py-8 md:py-12">
-      <div className="w-full max-w-4xl space-y-6 md:space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Set the Stage</h1>
+    <div className="min-h-full min-w-0 px-4 pb-32 pt-8 md:px-8 md:pb-16 md:pt-12">
+      <div className="mx-auto w-full max-w-6xl space-y-8">
+        <div className="space-y-2">
+          <h1 className="font-display text-4xl font-semibold md:text-5xl">Start a debate</h1>
           <p className="text-muted-foreground">
-            Pick a topic, cast your AI agents, and watch the drama unfold
+            Ask a hard question, cast the agents, set the rules.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <ScenarioSelector
+        <form onSubmit={handleSubmit} className="grid min-w-0 items-start gap-8 lg:grid-cols-12">
+          <div className="min-w-0 space-y-6 lg:col-span-8">
+            <ScenarioSelector
             scenarioTypes={scenarioTypes}
             activeScenario={state.activeScenario}
             setActiveScenario={actions.setActiveScenario}
             promptInputs={state.promptInputs}
             handleInputChange={actions.handleInputChange}
             suggestedTopics={suggestedTopics}
-          />
-
-          {/* Configuration Card — de-emphasised until the user engages with it.
-              The dimming is applied via an overlay veil instead of opacity on the
-              content, so nothing sits on top of (and obscures) the agent cards. */}
-          <div className="group relative">
-            <p className="hidden md:block text-center text-xs text-muted-foreground mb-2 transition-opacity duration-300 group-hover:opacity-0 group-focus-within:opacity-0">
-              Defaults are ready to go — hover to fine-tune your cast &amp; settings
-            </p>
-            <div
-              aria-hidden="true"
-              className="hidden md:block pointer-events-none absolute inset-x-0 bottom-0 top-6 z-10 rounded-xl bg-background/55 transition-opacity duration-500 group-hover:opacity-0 group-focus-within:opacity-0"
             />
-            <Card className="md:group-hover:shadow-lg md:group-focus-within:shadow-lg transition-shadow duration-500">
-
-              <CardContent className="pt-6 space-y-4">
-                {/* Agent Configuration */}
-                <AgentGridSection
+            <AgentGridSection
                   numberOfAgents={state.numberOfAgents}
+                  setNumberOfAgents={actions.setNumberOfAgents}
                   agentAModel={state.agentAModel}
                   setAgentAModel={actions.setAgentAModel}
                   agentBModel={state.agentBModel}
@@ -311,16 +303,10 @@ export const NewChatView = () => {
                   formC={state.formC}
                   modelsByProvider={modelsByProvider}
                   loadingModels={state.loadingModels}
-                  conversationTone={state.conversationTone}
-                  agreementBias={state.agreementBias}
-                  temperature={state.temperature}
-                  personalityIntensity={state.personalityIntensity}
                   onShuffleModels={actions.shuffleModels}
                 />
-
-                <Separator className="my-4" />
-
-                {/* Conversation Settings + Advanced */}
+            <section className="min-w-0 max-w-full overflow-hidden space-y-6 rounded-lg border bg-card p-5 md:p-7">
+              <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">3</span><h2 className="font-display text-2xl font-semibold">Set the rules</h2></div>
                 <ConversationSettings
                   numberOfAgents={state.numberOfAgents}
                   setNumberOfAgents={actions.setNumberOfAgents}
@@ -344,56 +330,37 @@ export const NewChatView = () => {
                   setTemperature={actions.setTemperature}
                   personalityIntensity={state.personalityIntensity}
                   setPersonalityIntensity={actions.setPersonalityIntensity}
+                  participationMode={state.participationMode}
+                  setParticipationMode={actions.setParticipationMode}
+                  turnOrder={state.turnOrder}
+                  setTurnOrder={actions.setTurnOrder}
                 />
-              </CardContent>
-            </Card>
+            </section>
           </div>
-          
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex flex-wrap justify-center items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-2 text-sm text-foreground">
-              <Globe className="h-4 w-4 text-primary" />
-              <span>Your debate will be <strong>public</strong> and shareable via link.</span>
+
+          <aside className="hidden rounded-lg bg-foreground p-6 text-background lg:sticky lg:top-8 lg:col-span-4 lg:block">
+            <p className="text-xs font-semibold uppercase text-background/60">Your debate</p>
+            <h2 className="mt-5 font-display text-3xl font-semibold leading-tight">{currentPrompt.trim() || 'Your question will appear here'}</h2>
+            <div className="my-6 h-px bg-background/20" />
+            <div className="space-y-4">{selectedModels.map((model, index) => <div key={model?.model_id || index} className="flex items-center gap-3"><span className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${index === 0 ? 'bg-agent-a-bg text-agent-a-fg' : index === 1 ? 'bg-agent-b-bg text-agent-b-fg' : 'bg-agent-c-bg text-agent-c-fg'}`}>{String.fromCharCode(65 + index)}</span><div className="min-w-0"><p className="font-medium">{getAgentSoapName(`Agent ${String.fromCharCode(65 + index)}`, personas[index])}</p><p className="truncate text-xs text-background/60">{model?.display_name || model?.model_id || 'Selecting model'} · {model?.origin_region || 'OTHER'}</p></div></div>)}</div>
+            <p className="mt-6 text-sm text-background/70">{rulesLine}</p>
+            <p className="mt-5 text-sm text-background/70">Public and shareable by link. {isGuest && <><Link to="/auth" className="underline text-background">Sign in</Link> to keep it private.</>}</p>
+            <Button type="submit" variant="secondary" size="lg" className="mt-6 w-full justify-between" disabled={!currentPrompt.trim() || isGenerating}>{isGenerating ? <><Loader2 className="h-4 w-4 animate-spin" />Generating...</> : <>Start debate<ArrowRight className="h-4 w-4" /></>}</Button>
+            <p className="mt-3 text-center text-xs text-background/60">Uses 1 {isGuest ? 'free debate' : 'credit'}</p>
+          </aside>
+
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur lg:hidden">
+            <div className="mx-auto max-w-lg"><p className="mb-2 truncate text-center text-xs text-muted-foreground">{state.numberOfAgents} agents · {state.rounds} rounds · Public {isGuest && <>· <Link to="/auth" className="underline">Sign in to keep it private</Link></>}</p><Button type="submit" size="lg" className="w-full" disabled={!currentPrompt.trim() || isGenerating}>{isGenerating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : 'Start debate'}</Button></div>
+          </div>
+          <div className="sr-only">
               {isGuest && (
                 <span className="flex items-center gap-1 text-muted-foreground">
                   <Lock className="h-3 w-3" />
                   <Link to="/auth" className="underline hover:text-primary transition-colors">Sign in</Link> to keep it private.
                 </span>
               )}
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Button
-                type="submit"
-                size="lg"
-                className="gap-2 px-8 text-base shadow-md"
-                disabled={!currentPrompt.trim() || isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Start Debate
-                  </>
-                )}
-              </Button>
-              {!currentPrompt.trim() && !isGenerating && (
-                <p className="text-xs text-muted-foreground">
-                  Enter your question above to start
-                </p>
-              )}
-            </div>
           </div>
-
         </form>
-
-        {!user && (
-          <div className="text-center text-sm text-muted-foreground">
-            🎬 Sign in to save your episodes and analyze the drama
-          </div>
-        )}
 
         <CreditsExhaustedModal
           open={showCreditsModal}

@@ -5,36 +5,46 @@
 
 @layer base {
   :root {
-    --background: 210 50% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 43 28% 95%;
+    --foreground: 250 12% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 250 12% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 250 12% 10%;
 
-    --primary: 280 75% 70%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 257 58% 50%;
+    --primary-foreground: 0 0% 100%;
     --primary-glow: 280 65% 85%;
 
-    --secondary: 195 85% 65%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 40 18% 92%;
+    --secondary-foreground: 250 12% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 40 18% 92%;
+    --muted-foreground: 248 6% 35%;
 
-    --accent: 330 70% 75%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 258 57% 95%;
+    --accent-foreground: 257 59% 41%;
     
     --bubble-gradient: linear-gradient(135deg, hsl(280 75% 70%), hsl(195 85% 65%), hsl(330 70% 75%));
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 39 17% 86%;
+    --input: 39 16% 78%;
+    --ring: 257 58% 50%;
+
+    --chip-open-bg: 139 36% 92%; --chip-open-fg: 157 59% 26%;
+    --chip-closed-bg: 250 13% 92%; --chip-closed-fg: 248 8% 26%;
+    --chip-fast-bg: 258 57% 95%; --chip-fast-fg: 257 59% 41%;
+    --chip-medium-bg: 38 87% 92%; --chip-medium-fg: 34 83% 26%;
+    --chip-slow-bg: 10 42% 91%; --chip-slow-fg: 8 64% 33%;
+    --chip-warning-bg: 40 76% 91%; --chip-warning-fg: 34 83% 26%;
+    --agent-a-bg: 259 63% 93%; --agent-a-fg: 257 59% 41%;
+    --agent-b-bg: 180 35% 90%; --agent-b-fg: 185 56% 26%;
+    --agent-c-bg: 35 65% 89%; --agent-c-fg: 34 83% 26%;
 
     --radius: 1rem;
 
@@ -49,36 +59,46 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 252 13% 8%;
+    --foreground: 45 24% 93%;
 
-    --card: 222.2 84% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 249 12% 12%;
+    --card-foreground: 45 24% 93%;
 
-    --popover: 222.2 84% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 249 12% 12%;
+    --popover-foreground: 45 24% 93%;
 
-    --primary: 280 75% 70%;
-    --primary-foreground: 222.2 84% 4.9%;
+    --primary: 255 82% 75%;
+    --primary-foreground: 252 13% 8%;
     --primary-glow: 280 65% 85%;
 
-    --secondary: 195 85% 65%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 251 12% 15%;
+    --secondary-foreground: 45 24% 93%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 251 12% 15%;
+    --muted-foreground: 249 7% 68%;
 
-    --accent: 330 70% 75%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 255 29% 19%;
+    --accent-foreground: 255 100% 86%;
     
     --bubble-gradient: linear-gradient(135deg, hsl(280 75% 70%), hsl(195 85% 65%), hsl(330 70% 75%));
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 262 77% 74%;
+    --border: 250 9% 19%;
+    --input: 252 9% 24%;
+    --ring: 255 82% 75%;
+
+    --chip-open-bg: 143 32% 17%; --chip-open-fg: 145 52% 75%;
+    --chip-closed-bg: 250 10% 17%; --chip-closed-fg: 250 16% 86%;
+    --chip-fast-bg: 255 29% 19%; --chip-fast-fg: 255 100% 86%;
+    --chip-medium-bg: 35 49% 15%; --chip-medium-fg: 37 70% 74%;
+    --chip-slow-bg: 4 28% 18%; --chip-slow-fg: 9 72% 78%;
+    --chip-warning-bg: 41 27% 13%; --chip-warning-fg: 40 82% 70%;
+    --agent-a-bg: 255 29% 19%; --agent-a-fg: 255 100% 86%;
+    --agent-b-bg: 184 38% 15%; --agent-b-fg: 184 45% 74%;
+    --agent-c-bg: 35 49% 15%; --agent-c-fg: 37 70% 74%;
 
     --sidebar-background: 222.2 84% 6%;
     --sidebar-foreground: 210 40% 98%;
@@ -99,10 +119,10 @@
     @apply bg-background text-foreground;
   }
   html:not(.dark) body {
-    background: linear-gradient(to bottom, #F8F9FB, #F0F4F8);
+    background: hsl(var(--background));
   }
   html.dark body {
-    background: linear-gradient(to bottom, hsl(222.2 84% 4.9%), hsl(217.2 32.6% 12%));
+    background: hsl(var(--background));
   }
   html {
     scroll-behavior: smooth;

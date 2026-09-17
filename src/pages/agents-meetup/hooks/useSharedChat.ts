@@ -9,6 +9,8 @@ interface ChatData {
   prompt: string;
   settings: ChatSettings;
   view_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useSharedChat = (shareId: string | undefined) => {
@@ -60,6 +62,8 @@ export const useSharedChat = (shareId: string | undefined) => {
         prompt: chatData.prompt,
         settings: chatData.settings,
         view_count: chatData.view_count,
+        created_at: chatData.created_at,
+        updated_at: chatData.updated_at,
       });
 
       setMessages(messagesData);

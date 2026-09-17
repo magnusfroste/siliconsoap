@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ArrowRight, Flag } from 'lucide-react';
 import { LandingHallOfShame } from '@/components/landing';
@@ -15,20 +15,6 @@ import {
 const FONT_HEAD = '"Fraunces", Georgia, serif';
 const FONT_BODY = '"IBM Plex Sans", system-ui, sans-serif';
 const FONT_MONO = '"IBM Plex Mono", ui-monospace, monospace';
-
-const FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap';
-
-function useLandingFonts() {
-  useEffect(() => {
-    if (document.getElementById('landing-fonts')) return;
-    const link = document.createElement('link');
-    link.id = 'landing-fonts';
-    link.rel = 'stylesheet';
-    link.href = FONTS_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 const NAV_LINKS = [
   { label: 'Explore debates', to: '/explore' },
@@ -80,7 +66,6 @@ function formatAddedDate(iso: string) {
 }
 
 export const Landing = () => {
-  useLandingFonts();
   const { isEnabled } = useFeatureFlags();
   const [menuOpen, setMenuOpen] = useState(false);
   const {

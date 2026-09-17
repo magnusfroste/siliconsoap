@@ -7,6 +7,7 @@ import { Shuffle } from "lucide-react";
 
 interface AgentGridSectionProps {
   numberOfAgents: number;
+  setNumberOfAgents?: (count: number) => void;
   agentAModel: string;
   setAgentAModel: (model: string) => void;
   agentBModel: string;
@@ -34,6 +35,7 @@ interface AgentGridSectionProps {
 
 export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   numberOfAgents,
+  setNumberOfAgents,
   agentAModel,
   setAgentAModel,
   agentBModel,
@@ -59,16 +61,20 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
   onShuffleModels,
 }) => {
   return (
-    <div className="space-y-4 mb-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Agent Crew</h3>
+    <section className="min-w-0 max-w-full overflow-hidden space-y-5 rounded-lg border bg-card p-5 md:p-7">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">2</span><h2 className="font-display text-2xl font-semibold">Cast the agents</h2></div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {setNumberOfAgents && <div className="flex rounded-md bg-muted p-1"><Button type="button" size="sm" variant={numberOfAgents === 2 ? 'default' : 'ghost'} onClick={() => setNumberOfAgents(2)}>2 agents</Button><Button type="button" size="sm" variant={numberOfAgents === 3 ? 'default' : 'ghost'} onClick={() => setNumberOfAgents(3)}>3 agents</Button></div>}
         {onShuffleModels && (
           <Button variant="outline" size="sm" onClick={onShuffleModels} className="h-8 gap-1.5" type="button">
             <Shuffle className="h-3.5 w-3.5" />
-            Shuffle Models
+            Shuffle fast models
           </Button>
         )}
+        </div>
       </div>
+      <p className="text-sm text-muted-foreground">Suggested cast: one fast open-weight model each from the European Union, the United States and China.</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <AgentCard
           agentLetter="A"
@@ -130,6 +136,6 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
           personalityIntensity={personalityIntensity}
         />
       </div>
-    </div>
+    </section>
   );
 };
