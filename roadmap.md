@@ -10,9 +10,9 @@
 - [x] Typecheck + build
 
 ## Debate page design makeover (approved)
-- [ ] Self-host fonts and remap global semantic tokens
-- [ ] Add reusable model chips and slot-colored agent avatar
-- [ ] Restyle the app sidebar and mobile header
-- [ ] Rebuild `/new` with the three-step layout, smart cast defaults, summary rail, and mobile action bar
-- [ ] Rebuild `/shared/:shareId` with transcript controls, source-free number flags, cast rail, and rerun bands
-- [ ] Verify typecheck, build, light/dark desktop and mobile layouts, guest start, and prompt-prefill reruns
+- [x] Self-host fonts and remap global semantic tokens
+- [x] Add reusable model chips and slot-colored agent avatar
+- [x] Restyle the app sidebar and mobile header
+- [x] Rebuild `/new` with the three-step layout, smart cast defaults, summary rail, and mobile action bar
+- [x] Rebuild `/shared/:shareId` with transcript controls, source-free number flags, cast rail, and rerun bands
+- [x] Verify typecheck, build, light/dark desktop and mobile layouts, and prompt-prefill reruns
