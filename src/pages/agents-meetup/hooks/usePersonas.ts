@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 export const usePersonas = () => {
   const [agentAPersona, setAgentAPersona] = useState('analytical');
   const [agentBPersona, setAgentBPersona] = useState('creative');
-  const [agentCPersona, setAgentCPersona] = useState('empathetic');
+  const [agentCPersona, setAgentCPersona] = useState('empathy');
 
   const formA = useForm({
     defaultValues: { persona: 'analytical' }
@@ -16,7 +16,7 @@ export const usePersonas = () => {
   });
 
   const formC = useForm({
-    defaultValues: { persona: 'empathetic' }
+    defaultValues: { persona: 'empathy' }
   });
 
   const handleAgentAPersonaChange = (value: string) => {

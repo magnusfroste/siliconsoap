@@ -24,9 +24,19 @@ export const AgentCard: React.FC<AgentCardProps> = ({
   iconBgClass,
 }) => {
   const isDisabled = numberOfAgents < minAgents;
-  
+
   // Get the current selected profile
   const selectedProfile = profiles.find(p => p.id === agentPersona);
+
+  // While profiles are still loading (or the stored slug is not in the list yet),
+  // don't hand Radix a value it cannot represent — it would emit onValueChange("")
+  // and wipe a perfectly valid persona.
+  const selectValue = selectedProfile ? agentPersona : undefined;
+  const handleValueChange = (value: string) => {
+    if (!value) return;
+    handleAgentPersonaChange(value);
+  };
+  
   
   // Generate the soap opera name based on agent letter and persona
   const soapName = getAgentSoapName(`Agent ${agentLetter}`, agentPersona);
@@ -42,8 +52,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({
       <CardContent className="space-y-4 pt-0 px-4 pb-4">
         <div className="space-y-2">
           <Label>Role</Label>
-          <Select value={agentPersona} onValueChange={handleAgentPersonaChange} disabled={isDisabled}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={selectValue} onValueChange={handleValueChange} disabled={isDisabled}>
+            <SelectTrigger><SelectValue placeholder="Choose a role" /></SelectTrigger>
             <SelectContent>{profiles.map((profile) => <SelectItem key={profile.id} value={profile.id}>{profile.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>

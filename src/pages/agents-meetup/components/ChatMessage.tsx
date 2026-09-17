@@ -173,9 +173,11 @@ export const ChatMessage = ({
               </TooltipProvider>
             )}
             
-            <Badge variant="secondary" className="text-xs">
-              {message.persona}
-            </Badge>
+            {message.persona && (
+              <Badge variant="secondary" className="text-xs">
+                {message.persona}
+              </Badge>
+            )}
 
             {thinking && showInnerThoughts && (
               <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
