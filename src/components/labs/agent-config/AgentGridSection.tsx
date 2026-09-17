@@ -64,7 +64,7 @@ export const AgentGridSection: React.FC<AgentGridSectionProps> = ({
     <section className="space-y-5 rounded-lg border bg-card p-5 md:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">2</span><h2 className="font-display text-2xl font-semibold">Cast the agents</h2></div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {setNumberOfAgents && <div className="flex rounded-md bg-muted p-1"><Button type="button" size="sm" variant={numberOfAgents === 2 ? 'default' : 'ghost'} onClick={() => setNumberOfAgents(2)}>2 agents</Button><Button type="button" size="sm" variant={numberOfAgents === 3 ? 'default' : 'ghost'} onClick={() => setNumberOfAgents(3)}>3 agents</Button></div>}
         {onShuffleModels && (
           <Button variant="outline" size="sm" onClick={onShuffleModels} className="h-8 gap-1.5" type="button">

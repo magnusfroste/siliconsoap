@@ -263,7 +263,7 @@ export const NewChatView = () => {
   const rulesLine = `${state.rounds} ${state.rounds === 1 ? 'round' : 'rounds'} · ${answerLabel} answers · ${state.conversationTone[0].toUpperCase()}${state.conversationTone.slice(1)} · ${getAgreementLabel(state.agreementBias)}`;
 
   return (
-    <div className="min-h-full px-4 pb-32 pt-8 md:px-8 md:pb-16 md:pt-12">
+    <div className="min-h-full min-w-0 px-4 pb-32 pt-8 md:px-8 md:pb-16 md:pt-12">
       <div className="mx-auto w-full max-w-6xl space-y-8">
         <div className="space-y-2">
           <h1 className="font-display text-4xl font-semibold md:text-5xl">Start a debate</h1>

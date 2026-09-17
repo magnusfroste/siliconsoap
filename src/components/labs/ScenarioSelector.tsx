@@ -40,7 +40,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
         <h2 className="font-display text-2xl font-semibold">Ask a hard question</h2>
       </div>
       {/* Pill-style scenario buttons */}
-      <div className="grid grid-cols-3 rounded-md bg-muted p-1">
+      <div className="grid grid-cols-1 gap-1 rounded-md bg-muted p-1 sm:grid-cols-3">
         {scenarioTypes.map(scenario => (
           <Button
             key={scenario.id}
@@ -80,7 +80,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 
       {/* Suggested Topics — clickable chips */}
       {suggestedTopics && suggestedTopics.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground mr-1">Try one:</span>
           {suggestedTopics.map((topic, idx) => (
             <Button
@@ -89,7 +89,7 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
               onClick={() => handleInputChange(activeScenario, topic)}
               variant="outline"
               size="sm"
-              className="h-auto max-w-full whitespace-normal rounded-full py-1.5 text-left text-xs font-normal"
+              className="h-auto max-w-full whitespace-normal break-words rounded-full py-1.5 text-left text-xs font-normal"
             >
               {topic}
             </Button>
