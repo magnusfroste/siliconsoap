@@ -24,6 +24,7 @@ const settingChip = 'inline-flex min-h-7 items-center rounded-full border border
 const NUMBER_RE = /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i;
 const LINK_RE = /https?:\/\//i;
 
+const splitParagraphs = (text: string) => text.split(/\n\s*\n/);
 const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/);
 
 const splitPrompt = (prompt: string) => {
@@ -59,11 +60,13 @@ const numberClaims = (entries: RoundedMsg[]): Claim[] => {
   entries.forEach(({ message, round, name }) => {
     const publicText = parseAgentResponse(message.message).publicMessage;
     if (LINK_RE.test(publicText)) return;
-    splitSentences(publicText).forEach((raw) => {
-      const sentence = raw.trim();
-      if (!sentence || seen.has(sentence) || !NUMBER_RE.test(sentence)) return;
-      seen.add(sentence);
-      found.push({ sentence, name, round });
+    splitParagraphs(publicText).forEach((paragraph) => {
+      splitSentences(paragraph).forEach((raw) => {
+        const sentence = raw.trim();
+        if (!sentence || seen.has(sentence) || !NUMBER_RE.test(sentence)) return;
+        seen.add(sentence);
+        found.push({ sentence, name, round });
+      });
     });
   });
   return found.slice(0, 6);
@@ -170,21 +173,24 @@ function SharedMessage({ entry, index, total, chatUrl, flagged }: { entry: Round
   const letter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
   const long = parsed.publicMessage.length > 600;
   const visible = long && !expanded ? `${parsed.publicMessage.slice(0, 600).trim()}…` : parsed.publicMessage;
-  const sentences = splitSentences(visible);
-  const hasFlag = sentences.some((sentence) => flagged.has(sentence.trim()));
+  const paragraphs = splitParagraphs(visible);
+  const hasFlag = paragraphs.some((paragraph) => splitSentences(paragraph).some((sentence) => flagged.has(sentence.trim())));
 
   return <article className="group border-b border-border pb-8"><div className="flex gap-4">
     {isUser
       ? <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground" aria-hidden="true"><User className="h-5 w-5" /></div>
       : <AgentAvatar agentLetter={letter} name={name} size="md" />}
     <div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{name}</h3>{!isUser && <p className="text-xs text-muted-foreground">{message.persona} · <span className="font-mono">{message.model}</span></p>}</div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div>
-    <p className="mt-4 whitespace-pre-wrap text-[17px] leading-[1.65]">{sentences.map((sentence, sentenceIndex) => {
-      const isFlagged = flagged.has(sentence.trim());
-      const text = sentenceIndex < sentences.length - 1 ? `${sentence} ` : sentence;
-      return isFlagged
-        ? <mark key={sentenceIndex} className="bg-chip-warning-bg text-chip-warning-fg underline decoration-dotted decoration-1 underline-offset-4">{text}</mark>
-        : <span key={sentenceIndex}>{text}</span>;
-    })}</p>
+    <div className="mt-4 space-y-4 text-[17px] leading-[1.65]">{paragraphs.map((paragraph, paragraphIndex) => {
+      const sentences = splitSentences(paragraph);
+      return <p key={paragraphIndex} className="whitespace-pre-wrap">{sentences.map((sentence, sentenceIndex) => {
+        const isFlagged = flagged.has(sentence.trim());
+        const text = sentenceIndex < sentences.length - 1 ? `${sentence} ` : sentence;
+        return isFlagged
+          ? <mark key={sentenceIndex} className="bg-chip-warning-bg text-chip-warning-fg underline decoration-dotted decoration-1 underline-offset-4">{text}</mark>
+          : <span key={sentenceIndex}>{text}</span>;
+      })}</p>;
+    })}</div>
     {hasFlag && <p className="mt-2 text-xs font-medium text-chip-warning-fg">Number to check: figure cited without a source link.</p>}
     {long && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Continue reading'}</Button>}
     {parsed.thinking && <Collapsible className="mt-4"><CollapsibleTrigger className="text-xs font-medium text-muted-foreground underline">Private reasoning</CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}
