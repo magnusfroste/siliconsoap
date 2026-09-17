@@ -24,6 +24,7 @@ const settingChip = 'inline-flex min-h-7 items-center rounded-full border border
 const NUMBER_RE = /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i;
 const LINK_RE = /https?:\/\//i;
 
+const splitParagraphs = (text: string) => text.split(/\n\s*\n/);
 const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/);
 
 const splitPrompt = (prompt: string) => {
