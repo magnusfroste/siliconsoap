@@ -20,6 +20,7 @@ export interface CuratedModel {
   category: string | null;
   context_window: number | null;
   speed_rating: string | null;
+  origin_region: 'US' | 'CN' | 'EU' | 'OTHER' | null;
   // License type: open-weight (self-hostable) vs closed (cloud API only)
   license_type: string | null;
   // Pricing fields
@@ -49,6 +50,7 @@ export interface CuratedModelInsert {
   category?: string | null;
   context_window?: number | null;
   speed_rating?: string | null;
+  origin_region?: 'US' | 'CN' | 'EU' | 'OTHER' | null;
 }
 
 export interface CuratedModelUpdate {
@@ -60,6 +62,7 @@ export interface CuratedModelUpdate {
   category?: string | null;
   context_window?: number | null;
   speed_rating?: string | null;
+  origin_region?: 'US' | 'CN' | 'EU' | 'OTHER' | null;
   is_enabled?: boolean;
   is_free?: boolean;
   display_name?: string;

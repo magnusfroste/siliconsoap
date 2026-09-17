@@ -53,6 +53,25 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				chip: {
+					'open-bg': 'hsl(var(--chip-open-bg))',
+					'open-fg': 'hsl(var(--chip-open-fg))',
+					'closed-bg': 'hsl(var(--chip-closed-bg))',
+					'closed-fg': 'hsl(var(--chip-closed-fg))',
+					'fast-bg': 'hsl(var(--chip-fast-bg))',
+					'fast-fg': 'hsl(var(--chip-fast-fg))',
+					'medium-bg': 'hsl(var(--chip-medium-bg))',
+					'medium-fg': 'hsl(var(--chip-medium-fg))',
+					'slow-bg': 'hsl(var(--chip-slow-bg))',
+					'slow-fg': 'hsl(var(--chip-slow-fg))',
+					'warning-bg': 'hsl(var(--chip-warning-bg))',
+					'warning-fg': 'hsl(var(--chip-warning-fg))',
+				},
+				agent: {
+					'a-bg': 'hsl(var(--agent-a-bg))', 'a-fg': 'hsl(var(--agent-a-fg))',
+					'b-bg': 'hsl(var(--agent-b-bg))', 'b-fg': 'hsl(var(--agent-b-fg))',
+					'c-bg': 'hsl(var(--agent-c-bg))', 'c-fg': 'hsl(var(--agent-c-fg))',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -79,8 +98,9 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ['SF Pro Display', 'system-ui', 'sans-serif'],
-				mono: ['SF Mono', 'monospace']
+				display: ['Fraunces Variable', 'Georgia', 'serif'],
+				sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+				mono: ['IBM Plex Mono', 'ui-monospace', 'monospace']
 			},
 			keyframes: {
 				'accordion-down': {
