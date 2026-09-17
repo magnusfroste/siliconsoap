@@ -1,648 +1,128 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowRight, ChevronDown, Copy, Droplets, Lock, RotateCcw, Share2, Trash2 } from 'lucide-react';
 import { useSharedChat } from '../hooks/useSharedChat';
-import { ChatMessage } from '../components/ChatMessage';
-import { RoundSeparator } from '../components/RoundSeparator';
-import { SocialShareButtons } from '../components/SocialShareButtons';
 import { ReactionButtons } from '../components/ReactionButtons';
+import { RoundSeparator } from '../components/RoundSeparator';
+import { QuoteShareButton } from '../components/QuoteShareButton';
+import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
+import { LicenseChip, OriginChip, SpeedChip } from '@/components/model-chips';
 import { Button } from '@/components/ui/button';
-import { Droplets, ArrowRight, Trash2, Lock, Eye, MessageSquare, Users, Eye as EyeView, Flame, Handshake, GraduationCap, Coffee, Scale, Sparkles, Zap, Feather, RotateCcw, FileText, ListOrdered, Shuffle, Popcorn, SlidersHorizontal } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
-import { useRef } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-
+import { parseAgentResponse } from '../utils/parseAgentResponse';
+import { getAgentLetter, getAgentSoapName } from '../utils/agentNameGenerator';
+import { getEnabledModels } from '@/repositories/curatedModelsRepository';
+import type { CuratedModel } from '@/models/model';
 
 const BASE_URL = 'https://siliconsoap.com';
 const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
+
+const settingChip = 'inline-flex min-h-7 items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium';
+
+const splitPrompt = (prompt: string) => {
+  const match = prompt.match(/\s*\(Note:\s*([^)]*)\)\s*$/i);
+  return match ? { question: prompt.slice(0, match.index).trim(), note: match[1].trim() } : { question: prompt, note: '' };
+};
+
+const dateLabel = (value?: string) => value ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : '';
+
+const numberClaims = (messages: { message: string }[]) => {
+  const found: string[] = [];
+  messages.forEach(({ message }) => {
+    const publicText = parseAgentResponse(message).publicMessage;
+    publicText.split(/(?<=[.!?])\s+/).forEach((sentence) => {
+      if (!/https?:\/\//i.test(sentence) && /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d{4}\b|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i.test(sentence)) found.push(sentence.trim());
+    });
+  });
+  return [...new Set(found)].slice(0, 6);
+};
 
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
-  const viewTrackedRef = useRef(false);
-  const [showCta, setShowCta] = useState(false);
+  const tracked = useRef(false);
+  const [models, setModels] = useState<CuratedModel[]>([]);
 
-  // Reveal the sticky CTA only after the reader scrolls past the first answer
+  useEffect(() => { getEnabledModels().then(setModels).catch(() => setModels([])); }, []);
   useEffect(() => {
-    const viewport = document.querySelector(
-      '[data-radix-scroll-area-viewport]'
-    ) as HTMLElement | null;
-    if (!viewport) return;
-    const onScroll = () => setShowCta(viewport.scrollTop > 320);
-    viewport.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => viewport.removeEventListener('scroll', onScroll);
-  }, [messages.length]);
-
-  // Track view count once
-  useEffect(() => {
-    const trackView = async () => {
-      if (shareId && !viewTrackedRef.current) {
-        viewTrackedRef.current = true;
-        console.log('[ViewTrack] Incrementing view count for:', shareId);
-        const { error } = await supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
-        if (error) {
-          console.error('[ViewTrack] Failed to increment view count:', error);
-        } else {
-          console.log('[ViewTrack] View count incremented successfully');
-        }
-      }
-    };
-    trackView();
+    if (!shareId || tracked.current) return;
+    tracked.current = true;
+    void supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
   }, [shareId]);
 
-  // Dynamic meta tags for OG and DiscussionForumPosting schema
   useEffect(() => {
-    if (chat) {
-      const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
-      const descriptionText = chat.prompt?.length > 160
-        ? chat.prompt.slice(0, 157) + '...'
-        : chat.prompt || `AI debate: ${chat.title}`;
-
-      // Update document title
-      document.title = `${chat.title} | SiliconSoap`;
-
-      // Standard description + canonical (was missing)
-      updateMetaTag('description', descriptionText);
-      updateLinkTag('canonical', canonicalUrl);
-
-      // Update meta tags dynamically
-      updateMetaTag('og:title', chat.title);
-      updateMetaTag('og:description', descriptionText);
-      updateMetaTag('og:url', canonicalUrl);
-      updateMetaTag('og:type', 'article');
-      updateMetaTag('og:image', getOgImageUrl(shareId || ''));
-      updateMetaTag('twitter:title', chat.title);
-      updateMetaTag('twitter:description', descriptionText);
-      updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
-
-      // Add DiscussionForumPosting schema
-      updateDiscussionSchema(chat, messages, shareId || '');
-    }
-
-    return () => {
-      // Reset on unmount
-      document.title = 'SiliconSoap - Where AI Debates Get Dramatic';
-      updateLinkTag('canonical', `${BASE_URL}/`);
-      updateMetaTag('og:type', 'website');
-      removeDiscussionSchema();
-    };
+    if (!chat) return;
+    const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
+    const description = chat.prompt.length > 160 ? `${chat.prompt.slice(0, 157)}...` : chat.prompt;
+    document.title = `${chat.title} | SiliconSoap`;
+    updateMetaTag('description', description); updateLinkTag('canonical', canonicalUrl);
+    updateMetaTag('og:title', chat.title); updateMetaTag('og:description', description); updateMetaTag('og:url', canonicalUrl); updateMetaTag('og:type', 'article'); updateMetaTag('og:image', getOgImageUrl(shareId || ''));
+    updateMetaTag('twitter:title', chat.title); updateMetaTag('twitter:description', description); updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
+    updateDiscussionSchema(chat, messages, shareId || '');
+    return () => { document.title = 'SiliconSoap - Where AI Debates Get Dramatic'; updateLinkTag('canonical', `${BASE_URL}/`); updateMetaTag('og:type', 'website'); removeDiscussionSchema(); };
   }, [chat, messages, shareId]);
 
-  const getOgImageUrl = (shareId: string) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return `${supabaseUrl}/functions/v1/og-image?shareId=${shareId}`;
-  };
+  const claims = useMemo(() => numberClaims(messages), [messages]);
 
-  const shareUrl = window.location.href;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">Loading shared conversation...</p>
-        </div>
-      </div>
-    );
-  }
-
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" /></div>;
   if (error || !chat) {
-    const errorConfig = {
-      deleted: {
-        icon: Trash2,
-        title: 'Chat Removed',
-        description: 'This conversation has been deleted by the owner.'
-      },
-      not_public: {
-        icon: Lock,
-        title: 'Private Chat',
-        description: "This chat hasn't been shared publicly."
-      },
-      not_found: {
-        icon: Droplets,
-        title: 'Chat Not Found',
-        description: 'This link appears to be invalid.'
-      }
-    };
-
-    const config = error ? errorConfig[error] : errorConfig.not_found;
-    const Icon = config.icon;
-
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4 max-w-md">
-          <Icon className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h2 className="text-2xl font-bold">{config.title}</h2>
-          <p className="text-muted-foreground">{config.description}</p>
-          <Button onClick={() => navigate('/')}>
-            Start Your Own Conversation
-          </Button>
-        </div>
-      </div>
-    );
+    const config = error === 'deleted' ? [Trash2, 'Debate removed', 'This debate has been deleted by its owner.'] : error === 'not_public' ? [Lock, 'Private debate', 'This debate is not public.'] : [Droplets, 'Debate not found', 'This link appears to be invalid.'];
+    const Icon = config[0] as typeof Droplets;
+    return <main className="flex min-h-screen items-center justify-center p-6 text-center"><div className="max-w-md space-y-4"><Icon className="mx-auto h-10 w-10 text-muted-foreground" /><h1 className="font-display text-3xl font-semibold">{String(config[1])}</h1><p className="text-muted-foreground">{String(config[2])}</p><Button onClick={() => navigate('/')}>Go home</Button></div></main>;
   }
 
-  // Group messages by round
-  const messagesByRound: { [key: number]: typeof messages } = {};
-  messages.forEach((msg: any) => {
-    const round = msg.round || 1;
-    if (!messagesByRound[round]) {
-      messagesByRound[round] = [];
-    }
-    messagesByRound[round].push(msg);
-  });
+  const { question, note } = splitPrompt(chat.prompt);
+  const settings = chat.settings;
+  const agents = Math.min(3, Math.max(1, settings.numberOfAgents || 2));
+  const rounds = Math.max(1, settings.rounds || 1);
+  const bias = settings.agreementBias ?? 50;
+  const biasLabel = bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced';
+  const tone = settings.conversationTone || 'collaborative';
+  const length = settings.responseLength === 'short' ? 'Brief answers' : settings.responseLength === 'long' ? 'Detailed answers' : 'Medium-length answers';
+  const order = settings.turnOrder === 'random' ? 'Random turns' : settings.turnOrder === 'popcorn' ? 'Popcorn turns' : 'Turns in fixed order';
+  const chips = [`${tone[0].toUpperCase()}${tone.slice(1)} tone`, ...(bias !== 50 ? [`${biasLabel} · bias ${bias}`] : []), ...(settings.personalityIntensity !== 'moderate' && settings.personalityIntensity ? [settings.personalityIntensity === 'extreme' ? 'Dramatic personas' : 'Subtle personas'] : []), length, order];
+  const modelIds = [settings.models.agentA, settings.models.agentB, settings.models.agentC].slice(0, agents);
+  const personas = [settings.personas.agentA, settings.personas.agentB, settings.personas.agentC];
+  const rerun = `/new?prompt=${encodeURIComponent(chat.prompt)}`;
+  const shareUrl = window.location.href;
+  const grouped = Array.from({ length: rounds }, (_, index) => ({ round: index + 1, items: messages.slice(index * agents, (index + 1) * agents) })).filter((group) => group.items.length);
 
-  return (
-    <div className="flex flex-col h-screen min-h-screen [@supports(height:100dvh)]:h-[100dvh] [@supports(height:100dvh)]:min-h-[100dvh] bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-start gap-3 min-w-0 flex-1">
-              <Droplets className="h-5 w-5 text-primary shrink-0 mt-1" />
-              <div className="flex flex-col gap-2 min-w-0 flex-1">
-                <div className="min-w-0">
-                  <h1 className="text-lg font-semibold break-words">{chat.title}</h1>
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <span>Shared via SiliconSoap</span>
-                    {chat.view_count !== undefined && chat.view_count > 0 && (
-                      <>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <EyeView className="h-3 w-3" />
-                          {chat.view_count.toLocaleString()} {chat.view_count === 1 ? 'view' : 'views'}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                </div>
-                {(() => {
-                  // ---- Build badges once, reuse for desktop inline + mobile sheet ----
+  return <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <header className="border-b bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8"><Link to="/" className="font-display text-2xl font-semibold">SiliconSoap</Link><nav className="hidden items-center gap-7 text-sm md:flex"><Link to="/explore">Explore debates</Link><Link to="/models">Models</Link><Link to="/learn">Learn</Link></nav><Button asChild><Link to="/new">Start a debate</Link></Button></div></header>
 
-                  const settings = chat.settings as any;
-                  const mode = settings?.participationMode || 'jump-in';
-                  const modeConfig = {
-                    'spectator': { 
-                      label: 'Spectator', 
-                      icon: Eye, 
-                      variant: 'secondary' as const,
-                      tooltip: 'Watch only mode. Agents completed all rounds automatically.'
-                    },
-                    'jump-in': { 
-                      label: 'Jump In', 
-                      icon: MessageSquare, 
-                      variant: 'default' as const,
-                      tooltip: 'Comment mode. The creator could add thoughts after agents finished.'
-                    },
-                    'round-by-round': { 
-                      label: 'Round by Round', 
-                      icon: Users, 
-                      variant: 'outline' as const,
-                      tooltip: 'Interactive mode. The creator could participate between rounds.'
-                    }
-                  };
-                  const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
-                  const Icon = config.icon;
-                  
-                  // Conversation tone config
-                  const tone = settings?.conversationTone || 'collaborative';
-                  const toneConfig = {
-                    'formal': { label: 'Formal', icon: GraduationCap, tooltip: 'Academic rigor and professional discourse' },
-                    'casual': { label: 'Casual', icon: Coffee, tooltip: 'Friendly, everyday conversation' },
-                    'heated': { label: 'Heated', icon: Flame, tooltip: 'Passionate and assertive viewpoints' },
-                    'collaborative': { label: 'Collaborative', icon: Handshake, tooltip: 'Building on ideas together' }
-                  };
-                  const toneInfo = toneConfig[tone as keyof typeof toneConfig] || toneConfig['collaborative'];
-                  const ToneIcon = toneInfo.icon;
-                  
-                  // Agreement bias
-                  const bias = settings?.agreementBias ?? 50;
-                  const biasLabel = bias < 30 ? "Devil's Advocate" : bias > 70 ? "Agreeable" : "Balanced";
-                  
-                  const badges = (
-                    <div className="flex items-center gap-2 flex-wrap">
+    <main>
+      <section className="border-b"><div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:px-8 lg:grid-cols-12 lg:py-16"><div className="lg:col-span-8"><div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span className="rounded-full bg-chip-open-bg px-3 py-1 font-medium text-chip-open-fg">Public debate</span><span>{dateLabel(chat.created_at)}</span><span>·</span><span>{agents} agents · {rounds} rounds</span></div><h1 className="max-w-4xl font-display text-4xl font-semibold leading-tight md:text-6xl">{question}</h1>{note && <p className="mt-4 text-muted-foreground"><strong className="text-foreground">Setup note:</strong> {note}</p>}<div className="mt-6 flex flex-wrap gap-2">{chips.map((chip, index) => <span key={chip} className={`${settingChip} ${index > 2 ? 'hidden sm:inline-flex' : ''}`}>{chip}</span>)}</div></div>
+      <aside className="rounded-lg bg-foreground p-5 text-background lg:col-span-4"><p className="font-display text-2xl font-semibold">Run this question your way</p><p className="mt-2 text-sm text-background/70">Keep the question, change the cast and rules.</p><Button asChild variant="secondary" size="lg" className="mt-5 w-full"><Link to={rerun}>Rerun with your own cast<ArrowRight className="ml-2 h-4 w-4" /></Link></Button><div className="mt-4 flex gap-2"><Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Copy debate link" onClick={() => navigator.clipboard.writeText(shareUrl)}><Copy className="h-4 w-4" /></Button>{typeof navigator.share === 'function' && <Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Share debate" onClick={() => navigator.share({ title: chat.title, url: shareUrl })}><Share2 className="h-4 w-4" /></Button>}</div></aside></div></section>
 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
-                              <Icon className="h-3 w-3" />
-                              {config.label}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-xs">
-                            <p>{config.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      {/* Conversation Tone Badge */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                              <ToneIcon className="h-3 w-3" />
-                              {toneInfo.label}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-xs">
-                            <p>{toneInfo.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      {/* Agreement Bias Badge - only show if not default */}
-                      {bias !== 50 && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                <Scale className="h-3 w-3" />
-                                {biasLabel}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-xs">
-                              <p>Agreement bias: {bias}% - {bias < 30 ? 'Agents challenge each other' : bias > 70 ? 'Agents build on ideas' : 'Balanced debate'}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      
-                      {/* Personality Intensity Badge - only show if not default */}
-                      {(() => {
-                        const intensity = settings?.personalityIntensity || 'moderate';
-                        if (intensity === 'moderate') return null;
-                        
-                        const intensityConfig = {
-                          'mild': { label: 'Subtle', icon: Feather, tooltip: 'Personas expressed subtly, focus on content' },
-                          'extreme': { label: 'Dramatic', icon: Sparkles, tooltip: 'Strong persona expression with distinctive voice' }
-                        };
-                        const intensityInfo = intensityConfig[intensity as keyof typeof intensityConfig];
-                        if (!intensityInfo) return null;
-                        const IntensityIcon = intensityInfo.icon;
-                        
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                  <IntensityIcon className="h-3 w-3" />
-                                  {intensityInfo.label}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p>{intensityInfo.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                      
-                      {/* Number of Rounds Badge */}
-                      {(() => {
-                        const rounds = settings?.rounds || 2;
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                  <RotateCcw className="h-3 w-3" />
-                                  {rounds} {rounds === 1 ? 'Round' : 'Rounds'}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p>Number of conversation rounds between agents</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                      
-                      {/* Response Length Badge */}
-                      {(() => {
-                        const length = settings?.responseLength || 'medium';
-                        const lengthConfig = {
-                          'short': { label: 'Brief', tooltip: 'Concise responses (~100 words)' },
-                          'medium': { label: 'Medium', tooltip: 'Balanced responses (~200 words)' },
-                          'long': { label: 'Detailed', tooltip: 'Comprehensive responses (~400 words)' }
-                        };
-                        const lengthInfo = lengthConfig[length as keyof typeof lengthConfig] || lengthConfig['medium'];
-                        
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                  <FileText className="h-3 w-3" />
-                                  {lengthInfo.label}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p>{lengthInfo.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                      
-                      {/* Number of Agents Badge */}
-                      {(() => {
-                        const numAgents = settings?.numberOfAgents || 2;
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                  <Users className="h-3 w-3" />
-                                  {numAgents} Agents
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p>{numAgents} AI agents participating in this debate</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                      
-                      {/* Turn Order Badge */}
-                      {(() => {
-                        const turnOrder = settings?.turnOrder || 'sequential';
-                        const orderConfig = {
-                          'sequential': { label: 'Sequential', icon: ListOrdered, tooltip: 'Agents take turns in fixed order' },
-                          'random': { label: 'Random', icon: Shuffle, tooltip: 'Random agent speaks next each turn' },
-                          'popcorn': { label: 'Popcorn', icon: Popcorn, tooltip: 'Each agent picks who speaks next' }
-                        };
-                        const orderInfo = orderConfig[turnOrder as keyof typeof orderConfig] || orderConfig['sequential'];
-                        const OrderIcon = orderInfo.icon;
-                        
-                        return (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                                  <OrderIcon className="h-3 w-3" />
-                                  {orderInfo.label}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom" className="max-w-xs">
-                                <p>{orderInfo.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })()}
-                    </div>
-                  );
-                  return (
-                    <>
-                      <div className="hidden sm:block w-full">{badges}</div>
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button variant="outline" size="sm" className="sm:hidden gap-1.5 self-start">
-                            <SlidersHorizontal className="h-3 w-3" />
-                            Debate settings
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
-                          <SheetHeader>
-                            <SheetTitle>Debate settings</SheetTitle>
-                          </SheetHeader>
-                          <div className="py-4 space-y-3 text-sm">
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Participation</span>
-                              <span className="font-medium text-right">{config.label}</span>
-                            </div>
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Tone</span>
-                              <span className="font-medium text-right">{toneInfo.label}</span>
-                            </div>
-                            {bias !== 50 && (
-                              <div className="flex items-start justify-between gap-3">
-                                <span className="text-muted-foreground">Agreement bias</span>
-                                <span className="font-medium text-right">{biasLabel} ({bias}%)</span>
-                              </div>
-                            )}
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Rounds</span>
-                              <span className="font-medium text-right">{settings?.rounds || 2}</span>
-                            </div>
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Response length</span>
-                              <span className="font-medium text-right capitalize">{settings?.responseLength || 'medium'}</span>
-                            </div>
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Agents</span>
-                              <span className="font-medium text-right">{settings?.numberOfAgents || 2}</span>
-                            </div>
-                            <div className="flex items-start justify-between gap-3">
-                              <span className="text-muted-foreground">Turn order</span>
-                              <span className="font-medium text-right capitalize">{settings?.turnOrder || 'sequential'}</span>
-                            </div>
-                          </div>
-                        </SheetContent>
-                      </Sheet>
-                    </>
-                  );
-
-                })()}
-              </div>
-            </div>
-
-            
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Social Share Buttons */}
-              <SocialShareButtons 
-                url={shareUrl} 
-                title={chat.title}
-                description={chat.prompt}
-              />
-              
-              <Button
-                onClick={() => navigate(`/new?prompt=${encodeURIComponent(chat.prompt)}`)}
-                className="gap-2"
-              >
-                Rerun with your own cast
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Chat Messages */}
-      <ScrollArea className="flex-1">
-        <div className="container max-w-5xl mx-auto px-4 py-8 space-y-6">
-          {/* Original Prompt */}
-          <div className="p-4 rounded-lg border bg-muted/30">
-            <p className="text-sm text-muted-foreground mb-1">Original Prompt</p>
-            <p className="text-foreground">{chat.prompt}</p>
-          </div>
-
-          {/* Reaction Buttons */}
-          {shareId && (
-            <div className="flex items-center justify-between flex-wrap gap-4 p-4 rounded-lg border bg-muted/10">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">React to this debate:</span>
-              </div>
-              <ReactionButtons shareId={shareId} />
-            </div>
-          )}
-          {/* Messages by Round */}
-          {Object.entries(messagesByRound)
-            .sort(([a], [b]) => Number(a) - Number(b))
-            .map(([roundStr, roundMessages], roundIndex) => {
-              const round = Number(roundStr);
-              return (
-                <div key={round} className="space-y-4">
-                  {roundIndex > 0 && <RoundSeparator roundNumber={round} />}
-                  {roundMessages.map((message: any) => (
-                    <ChatMessage
-                      key={message.id}
-                      message={message}
-                      messageIndex={messages.indexOf(message)}
-                      totalMessages={messages.length}
-                      chatUrl={shareUrl}
-                      showQuoteShare={true}
-                    />
-                  ))}
-                </div>
-              );
-            })}
-        </div>
-      </ScrollArea>
-
-      {/* CTA Footer — slides in after the reader scrolls past the first answer */}
-      <div
-        className={`border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-300 ease-out motion-reduce:transition-none ${
-          showCta ? 'translate-y-0' : 'translate-y-full'
-        }`}
-        aria-hidden={!showCta}
-      >
-        <div className="container max-w-5xl mx-auto px-4 py-3 sm:py-6 flex items-center justify-center gap-3 flex-wrap text-center">
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            Want to create your own multi-agent conversations?
-          </p>
-          <Button
-            onClick={() => navigate(`/new?prompt=${encodeURIComponent(chat.prompt)}`)}
-            size="lg"
-            className="gap-2"
-          >
-            <Droplets className="h-4 w-4" />
-            Rerun this question with your own cast
-          </Button>
-        </div>
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 md:px-8 lg:grid-cols-12">
+        <section className="order-3 min-w-0 lg:order-1 lg:col-span-8"><h2 className="mb-7 font-display text-3xl font-semibold">The debate</h2><div className="space-y-10">{grouped.map(({ round, items }, groupIndex) => <div key={round} className="space-y-6">{groupIndex > 0 && <RoundSeparator roundNumber={round} totalConfiguredRounds={rounds} isFinalRound={round === rounds} />}{items.map((message, itemIndex) => <SharedMessage key={message.id || `${round}-${itemIndex}`} message={message} index={(round - 1) * agents + itemIndex} total={messages.length} chatUrl={shareUrl} />)}</div>)}</div></section>
+        <aside className="order-1 space-y-5 lg:order-2 lg:col-span-4">
+          <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-2xl font-semibold">The cast</h2><div className="mt-5 space-y-5">{modelIds.map((modelId, index) => { const model = models.find((item) => item.model_id === modelId); const letter = String.fromCharCode(65 + index) as 'A' | 'B' | 'C'; const name = getAgentSoapName(`Agent ${letter}`, personas[index]); return <div key={modelId} className="flex gap-3"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0"><p className="font-medium">{name}</p><p className="truncate font-mono text-xs text-muted-foreground">{model?.display_name || modelId}</p><div className="mt-2 flex flex-wrap gap-1"><LicenseChip license={model?.license_type} /><OriginChip origin={model?.origin_region} compact /><SpeedChip speed={model?.speed_rating} /></div></div></div>; })}</div><Button asChild variant="outline" className="mt-5 w-full"><Link to={rerun}>Rerun this cast</Link></Button></section>
+          {claims.length > 0 && <Collapsible className="rounded-lg border bg-chip-warning-bg p-5"><CollapsibleTrigger className="flex w-full items-center justify-between text-left font-medium text-chip-warning-fg">Numbers to check <ChevronDown className="h-4 w-4" /></CollapsibleTrigger><CollapsibleContent className="pt-4"><p className="mb-3 text-xs text-chip-warning-fg">These claims contain figures but no visible source link. Verify before sharing.</p><ol className="space-y-2 text-sm text-chip-warning-fg">{claims.map((claim) => <li key={claim} className="border-t border-chip-warning-fg/20 pt-2">{claim}</li>)}</ol></CollapsibleContent></Collapsible>}
+          {shareId && <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-xl font-semibold">React to this debate</h2><div className="mt-4"><ReactionButtons shareId={shareId} /></div></section>}
+        </aside>
       </div>
-    </div>
-  );
+    </main>
+
+    <section className="bg-foreground text-background"><div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 px-4 py-12 md:flex-row md:items-center md:px-8"><div><p className="font-display text-3xl font-semibold">Try a fresh fast-model cast</p><p className="mt-2 text-background/70">Same hard question, a different set of minds.</p></div><div className="flex gap-3"><Button asChild variant="secondary"><Link to={rerun}>Start from this question</Link></Button><Button asChild variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"><Link to="/explore">Explore debates</Link></Button></div></div></section>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur md:hidden"><Button asChild size="lg" className="w-full"><Link to={rerun}><RotateCcw className="mr-2 h-4 w-4" />Rerun this question</Link></Button></div>
+  </div>;
 };
 
-// Helper to update meta tags
-function updateMetaTag(property: string, content: string) {
-  let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
-  if (!meta) {
-    meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement;
-  }
-  if (meta) {
-    meta.setAttribute('content', content);
-  } else {
-    meta = document.createElement('meta');
-    if (property.startsWith('og:')) {
-      meta.setAttribute('property', property);
-    } else {
-      meta.setAttribute('name', property);
-    }
-    meta.setAttribute('content', content);
-    document.head.appendChild(meta);
-  }
+function SharedMessage({ message, index, total, chatUrl }: { message: { agent: string; persona: string; model: string; message: string }; index: number; total: number; chatUrl: string }) {
+  const parsed = parseAgentResponse(message.message);
+  const [expanded, setExpanded] = useState(false);
+  const letter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
+  const name = getAgentSoapName(message.agent, message.persona);
+  const long = parsed.publicMessage.length > 600;
+  const visible = long && !expanded ? `${parsed.publicMessage.slice(0, 600).trim()}…` : parsed.publicMessage;
+  return <article className="group border-b border-border pb-8"><div className="flex gap-4"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{name}</h3><p className="text-xs text-muted-foreground">{message.persona} · <span className="font-mono">{message.model}</span></p></div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div><p className="mt-4 whitespace-pre-wrap text-[17px] leading-[1.65]">{visible}</p>{long && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Continue reading'}</Button>}{parsed.thinking && <Collapsible className="mt-4"><CollapsibleTrigger className="text-xs font-medium text-muted-foreground underline">Private reasoning</CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}<div className="mt-4"><QuoteShareButton message={message} chatUrl={chatUrl} /></div></div></div></article>;
 }
 
-// Helper to update <link rel="..."> tags
-function updateLinkTag(rel: string, href: string) {
-  let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement;
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = rel;
-    document.head.appendChild(link);
-  }
-  link.href = href;
-}
-
-// Helper to update DiscussionForumPosting schema
-function updateDiscussionSchema(chat: any, messages: any[], shareId: string) {
-  removeDiscussionSchema();
-
-  // Get unique agents from messages
-  const agents = [...new Set(messages.map((m: any) => m.agent))];
-
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'DiscussionForumPosting',
-    '@id': `${BASE_URL}/shared/${shareId}`,
-    'headline': chat.title,
-    'articleBody': chat.prompt,
-    'url': `${BASE_URL}/shared/${shareId}`,
-    'datePublished': chat.created_at,
-    'dateModified': chat.updated_at || chat.created_at,
-    'publisher': {
-      '@type': 'Organization',
-      'name': 'SiliconSoap',
-      'url': BASE_URL,
-      'logo': {
-        '@type': 'ImageObject',
-        'url': `${BASE_URL}/og-image.png`
-      }
-    },
-    'about': {
-      '@type': 'Thing',
-      'name': chat.title,
-      'description': chat.prompt
-    },
-    'author': agents.map((agent: string) => ({
-      '@type': 'Person',
-      'name': agent,
-      'description': `AI Agent in SiliconSoap debate`
-    })),
-    'interactionStatistic': [
-      {
-        '@type': 'InteractionCounter',
-        'interactionType': 'https://schema.org/ViewAction',
-        'userInteractionCount': chat.view_count || 0
-      },
-      {
-        '@type': 'InteractionCounter',
-        'interactionType': 'https://schema.org/CommentAction',
-        'userInteractionCount': messages.length
-      }
-    ],
-    'comment': messages.slice(0, 10).map((msg: any, index: number) => ({
-      '@type': 'Comment',
-      'position': index + 1,
-      'author': {
-        '@type': 'Person',
-        'name': msg.agent
-      },
-      'text': msg.message.substring(0, 500) + (msg.message.length > 500 ? '...' : ''),
-      'dateCreated': msg.created_at
-    })),
-    'commentCount': messages.length
-  };
-
-  const script = document.createElement('script');
-  script.id = SCHEMA_SCRIPT_ID;
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify(schema);
-  document.head.appendChild(script);
-}
-
-// Helper to remove DiscussionForumPosting schema
-function removeDiscussionSchema() {
-  const existing = document.getElementById(SCHEMA_SCRIPT_ID);
-  if (existing) {
-    existing.remove();
-  }
-}
+const getOgImageUrl = (shareId: string) => `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?shareId=${shareId}`;
+function updateMetaTag(property: string, content: string) { let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null; if (!meta) meta = document.querySelector(`meta[name="${property}"]`) as HTMLMetaElement | null; if (!meta) { meta = document.createElement('meta'); meta.setAttribute(property.startsWith('og:') ? 'property' : 'name', property); document.head.appendChild(meta); } meta.content = content; }
+function updateLinkTag(rel: string, href: string) { let link = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null; if (!link) { link = document.createElement('link'); link.rel = rel; document.head.appendChild(link); } link.href = href; }
+function updateDiscussionSchema(chat: { title: string; prompt: string; created_at?: string; updated_at?: string; view_count?: number }, messages: { agent: string; message: string; created_at?: string }[], shareId: string) { removeDiscussionSchema(); const schema = { '@context': 'https://schema.org', '@type': 'DiscussionForumPosting', '@id': `${BASE_URL}/shared/${shareId}`, headline: chat.title, articleBody: chat.prompt, url: `${BASE_URL}/shared/${shareId}`, datePublished: chat.created_at, dateModified: chat.updated_at || chat.created_at, publisher: { '@type': 'Organization', name: 'SiliconSoap', url: BASE_URL }, interactionStatistic: [{ '@type': 'InteractionCounter', interactionType: 'https://schema.org/ViewAction', userInteractionCount: chat.view_count || 0 }, { '@type': 'InteractionCounter', interactionType: 'https://schema.org/CommentAction', userInteractionCount: messages.length }], comment: messages.slice(0, 10).map((msg, index) => ({ '@type': 'Comment', position: index + 1, author: { '@type': 'Person', name: msg.agent }, text: msg.message.slice(0, 500), dateCreated: msg.created_at })), commentCount: messages.length }; const script = document.createElement('script'); script.id = SCHEMA_SCRIPT_ID; script.type = 'application/ld+json'; script.textContent = JSON.stringify(schema); document.head.appendChild(script); }
+function removeDiscussionSchema() { document.getElementById(SCHEMA_SCRIPT_ID)?.remove(); }
