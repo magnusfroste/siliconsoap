@@ -60,11 +60,13 @@ const numberClaims = (entries: RoundedMsg[]): Claim[] => {
   entries.forEach(({ message, round, name }) => {
     const publicText = parseAgentResponse(message.message).publicMessage;
     if (LINK_RE.test(publicText)) return;
-    splitSentences(publicText).forEach((raw) => {
-      const sentence = raw.trim();
-      if (!sentence || seen.has(sentence) || !NUMBER_RE.test(sentence)) return;
-      seen.add(sentence);
-      found.push({ sentence, name, round });
+    splitParagraphs(publicText).forEach((paragraph) => {
+      splitSentences(paragraph).forEach((raw) => {
+        const sentence = raw.trim();
+        if (!sentence || seen.has(sentence) || !NUMBER_RE.test(sentence)) return;
+        seen.add(sentence);
+        found.push({ sentence, name, round });
+      });
     });
   });
   return found.slice(0, 6);
