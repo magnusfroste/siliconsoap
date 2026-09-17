@@ -86,6 +86,17 @@ export const NewChatView = () => {
   }, [searchParams, state.availableModels, actions]);
 
 
+  // Safety net: never send an empty/unknown persona to the debate engine.
+  const { getTextValue } = useFeatureFlags();
+  const resolvePersona = (persona: string, slot: 'a' | 'b' | 'c') => {
+    const known = (value?: string | null) => !!value && profiles.some((profile) => profile.id === value);
+    if (known(persona)) return persona;
+    const flagDefault = getTextValue(`default_profile_agent_${slot}`);
+    if (known(flagDefault)) return flagDefault;
+    const hardDefault = slot === 'a' ? 'analytical' : slot === 'b' ? 'creative' : 'strategic';
+    return hardDefault;
+  };
+
   // Build chat settings from current state
   const buildChatSettings = (): ChatSettings => ({
     numberOfAgents: state.numberOfAgents,
