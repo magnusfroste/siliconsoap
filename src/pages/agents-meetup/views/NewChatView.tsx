@@ -22,6 +22,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import type { ChatSettings } from '@/models/chat';
 import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { getAgreementLabel } from '@/components/labs/agent-config/ExpertSettings';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 export const NewChatView = () => {
   const isMounted = useRef(true);
@@ -110,9 +111,9 @@ export const NewChatView = () => {
       agentC: state.agentCModel
     },
     personas: {
-      agentA: state.agentAPersona,
-      agentB: state.agentBPersona,
-      agentC: state.agentCPersona
+      agentA: resolvePersona(state.agentAPersona, 'a'),
+      agentB: resolvePersona(state.agentBPersona, 'b'),
+      agentC: resolvePersona(state.agentCPersona, 'c')
     },
     conversationTone: state.conversationTone,
     agreementBias: state.agreementBias,
