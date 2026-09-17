@@ -231,9 +231,9 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
                   <Ticket className="h-4 w-4 text-primary" />
                   <span className="text-muted-foreground">Free debates · {creditsRemaining} left</span>
                 </div>
-                <Badge className="sr-only"
+                <Badge
                   variant={creditsRemaining > 3 ? "secondary" : creditsRemaining > 0 ? "outline" : "destructive"}
-                  className="font-semibold"
+                  className="sr-only font-semibold"
                 >
                   {creditsRemaining}
                 </Badge>
