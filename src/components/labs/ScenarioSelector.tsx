@@ -2,7 +2,6 @@
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 export type ScenarioType = {
   id: string;
@@ -35,21 +34,23 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   const currentScenario = scenarioTypes.find(s => s.id === activeScenario);
 
   return (
-    <div className="border rounded-xl bg-card p-6 md:p-8 space-y-4 focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-md ring-1 ring-primary/5">
+    <section className="rounded-lg border bg-card p-5 md:p-7 space-y-5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">1</span>
+        <h2 className="font-display text-2xl font-semibold">Ask a hard question</h2>
+      </div>
       {/* Pill-style scenario buttons */}
-      <div className="flex justify-center gap-2 pb-3 border-b border-border/40">
+      <div className="grid grid-cols-3 rounded-md bg-muted p-1">
         {scenarioTypes.map(scenario => (
           <Button
             key={scenario.id}
             type="button"
-            variant={activeScenario === scenario.id ? "default" : "outline"}
+            variant={activeScenario === scenario.id ? "default" : "ghost"}
             size="sm"
             onClick={() => setActiveScenario(scenario.id)}
-            className="flex items-center gap-2 transition-all"
+            className="h-auto min-h-10 whitespace-normal px-2 text-xs sm:text-sm"
           >
-            {scenario.icon}
-            <span className="hidden sm:inline">{scenario.name}</span>
-            <span className="sm:hidden text-xs">{scenario.name.split(' ')[0]}</span>
+            <span>{scenario.name}</span>
           </Button>
         ))}
       </div>
@@ -67,8 +68,8 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
           placeholder={currentScenario?.placeholder || "Enter your topic..."}
           value={promptInputs[activeScenario] || ''}
           onChange={(e) => handleInputChange(activeScenario, e.target.value)}
-          className="w-full min-h-[4rem] resize-none text-lg md:text-xl font-medium leading-snug border-0 focus-visible:ring-0 bg-transparent px-0 placeholder:text-muted-foreground/60 placeholder:font-normal placeholder:text-base"
-          rows={2}
+          className="min-h-32 resize-none border-input bg-background p-4 text-base leading-relaxed"
+          rows={4}
           onInput={(e) => {
             const target = e.target as HTMLTextAreaElement;
             target.style.height = 'auto';
@@ -79,21 +80,23 @@ export const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 
       {/* Suggested Topics — clickable chips */}
       {suggestedTopics && suggestedTopics.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-3 border-t border-border/20">
-          <span className="text-xs text-muted-foreground/70 mr-1">Try one:</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground mr-1">Try one:</span>
           {suggestedTopics.map((topic, idx) => (
-            <button
+            <Button
               key={idx}
               type="button"
               onClick={() => handleInputChange(activeScenario, topic)}
-              className="max-w-full text-left text-xs rounded-full border border-border bg-muted/40 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              variant="outline"
+              size="sm"
+              className="h-auto max-w-full whitespace-normal rounded-full py-1.5 text-left text-xs font-normal"
             >
               {topic}
-            </button>
+            </Button>
           ))}
         </div>
       )}
-    </div>
+    </section>
 
   );
 };

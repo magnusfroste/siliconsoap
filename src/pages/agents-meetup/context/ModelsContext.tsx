@@ -18,6 +18,43 @@ const FALLBACK_POOL = [
   "mistralai/mistral-large-2411",
 ];
 
+const PRICE_RANK: Record<string, number> = { budget: 0, standard: 1, premium: 2 };
+
+const orderedFastCast = (models: CuratedModel[]) => {
+  const fastOpen = models
+    .filter((model) => model.is_enabled !== false && model.speed_rating === 'fast' && model.license_type === 'open-weight')
+    .sort((a, b) => (PRICE_RANK[a.price_tier || 'standard'] ?? 1) - (PRICE_RANK[b.price_tier || 'standard'] ?? 1) || (a.sort_order ?? 999) - (b.sort_order ?? 999));
+  const chosen: CuratedModel[] = [];
+  for (const origin of ['EU', 'US', 'CN']) {
+    const match = fastOpen.find((model) => model.origin_region === origin && !chosen.some((item) => item.model_id === model.model_id));
+    if (match) chosen.push(match);
+  }
+  for (const model of fastOpen) {
+    if (chosen.length === 3) break;
+    if (!chosen.some((item) => item.model_id === model.model_id)) chosen.push(model);
+  }
+  for (const model of models) {
+    if (chosen.length === 3) break;
+    if (!chosen.some((item) => item.model_id === model.model_id)) chosen.push(model);
+  }
+  return chosen;
+};
+
+const pickSmartDefaults = (models: CuratedModel[]) => {
+  const chosen = orderedFastCast(models);
+  if (chosen.length < 3) return pickRandomModels(models.map((model) => model.model_id));
+  return { agentA: chosen[0].model_id, agentB: chosen[1].model_id, agentC: chosen[2].model_id };
+};
+
+const pickFastShuffle = (models: CuratedModel[]) => {
+  const fast = models.filter((model) => model.is_enabled !== false && model.speed_rating === 'fast');
+  const source = fast.length >= 3 ? fast : models;
+  const shuffled = [...source].sort(() => Math.random() - 0.5);
+  const distinct = shuffled.filter((model, index, list) => list.findIndex((item) => item.origin_region === model.origin_region) === index);
+  const chosen = [...distinct, ...shuffled.filter((model) => !distinct.includes(model))].slice(0, 3);
+  return pickSmartDefaults(chosen);
+};
+
 // Pick 3 unique random models from a given pool (falls back to FALLBACK_POOL if too few)
 const pickRandomModels = (
   pool: string[] = FALLBACK_POOL
@@ -59,8 +96,7 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const models = await getEnabledModels();
         setAvailableModels(models);
         if (models.length >= 3) {
-          // Re-pick from curated pool so initial selection reflects what admin enabled
-          setAgentModels(pickRandomModels(models.map((m) => m.model_id)));
+          setAgentModels(pickSmartDefaults(models));
         }
       } catch (error) {
         console.error("Failed to load curated models:", error);
@@ -97,8 +133,7 @@ export const ModelsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const shuffleModels = () => {
-    const pool = availableModels.map((m) => m.model_id);
-    setAgentModels(pickRandomModels(pool));
+    setAgentModels(pickFastShuffle(availableModels));
   };
 
   return (
