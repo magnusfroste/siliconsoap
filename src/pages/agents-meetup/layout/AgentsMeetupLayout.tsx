@@ -28,7 +28,7 @@ export const AgentsMeetupLayout = () => {
       {/* Sidebar - Desktop */}
       <aside 
         className={`hidden md:block border-r transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'w-16' : 'w-64'
+          sidebarCollapsed ? 'w-16' : 'w-[264px]'
         }`}
       >
         <ChatSidebar 
@@ -45,7 +45,7 @@ export const AgentsMeetupLayout = () => {
             className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="fixed left-0 top-0 bottom-0 w-64 bg-background z-50 md:hidden animate-slide-in-right">
+          <aside className="fixed left-0 top-0 bottom-0 w-[min(88vw,320px)] bg-background z-50 md:hidden animate-slide-in-right">
             <ChatSidebar onClose={() => setSidebarOpen(false)} user={user} />
           </aside>
         </>
