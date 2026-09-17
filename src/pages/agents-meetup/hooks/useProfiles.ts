@@ -47,16 +47,19 @@ export const useProfiles = () => {
   }, [loading, getTextValue, formA, formB, formC]);
 
   const handleAgentAPersonaChange = useCallback((value: string) => {
+    if (!value) return;
     setAgentAPersona(value);
     formA.setValue('persona', value);
   }, [formA]);
 
   const handleAgentBPersonaChange = useCallback((value: string) => {
+    if (!value) return;
     setAgentBPersona(value);
     formB.setValue('persona', value);
   }, [formB]);
   
   const handleAgentCPersonaChange = useCallback((value: string) => {
+    if (!value) return;
     setAgentCPersona(value);
     formC.setValue('persona', value);
   }, [formC]);

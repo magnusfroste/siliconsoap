@@ -24,7 +24,7 @@ const personas = [
     gradient: 'from-orange-500 to-amber-500',
   },
   {
-    id: 'empathetic',
+    id: 'empathy',
     name: 'Empathy Expert',
     description: 'Emotional intelligence & compassion',
     icon: UserRound,
