@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, ChevronDown, Copy, Droplets, Lock, RotateCcw, Share2, Trash2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, Copy, Droplets, Lock, RotateCcw, Trash2, User } from 'lucide-react';
+import { toast } from 'sonner';
 import { useSharedChat } from '../hooks/useSharedChat';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { RoundSeparator } from '../components/RoundSeparator';
@@ -17,8 +18,13 @@ import type { CuratedModel } from '@/models/model';
 
 const BASE_URL = 'https://siliconsoap.com';
 const SCHEMA_SCRIPT_ID = 'discussion-forum-schema';
+const DEFAULT_TITLE = 'SiliconSoap — See how AI models really reason under pressure';
 
 const settingChip = 'inline-flex min-h-7 items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium';
+const NUMBER_RE = /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i;
+const LINK_RE = /https?:\/\//i;
+
+const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/);
 
 const splitPrompt = (prompt: string) => {
   const match = prompt.match(/\s*\(Note:\s*([^)]*)\)\s*$/i);
@@ -27,16 +33,43 @@ const splitPrompt = (prompt: string) => {
 
 const dateLabel = (value?: string) => value ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : '';
 
-const numberClaims = (messages: { message: string }[]) => {
-  const found: string[] = [];
-  messages.forEach(({ message }) => {
-    const publicText = parseAgentResponse(message).publicMessage;
-    publicText.split(/(?<=[.!?])\s+/).forEach((sentence) => {
-      if (!/https?:\/\//i.test(sentence) && /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d{4}\b|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i.test(sentence)) found.push(sentence.trim());
+type SharedMsg = { id?: string; agent: string; persona: string; model: string; message: string; created_at?: string };
+type RoundedMsg = { message: SharedMsg; round: number; isUser: boolean; name: string };
+
+/** Rounds are derived by walking messages in created_at order: a new round starts when an
+ * agent letter that already spoke in the current round speaks again. User turns stay put. */
+const withRounds = (messages: SharedMsg[]): RoundedMsg[] => {
+  const ordered = [...messages].sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  let round = 1;
+  let seen = new Set<string>();
+  return ordered.map((message) => {
+    const isUser = message.agent === 'You';
+    if (isUser) return { message, round, isUser, name: 'You (debate creator)' };
+    const letter = getAgentLetter(message.agent);
+    if (seen.has(letter)) { round += 1; seen = new Set([letter]); } else seen.add(letter);
+    return { message, round, isUser, name: getAgentSoapName(message.agent, message.persona) };
+  });
+};
+
+type Claim = { sentence: string; name: string; round: number };
+
+const numberClaims = (entries: RoundedMsg[]): Claim[] => {
+  const found: Claim[] = [];
+  const seen = new Set<string>();
+  entries.forEach(({ message, round, name }) => {
+    const publicText = parseAgentResponse(message.message).publicMessage;
+    if (LINK_RE.test(publicText)) return;
+    splitSentences(publicText).forEach((raw) => {
+      const sentence = raw.trim();
+      if (!sentence || seen.has(sentence) || !NUMBER_RE.test(sentence)) return;
+      seen.add(sentence);
+      found.push({ sentence, name, round });
     });
   });
-  return [...new Set(found)].slice(0, 6);
+  return found.slice(0, 6);
 };
+
+const excerpt = (text: string) => text.length > 140 ? `${text.slice(0, 139).trim()}…` : text;
 
 export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
@@ -44,6 +77,7 @@ export const SharedChatView = () => {
   const { chat, messages, loading, error } = useSharedChat(shareId);
   const tracked = useRef(false);
   const [models, setModels] = useState<CuratedModel[]>([]);
+  const [claimsOpen, setClaimsOpen] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
 
   useEffect(() => { getEnabledModels().then(setModels).catch(() => setModels([])); }, []);
   useEffect(() => {
@@ -61,10 +95,12 @@ export const SharedChatView = () => {
     updateMetaTag('og:title', chat.title); updateMetaTag('og:description', description); updateMetaTag('og:url', canonicalUrl); updateMetaTag('og:type', 'article'); updateMetaTag('og:image', getOgImageUrl(shareId || ''));
     updateMetaTag('twitter:title', chat.title); updateMetaTag('twitter:description', description); updateMetaTag('twitter:image', getOgImageUrl(shareId || ''));
     updateDiscussionSchema(chat, messages, shareId || '');
-    return () => { document.title = 'SiliconSoap - Where AI Debates Get Dramatic'; updateLinkTag('canonical', `${BASE_URL}/`); updateMetaTag('og:type', 'website'); removeDiscussionSchema(); };
+    return () => { document.title = DEFAULT_TITLE; updateLinkTag('canonical', `${BASE_URL}/`); updateMetaTag('og:type', 'website'); removeDiscussionSchema(); };
   }, [chat, messages, shareId]);
 
-  const claims = useMemo(() => numberClaims(messages), [messages]);
+  const rounded = useMemo(() => withRounds(messages as SharedMsg[]), [messages]);
+  const claims = useMemo(() => numberClaims(rounded), [rounded]);
+  const flaggedSentences = useMemo(() => new Set(claims.map((claim) => claim.sentence)), [claims]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" /></div>;
   if (error || !chat) {
@@ -87,20 +123,36 @@ export const SharedChatView = () => {
   const personas = [settings.personas.agentA, settings.personas.agentB, settings.personas.agentC];
   const rerun = `/new?prompt=${encodeURIComponent(chat.prompt)}`;
   const shareUrl = window.location.href;
-  const grouped = Array.from({ length: rounds }, (_, index) => ({ round: index + 1, items: messages.slice(index * agents, (index + 1) * agents) })).filter((group) => group.items.length);
+  const productionUrl = shareId ? `${BASE_URL}/shared/${shareId}` : shareUrl;
+  const totalRounds = rounded.length ? Math.max(rounds, rounded[rounded.length - 1].round) : rounds;
+  const groups = rounded.reduce<{ round: number; items: RoundedMsg[] }[]>((acc, entry) => {
+    const last = acc[acc.length - 1];
+    if (last && last.round === entry.round) last.items.push(entry); else acc.push({ round: entry.round, items: [entry] });
+    return acc;
+  }, []);
+
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(productionUrl); toast.success('Link copied'); }
+    catch { toast.error('Could not copy the link'); }
+  };
+  const openShare = (url: string) => window.open(url, '_blank', 'width=600,height=600,noopener,noreferrer');
 
   return <div className="min-h-screen bg-background pb-20 md:pb-0">
     <header className="border-b bg-background/95 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8"><Link to="/" className="font-display text-2xl font-semibold">SiliconSoap</Link><nav className="hidden items-center gap-7 text-sm md:flex"><Link to="/explore">Explore debates</Link><Link to="/models">Models</Link><Link to="/learn">Learn</Link></nav><Button asChild><Link to="/new">Start a debate</Link></Button></div></header>
 
     <main>
-      <section className="border-b"><div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:px-8 lg:grid-cols-12 lg:py-16"><div className="lg:col-span-8"><div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span className="rounded-full bg-chip-open-bg px-3 py-1 font-medium text-chip-open-fg">Public debate</span><span>{dateLabel(chat.created_at)}</span><span>·</span><span>{agents} agents · {rounds} rounds</span></div><h1 className="max-w-4xl font-display text-4xl font-semibold leading-tight md:text-6xl">{question}</h1>{note && <p className="mt-4 text-muted-foreground"><strong className="text-foreground">Setup note:</strong> {note}</p>}<div className="mt-6 flex flex-wrap gap-2">{chips.map((chip, index) => <span key={chip} className={`${settingChip} ${index > 2 ? 'hidden sm:inline-flex' : ''}`}>{chip}</span>)}</div></div>
-      <aside className="rounded-lg bg-foreground p-5 text-background lg:col-span-4"><p className="font-display text-2xl font-semibold">Run this question your way</p><p className="mt-2 text-sm text-background/70">Keep the question, change the cast and rules.</p><Button asChild variant="secondary" size="lg" className="mt-5 w-full"><Link to={rerun}>Rerun with your own cast<ArrowRight className="ml-2 h-4 w-4" /></Link></Button><div className="mt-4 flex gap-2"><Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Copy debate link" onClick={() => navigator.clipboard.writeText(shareUrl)}><Copy className="h-4 w-4" /></Button>{typeof navigator.share === 'function' && <Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Share debate" onClick={() => navigator.share({ title: chat.title, url: shareUrl })}><Share2 className="h-4 w-4" /></Button>}</div></aside></div></section>
+      <section className="border-b"><div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:px-8 lg:grid-cols-12 lg:py-16"><div className="lg:col-span-8"><div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span className={settingChip}>Public debate</span><span>{dateLabel(chat.created_at)}</span><span>·</span><span>{agents} agents · {rounds} rounds</span></div><h1 className="max-w-4xl font-display text-4xl font-semibold leading-tight md:text-6xl">{question}</h1>{note && <p className="mt-4 text-muted-foreground"><strong className="text-foreground">Setup note:</strong> {note}</p>}<div className="mt-6 flex flex-wrap gap-2">{chips.map((chip, index) => <span key={chip} className={`${settingChip} ${index > 2 ? 'hidden sm:inline-flex' : ''}`}>{chip}</span>)}</div></div>
+      <aside className="rounded-lg bg-foreground p-5 text-background lg:col-span-4"><p className="font-display text-2xl font-semibold">Run this question your way</p><p className="mt-2 text-sm text-background/70">Keep the question, change the cast and rules.</p><Button asChild variant="secondary" size="lg" className="mt-5 w-full"><Link to={rerun}>Rerun with your own cast<ArrowRight className="ml-2 h-4 w-4" /></Link></Button><div className="mt-4 flex gap-2">
+        <Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Copy debate link" onClick={copyLink}><Copy className="h-4 w-4" /></Button>
+        <Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Share this debate on X" onClick={() => openShare(`https://twitter.com/intent/tweet?url=${encodeURIComponent(productionUrl)}&text=${encodeURIComponent(chat.title)}%20via%20%40SiliconSoap`)}><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg></Button>
+        <Button variant="secondary" size="icon" className="h-11 w-11" aria-label="Share this debate on LinkedIn" onClick={() => openShare(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(productionUrl)}`)}><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452z" /></svg></Button>
+      </div></aside></div></section>
 
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 md:px-8 lg:grid-cols-12">
-        <section className="order-3 min-w-0 lg:order-1 lg:col-span-8"><h2 className="mb-7 font-display text-3xl font-semibold">The debate</h2><div className="space-y-10">{grouped.map(({ round, items }, groupIndex) => <div key={round} className="space-y-6">{groupIndex > 0 && <RoundSeparator roundNumber={round} totalConfiguredRounds={rounds} isFinalRound={round === rounds} />}{items.map((message, itemIndex) => <SharedMessage key={message.id || `${round}-${itemIndex}`} message={message} index={(round - 1) * agents + itemIndex} total={messages.length} chatUrl={shareUrl} />)}</div>)}</div></section>
+        <section className="order-3 min-w-0 lg:order-1 lg:col-span-8"><h2 className="mb-7 font-display text-3xl font-semibold">The debate</h2><div className="space-y-10">{groups.map(({ round, items }, groupIndex) => <div key={round} className="space-y-6">{groupIndex > 0 && <RoundSeparator roundNumber={round} totalConfiguredRounds={totalRounds} isFinalRound={round === totalRounds} />}{items.map((entry, itemIndex) => <SharedMessage key={entry.message.id || `${round}-${itemIndex}`} entry={entry} total={rounded.length} index={rounded.indexOf(entry)} chatUrl={shareUrl} flagged={flaggedSentences} />)}</div>)}</div></section>
         <aside className="order-1 space-y-5 lg:order-2 lg:col-span-4">
           <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-2xl font-semibold">The cast</h2><div className="mt-5 space-y-5">{modelIds.map((modelId, index) => { const model = models.find((item) => item.model_id === modelId); const letter = String.fromCharCode(65 + index) as 'A' | 'B' | 'C'; const name = getAgentSoapName(`Agent ${letter}`, personas[index]); return <div key={modelId} className="flex gap-3"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0"><p className="font-medium">{name}</p><p className="truncate font-mono text-xs text-muted-foreground">{model?.display_name || modelId}</p><div className="mt-2 flex flex-wrap gap-1"><LicenseChip license={model?.license_type} /><OriginChip origin={model?.origin_region} compact /><SpeedChip speed={model?.speed_rating} /></div></div></div>; })}</div><Button asChild variant="outline" className="mt-5 w-full"><Link to={rerun}>Rerun this cast</Link></Button></section>
-          {claims.length > 0 && <Collapsible className="rounded-lg border bg-chip-warning-bg p-5"><CollapsibleTrigger className="flex w-full items-center justify-between text-left font-medium text-chip-warning-fg">Numbers to check <ChevronDown className="h-4 w-4" /></CollapsibleTrigger><CollapsibleContent className="pt-4"><p className="mb-3 text-xs text-chip-warning-fg">These claims contain figures but no visible source link. Verify before sharing.</p><ol className="space-y-2 text-sm text-chip-warning-fg">{claims.map((claim) => <li key={claim} className="border-t border-chip-warning-fg/20 pt-2">{claim}</li>)}</ol></CollapsibleContent></Collapsible>}
+          {claims.length > 0 && <Collapsible open={claimsOpen} onOpenChange={setClaimsOpen} className="rounded-lg border bg-chip-warning-bg p-5"><CollapsibleTrigger className="flex w-full items-center justify-between gap-2 text-left font-medium text-chip-warning-fg"><span className="flex items-center gap-2">Numbers to check <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-chip-warning-fg/30 px-1.5 text-xs">{claims.length}</span></span><ChevronDown className="h-4 w-4" /></CollapsibleTrigger><CollapsibleContent className="pt-4"><p className="mb-3 text-xs text-chip-warning-fg">These claims contain figures but no visible source link. Verify before sharing.</p><ol className="space-y-3 text-sm text-chip-warning-fg">{claims.map((claim) => <li key={claim.sentence} className="border-t border-chip-warning-fg/20 pt-2"><p>“{excerpt(claim.sentence)}”</p><p className="mt-1 text-xs text-chip-warning-fg/80">{claim.name} · Round {claim.round}</p></li>)}</ol></CollapsibleContent></Collapsible>}
           {shareId && <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-xl font-semibold">React to this debate</h2><div className="mt-4"><ReactionButtons shareId={shareId} /></div></section>}
         </aside>
       </div>
@@ -111,14 +163,33 @@ export const SharedChatView = () => {
   </div>;
 };
 
-function SharedMessage({ message, index, total, chatUrl }: { message: { agent: string; persona: string; model: string; message: string }; index: number; total: number; chatUrl: string }) {
+function SharedMessage({ entry, index, total, chatUrl, flagged }: { entry: RoundedMsg; index: number; total: number; chatUrl: string; flagged: Set<string> }) {
+  const { message, isUser, name } = entry;
   const parsed = parseAgentResponse(message.message);
   const [expanded, setExpanded] = useState(false);
   const letter = getAgentLetter(message.agent) as 'A' | 'B' | 'C';
-  const name = getAgentSoapName(message.agent, message.persona);
   const long = parsed.publicMessage.length > 600;
   const visible = long && !expanded ? `${parsed.publicMessage.slice(0, 600).trim()}…` : parsed.publicMessage;
-  return <article className="group border-b border-border pb-8"><div className="flex gap-4"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{name}</h3><p className="text-xs text-muted-foreground">{message.persona} · <span className="font-mono">{message.model}</span></p></div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div><p className="mt-4 whitespace-pre-wrap text-[17px] leading-[1.65]">{visible}</p>{long && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Continue reading'}</Button>}{parsed.thinking && <Collapsible className="mt-4"><CollapsibleTrigger className="text-xs font-medium text-muted-foreground underline">Private reasoning</CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}<div className="mt-4"><QuoteShareButton message={message} chatUrl={chatUrl} /></div></div></div></article>;
+  const sentences = splitSentences(visible);
+  const hasFlag = sentences.some((sentence) => flagged.has(sentence.trim()));
+
+  return <article className="group border-b border-border pb-8"><div className="flex gap-4">
+    {isUser
+      ? <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground" aria-hidden="true"><User className="h-5 w-5" /></div>
+      : <AgentAvatar agentLetter={letter} name={name} size="md" />}
+    <div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{name}</h3>{!isUser && <p className="text-xs text-muted-foreground">{message.persona} · <span className="font-mono">{message.model}</span></p>}</div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div>
+    <p className="mt-4 whitespace-pre-wrap text-[17px] leading-[1.65]">{sentences.map((sentence, sentenceIndex) => {
+      const isFlagged = flagged.has(sentence.trim());
+      const text = sentenceIndex < sentences.length - 1 ? `${sentence} ` : sentence;
+      return isFlagged
+        ? <mark key={sentenceIndex} className="bg-chip-warning-bg text-chip-warning-fg underline decoration-dotted decoration-1 underline-offset-4">{text}</mark>
+        : <span key={sentenceIndex}>{text}</span>;
+    })}</p>
+    {hasFlag && <p className="mt-2 text-xs font-medium text-chip-warning-fg">Number to check: figure cited without a source link.</p>}
+    {long && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Continue reading'}</Button>}
+    {parsed.thinking && <Collapsible className="mt-4"><CollapsibleTrigger className="text-xs font-medium text-muted-foreground underline">Private reasoning</CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}
+    <div className="mt-4"><QuoteShareButton message={message} chatUrl={chatUrl} /></div></div>
+  </div></article>;
 }
 
 const getOgImageUrl = (shareId: string) => `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?shareId=${shareId}`;
