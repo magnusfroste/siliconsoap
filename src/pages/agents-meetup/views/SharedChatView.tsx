@@ -181,13 +181,16 @@ function SharedMessage({ entry, index, total, chatUrl, flagged }: { entry: Round
       ? <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground" aria-hidden="true"><User className="h-5 w-5" /></div>
       : <AgentAvatar agentLetter={letter} name={name} size="md" />}
     <div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{name}</h3>{!isUser && <p className="text-xs text-muted-foreground">{message.persona} · <span className="font-mono">{message.model}</span></p>}</div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div>
-    <p className="mt-4 whitespace-pre-wrap text-[17px] leading-[1.65]">{sentences.map((sentence, sentenceIndex) => {
-      const isFlagged = flagged.has(sentence.trim());
-      const text = sentenceIndex < sentences.length - 1 ? `${sentence} ` : sentence;
-      return isFlagged
-        ? <mark key={sentenceIndex} className="bg-chip-warning-bg text-chip-warning-fg underline decoration-dotted decoration-1 underline-offset-4">{text}</mark>
-        : <span key={sentenceIndex}>{text}</span>;
-    })}</p>
+    <div className="mt-4 space-y-4 text-[17px] leading-[1.65]">{paragraphs.map((paragraph, paragraphIndex) => {
+      const sentences = splitSentences(paragraph);
+      return <p key={paragraphIndex} className="whitespace-pre-wrap">{sentences.map((sentence, sentenceIndex) => {
+        const isFlagged = flagged.has(sentence.trim());
+        const text = sentenceIndex < sentences.length - 1 ? `${sentence} ` : sentence;
+        return isFlagged
+          ? <mark key={sentenceIndex} className="bg-chip-warning-bg text-chip-warning-fg underline decoration-dotted decoration-1 underline-offset-4">{text}</mark>
+          : <span key={sentenceIndex}>{text}</span>;
+      })}</p>;
+    })}</div>
     {hasFlag && <p className="mt-2 text-xs font-medium text-chip-warning-fg">Number to check: figure cited without a source link.</p>}
     {long && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Continue reading'}</Button>}
     {parsed.thinking && <Collapsible className="mt-4"><CollapsibleTrigger className="text-xs font-medium text-muted-foreground underline">Private reasoning</CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}
