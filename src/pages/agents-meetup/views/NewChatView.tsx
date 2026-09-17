@@ -305,7 +305,7 @@ export const NewChatView = () => {
                   loadingModels={state.loadingModels}
                   onShuffleModels={actions.shuffleModels}
                 />
-            <section className="space-y-6 rounded-lg border bg-card p-5 md:p-7">
+            <section className="min-w-0 max-w-full overflow-hidden space-y-6 rounded-lg border bg-card p-5 md:p-7">
               <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">3</span><h2 className="font-display text-2xl font-semibold">Set the rules</h2></div>
                 <ConversationSettings
                   numberOfAgents={state.numberOfAgents}
