@@ -29,7 +29,7 @@ export const getCurrentPrompt = (
   return promptInputs[activeScenario] || '';
 };
 
-export const getModelDisplayName = (modelId: string, availableModels: any[]): string => {
+export const getModelDisplayName = (modelId: string, availableModels: Array<{ id: string; name: string }>): string => {
   const model = availableModels.find(m => m.id === modelId);
   return model ? model.name : modelId.split('/').pop() || modelId;
 };

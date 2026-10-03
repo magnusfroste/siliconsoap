@@ -67,7 +67,7 @@ export const LeaderboardView = () => {
 
       // Get reaction counts for all public share_ids
       const shareIds = allChats.filter(c => c.is_public && c.share_id).map(c => c.share_id) as string[];
-      let reactionCounts: Record<string, number> = {};
+      const reactionCounts: Record<string, number> = {};
       
       if (shareIds.length > 0) {
         const { data: reactions } = await supabase

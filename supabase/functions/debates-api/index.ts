@@ -12,6 +12,9 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// Tillhandahålls av Supabase Edge Runtime (ingår inte i Denos standardglobaler).
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -875,7 +878,6 @@ Deno.serve(async (req) => {
       }
 
       // ----- Async mode (default): return immediately, run in background -----
-      // @ts-ignore EdgeRuntime is available in Supabase edge runtime
       EdgeRuntime.waitUntil(runOrchestration());
 
       return json(

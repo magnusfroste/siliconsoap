@@ -658,7 +658,7 @@ export const handleAdditionalRounds = async (
     { name: 'Agent C', model: agentCModel, persona: agentCPersona },
   ].slice(0, numberOfAgents);
   
-  let allMessages: ConversationMessage[] = [...conversation];
+  const allMessages: ConversationMessage[] = [...conversation];
   
   for (let roundNum = 2; roundNum <= rounds; roundNum++) {
     console.log(`[conversationService] Starting round ${roundNum} of ${rounds}`);

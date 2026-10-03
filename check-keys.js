@@ -1,1 +1,0 @@
-console.log('User API key exists:', cd /Users/mafr/Documents/github/master-business-agent && npm run devlocalStorage.getItem('userOpenRouterApiKey')); console.log('OpenRouter API key:', localStorage.getItem('openRouterApiKey') ? 'exists' : 'not found');

@@ -1,4 +1,5 @@
 
+import { ConversationMessage } from '@/models';
 import { ScenarioType } from '../../../types';
 import { getAgentSoapName, setActiveAgentName, clearActiveAgentNames } from '../../../utils/agentNameGenerator';
 
@@ -394,7 +395,7 @@ export const createAgentCFinalPrompt = (
 export const createResponseToUserPrompt = (
   originalPrompt: string,
   userMessage: string,
-  conversationHistory: any[],
+  conversationHistory: ConversationMessage[],
   agentName: string,
   currentScenario: ScenarioType,
   persona: string = 'analytical'

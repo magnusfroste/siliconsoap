@@ -122,7 +122,7 @@ export default function ExploreView() {
           .in('user_id', userIds);
 
         const shareIds = userChats?.filter(c => c.is_public && c.share_id).map(c => c.share_id) || [];
-        let reactionCounts: Record<string, number> = {};
+        const reactionCounts: Record<string, number> = {};
         if (shareIds.length > 0) {
           const { data: reactions } = await supabase
             .from('chat_reactions')

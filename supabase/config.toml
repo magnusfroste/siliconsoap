@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.mcp-token]
 verify_jwt = false
+
+[functions.dynamic-sitemap]
+verify_jwt = false
