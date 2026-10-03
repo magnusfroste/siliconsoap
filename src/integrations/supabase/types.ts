@@ -804,38 +804,22 @@ export type Database = {
           success: boolean
         }[]
       }
-      use_tokens:
-        | {
-            Args: {
-              p_chat_id: string
-              p_completion_tokens: number
-              p_estimated_cost: number
-              p_model_id: string
-              p_prompt_tokens: number
-              p_user_id: string
-            }
-            Returns: {
-              new_budget_remaining: number
-              new_tokens_used: number
-              success: boolean
-            }[]
-          }
-        | {
-            Args: {
-              p_chat_id: string
-              p_completion_tokens: number
-              p_estimated_cost: number
-              p_model_id: string
-              p_prompt_tokens: number
-              p_requested_model_id?: string
-              p_user_id: string
-            }
-            Returns: {
-              new_budget_remaining: number
-              new_tokens_used: number
-              success: boolean
-            }[]
-          }
+      use_tokens: {
+        Args: {
+          p_chat_id: string
+          p_completion_tokens: number
+          p_estimated_cost: number
+          p_model_id: string
+          p_prompt_tokens: number
+          p_requested_model_id?: string
+          p_user_id: string
+        }
+        Returns: {
+          new_budget_remaining: number
+          new_tokens_used: number
+          success: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"

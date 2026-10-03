@@ -41,7 +41,9 @@ export const tokenRepository = {
       p_model_id: modelId,
       p_prompt_tokens: usage.prompt_tokens,
       p_completion_tokens: usage.completion_tokens,
-      p_estimated_cost: usage.estimated_cost
+      p_estimated_cost: usage.estimated_cost,
+      // Only the 7-argument overload exists; the requested model defaults to the actual one.
+      p_requested_model_id: modelId
     });
 
     if (error) {
