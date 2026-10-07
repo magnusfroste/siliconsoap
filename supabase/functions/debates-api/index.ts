@@ -11,6 +11,7 @@
 //   GET    /debates/:id      -> fetch debate + messages
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { baseMaxTokens, effectiveMaxTokens } from "../_shared/tokenBudget.ts";
 
 // Tillhandahålls av Supabase Edge Runtime (ingår inte i Denos standardglobaler).
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
@@ -379,26 +380,16 @@ function buildUserPrompt(
   return `Debate topic: "${topic}"\n\nConversation so far:\n\n${transcript}\n\nYour turn. ${closer}`;
 }
 
-async function callOpenRouter(
-  apiKey: string,
-  model: string,
-  systemPrompt: string,
-  userPrompt: string,
-  disableReasoning: boolean,
-): Promise<{ content: string; usage?: any; modelUsed?: string }> {
-  const body: Record<string, unknown> = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    max_tokens: 600,
-    temperature: 0.9,
-    stream: false,
-    usage: { include: true },
-  };
-  if (disableReasoning) body.reasoning = { enabled: false };
+function extractContent(data: any): string {
+  const raw = data?.choices?.[0]?.message?.content;
+  if (typeof raw === "string") return raw.trim();
+  if (Array.isArray(raw)) {
+    return raw.map((p: any) => (typeof p === "string" ? p : p?.text ?? "")).join("").trim();
+  }
+  return "";
+}
 
+async function postOpenRouter(apiKey: string, body: Record<string, unknown>) {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
@@ -409,25 +400,67 @@ async function callOpenRouter(
     },
     body: JSON.stringify(body),
   });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      `OpenRouter ${res.status}: ${data?.error?.message ?? "request failed"}`,
-    );
+function hasUnclosedThinking(content: string): boolean {
+  return !!content && /<thinking>/i.test(content) && !/<\/thinking>/i.test(content);
+}
+
+async function callOpenRouter(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  disableReasoning: boolean,
+  responseLength: string,
+): Promise<{ content: string; usage?: any; modelUsed?: string }> {
+  const maxTokens = effectiveMaxTokens(responseLength, disableReasoning);
+  const body: Record<string, unknown> = {
+    model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    max_tokens: maxTokens,
+    temperature: 0.9,
+    stream: false,
+    usage: { include: true },
+  };
+  if (disableReasoning) {
+    body.reasoning = { enabled: false };
+    console.log(`[reasoning] Disabled for ${model} (admin toggle), max_tokens=${maxTokens}`);
+  } else {
+    console.log(`[reasoning] Buffer added for ${model}: ${baseMaxTokens(responseLength)} -> ${maxTokens}`);
   }
-  const raw = data?.choices?.[0]?.message?.content;
-  const content =
-    typeof raw === "string"
-      ? raw.trim()
-      : Array.isArray(raw)
-        ? raw
-            .map((p: any) => (typeof p === "string" ? p : p?.text ?? ""))
-            .join("")
-            .trim()
-        : "";
-  if (!content) {
-    throw new Error(`Empty response from ${model}`);
+
+  let res = await postOpenRouter(apiKey, body);
+  if (!res.ok) {
+    const errMsg = String(res.data?.error?.message ?? "");
+    if (res.status === 400 && /reasoning is mandatory/i.test(errMsg) && body.reasoning === undefined) {
+      console.log(`[reasoning] Endpoint requires reasoning. Retrying ${model} with reasoning.enabled=true`);
+      body.reasoning = { enabled: true };
+      res = await postOpenRouter(apiKey, body);
+    }
+  }
+  if (!res.ok) {
+    throw new Error(`OpenRouter ${res.status}: ${res.data?.error?.message ?? "request failed"}`);
+  }
+
+  let content = extractContent(res.data);
+  let data = res.data;
+  if (!content || hasUnclosedThinking(content)) {
+    const boosted = Math.max(baseMaxTokens(responseLength) * 6, maxTokens * 2);
+    console.warn(`Empty/truncated response from ${model}. Retrying with max_tokens=${boosted}`);
+    const retry = await postOpenRouter(apiKey, { ...body, max_tokens: boosted });
+    const retryContent = retry.ok ? extractContent(retry.data) : "";
+    if (retryContent && !hasUnclosedThinking(retryContent)) {
+      content = retryContent;
+      data = retry.data;
+    } else {
+      throw new Error(`Empty response from ${model}`);
+    }
   }
   return { content, usage: data?.usage, modelUsed: data?.model };
 }
@@ -767,6 +800,7 @@ Deno.serve(async (req) => {
                     sys,
                     usr,
                     disableReasoning,
+                    input.response_length ?? "medium",
                   );
                   content = result.content;
                   usage = result.usage;

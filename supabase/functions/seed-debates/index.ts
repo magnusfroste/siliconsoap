@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { baseMaxTokens, effectiveMaxTokens as getEffectiveMaxTokens } from '../_shared/tokenBudget.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,8 +97,7 @@ async function getOrCreateDemoUser(supabase: any): Promise<string> {
   return newUser.user.id;
 }
 
-const BASE_MAX_TOKENS = 700; // "medium" response length used by the seeder
-const REASONING_BUFFER = 600; // mirrors openrouter-chat
+const SEED_RESPONSE_LENGTH = 'medium'; // response length used by the seeder
 
 async function getDisableReasoning(supabase: any, model: string): Promise<boolean> {
   try {
@@ -136,7 +136,7 @@ async function callOpenRouterOnce(
   messages: { role: string; content: string }[],
   disableReasoning: boolean,
 ): Promise<string> {
-  const effectiveMaxTokens = disableReasoning ? BASE_MAX_TOKENS : BASE_MAX_TOKENS + REASONING_BUFFER;
+  const effectiveMaxTokens = getEffectiveMaxTokens(SEED_RESPONSE_LENGTH, disableReasoning);
   const requestBody: Record<string, unknown> = {
     model,
     messages,
@@ -147,7 +147,7 @@ async function callOpenRouterOnce(
     requestBody.reasoning = { enabled: false };
     console.log(`[reasoning] Disabled for ${model} (admin toggle), max_tokens=${effectiveMaxTokens}`);
   } else {
-    console.log(`[reasoning] Buffer added for ${model}: ${BASE_MAX_TOKENS} -> ${effectiveMaxTokens}`);
+    console.log(`[reasoning] Buffer added for ${model}: ${baseMaxTokens(SEED_RESPONSE_LENGTH)} -> ${effectiveMaxTokens}`);
   }
 
   let res = await postCompletion(apiKey, requestBody);
