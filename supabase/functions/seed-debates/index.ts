@@ -377,6 +377,8 @@ This is the second round. Respond to the other agents' points, defend your posit
 
     if (messagesError) {
       console.error('Error inserting messages:', messagesError);
+      // Roll back so a half-built debate is never public/featured
+      await supabase.from('agent_chats').delete().eq('id', chat.id);
       throw messagesError;
     }
 
