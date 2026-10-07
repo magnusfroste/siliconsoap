@@ -16,3 +16,9 @@
 - [x] Rebuild `/new` with the three-step layout, smart cast defaults, summary rail, and mobile action bar
 - [x] Rebuild `/shared/:shareId` with transcript controls, source-free number flags, cast rail, and rerun bands
 - [x] Verify typecheck, build, light/dark desktop and mobile layouts, and prompt-prefill reruns
+
+## Chat presentation makeover (approved)
+- [ ] Extract shared message rendering and round grouping for /shared and /chat
+- [ ] Restyle chat header, live progress, answering state, pauses, completion, input, and audio controls without changing generation handlers
+- [ ] Restyle judge results/drawer and sidebar statuses
+- [ ] Verify guest generation, round pause/skip, human turns, themes, mobile, and preview diagnostics
