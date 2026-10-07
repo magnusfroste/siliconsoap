@@ -96,34 +96,91 @@ async function getOrCreateDemoUser(supabase: any): Promise<string> {
   return newUser.user.id;
 }
 
-async function callOpenRouter(
-  apiKey: string,
-  model: string,
-  messages: { role: string; content: string }[]
-): Promise<string> {
+const BASE_MAX_TOKENS = 700; // "medium" response length used by the seeder
+const REASONING_BUFFER = 600; // mirrors openrouter-chat
+
+async function getDisableReasoning(supabase: any, model: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('curated_models')
+      .select('disable_reasoning')
+      .eq('model_id', model)
+      .maybeSingle();
+    return data?.disable_reasoning === true;
+  } catch (err) {
+    console.warn('[reasoning] Lookup failed, defaulting to enabled:', err);
+    return false;
+  }
+}
+
+async function postCompletion(apiKey: string, requestBody: Record<string, unknown>) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://lovable.dev',
-      'X-Title': 'Magnus Froste Labs - Seed Debates'
+      'HTTP-Referer': 'https://siliconsoap.com',
+      'X-Title': 'SiliconSoap - Seed Debates'
     },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: 500,
-      temperature: 0.8,
-    }),
+    body: JSON.stringify(requestBody),
   });
+  const text = await response.text();
+  let json: any = null;
+  try { json = JSON.parse(text); } catch { /* non-JSON error body */ }
+  return { ok: response.ok, status: response.status, text, json };
+}
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenRouter error: ${response.status} - ${error}`);
+async function callOpenRouterOnce(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string }[],
+  disableReasoning: boolean,
+): Promise<string> {
+  const effectiveMaxTokens = disableReasoning ? BASE_MAX_TOKENS : BASE_MAX_TOKENS + REASONING_BUFFER;
+  const requestBody: Record<string, unknown> = {
+    model,
+    messages,
+    max_tokens: effectiveMaxTokens,
+    temperature: 0.8,
+  };
+  if (disableReasoning) {
+    requestBody.reasoning = { enabled: false };
+    console.log(`[reasoning] Disabled for ${model} (admin toggle), max_tokens=${effectiveMaxTokens}`);
+  } else {
+    console.log(`[reasoning] Buffer added for ${model}: ${BASE_MAX_TOKENS} -> ${effectiveMaxTokens}`);
   }
 
-  const data = await response.json();
-  return data.choices[0]?.message?.content || '';
+  let res = await postCompletion(apiKey, requestBody);
+  if (!res.ok) {
+    const errMsg = res.json?.error?.message ?? res.text;
+    if (/reasoning is mandatory/i.test(String(errMsg)) && requestBody.reasoning === undefined) {
+      console.log(`[reasoning] Endpoint requires reasoning. Retrying ${model} with reasoning.enabled=true`);
+      res = await postCompletion(apiKey, { ...requestBody, reasoning: { enabled: true } });
+    }
+  }
+  if (!res.ok) {
+    throw new Error(`OpenRouter error for ${model}: ${res.status} - ${res.json?.error?.message ?? res.text}`);
+  }
+  return res.json?.choices?.[0]?.message?.content || '';
+}
+
+// Raw content (including any <thinking> block) is stored as-is, consistent with
+// the rest of the app, which strips it at render time via parseAgentResponse.
+async function callOpenRouter(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string }[],
+  disableReasoning: boolean,
+): Promise<string> {
+  let content = await callOpenRouterOnce(apiKey, model, messages, disableReasoning);
+  if (!content.trim()) {
+    console.warn(`Model ${model} returned empty content, retrying once`);
+    content = await callOpenRouterOnce(apiKey, model, messages, disableReasoning);
+  }
+  if (!content.trim()) {
+    throw new Error(`Model ${model} returned empty content twice; seed aborted, no debate was created.`);
+  }
+  return content;
 }
 
 serve(async (req) => {
@@ -170,37 +227,11 @@ serve(async (req) => {
     // Parse target date
     const baseDate = new Date(targetDate);
 
-    // Create the chat first
-    const { data: chat, error: chatError } = await supabase
-      .from('agent_chats')
-      .insert({
-        user_id: demoUserId,
-        title: topic,
-        prompt: prompt,
-        scenario_id: scenarioId,
-        settings: {
-          numberOfAgents: agents.length,
-          rounds: 2,
-          responseLength: 'medium',
-          participationMode: 'all',
-          turnOrder: 'fixed'
-        },
-        is_public: true,
-        share_id: shareId,
-        view_count: viewCount,
-        featured_at: featured === true ? new Date().toISOString() : null,
-        created_at: baseDate.toISOString(),
-        updated_at: baseDate.toISOString()
-      })
-      .select()
-      .single();
-
-    if (chatError) {
-      console.error('Error creating chat:', chatError);
-      throw chatError;
+    // Resolve per-model reasoning toggle once
+    const reasoningOff: Record<string, boolean> = {};
+    for (const a of agents) {
+      if (!(a.model in reasoningOff)) reasoningOff[a.model] = await getDisableReasoning(supabase, a.model);
     }
-
-    console.log(`Created chat ${chat.id} with share_id ${shareId}`);
 
     // Generate conversation messages
     const messages: {
@@ -239,7 +270,7 @@ ${i === 0 ? 'You are starting the debate. Give your initial position.' : 'Respon
 
       console.log(`Generating response for ${agent.name} using ${agent.model}...`);
       
-      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi);
+      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true);
       
       // Add to conversation history
       conversationHistory.push({
@@ -281,7 +312,7 @@ This is the second round. Respond to the other agents' points, defend your posit
 
       console.log(`Generating follow-up for ${agent.name}...`);
       
-      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi);
+      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true);
       
       conversationHistory.push({
         role: 'assistant',
@@ -301,6 +332,38 @@ This is the second round. Respond to the other agents' points, defend your posit
 
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
+
+    // Create the chat only after every message generated successfully
+    const { data: chat, error: chatError } = await supabase
+      .from('agent_chats')
+      .insert({
+        user_id: demoUserId,
+        title: topic,
+        prompt: prompt,
+        scenario_id: scenarioId,
+        settings: {
+          numberOfAgents: agents.length,
+          rounds: 2,
+          responseLength: 'medium',
+          participationMode: 'all',
+          turnOrder: 'fixed'
+        },
+        is_public: true,
+        share_id: shareId,
+        view_count: viewCount,
+        featured_at: featured === true ? new Date().toISOString() : null,
+        created_at: baseDate.toISOString(),
+        updated_at: baseDate.toISOString()
+      })
+      .select()
+      .single();
+
+    if (chatError) {
+      console.error('Error creating chat:', chatError);
+      throw chatError;
+    }
+
+    console.log(`Created chat ${chat.id} with share_id ${shareId}`);
 
     // Insert all messages
     const messagesWithChatId = messages.map(m => ({
