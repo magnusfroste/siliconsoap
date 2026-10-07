@@ -429,7 +429,7 @@ export const ChatView = () => {
   const shareUrl = shareId ? `https://siliconsoap.com/shared/${shareId}` : undefined;
   const shouldShowInput = mode === 'spectator' ? false : mode === 'round-by-round' ? waitingForUserInput || wantsToContinue : conversationComplete || wantsToContinue || !isGenerating;
   const bias = settings.agreementBias ?? 50;
-  const chips = [mode === 'spectator' ? 'Spectator' : mode === 'round-by-round' ? 'Round by round' : 'Jump in', `${settings.conversationTone || 'collaborative'} tone`, ...(bias !== 50 ? [`${bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced'} · bias ${bias}`] : []), `${settings.rounds} rounds`];
+  const chips = [mode === 'spectator' ? 'Spectator' : mode === 'round-by-round' ? 'Round by round' : 'Jump in', `${settings.conversationTone || 'collaborative'} tone`, ...(bias !== 50 ? [`${bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced'} · bias ${bias}`] : []), `${settings.rounds} round${settings.rounds === 1 ? '' : 's'}`];
   const onSkip = async () => {
                 if (!chat || !chatId) return;
                 
@@ -712,7 +712,7 @@ export const ChatView = () => {
             <div data-message-index={index}><DebateMessage entry={entry} index={index} total={messages.length} chatUrl={shareUrl} flagged={flagged} reasoningEnabled={scratchpadEnabled} reasoningOpen={showInnerThoughts} userLabel="You" isPlaying={isPlaying && currentMessageIndex === index} isTheaterReveal={theaterReveal} audioDurationMs={theaterReveal ? audioDuration : null} /></div>
           </div>;
         })}
-        {isGenerating && answeringAgent && <AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} />}
+        {isGenerating && answeringAgent && <>{(!rounded.length || live.round > (rounded[rounded.length - 1]?.round || 0)) && <RoundSeparator roundNumber={live.round} totalConfiguredRounds={settings.rounds} isFinalRound={live.round === settings.rounds} />}<AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} /></>}
         {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => getAgentSoapName(`Agent ${letter}`, settings.personas[`agent${letter}`])).join(', ')} respond to each other</>}</p>}
         {waitingForUserInput && !isGenerating && <RoundPausePrompt roundNumber={currentRoundInProgress - 1} onSkip={onSkip}><div className="hidden md:block">{input}</div></RoundPausePrompt>}
         {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}

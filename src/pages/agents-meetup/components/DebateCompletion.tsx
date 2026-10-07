@@ -10,7 +10,7 @@ export function DebateCompletion({ answers, rounds, shareId, saving, prompt, onC
   const social = (url: string) => window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');
   return <section className="debate-completion rounded-lg p-5 md:p-7" aria-label="Debate complete">
     <h2 className="font-display text-3xl font-semibold">Debate complete</h2>
-    <p className="mt-2 text-sm opacity-75">{answers} answers in {rounds} rounds. {saving ? 'Saving…' : shareId ? <>Public and shareable at <span className="break-all font-mono text-xs">siliconsoap.com/shared/{shareId}</span></> : 'Not shared publicly.'}</p>
+    <p className="mt-2 text-sm opacity-75">{answers} answers in {rounds} round{rounds === 1 ? '' : 's'}. {saving ? 'Saving…' : shareId ? <>Public and shareable at <span className="break-all font-mono text-xs">siliconsoap.com/shared/{shareId}</span></> : 'Not shared publicly.'}</p>
     <div className="mt-5 flex flex-wrap gap-2">
       <Button variant="secondary" className="h-11" onClick={onCopy} disabled={saving}><Copy className="mr-2 h-4 w-4" />Copy share link</Button>
       <Button variant="outline" size="icon" className="completion-outline h-11 w-11" aria-label="Share debate on X" disabled={!shareId} onClick={() => social(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(prompt)}`)}><svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg></Button>

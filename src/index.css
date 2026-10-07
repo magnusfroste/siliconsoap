@@ -136,8 +136,8 @@
 @layer components {
   .debate-completion { background: hsl(var(--completion-bg)); color: hsl(var(--completion-fg)); }
   .completion-tile { background: hsl(var(--completion-tile)); }
-  .completion-outline { background: transparent; color: hsl(var(--completion-fg)); border-color: hsl(var(--completion-border)); }
-  .completion-outline:hover { background: hsl(var(--completion-tile)); color: hsl(var(--completion-fg)); }
+  .debate-completion .completion-outline { background: transparent; color: hsl(var(--completion-fg)); border-color: hsl(var(--completion-border)); }
+  .debate-completion .completion-outline:hover { background: hsl(var(--completion-tile)); color: hsl(var(--completion-fg)); }
   .completion-link { color: hsl(var(--completion-fg)); }
   .debate-progress { appearance: none; background: hsl(var(--muted)); color: hsl(var(--primary)); }
   .debate-progress::-webkit-progress-bar { background: hsl(var(--muted)); }
