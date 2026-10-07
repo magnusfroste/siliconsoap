@@ -1,17 +1,20 @@
-import { useParams } from 'react-router-dom';
+import { DebateMessage } from '../components/DebateMessage';
+import { DebateProgress, AnsweringMessage, getLiveRound, useAnsweringClock } from '../components/DebateProgress';
+import { DebateCompletion } from '../components/DebateCompletion';
+import { JudgeVerdict } from '../components/JudgeVerdict';
+import { withRounds, numberClaims } from '../utils/debatePresentation';
+import { getAgentSoapName } from '../utils/agentNameGenerator';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Link, useParams } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChatMessage } from '../components/ChatMessage';
-import { UserMessage } from '../components/UserMessage';
 import { RoundSeparator } from '../components/RoundSeparator';
-import { AgentTypingIndicator } from '../components/AgentTypingIndicator';
 import { ChatInput } from '../components/ChatInput';
 import { RoundPausePrompt } from '../components/RoundPausePrompt';
-import { ConversationComplete } from '../components/ConversationComplete';
 import { useAuth } from '../hooks/useAuth';
 import { useChat } from '../hooks/useChat';
 import { useLabsState } from '../hooks/useLabsState';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
-import { Loader2, Share2, Eye, MessageSquare, Users, Flame, Handshake, GraduationCap, Coffee, Zap, Scale, Brain } from 'lucide-react';
+import { Loader2, Share2, Brain, MoreHorizontal, Pause, Play, Square } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { handleInitialRound, handleAdditionalRounds, handleSingleRound, checkBeforeStarting, handleUserFollowUp, TokenUsageCallback, ExpertSettings, EnhancementOptions } from '@/services/conversationService';
 import { webSearchService } from '@/services/webSearchService';
@@ -20,12 +23,9 @@ import { creditsService } from '@/services';
 import { toast } from 'sonner';
 import { ConversationMessage, TokenUsage } from '@/models';
 import { scenarioTypes } from '../constants';
-import { FloatingActionBar } from '../components/FloatingActionBar';
 import { AnalysisDrawer } from '../components/AnalysisDrawer';
 import { useConversationAnalysis } from '../hooks/conversation/useConversationAnalysis';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,6 +44,7 @@ export const ChatView = () => {
   const [waitingForUserInput, setWaitingForUserInput] = useState(false);
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
+  const [questionExpanded, setQuestionExpanded] = useState(false);
   const [guestShareId, setGuestShareId] = useState<string | null>(null);
   const [isSavingGuest, setIsSavingGuest] = useState(false);
   
@@ -110,15 +111,16 @@ export const ChatView = () => {
   // Copy public share link (chats are auto-shared on creation)
   const handleCopyShareClick = async () => {
     if (!chatId) return;
-    let shareId = chat?.share_id;
+    let shareId = guestShareId || chat?.share_id;
+    if (isGuest && !shareId) { toast.info(isSavingGuest || isGenerating ? 'The share link is available when the debate finishes saving.' : 'The share link is not available yet.'); return; }
     if (!shareId) {
       // Re-share previously unshared chat
       shareId = (await shareChat(chatId)) ?? undefined;
     }
     if (shareId) {
       const shareUrl = `${window.location.origin}/shared/${shareId}`;
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copied! Anyone with the link can view this chat.');
+      try { await navigator.clipboard.writeText(shareUrl); toast.success('Link copied'); }
+      catch { toast.error('Could not copy the link'); }
     }
   };
 
@@ -385,6 +387,14 @@ export const ChatView = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat, chatId, loading, creditsLoading, messages.length, state.apiKey, saveMessage, hasCredits, refreshCredits, user?.id, creditsRemaining]);
 
+  const displayLive = chat ? getLiveRound(messages, chat.settings) : null;
+  const displayAgent = isGenerating && chat ? (currentAgent && !displayLive?.spoken.has(currentAgent) ? currentAgent : ['Agent A', 'Agent B', 'Agent C'].slice(0, chat.settings.numberOfAgents).find(agent => !displayLive?.spoken.has(agent)) || null) : null;
+  const answeringSeconds = useAnsweringClock(displayAgent, isGenerating);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('debateLiveStatus', { detail: { chatId, live: isGenerating } }));
+    return () => { window.dispatchEvent(new CustomEvent('debateLiveStatus', { detail: { chatId, live: false } })); };
+  }, [chatId, isGenerating]);
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -406,217 +416,21 @@ export const ChatView = () => {
     );
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Chat Title with Participation Mode Badge and Share Button */}
-      <div className="border-b px-4 py-3 pr-16 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <h2 className="font-semibold truncate">{chat.prompt}</h2>
-          {(() => {
-            const settings = chat.settings as any;
-            const mode = settings?.participationMode || 'jump-in';
-            const modeConfig = {
-              'spectator': { 
-                label: 'Spectator', 
-                icon: Eye, 
-                variant: 'secondary' as const,
-                tooltip: 'Watch only mode. Agents will complete all rounds automatically without any input from you.'
-              },
-              'jump-in': { 
-                label: 'Jump In', 
-                icon: MessageSquare, 
-                variant: 'default' as const,
-                tooltip: 'Comment after agents finish. Once all rounds complete, you can add your thoughts and agents will respond.'
-              },
-              'round-by-round': { 
-                label: 'Round by Round', 
-                icon: Users, 
-                variant: 'outline' as const,
-                tooltip: 'Interactive mode. The conversation pauses after each round, letting you contribute or skip to the next round.'
-              }
-            };
-            const config = modeConfig[mode as keyof typeof modeConfig] || modeConfig['jump-in'];
-            const Icon = config.icon;
-            
-            // Conversation tone config
-            const tone = settings?.conversationTone || 'collaborative';
-            const toneConfig = {
-              'formal': { label: 'Formal', icon: GraduationCap, tooltip: 'Academic rigor and professional discourse' },
-              'casual': { label: 'Casual', icon: Coffee, tooltip: 'Friendly, everyday conversation' },
-              'heated': { label: 'Heated', icon: Flame, tooltip: 'Passionate and assertive viewpoints' },
-              'collaborative': { label: 'Collaborative', icon: Handshake, tooltip: 'Building on ideas together' }
-            };
-            const toneInfo = toneConfig[tone as keyof typeof toneConfig] || toneConfig['collaborative'];
-            const ToneIcon = toneInfo.icon;
-            
-            // Agreement bias
-            const bias = settings?.agreementBias ?? 50;
-            const biasLabel = bias < 30 ? "Devil's Advocate" : bias > 70 ? "Agreeable" : "Balanced";
-            
-            return (
-              <div className="flex items-center gap-2 flex-wrap">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant={config.variant} className="shrink-0 gap-1.5 cursor-help">
-                        <Icon className="h-3 w-3" />
-                        {config.label}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      <p>{config.tooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                {/* Conversation Tone Badge */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                        <ToneIcon className="h-3 w-3" />
-                        {toneInfo.label}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      <p>{toneInfo.tooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                {/* Agreement Bias Badge - only show if not default */}
-                {bias !== 50 && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className="shrink-0 gap-1.5 cursor-help">
-                          <Scale className="h-3 w-3" />
-                          {biasLabel}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="max-w-xs">
-                        <p>Agreement bias: {bias}% - {bias < 30 ? 'Agents challenge each other' : bias > 70 ? 'Agents build on ideas' : 'Balanced debate'}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {scratchpadEnabled && messages.length > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={showInnerThoughts ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setShowInnerThoughts(v => !v)}
-                    className="gap-2"
-                    aria-pressed={showInnerThoughts}
-                  >
-                    <Brain className="h-4 w-4" />
-                    {showInnerThoughts ? 'Hide thoughts' : 'Show thoughts'}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p>Reveal each agent's private inner monologue (Hermes-style scratchpad).</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {!isGuest && messages.length > 0 && (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleCopyShareClick}
-                className="gap-2"
-                title={chat?.share_id ? 'Copy public share link' : 'Re-share and copy link'}
-              >
-                <Share2 className="h-4 w-4" />
-                {chat?.share_id ? 'Copy link' : 'Share'}
-              </Button>
-              {chat?.share_id && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleUnshareClick}
-                  className="gap-2 text-muted-foreground hover:text-foreground"
-                  title="Make this chat private — disables the share link"
-                >
-                  Unshare
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Messages */}
-      <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
-        <div className="max-w-4xl mx-auto py-6 space-y-4">
-          {messages.map((message, index) => {
-            const settings = chat.settings as any;
-            const numberOfAgents = settings?.numberOfAgents || 2;
-            const currentRound = Math.floor(index / numberOfAgents) + 1;
-            const previousRound = index > 0 ? Math.floor((index - 1) / numberOfAgents) + 1 : 0;
-            const isNewRound = currentRound > previousRound;
-
-            // Theater mode: hide messages that haven't been revealed yet
-            const isHiddenInTheater = theaterMode && (isPlaying || isPaused) && index > currentMessageIndex;
-            const isCurrentTheaterMessage = theaterMode && isPlaying && index === currentMessageIndex;
-
-            if (isHiddenInTheater) return null;
-
-            return (
-              <div key={index}>
-                {/* Round Separator */}
-                {isNewRound && (
-                  <RoundSeparator 
-                    roundNumber={currentRound} 
-                    totalConfiguredRounds={(chat.settings as any)?.rounds || 1}
-                    isFinalRound={currentRound === ((chat.settings as any)?.rounds || 1)}
-                  />
-                )}
-                
-                {/* Message */}
-                <div data-message-index={index}>
-                  {message.isHuman ? (
-                    <UserMessage 
-                      message={message} 
-                      messageIndex={index}
-                      totalMessages={messages.length}
-                      showTimeline={true}
-                    />
-                  ) : (
-                    <ChatMessage 
-                      message={message} 
-                      messageIndex={index}
-                      totalMessages={messages.length}
-                      showTimeline={true}
-                      isPlaying={isPlaying && currentMessageIndex === index}
-                      isTheaterReveal={isCurrentTheaterMessage}
-                      audioDurationMs={isCurrentTheaterMessage ? audioDuration : null}
-                      showInnerThoughts={showInnerThoughts}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Enhanced Typing Indicator */}
-          {isGenerating && currentAgent && (
-            <AgentTypingIndicator agentName={currentAgent} />
-          )}
-          
-          {/* Round Pause Prompt */}
-          {waitingForUserInput && !isGenerating && (
-            <RoundPausePrompt 
-              roundNumber={currentRoundInProgress - 1}
-              onSkip={async () => {
+  const settings = chat.settings;
+  const rounded = withRounds(messages);
+  const flagged = new Set(numberClaims(rounded).map(claim => claim.sentence));
+  const mode = settings.participationMode || 'jump-in';
+  const answers = rounded.filter(entry => !entry.isUser).length;
+  const actualRounds = rounded[rounded.length - 1]?.round || settings.rounds;
+  const live = getLiveRound(messages, settings);
+  const candidate = ['Agent A', 'Agent B', 'Agent C'].slice(0, settings.numberOfAgents).find(agent => !live.spoken.has(agent));
+  const answeringAgent = isGenerating ? (currentAgent && !live.spoken.has(currentAgent) ? currentAgent : candidate || null) : null;
+  const shareId = guestShareId || chat.share_id;
+  const shareUrl = shareId ? `https://siliconsoap.com/shared/${shareId}` : undefined;
+  const shouldShowInput = mode === 'spectator' ? false : mode === 'round-by-round' ? waitingForUserInput || wantsToContinue : conversationComplete || wantsToContinue || !isGenerating;
+  const bias = settings.agreementBias ?? 50;
+  const chips = [mode === 'spectator' ? 'Spectator' : mode === 'round-by-round' ? 'Round by round' : 'Jump in', `${settings.conversationTone || 'collaborative'} tone`, ...(bias !== 50 ? [`${bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced'} · bias ${bias}`] : []), `${settings.rounds} round${settings.rounds === 1 ? '' : 's'}`];
+  const onSkip = async () => {
                 if (!chat || !chatId) return;
                 
                 const settings = chat.settings as any;
@@ -709,47 +523,8 @@ export const ChatView = () => {
                 } finally {
                   setIsGenerating(false);
                 }
-              }}
-            />
-          )}
-          
-          {/* Conversation Complete */}
-          {conversationComplete && !isGenerating && !wantsToContinue && (
-            <ConversationComplete
-              totalRounds={(chat.settings as any)?.rounds || 1}
-              participationMode={(chat.settings as any)?.participationMode || 'jump-in'}
-              canContinue={true}
-              onContinue={() => setWantsToContinue(true)}
-              isGuest={isGuest}
-              shareId={guestShareId || chat?.share_id}
-              isSavingGuest={isSavingGuest}
-            />
-          )}
-        </div>
-      </ScrollArea>
-
-      {/* Input - hide based on participation mode and completion state */}
-      {(() => {
-        const settings = chat?.settings as any;
-        const participationMode = settings?.participationMode || 'jump-in';
-        
-        // Determine if input should be shown
-        let shouldShowInput = false;
-        
-        if (participationMode === 'spectator') {
-          // Never show input for spectator mode
-          shouldShowInput = false;
-        } else if (participationMode === 'round-by-round') {
-          // Show input when waiting for user OR when user explicitly wants to continue after completion
-          shouldShowInput = waitingForUserInput || wantsToContinue;
-        } else {
-          // Jump-in mode: show input after completion OR when not complete yet
-          shouldShowInput = conversationComplete || wantsToContinue || !isGenerating;
-        }
-        
-        return shouldShowInput && (
-          <ChatInput
-            onSend={async (userMessage) => {
+              };
+  const onSend = async (userMessage) => {
               if (!chatId || !chat) return;
               
               // Check credits before user follow-up
@@ -871,12 +646,14 @@ export const ChatView = () => {
                     refreshCredits();
                   };
                   
+                  const followUpScenario = scenarioTypes.find(s => s.id === chat.scenario_id);
+                  if (!followUpScenario) throw new Error('Scenario not found');
                   // Jump-in mode or continuing after completion: trigger agents to respond to user's message
                   await handleUserFollowUp(
                     chat.prompt,
                     userMessage,
                     currentConversation,
-                    scenarioTypes.find(s => s.id === chat.scenario_id)!,
+                    followUpScenario,
                     settings.numberOfAgents,
                     settings.models.agentA,
                     settings.models.agentB,
@@ -908,50 +685,44 @@ export const ChatView = () => {
               } finally {
                 setIsGenerating(false);
               }
-            }}
-            disabled={isGenerating}
-            placeholder={
-              waitingForUserInput 
-                ? "Your turn! Share your thoughts or skip to next round..." 
-                : "Continue the conversation..."
-            }
-          />
-        );
-      })()}
+            };
+  const input = <ChatInput onSend={onSend} disabled={isGenerating} placeholder="Add your view and the agents will respond to you…" />;
+  const reasoningButton = scratchpadEnabled && <Button variant={showInnerThoughts ? 'secondary' : 'outline'} className="min-h-11 gap-2" aria-pressed={showInnerThoughts} onClick={() => setShowInnerThoughts(value => !value)}><Brain className="h-4 w-4" />Private reasoning</Button>;
 
-      {/* Floating Action Bar - Combined Audio + Analysis */}
-      {!isGenerating && messages.length > 0 && (
-        <FloatingActionBar
-          audioEnabled={audioPlaybackEnabled}
-          isPlaying={isPlaying}
-          isPaused={isPaused}
-          isGeneratingAudio={isGeneratingAudio}
-          currentMessageIndex={currentMessageIndex}
-          totalMessages={messages.length}
-          theaterMode={theaterMode}
-          onPlay={play}
-          onPlayTheater={playTheater}
-          onPause={pause}
-          onStop={stop}
-          canAnalyze={judgeBotEnabled && !isGuest}
-          isAnalyzing={isAnalyzing}
-          onAnalyze={() => setShowAnalysisDrawer(true)}
-        />
-      )}
-
-      {/* Analysis Drawer */}
-      {judgeBotEnabled && (
-        <AnalysisDrawer
-          open={showAnalysisDrawer}
-          onOpenChange={setShowAnalysisDrawer}
-          isAnalyzing={isAnalyzing}
-          analysisResults={analysisResults}
-          conversation={messages}
-          onAnalyze={() => handleAnalyzeConversation()}
-          isGuest={isGuest}
-          isSaved={isAnalysisSaved}
-        />
-      )}
-    </div>
-  );
+  return <div className="flex h-full min-h-0 min-w-0 flex-col bg-background">
+    <header className="shrink-0 border-b px-4 py-4 md:px-8 md:py-5">
+      <div className="mx-auto flex max-w-5xl items-start justify-between gap-4">
+        <div className="min-w-0 flex-1"><h1 className={`font-display text-xl font-semibold leading-tight md:text-3xl ${questionExpanded ? '' : 'line-clamp-2'}`}>{chat.prompt}</h1><Button variant="link" className="mt-1 h-auto p-0 text-xs" onClick={() => setQuestionExpanded(value => !value)}><span className="md:hidden">{questionExpanded ? 'Less' : 'More'}</span><span className="hidden md:inline">{questionExpanded ? 'Show less' : 'Show full question'}</span></Button>
+          <div className="mt-3 flex flex-wrap gap-1.5">{chips.map((chip, index) => <span key={chip} className={`rounded-full border bg-card px-2.5 py-1 text-[11px] capitalize ${index > 2 ? 'hidden md:inline-flex' : ''}`}>{chip}</span>)}{conversationComplete && !isGenerating && <span className="rounded-full bg-accent px-2.5 py-1 text-[11px] text-accent-foreground">Complete · {answers} answers</span>}</div>
+        </div>
+        <div className="hidden shrink-0 items-center gap-2 md:flex">{reasoningButton}<Button variant="outline" className="min-h-11" onClick={handleCopyShareClick}><Share2 className="mr-2 h-4 w-4" />Share</Button>
+          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="icon" className="h-11 w-11" aria-label="More debate actions"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{!isGuest && chat.share_id && <DropdownMenuItem onClick={handleUnshareClick}>Unshare</DropdownMenuItem>}{audioPlaybackEnabled && <><DropdownMenuItem onClick={play} disabled={!messages.length}>Listen to the debate</DropdownMenuItem><DropdownMenuItem onClick={playTheater} disabled={!messages.length}>Theater mode</DropdownMenuItem></>}</DropdownMenuContent></DropdownMenu>
+        </div>
+      </div>
+    </header>
+    {isGenerating && <DebateProgress settings={settings} messages={messages} answeringAgent={answeringAgent} seconds={answeringSeconds} models={state.availableModels} />}
+    <ScrollArea className="min-h-0 flex-1" ref={scrollAreaRef}>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-5 md:px-8 md:py-8">
+        {rounded.map((entry, position) => {
+          const index = messages.indexOf(entry.message);
+          if (theaterMode && (isPlaying || isPaused) && index > currentMessageIndex) return null;
+          const theaterReveal = theaterMode && isPlaying && index === currentMessageIndex;
+          return <div key={entry.message.id || index}>
+            {(position === 0 || rounded[position - 1].round !== entry.round) && <RoundSeparator roundNumber={entry.round} totalConfiguredRounds={settings.rounds} isFinalRound={entry.round === settings.rounds} />}
+            <div data-message-index={index}><DebateMessage entry={entry} index={index} total={messages.length} chatUrl={shareUrl} flagged={flagged} reasoningEnabled={scratchpadEnabled} reasoningOpen={showInnerThoughts} userLabel="You" isPlaying={isPlaying && currentMessageIndex === index} isTheaterReveal={theaterReveal} audioDurationMs={theaterReveal ? audioDuration : null} /></div>
+          </div>;
+        })}
+        {isGenerating && answeringAgent && <>{(!rounded.length || live.round > (rounded[rounded.length - 1]?.round || 0)) && <RoundSeparator roundNumber={live.round} totalConfiguredRounds={settings.rounds} isFinalRound={live.round === settings.rounds} />}<AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} /></>}
+        {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => getAgentSoapName(`Agent ${letter}`, settings.personas[`agent${letter}`])).join(', ')} respond to each other</>}</p>}
+        {waitingForUserInput && !isGenerating && <RoundPausePrompt roundNumber={currentRoundInProgress - 1} onSkip={onSkip}><div className="hidden md:block">{input}</div></RoundPausePrompt>}
+        {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}
+        {judgeBotEnabled && analysisResults && <JudgeVerdict analysis={analysisResults} />}
+        {shouldShowInput && !waitingForUserInput && <section className="hidden rounded-lg border bg-card p-4 md:block"><h2 className="text-sm font-semibold">Jump in</h2>{input}</section>}
+        {mode !== 'spectator' && conversationComplete && !wantsToContinue && <Button variant="ghost" className="hidden md:inline-flex" onClick={() => setWantsToContinue(true)}>Continue the debate</Button>}
+      </div>
+    </ScrollArea>
+    {audioPlaybackEnabled && (isPlaying || isPaused || isGeneratingAudio) && <div className="flex shrink-0 items-center justify-center gap-3 border-t bg-card px-3 py-2" aria-label="Audio player"><Button variant="outline" size="icon" className="h-11 w-11" aria-label={isPaused ? 'Resume playback' : 'Pause playback'} onClick={isPaused ? play : pause}>{isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}</Button><Button variant="outline" size="icon" className="h-11 w-11" aria-label="Stop playback" onClick={stop}><Square className="h-4 w-4" /></Button><span className="text-xs">{isGeneratingAudio ? 'Preparing audio · ' : ''}Message {currentMessageIndex + 1} of {messages.length}</span></div>}
+    <div className="shrink-0 border-t bg-card p-3 md:hidden">{shouldShowInput ? <><h2 className="text-xs font-semibold">{waitingForUserInput ? `Round ${currentRoundInProgress - 1} done — your turn` : 'Jump in'}</h2>{input}</> : <div className="flex gap-2">{isGenerating ? reasoningButton : null}<Button variant="default" className="min-h-11 flex-1" onClick={handleCopyShareClick} disabled={isSavingGuest}>{conversationComplete && !isGenerating ? 'Copy share link' : 'Share'}</Button>{conversationComplete && !isGenerating && <Button asChild variant="outline" className="min-h-11"><Link to={`/new?prompt=${encodeURIComponent(chat.prompt)}`}>Rerun</Link></Button>}</div>}</div>
+    {judgeBotEnabled && <AnalysisDrawer open={showAnalysisDrawer} onOpenChange={setShowAnalysisDrawer} isAnalyzing={isAnalyzing} analysisResults={analysisResults} conversation={messages} onAnalyze={() => handleAnalyzeConversation()} isGuest={isGuest} isSaved={isAnalysisSaved} />}
+  </div>;
 };

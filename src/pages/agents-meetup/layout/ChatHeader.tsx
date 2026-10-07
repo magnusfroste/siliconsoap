@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Menu } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,12 +50,13 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
   const displayName = profile?.display_name || user?.email;
 
   return (
-    <header className="bg-transparent absolute top-0 right-0 z-10">
-      <div className="flex items-center justify-end px-4 py-2">
+    <header className="shrink-0 border-b bg-background">
+      <div className="flex h-12 items-center justify-between px-4">
+        <div className="flex items-center gap-2"><Button variant="ghost" size="icon" className="h-11 w-11 md:hidden" aria-label="Open navigation" onClick={onMenuClick}><Menu className="h-5 w-5" /></Button><Link to="/new" className="font-display text-sm font-semibold md:hidden">SiliconSoap</Link>{title && <span className="text-sm font-semibold">{title}</span>}</div>
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Account menu">
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>

@@ -1,21 +1,20 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 interface RoundPausePromptProps {
   roundNumber: number;
   onSkip: () => void;
+  children?: ReactNode;
 }
 
-export const RoundPausePrompt = ({ roundNumber, onSkip }: RoundPausePromptProps) => {
+export const RoundPausePrompt = ({ roundNumber, onSkip, children }: RoundPausePromptProps) => {
   return (
-    <Card className="p-6 border-2 border-primary/20 bg-primary/5">
-      <div className="flex items-center justify-between">
+    <Card className="rounded-lg border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-primary">Round {roundNumber} Complete</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your turn! Add to the discussion or continue to the next round.
-          </p>
+          <p className="font-display text-xl font-semibold">Round {roundNumber} done — your turn</p>
         </div>
         <Button
           onClick={onSkip}
@@ -23,10 +22,11 @@ export const RoundPausePrompt = ({ roundNumber, onSkip }: RoundPausePromptProps)
           size="sm"
           className="ml-4"
         >
-          Skip to Round {roundNumber + 1}
+          Skip to round {roundNumber + 1}
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+      {children}
     </Card>
   );
 };

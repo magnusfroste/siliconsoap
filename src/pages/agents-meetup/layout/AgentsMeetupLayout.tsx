@@ -24,7 +24,7 @@ export const AgentsMeetupLayout = () => {
 
   return (
     <ModelsProvider>
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-dvh w-full overflow-hidden">
       {/* Sidebar - Desktop */}
       <aside 
         className={`hidden md:block border-r transition-all duration-300 ease-in-out ${
@@ -42,7 +42,7 @@ export const AgentsMeetupLayout = () => {
       {sidebarOpen && (
         <>
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
+            className="fixed inset-0 bg-foreground/50 z-40 md:hidden animate-fade-in"
             onClick={() => setSidebarOpen(false)}
           />
           <aside className="fixed left-0 top-0 bottom-0 w-[min(88vw,320px)] bg-background z-50 md:hidden animate-slide-in-right">
@@ -57,7 +57,7 @@ export const AgentsMeetupLayout = () => {
           onMenuClick={() => setSidebarOpen(true)}
         />
         
-        <main className="flex-1 overflow-auto">
+        <main className="min-h-0 min-w-0 flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

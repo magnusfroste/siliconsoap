@@ -45,6 +45,10 @@
     --agent-a-bg: 259 63% 93%; --agent-a-fg: 257 59% 41%;
     --agent-b-bg: 180 35% 90%; --agent-b-fg: 185 56% 26%;
     --agent-c-bg: 35 65% 89%; --agent-c-fg: 34 83% 26%;
+    --completion-bg: 250 12% 10%;
+    --completion-fg: 45 24% 93%;
+    --completion-tile: 250 10% 16%;
+    --completion-border: 250 8% 26%;
 
     --radius: 1rem;
 
@@ -130,6 +134,15 @@
 }
 
 @layer components {
+  .debate-completion { background: hsl(var(--completion-bg)); color: hsl(var(--completion-fg)); }
+  .completion-tile { background: hsl(var(--completion-tile)); }
+  .debate-completion .completion-outline { background: transparent; color: hsl(var(--completion-fg)); border-color: hsl(var(--completion-border)); }
+  .debate-completion .completion-outline:hover { background: hsl(var(--completion-tile)); color: hsl(var(--completion-fg)); }
+  .completion-link { color: hsl(var(--completion-fg)); }
+  .debate-progress { appearance: none; background: hsl(var(--muted)); color: hsl(var(--primary)); }
+  .debate-progress::-webkit-progress-bar { background: hsl(var(--muted)); }
+  .debate-progress::-webkit-progress-value { background: hsl(var(--primary)); border-radius: 999px; }
+  .debate-progress::-moz-progress-bar { background: hsl(var(--primary)); border-radius: 999px; }
   .glass-card {
     @apply bg-white bg-opacity-70 backdrop-blur-md border border-white border-opacity-20 shadow-apple rounded-2xl transition-all hover:shadow-apple-hover;
   }

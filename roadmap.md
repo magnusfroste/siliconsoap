@@ -16,3 +16,10 @@
 - [x] Rebuild `/new` with the three-step layout, smart cast defaults, summary rail, and mobile action bar
 - [x] Rebuild `/shared/:shareId` with transcript controls, source-free number flags, cast rail, and rerun bands
 - [x] Verify typecheck, build, light/dark desktop and mobile layouts, and prompt-prefill reruns
+
+## Chat presentation makeover (approved)
+- [x] Extract shared message rendering and round grouping for /shared and /chat
+- [x] Restyle chat header, live progress, answering state, pauses, completion, input, and audio controls without changing generation handlers
+- [x] Restyle judge results/drawer and sidebar statuses
+- [x] Verify real guest generation, elapsed counter, pause/reply/skip, human turns, light/dark transcript, 375px completion, and preview diagnostics; 25 presentation tests pass
+- [ ] Verify enabled Judge Bot and audio flows end-to-end — blocked by their current disabled feature flags; no configuration changes requested
