@@ -768,6 +768,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assert_credit_caller: { Args: { p_user_id: string }; Returns: undefined }
       get_shared_chat: {
         Args: { p_share_id: string }
         Returns: {
