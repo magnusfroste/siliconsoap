@@ -11,10 +11,9 @@ export const RoundSeparator = ({ roundNumber, totalConfiguredRounds, isFinalRoun
   const followUpNumber = isFollowUp ? roundNumber - totalConfiguredRounds : 0;
   
   return (
-    <div className="relative flex items-center justify-center py-6 my-2">
-      <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+    <div className="relative my-2 flex items-center gap-4 py-4">
       
-      <div className="relative flex items-center gap-2 px-4 py-1.5 bg-background border rounded-full shadow-sm">
+      <div className="relative flex shrink-0 items-center gap-2 bg-background">
         {isFinalRound ? (
           <CheckCircle className="h-3.5 w-3.5 text-primary" />
         ) : (
@@ -24,11 +23,12 @@ export const RoundSeparator = ({ roundNumber, totalConfiguredRounds, isFinalRoun
           {isFollowUp 
             ? `Follow-up ${followUpNumber}` 
             : isFinalRound 
-              ? 'Final Round' 
+              ? `Round ${roundNumber} · Final`
               : `Round ${roundNumber}`
           }
         </span>
       </div>
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 };

@@ -16,7 +16,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({ agentLetter, iconBgCla
 
   return (
     <Avatar className={`${size === 'md' ? 'h-11 w-11 text-sm' : 'h-9 w-9 text-xs'} ${iconBgClass || ''}`}>
-      <AvatarFallback className={`${iconBgClass || `bg-agent-${agentLetter.toLowerCase()}-bg text-agent-${agentLetter.toLowerCase()}-fg`} font-semibold`}>
+      <AvatarFallback className={`${iconBgClass || { A: 'bg-agent-a-bg text-agent-a-fg', B: 'bg-agent-b-bg text-agent-b-fg', C: 'bg-agent-c-bg text-agent-c-fg' }[agentLetter]} font-semibold`}>
         {initials}
       </AvatarFallback>
     </Avatar>

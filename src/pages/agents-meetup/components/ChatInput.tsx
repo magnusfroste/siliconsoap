@@ -28,19 +28,19 @@ export const ChatInput = ({ onSend, disabled, placeholder = "Continue the conver
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t bg-background p-4">
-      <div className="container mx-auto max-w-4xl flex gap-2">
+    <form onSubmit={handleSubmit} className="bg-transparent pt-3">
+      <div className="mx-auto flex max-w-4xl items-end gap-2">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
-          className="min-h-[60px] resize-none"
+           className="min-h-[60px] min-w-0 resize-none bg-background"
           rows={2}
         />
-        <Button type="submit" disabled={disabled || !input.trim()} size="icon" className="h-[60px]">
-          <Send className="h-4 w-4" />
+        <Button type="submit" disabled={disabled || !input.trim()} className="h-11 shrink-0 gap-2" aria-label="Send message">
+          <Send className="h-4 w-4" /><span className="hidden sm:inline">Send</span>
         </Button>
       </div>
     </form>
