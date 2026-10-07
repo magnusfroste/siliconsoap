@@ -421,7 +421,7 @@ export const ChatView = () => {
   const flagged = new Set(numberClaims(rounded).map(claim => claim.sentence));
   const mode = settings.participationMode || 'jump-in';
   const answers = rounded.filter(entry => !entry.isUser).length;
-  const actualRounds = rounded.at(-1)?.round || settings.rounds;
+  const actualRounds = rounded[rounded.length - 1]?.round || settings.rounds;
   const live = getLiveRound(messages, settings);
   const candidate = ['Agent A', 'Agent B', 'Agent C'].slice(0, settings.numberOfAgents).find(agent => !live.spoken.has(agent));
   const answeringAgent = isGenerating ? (currentAgent && !live.spoken.has(currentAgent) ? currentAgent : candidate || null) : null;

@@ -19,7 +19,7 @@ export function useAnsweringClock(agent: string | null, running: boolean) {
 
 export function getLiveRound(messages: ChatMessage[], settings: ChatSettings) {
   const rounded = withRounds(messages);
-  const lastRound = rounded.at(-1)?.round || 1;
+  const lastRound = rounded[rounded.length - 1]?.round || 1;
   const spoken = new Set(rounded.filter(entry => entry.round === lastRound && !entry.isUser).map(entry => entry.message.agent));
   const full = spoken.size >= settings.numberOfAgents;
   return { round: full ? lastRound + 1 : lastRound, spoken: full ? new Set<string>() : spoken };
