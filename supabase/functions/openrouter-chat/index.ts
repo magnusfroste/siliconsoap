@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { BASE_MAX_TOKENS, REASONING_BUFFER } from "../_shared/tokenBudget.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -107,8 +108,8 @@ serve(async (req) => {
     // or reasoning tokens. Without this, low max_tokens budgets get fully
     // consumed inside the private monologue and the public reply is truncated
     // (we've seen this with stepfun, qwen-thinking, etc.).
-    const REASONING_BUFFER = 600;
-    const baseMaxTokens = typeof max_tokens === 'number' ? max_tokens : 700;
+    // Client sends the response-length base (getMaxTokens); add the shared buffer.
+    const baseMaxTokens = typeof max_tokens === 'number' ? max_tokens : BASE_MAX_TOKENS.medium;
     const effectiveMaxTokens = disableReasoning
       ? baseMaxTokens
       : baseMaxTokens + REASONING_BUFFER;
@@ -125,7 +126,7 @@ serve(async (req) => {
 
     if (disableReasoning) {
       requestBody.reasoning = { enabled: false };
-      console.log(`[reasoning] Disabled for ${model} (admin toggle)`);
+      console.log(`[reasoning] Disabled for ${model} (admin toggle), max_tokens=${effectiveMaxTokens}`);
     } else {
       console.log(`[reasoning] Buffer added for ${model}: ${baseMaxTokens} -> ${effectiveMaxTokens}`);
     }
@@ -247,7 +248,7 @@ serve(async (req) => {
       }
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
 
-      const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, 1500);
+      const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, effectiveMaxTokens * 2);
       console.log(`Model ${model} returned empty response (reasoning_tokens=${reasoningTokens}). Retrying with max_tokens=${boostedMaxTokens}`);
 
       const retryResponse = await fetch(openRouterUrl, {
