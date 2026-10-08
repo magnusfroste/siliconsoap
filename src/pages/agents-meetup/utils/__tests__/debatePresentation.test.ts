@@ -30,3 +30,29 @@ describe('isDebateComplete', () => {
     expect(isDebateComplete(2, 2, 1)).toBe(true);
   });
 });
+
+import { resolveCast } from '../debatePresentation';
+describe('resolveCast', () => {
+  const msgs = [
+    { agent: 'Agent A', model: 'm/a', persona: 'analytical' },
+    { agent: 'You', model: 'human', persona: 'Human Participant', isHuman: true },
+    { agent: 'Agent B', model: 'm/b', persona: 'creative' },
+    { agent: 'Agent C', model: 'm/c', persona: 'empathy' },
+    { agent: 'Agent A', model: 'm/a2', persona: 'other' },
+  ];
+  it('uses full settings when present', () => {
+    const cast = resolveCast({ numberOfAgents: 3, models: { agentA: 'x', agentB: 'y', agentC: 'z' }, personas: { agentA: 'p', agentB: 'q', agentC: 'r' } }, msgs);
+    expect(cast.models).toEqual({ agentA: 'x', agentB: 'y', agentC: 'z' });
+    expect(cast.personas.agentC).toBe('r');
+  });
+  it('falls back to the first message per agent when models/personas are missing', () => {
+    const cast = resolveCast({ numberOfAgents: 3 }, msgs);
+    expect(cast.models).toEqual({ agentA: 'm/a', agentB: 'm/b', agentC: 'm/c' });
+    expect(cast.personas).toEqual({ agentA: 'analytical', agentB: 'creative', agentC: 'empathy' });
+  });
+  it('infers 2 vs 3 agents from the transcript when settings lack it', () => {
+    expect(resolveCast(undefined, msgs.slice(0, 3)).numberOfAgents).toBe(2);
+    expect(resolveCast({}, msgs).numberOfAgents).toBe(3);
+    expect(resolveCast(undefined, msgs.slice(0, 3)).models.agentC).toBe('');
+  });
+});

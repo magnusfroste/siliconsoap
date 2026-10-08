@@ -27,6 +27,10 @@ interface SeedRequest {
   reactionCount: number;
   scenarioId: string;
   featured?: boolean;
+  conversationTone?: string;
+  agreementBias?: number;
+  temperature?: number;
+  personalityIntensity?: string;
 }
 
 const EMOJIS = ['🔥', '😂', '🤔', '🤯'];
@@ -344,9 +348,23 @@ This is the second round. Respond to the other agents' points, defend your posit
         settings: {
           numberOfAgents: agents.length,
           rounds: 2,
-          responseLength: 'medium',
-          participationMode: 'all',
-          turnOrder: 'fixed'
+          responseLength: SEED_RESPONSE_LENGTH,
+          participationMode: 'spectator',
+          turnOrder: 'sequential',
+          conversationTone: body.conversationTone ?? 'collaborative',
+          agreementBias: body.agreementBias ?? 50,
+          temperature: body.temperature ?? 0.8,
+          personalityIntensity: body.personalityIntensity ?? 'moderate',
+          models: {
+            agentA: agents[0]?.model ?? '',
+            agentB: agents[1]?.model ?? '',
+            agentC: agents[2]?.model ?? '',
+          },
+          personas: {
+            agentA: agents[0]?.persona ?? '',
+            agentB: agents[1]?.persona ?? '',
+            agentC: agents[2]?.persona ?? '',
+          },
         },
         is_public: true,
         share_id: shareId,
