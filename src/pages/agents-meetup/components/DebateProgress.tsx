@@ -4,6 +4,8 @@ import type { ChatSettings, ChatMessage } from '@/models/chat';
 import type { CuratedModel } from '@/models/model';
 import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { withRounds } from '../utils/debatePresentation';
+import { personaDisplayName } from '../utils/personaName';
+import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 
 export function useAnsweringClock(agent: string | null, running: boolean) {
   const [seconds, setSeconds] = useState(0);
@@ -60,8 +62,10 @@ export function AnsweringMessage({ agent, settings, seconds }: { agent: string; 
   const key = `agent${letter}` as keyof ChatSettings['personas'];
   const persona = settings.personas[key];
   const name = getAgentSoapName(agent, persona);
+  const { profiles } = useAgentProfiles();
+  const personaLabel = personaDisplayName(persona, profiles);
   return <article aria-live="polite" className="flex gap-3 rounded-lg border border-dashed border-chip-warning-fg/40 bg-chip-warning-bg/40 p-4">
     <AgentAvatar agentLetter={letter} name={name} size="md" />
-    <div className="min-w-0 flex-1"><h3 className="font-semibold">{name}</h3><p className="break-all text-xs text-muted-foreground">{persona ? `${persona} · ` : ''}<span className="font-mono">{settings.models[key]}</span></p><p className="mt-3 text-sm font-medium text-chip-warning-fg">Is answering… {seconds} s</p><div aria-hidden="true" className="mt-3 space-y-2 motion-safe:animate-pulse"><div className="h-2 w-11/12 rounded bg-muted" /><div className="h-2 w-4/5 rounded bg-muted" /><div className="h-2 w-3/5 rounded bg-muted" /></div></div>
+    <div className="min-w-0 flex-1"><h3 className="font-semibold">{name}</h3><p className="break-all text-xs text-muted-foreground">{personaLabel ? `${personaLabel} · ` : ''}<span className="font-mono">{settings.models[key]}</span></p><p className="mt-3 text-sm font-medium text-chip-warning-fg">Is answering… {seconds} s</p><div aria-hidden="true" className="mt-3 space-y-2 motion-safe:animate-pulse"><div className="h-2 w-11/12 rounded bg-muted" /><div className="h-2 w-4/5 rounded bg-muted" /><div className="h-2 w-3/5 rounded bg-muted" /></div></div>
   </article>;
 }
