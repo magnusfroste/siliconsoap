@@ -166,6 +166,14 @@ export const ChatView = () => {
   const guestSaveFailed = guestSave.status === 'failed';
   const retryGuestSave = guestSave.retry;
 
+  const metaTitle = chat?.title ? (chat.title.length > 60 ? `${chat.title.slice(0, 57).trimEnd()}…` : chat.title) : 'Live debate';
+  const metaPrompt = (chat?.prompt || '').replace(/\s+/g, ' ').trim();
+  usePageMeta({
+    title: `${metaTitle} | SiliconSoap`,
+    description: metaPrompt ? `AI models debate: ${metaPrompt.length > 140 ? `${metaPrompt.slice(0, 137).trimEnd()}…` : metaPrompt}` : 'A live multi-agent AI debate on SiliconSoap.',
+    canonicalPath: chatId ? `/chat/${chatId}` : '',
+  });
+
   // Cleanup on unmount
   useEffect(() => {
     isMounted.current = true;
