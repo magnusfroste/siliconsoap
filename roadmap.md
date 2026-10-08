@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Explore and favicon
-- [ ] Build editorial Explore, featured transcript quote, URL filters and paged complete-debate archive
-- [ ] Install supplied icons, SVG, manifest and head links
-- [ ] Run tests and verify public archive, filters, light/dark and 375px layouts
+- [x] Build editorial Explore, featured transcript quote, URL filters and paged complete-debate archive
+- [x] Install supplied icons, SVG, manifest and head links
+- [x] Run tests and verify public archive, filters, light/dark and 375px layouts (72 pass; 6 known credit failures)
 
 ## Landing and debate-link fixes (approved)
 - [x] Curated archive headlines for the three fixed debates + clamp titles to 4 lines
