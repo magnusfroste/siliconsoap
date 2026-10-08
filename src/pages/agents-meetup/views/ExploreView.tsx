@@ -1,472 +1,79 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Check, ChevronDown, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Clock, TrendingUp, MessageSquare, Sparkles, Users, RefreshCw, Flame, Heart } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { Json } from '@/integrations/supabase/types';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { LicenseChip, OriginChip } from '@/components/model-chips';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { ProfileStats, calculateRank, SiliconRank } from '../hooks/useProfileStats';
-import { HallOfShame } from '../components/HallOfShame';
-import { DebateCardSkeleton } from '@/components/skeletons';
-import { trackExploreView } from '@/utils/analytics';
+import { useExplore } from '@/hooks/useExplore';
+import type { CuratedModel } from '@/models/model';
+import { debateQuestion, shortModelName, showdownQuote, type ExploreDebate } from '@/services/exploreService';
+import { resolveCast } from '../utils/debatePresentation';
 
-interface UserRankInfo {
-  displayName: string | null;
-  rank: SiliconRank;
+const dateLabel = (value: string | null) => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
+function CastModels({ debate, models }: { debate: ExploreDebate; models: CuratedModel[] }) {
+  const cast = resolveCast(debate.settings, debate.transcript);
+  return <div className="space-y-2">{(['agentA', 'agentB', 'agentC'] as const).slice(0, cast.numberOfAgents).map(key => {
+    const id = cast.models[key];
+    const model = models.find(m => m.model_id === id && m.is_enabled);
+    return <div key={key} className="flex flex-wrap items-center gap-1.5 text-xs">
+      <span className={model ? 'font-semibold' : 'font-mono break-all text-muted-foreground'}>{model ? shortModelName(model.display_name) : id || 'Unknown model'}</span>
+      {model ? <><LicenseChip license={model.license_type} /><OriginChip origin={model.origin_region} compact /></> : <span className="rounded-full border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground">No longer offered</span>}
+    </div>;
+  })}</div>;
 }
-
-interface PublicDebate {
-  id: string;
-  title: string;
-  prompt: string;
-  share_id: string;
-  view_count: number;
-  created_at: string;
-  settings: Json | null;
-  user_id: string | null;
-  message_count?: number;
-  reaction_count?: number;
-  sharer_name?: string | null;
-  sharer_rank?: SiliconRank | null;
+function DebateCard({ debate, models }: { debate: ExploreDebate; models: CuratedModel[] }) {
+  const cast = resolveCast(debate.settings, debate.transcript);
+  return <Link to={`/shared/${debate.share_id}`} className="group flex min-w-0 flex-col rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <div className="mb-4 flex min-h-6 items-start justify-between gap-2">
+      <div className="flex flex-wrap gap-1.5">{debate.featured_at && <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">Showdown</span>}{debate.settings?.analysisResults && <span className="rounded-full bg-chip-warning-bg px-2 py-0.5 text-xs text-chip-warning-fg">Judge's verdict</span>}</div>
+      <time className="shrink-0 text-xs text-muted-foreground" dateTime={debate.created_at || undefined}>{dateLabel(debate.created_at)}</time>
+    </div>
+    <h2 className="mb-4 line-clamp-3 font-display text-xl font-semibold leading-snug">{debateQuestion(debate)}</h2>
+    <CastModels debate={debate} models={models} />
+    <div className="mt-auto pt-5"><div className="flex items-center justify-between border-t border-border pt-3 text-xs"><span className="text-muted-foreground">{cast.numberOfAgents} agents · {debate.settings?.rounds || 1} rounds</span><span className="flex items-center gap-1 font-semibold text-primary">Read <ArrowRight className="h-3.5 w-3.5" /></span></div></div>
+  </Link>;
 }
-
+function CardSkeleton() {
+  return <div className="min-h-64 animate-pulse rounded-lg border border-border bg-card p-5" aria-label="Loading debate"><div className="mb-5 h-4 w-20 rounded bg-muted" /><div className="mb-3 h-5 w-full rounded bg-muted" /><div className="mb-6 h-5 w-3/4 rounded bg-muted" />{[1,2,3].map(n => <div key={n} className="mb-3 h-4 w-2/3 rounded bg-muted" />)}<div className="mt-6 h-4 w-1/3 rounded bg-muted" /></div>;
+}
 export default function ExploreView() {
-  const navigate = useNavigate();
-  const [debates, setDebates] = useState<PublicDebate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('recent');
-
-  usePageMeta({
-    title: 'Explore Trending AI Debates',
-    description: 'Discover popular AI debates shared by the community. Watch AI agents debate topics from ethics to technology with dramatic flair.',
-    canonicalPath: '/explore',
-    breadcrumbs: [
-      { name: 'Home', path: '/' },
-      { name: 'Explore', path: '/explore' },
-    ],
-  });
-
-  useEffect(() => {
-    fetchPublicDebates();
-  }, [activeTab]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchPublicDebates(true);
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [activeTab]);
-
-  const fetchPublicDebates = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-
-    let query = supabase
-      .from('agent_chats')
-      .select('id, title, prompt, share_id, view_count, created_at, settings, user_id')
-      .eq('is_public', true)
-      .not('share_id', 'is', null)
-      .is('deleted_at', null);
-
-    if (activeTab === 'trending') {
-      query = query.order('view_count', { ascending: false }).limit(20);
-    } else {
-      query = query.order('created_at', { ascending: false }).limit(20);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching public debates:', error);
-      setLoading(false);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      const userIds = [...new Set(data.filter(d => d.user_id).map(d => d.user_id))] as string[];
-      const allShareIds = data.map(d => d.share_id).filter(Boolean) as string[];
-
-      // Per-debate reaction counts
-      const debateReactions: Record<string, number> = {};
-      if (allShareIds.length > 0) {
-        const { data: reactions } = await supabase
-          .from('chat_reactions')
-          .select('share_id')
-          .in('share_id', allShareIds);
-        reactions?.forEach(r => {
-          debateReactions[r.share_id] = (debateReactions[r.share_id] || 0) + 1;
-        });
-      }
-
-      const userRankInfo: Record<string, UserRankInfo> = {};
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('user_profiles')
-          .select('user_id, display_name')
-          .in('user_id', userIds);
-
-        const { data: userChats } = await supabase
-          .from('agent_chats')
-          .select('user_id, is_public, view_count, share_id')
-          .in('user_id', userIds)
-          .is('deleted_at', null);
-
-        const { data: userCredits } = await supabase
-          .from('user_credits')
-          .select('user_id, credits_used')
-          .in('user_id', userIds);
-
-        const shareIds = userChats?.filter(c => c.is_public && c.share_id).map(c => c.share_id) || [];
-        const reactionCounts: Record<string, number> = {};
-        if (shareIds.length > 0) {
-          const { data: reactions } = await supabase
-            .from('chat_reactions')
-            .select('share_id')
-            .in('share_id', shareIds as string[]);
-          reactions?.forEach(r => {
-            reactionCounts[r.share_id] = (reactionCounts[r.share_id] || 0) + 1;
-          });
-        }
-
-        for (const userId of userIds) {
-          const userProfile = profiles?.find(p => p.user_id === userId);
-          const chats = userChats?.filter(c => c.user_id === userId) || [];
-          const publicChats = chats.filter(c => c.is_public && c.share_id);
-          const credits = userCredits?.find(c => c.user_id === userId);
-          const totalViews = publicChats.reduce((sum, c) => sum + (c.view_count || 0), 0);
-          const totalReactions = publicChats.reduce((sum, c) => sum + (reactionCounts[c.share_id!] || 0), 0);
-          const stats: ProfileStats = {
-            totalDebates: chats.length,
-            publicDebates: publicChats.length,
-            totalViews,
-            totalReactions,
-            creditsUsed: credits?.credits_used || 0,
-          };
-          userRankInfo[userId] = {
-            displayName: userProfile?.display_name || null,
-            rank: calculateRank(stats),
-          };
-        }
-      }
-
-      const debatesWithCounts = await Promise.all(
-        data.map(async (debate) => {
-          const { count } = await supabase
-            .from('agent_chat_messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('chat_id', debate.id);
-          const userInfo = debate.user_id ? userRankInfo[debate.user_id] : null;
-          return {
-            ...debate,
-            message_count: count || 0,
-            reaction_count: debateReactions[debate.share_id] || 0,
-            sharer_name: userInfo?.displayName || null,
-            sharer_rank: userInfo?.rank || null,
-          };
-        })
-      );
-      setDebates(debatesWithCounts.filter(d => (d.message_count ?? 0) > 0));
-    } else {
-      setDebates([]);
-    }
-
-    setLoading(false);
-    setRefreshing(false);
-  };
-
-  const handleRefresh = () => fetchPublicDebates(true);
-
-  const getAgentCount = (settings: Json | null): number => {
-    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return 2;
-    const s = settings as { numberOfAgents?: number };
-    return s.numberOfAgents || 2;
-  };
-
-  const getPersonas = (settings: Json | null): string[] => {
-    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return [];
-    const s = settings as { personas?: Record<string, string>; numberOfAgents?: number };
-    const count = s.numberOfAgents || 2;
-    const keys = ['agentA', 'agentB', 'agentC'].slice(0, count);
-    return keys.map(k => s.personas?.[k] || '').filter(Boolean);
-  };
-
-  const handleDebateClick = (shareId: string) => navigate(`/shared/${shareId}`);
-
-  return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Explore Public Debates</h1>
-            <p className="text-muted-foreground">
-              Discover interesting AI debates shared by the community
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing || loading}
-            className="gap-2 shrink-0"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-
-        <h2 className="sr-only">Browse public debates</h2>
-        <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); trackExploreView(val); }} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="recent" className="gap-2">
-              <Clock className="h-4 w-4" />
-              Recent
-            </TabsTrigger>
-            <TabsTrigger value="trending" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Trending
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="recent" className="mt-6">
-            <DebateGrid
-              debates={debates}
-              loading={loading}
-              onDebateClick={handleDebateClick}
-              getAgentCount={getAgentCount}
-              getPersonas={getPersonas}
-            />
-          </TabsContent>
-
-          <TabsContent value="trending" className="mt-6">
-            <DebateGrid
-              debates={debates}
-              loading={loading}
-              onDebateClick={handleDebateClick}
-              getAgentCount={getAgentCount}
-              getPersonas={getPersonas}
-            />
-          </TabsContent>
-        </Tabs>
-
-        {!loading && debates.length > 0 && (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'ItemList',
-            'name': 'SiliconSoap AI Debates',
-            'description': 'Popular AI debates shared by the SiliconSoap community',
-            'numberOfItems': debates.length,
-            'itemListElement': debates.slice(0, 10).map((debate, i) => ({
-              '@type': 'ListItem',
-              'position': i + 1,
-              'item': {
-                '@type': 'DiscussionForumPosting',
-                'headline': debate.title,
-                'text': debate.prompt,
-                'url': `https://siliconsoap.com/shared/${debate.share_id}`,
-                'datePublished': debate.created_at,
-                'interactionStatistic': [
-                  { '@type': 'InteractionCounter', 'interactionType': 'https://schema.org/ViewAction', 'userInteractionCount': debate.view_count },
-                  { '@type': 'InteractionCounter', 'interactionType': 'https://schema.org/CommentAction', 'userInteractionCount': debate.message_count || 0 }
-                ],
-                'author': debate.sharer_name ? { '@type': 'Person', 'name': debate.sharer_name } : { '@type': 'Organization', 'name': 'SiliconSoap' }
-              }
-            }))
-          })}} />
-        )}
-
-        {!loading && debates.length === 0 && (
-          <div className="text-center py-12">
-            <Sparkles className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No public debates yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Be the first to share a debate with the community!
-            </p>
-            <Button onClick={() => navigate('/')}>Start a Debate</Button>
-          </div>
-        )}
-
-        <div className="mt-12">
-          <HallOfShame />
-        </div>
+  const state = useExplore();
+  const [modelOpen, setModelOpen] = useState(false);
+  const { filters, models, debates } = state;
+  usePageMeta({ title: 'Explore AI debates', description: 'Read real debates between AI models from the US, Europe and China. Filter by model, origin and license, then rerun any question with your own cast.', canonicalPath: '/explore' });
+  const featured = state.showdowns[0];
+  const quote = featured ? showdownQuote(featured) : null;
+  const chip = (active: boolean) => `h-11 shrink-0 rounded-full border px-3 text-xs ${active ? 'border-foreground bg-foreground text-background hover:bg-foreground/90 hover:text-background' : 'border-border bg-card text-card-foreground'}`;
+  return <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden"><div className="mx-auto max-w-6xl px-4 py-8 md:px-10 md:py-10">
+    <header className="mb-8 flex flex-wrap items-end justify-between gap-5">
+      <div className="max-w-2xl"><p className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary">Explore</p><h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl">Real transcripts. Real disagreements.</h1><p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">Public debates between models from the US, Europe and China. Filter by the models you care about, read how they hold up, then rerun any question with your own cast.</p></div>
+      <Button asChild className="h-11 rounded-full"><Link to="/new">Start a debate <ArrowRight /></Link></Button>
+    </header>
+    {featured && <section aria-label="This week's showdown" className="debate-completion mb-8 grid overflow-hidden rounded-lg lg:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="min-w-0 p-5 md:p-7"><p className="mb-3 text-xs font-semibold uppercase tracking-wider opacity-70">This week's showdown · {dateLabel(featured.featured_at)}</p><h2 className="mb-5 font-display text-2xl font-semibold leading-tight md:text-3xl">{debateQuestion(featured)}</h2><CastModels debate={featured} models={models} />
+        {quote && <blockquote className="completion-tile my-5 rounded-r-lg border-l-2 border-primary p-4"><p className="text-sm leading-relaxed">“{quote.sentence}”</p><footer className="mt-2 text-xs opacity-70">{quote.name} · <span className="break-all font-mono">{quote.model}</span></footer></blockquote>}
+        <div className="mt-5 flex flex-wrap gap-2"><Button asChild className="completion-primary h-11 w-full rounded-full md:w-auto"><Link to={`/shared/${featured.share_id}`}>Read the transcript</Link></Button><Button asChild variant="outline" className="completion-outline h-11 w-full rounded-full md:w-auto"><Link to={`/new?prompt=${encodeURIComponent(featured.prompt)}`}>Rerun with your own cast</Link></Button></div>
       </div>
-    </div>
-  );
-}
-
-interface DebateGridProps {
-  debates: PublicDebate[];
-  loading: boolean;
-  onDebateClick: (shareId: string) => void;
-  getAgentCount: (settings: Json | null) => number;
-  getPersonas: (settings: Json | null) => string[];
-}
-
-// Deterministic gradient pair from string id
-const GRADIENTS: Array<[string, string]> = [
-  ['hsl(280 85% 65%)', 'hsl(190 90% 60%)'], // purple -> cyan
-  ['hsl(330 85% 65%)', 'hsl(280 85% 65%)'], // pink -> purple
-  ['hsl(190 90% 60%)', 'hsl(160 75% 55%)'], // cyan -> mint
-  ['hsl(20 90% 62%)', 'hsl(330 85% 65%)'], // coral -> pink
-  ['hsl(250 85% 68%)', 'hsl(190 90% 60%)'], // indigo -> cyan
-];
-
-function hashId(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-function gradientFor(id: string): [string, string] {
-  return GRADIENTS[hashId(id) % GRADIENTS.length];
-}
-
-function avatarGradient(seed: string, offset = 0): string {
-  const palette = ['280 85% 65%', '190 90% 60%', '330 85% 65%', '160 75% 55%', '20 90% 62%', '250 85% 68%'];
-  const i = (hashId(seed) + offset) % palette.length;
-  const j = (i + 2) % palette.length;
-  return `linear-gradient(135deg, hsl(${palette[i]}), hsl(${palette[j]}))`;
-}
-
-function personaInitial(persona: string, idx: number): string {
-  if (!persona) return String.fromCharCode(65 + idx);
-  const clean = persona.replace(/[_-]/g, ' ').trim();
-  return clean.charAt(0).toUpperCase() || String.fromCharCode(65 + idx);
-}
-
-function DebateGrid({ debates, loading, onDebateClick, getAgentCount, getPersonas }: DebateGridProps) {
-  if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2">
-        {[...Array(4)].map((_, i) => <DebateCardSkeleton key={i} />)}
+      <aside className="completion-tile flex flex-col gap-3 p-5 md:p-7"><h3 className="mb-1 text-xs font-semibold uppercase tracking-wider opacity-60">Earlier showdowns</h3>{state.showdowns.slice(1).map(d => <Link key={d.id} to={`/shared/${d.share_id}`} className="rounded-lg border border-completion-border p-3 transition-colors hover:underline"><p className="line-clamp-3 font-display text-sm font-semibold">{debateQuestion(d)}</p><p className="mt-2 text-xs opacity-60">{dateLabel(d.featured_at)}</p></Link>)}<Button variant="link" className="completion-link mt-auto h-11 justify-start px-0" onClick={() => state.updateFilter('tab','showdowns')}>All showdowns <ArrowRight /></Button></aside>
+    </section>}
+    <section aria-label="Filter debates" className="mb-6 flex flex-col gap-3">
+      <div className="relative md:ml-auto md:w-80"><Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Search questions" placeholder="Search questions" value={state.search} onChange={e => state.setSearch(e.target.value)} className="h-11 bg-card pl-9" /></div>
+      <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-2" aria-label="Debate filters">
+        <div className="mr-2 flex shrink-0 gap-1 rounded-full bg-muted p-1" role="group" aria-label="Debate order">{['newest','showdowns'].map(tab => <Button key={tab} variant="ghost" className={chip(filters.tab === tab)} aria-pressed={filters.tab === tab} onClick={() => state.updateFilter('tab',tab)}>{tab === 'newest' ? 'Newest' : 'Showdowns'}</Button>)}</div>
+        <span className="text-xs text-muted-foreground">Origin</span>{[['EU','European Union'],['US','United States'],['CN','China']].map(([value,label]) => <Button key={value} variant="outline" className={chip(filters.origin === value)} aria-pressed={filters.origin === value} onClick={() => state.updateFilter('origin',filters.origin === value ? '' : value)}>{label}</Button>)}
+        <span className="ml-2 text-xs text-muted-foreground">License</span>{[['open','Open weights'],['closed','Closed']].map(([value,label]) => <Button key={value} variant="outline" className={chip(filters.license === value)} aria-pressed={filters.license === value} onClick={() => state.updateFilter('license',filters.license === value ? '' : value)}>{label}</Button>)}
+        <Popover open={modelOpen} onOpenChange={setModelOpen}><PopoverTrigger asChild><Button variant="outline" role="combobox" aria-expanded={modelOpen} aria-label="Filter by model" className={`${chip(!!filters.model)} max-w-64`}><span className="truncate">{shortModelName(models.find(m => m.model_id === filters.model)?.display_name || filters.model || 'Any model')}</span><ChevronDown /></Button></PopoverTrigger><PopoverContent className="w-80 max-w-[calc(100vw-32px)] p-0" align="end"><Command><CommandInput placeholder="Search models" /><CommandList><CommandEmpty>No models found.</CommandEmpty><CommandItem className="min-h-11" onSelect={() => { state.updateFilter('model',''); setModelOpen(false); }}>Any model</CommandItem>{models.filter(m => m.is_enabled).map(m => <CommandItem key={m.model_id} value={`${m.display_name} ${m.model_id}`} className="min-h-11" onSelect={() => { state.updateFilter('model',m.model_id); setModelOpen(false); }}><span>{shortModelName(m.display_name)}</span>{filters.model === m.model_id && <Check className="ml-auto h-4 w-4" />}</CommandItem>)}</CommandList></Command></PopoverContent></Popover>
       </div>
-    );
-  }
-
-  const now = Date.now();
-  const HOUR = 60 * 60 * 1000;
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {debates.map((debate) => {
-        const agentCount = getAgentCount(debate.settings);
-        const personas = getPersonas(debate.settings);
-        const ageMs = now - new Date(debate.created_at).getTime();
-        const isNew = ageMs < HOUR;
-        const isHot = debate.view_count >= 25 || (debate.reaction_count ?? 0) >= 5;
-        const [g1, g2] = gradientFor(debate.id);
-
-        return (
-          <Card
-            key={debate.id}
-            onClick={() => onDebateClick(debate.share_id)}
-            className="group relative cursor-pointer overflow-hidden border-border/60 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
-          >
-            {/* Gradient top accent */}
-            <div
-              className="absolute inset-x-0 top-0 h-[3px] opacity-70 transition-opacity group-hover:opacity-100"
-              style={{ background: `linear-gradient(90deg, ${g1}, ${g2})` }}
-              aria-hidden
-            />
-            {/* Soft hover glow */}
-            <div
-              className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-30"
-              style={{ background: `radial-gradient(circle, ${g1}, transparent 70%)` }}
-              aria-hidden
-            />
-
-            <CardContent className="relative p-5">
-              {/* Avatar stack + status badges */}
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="flex -space-x-2">
-                  {Array.from({ length: agentCount }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-card text-xs font-bold text-white shadow-md ring-0 transition-transform group-hover:translate-y-0"
-                      style={{
-                        background: avatarGradient(debate.id, i),
-                        zIndex: agentCount - i,
-                      }}
-                      title={personas[i] || `Agent ${String.fromCharCode(65 + i)}`}
-                    >
-                      {personaInitial(personas[i] || '', i)}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center justify-end gap-1.5">
-                  {isHot && (
-                    <Badge className="gap-1 border-0 bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-sm">
-                      <Flame className="h-3 w-3" />
-                      Hot
-                    </Badge>
-                  )}
-                  {isNew && !isHot && (
-                    <Badge className="gap-1 border-0 bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-sm">
-                      <Sparkles className="h-3 w-3" />
-                      New
-                    </Badge>
-                  )}
-                  {debate.sharer_rank && (
-                    <span
-                      className="text-base leading-none"
-                      title={debate.sharer_rank.title}
-                    >
-                      {debate.sharer_rank.emoji}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Title + prompt */}
-              <h3 className="mb-1.5 text-lg font-semibold leading-tight tracking-tight line-clamp-2 group-hover:text-primary transition-colors">
-                {debate.title}
-              </h3>
-              <p className="mb-4 text-sm text-muted-foreground/90 line-clamp-2">
-                {debate.prompt}
-              </p>
-
-              {/* Meta row */}
-              <div className="flex items-center justify-between gap-3 border-t border-border/40 pt-3 text-xs text-muted-foreground">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1" title="Agents">
-                    <Users className="h-3.5 w-3.5" />
-                    {agentCount}
-                  </span>
-                  <span className="flex items-center gap-1" title="Messages">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    {debate.message_count}
-                  </span>
-                  <span className="flex items-center gap-1" title="Views">
-                    <Eye className="h-3.5 w-3.5" />
-                    {debate.view_count}
-                  </span>
-                  {(debate.reaction_count ?? 0) > 0 && (
-                    <span className="flex items-center gap-1 text-pink-500" title="Reactions">
-                      <Heart className="h-3.5 w-3.5 fill-current" />
-                      {debate.reaction_count}
-                    </span>
-                  )}
-                </div>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <Clock className="h-3 w-3" />
-                  {formatDistanceToNow(new Date(debate.created_at), { addSuffix: true })}
-                </span>
-              </div>
-
-              {/* Sharer line (subtle) */}
-              {debate.sharer_name && (
-                <div className="mt-2 text-[11px] text-muted-foreground/70">
-                  Shared by <span className="font-medium text-foreground/80">{debate.sharer_name}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
+    </section>
+    {state.error ? <div className="py-12 text-center" role="alert"><h2 className="font-display text-2xl">Couldn't load these debates.</h2><Button variant="outline" className="mt-4 h-11 rounded-full" onClick={state.retry}>Try again</Button></div> : state.loading ? <div className="grid gap-4 md:grid-cols-2" role="status" aria-label="Loading debates">{[1,2,3,4].map(n => <CardSkeleton key={n} />)}</div> : <>
+      <div className="grid gap-4 md:grid-cols-2">{debates.map(d => <DebateCard key={d.id} debate={d} models={models} />)}</div>
+      {!debates.length && <div className="py-12 text-center"><h2 className="font-display text-2xl">No debates match these filters</h2><div className="mt-5 flex flex-wrap justify-center gap-3"><Button variant="outline" className="h-11 rounded-full" onClick={state.clearFilters}>Clear filters</Button><Button asChild className="h-11 rounded-full"><Link to="/new">Start a debate</Link></Button></div></div>}
+      {state.hasMore && <div className="mt-8 flex justify-center"><Button variant="outline" className="h-11 w-full rounded-full bg-card md:w-auto" disabled={state.loadingMore} onClick={state.loadMore}>{state.loadingMore && <Loader2 className="animate-spin" />}Load more debates</Button></div>}
+    </>}
+    <section className="mt-8 flex flex-wrap items-center justify-between gap-5 rounded-lg border border-primary/15 bg-accent p-5 md:p-7"><div className="max-w-2xl"><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">Second opinion for your agent</p><h2 className="font-display text-2xl font-semibold leading-tight">Let Claude or ChatGPT ask a panel before it answers you.</h2><p className="mt-3 text-sm leading-relaxed text-muted-foreground">Connect SiliconSoap to your own assistant. It sends the question, models from different labs argue it out, and your assistant gets back where they agree, where they don't, and which numbers nobody sourced.</p></div><Button asChild className="h-11 w-full rounded-full bg-foreground text-background hover:bg-foreground/90 md:w-auto"><Link to="/api-docs">Connect your agent</Link></Button></section>
+    {!state.loading && !state.error && debates.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context':'https://schema.org', '@type':'ItemList', name:'SiliconSoap AI Debates', numberOfItems:debates.length, itemListElement:debates.map((d,i) => ({ '@type':'ListItem', position:i+1, item:{ '@type':'DiscussionForumPosting', headline:debateQuestion(d), text:d.prompt, url:`https://siliconsoap.com/shared/${d.share_id}`, datePublished:d.created_at, author:{ '@type':'Organization', name:'SiliconSoap' }, interactionStatistic:[{ '@type':'InteractionCounter', interactionType:'https://schema.org/CommentAction', userInteractionCount:d.agent_chat_messages[0]?.count || 0 }] } })) }).replace(/</g,'\\u003c') }} />}
+  </div></div>;
 }
