@@ -6,7 +6,7 @@ import { useSharedChat } from '../hooks/useSharedChat';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { RoundSeparator } from '../components/RoundSeparator';
 import { DebateMessage } from '../components/DebateMessage';
-import { withRounds, numberClaims, type SharedMsg, type RoundedMsg } from '../utils/debatePresentation';
+import { resolveCast, withRounds, numberClaims, type SharedMsg, type RoundedMsg } from '../utils/debatePresentation';
 import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { LicenseChip, OriginChip, SpeedChip } from '@/components/model-chips';
 import { Button } from '@/components/ui/button';
@@ -69,17 +69,18 @@ export const SharedChatView = () => {
   }
 
   const { question, note } = splitPrompt(chat.prompt);
-  const settings = chat.settings;
-  const agents = Math.min(3, Math.max(1, settings.numberOfAgents || 2));
+  const settings = (chat.settings || {}) as Partial<typeof chat.settings>;
+  const cast = resolveCast(settings, messages as SharedMsg[]);
+  const agents = cast.numberOfAgents;
   const rounds = Math.max(1, settings.rounds || 1);
   const bias = settings.agreementBias ?? 50;
   const biasLabel = bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced';
-  const tone = settings.conversationTone || 'collaborative';
+  const tone = String(settings.conversationTone || 'collaborative');
   const length = settings.responseLength === 'short' ? 'Brief answers' : settings.responseLength === 'long' ? 'Detailed answers' : 'Medium-length answers';
   const order = settings.turnOrder === 'random' ? 'Random turns' : settings.turnOrder === 'popcorn' ? 'Popcorn turns' : 'Turns in fixed order';
   const chips = [`${tone[0].toUpperCase()}${tone.slice(1)} tone`, ...(bias !== 50 ? [`${biasLabel} · bias ${bias}`] : []), ...(settings.personalityIntensity !== 'moderate' && settings.personalityIntensity ? [settings.personalityIntensity === 'extreme' ? 'Dramatic personas' : 'Subtle personas'] : []), length, order];
-  const modelIds = [settings.models.agentA, settings.models.agentB, settings.models.agentC].slice(0, agents);
-  const personas = [settings.personas.agentA, settings.personas.agentB, settings.personas.agentC];
+  const modelIds = [cast.models.agentA, cast.models.agentB, cast.models.agentC].slice(0, agents);
+  const personas = [cast.personas.agentA, cast.personas.agentB, cast.personas.agentC];
   const rerun = `/new?prompt=${encodeURIComponent(chat.prompt)}`;
   const shareUrl = window.location.href;
   const productionUrl = shareId ? `${BASE_URL}/shared/${shareId}` : shareUrl;

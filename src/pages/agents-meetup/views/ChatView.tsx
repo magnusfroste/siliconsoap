@@ -360,8 +360,9 @@ export const ChatView = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chat, chatId, loading, creditsLoading, messages.length, state.apiKey, saveMessage, hasCredits, refreshCredits, user?.id, creditsRemaining]);
 
-  const displayLive = chat ? getLiveRound(messages, chat.settings) : null;
-  const displayAgent = isGenerating && chat ? (currentAgent && !displayLive?.spoken.has(currentAgent) ? currentAgent : ['Agent A', 'Agent B', 'Agent C'].slice(0, chat.settings.numberOfAgents).find(agent => !displayLive?.spoken.has(agent)) || null) : null;
+  const safeSettings = chat ? withSafeCast(chat.settings, messages) as ChatSettings : null;
+  const displayLive = safeSettings ? getLiveRound(messages, safeSettings) : null;
+  const displayAgent = isGenerating && chat ? (currentAgent && !displayLive?.spoken.has(currentAgent) ? currentAgent : ['Agent A', 'Agent B', 'Agent C'].slice(0, safeSettings?.numberOfAgents || 2).find(agent => !displayLive?.spoken.has(agent)) || null) : null;
   const answeringSeconds = useAnsweringClock(displayAgent, isGenerating);
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('debateLiveStatus', { detail: { chatId, live: isGenerating } }));
@@ -389,7 +390,7 @@ export const ChatView = () => {
     );
   }
 
-  const settings = chat.settings;
+  const settings = safeSettings as ChatSettings;
   const rounded = withRounds(messages);
   const flagged = new Set(numberClaims(rounded).map(claim => claim.sentence));
   const mode = settings.participationMode || 'jump-in';
