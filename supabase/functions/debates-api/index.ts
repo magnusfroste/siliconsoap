@@ -12,6 +12,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { baseMaxTokens, effectiveMaxTokens } from "../_shared/tokenBudget.ts";
+import { stripSpeakerLabel } from "../_shared/speakerLabel.ts";
 
 // Tillhandahålls av Supabase Edge Runtime (ingår inte i Denos standardglobaler).
 declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
