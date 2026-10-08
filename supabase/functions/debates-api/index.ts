@@ -371,13 +371,13 @@ function buildUserPrompt(
     return `The debate topic is: "${topic}"\n\nYou are opening the discussion. Stake out your position clearly.`;
   }
   const transcript = history
-    .map((m) => `${m.agent_name}: ${m.message}`)
+    .map((m) => `— ${m.agent_name} said:\n${m.message}`)
     .join("\n\n");
   const isFinalRound = round === (agent as any).__totalRounds;
   const closer = isFinalRound
     ? "This is the final round — share your closing position."
     : "Respond to what has been said so far. Advance the debate.";
-  return `Debate topic: "${topic}"\n\nConversation so far:\n\n${transcript}\n\nYour turn. ${closer}`;
+  return `Debate topic: "${topic}"\n\nPrevious turns:\n\n${transcript}\n\nYour turn. Reply with your own words only, without a name label. ${closer}`;
 }
 
 function extractContent(data: any): string {
@@ -723,6 +723,7 @@ Deno.serve(async (req) => {
           agentB: agents[1]?.model,
           agentC: agents[2]?.model,
         },
+        ...(input.agent_names?.length ? { agentNames: { agentA: agents[0].name, agentB: agents[1]?.name, agentC: agents[2]?.name } } : {}),
         personas: {
           agentA: agents[0].persona,
           agentB: agents[1]?.persona,
@@ -823,7 +824,7 @@ Deno.serve(async (req) => {
 
               // Safety net: replace any "Agent A/B/C" mentions the model
               // produced despite the naming rule with real soap names.
-              content = replaceAgentMentions(content, nameMap);
+              content = replaceAgentMentions(stripSpeakerLabel(content, agents.map((a) => a.name)), nameMap);
 
               // Strip private <thinking> scratchpad before persisting / exposing
               // via the public API. Falls back to original content if stripping

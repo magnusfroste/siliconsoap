@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import type { ChatSettings, ChatMessage } from '@/models/chat';
 import type { CuratedModel } from '@/models/model';
-import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { withRounds, agentDisplayName, type AgentNames } from '../utils/debatePresentation';
 import { personaDisplayName } from '../utils/personaName';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';

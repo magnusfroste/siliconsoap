@@ -12,7 +12,6 @@ import { LicenseChip, OriginChip, SpeedChip } from '@/components/model-chips';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
-import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { getEnabledModels } from '@/repositories/curatedModelsRepository';
 import type { CuratedModel } from '@/models/model';
 

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { stripSpeakerLabel } from '../_shared/speakerLabel.ts';
 import { baseMaxTokens, effectiveMaxTokens as getEffectiveMaxTokens } from '../_shared/tokenBudget.ts';
 
 const corsHeaders = {
@@ -274,12 +275,12 @@ ${i === 0 ? 'You are starting the debate. Give your initial position.' : 'Respon
 
       console.log(`Generating response for ${agent.name} using ${agent.model}...`);
       
-      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true);
+      const response = stripSpeakerLabel(await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true), agents.map((a) => a.name));
       
       // Add to conversation history
       conversationHistory.push({
-        role: 'assistant',
-        content: `[${agent.name}]: ${response}`
+        role: 'user',
+        content: `Previous turn — ${agent.name} said:\n${response}`
       });
 
       // Add to messages array
@@ -316,11 +317,11 @@ This is the second round. Respond to the other agents' points, defend your posit
 
       console.log(`Generating follow-up for ${agent.name}...`);
       
-      const response = await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true);
+      const response = stripSpeakerLabel(await callOpenRouter(openRouterKey, agent.model, messagesForApi, reasoningOff[agent.model] === true), agents.map((a) => a.name));
       
       conversationHistory.push({
-        role: 'assistant',
-        content: `[${agent.name}]: ${response}`
+        role: 'user',
+        content: `Previous turn — ${agent.name} said:\n${response}`
       });
 
       const messageDate = new Date(baseDate.getTime() + messageOffset * 60000);
@@ -359,6 +360,11 @@ This is the second round. Respond to the other agents' points, defend your posit
             agentA: agents[0]?.model ?? '',
             agentB: agents[1]?.model ?? '',
             agentC: agents[2]?.model ?? '',
+          },
+          agentNames: {
+            agentA: agents[0]?.name ?? '',
+            agentB: agents[1]?.name ?? '',
+            agentC: agents[2]?.name ?? '',
           },
           personas: {
             agentA: agents[0]?.persona ?? '',

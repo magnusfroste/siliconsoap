@@ -4,7 +4,6 @@ import { DebateCompletion } from '../components/DebateCompletion';
 import { JudgeVerdict } from '../components/JudgeVerdict';
 import { withRounds, numberClaims, isDebateComplete, withSafeCast, agentDisplayName, type AgentNames } from '../utils/debatePresentation';
 import type { ChatSettings } from '@/models/chat';
-import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Link, useParams } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
