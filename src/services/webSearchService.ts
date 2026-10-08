@@ -22,9 +22,17 @@ export const webSearchService = {
    */
   async search(query: string, limit = 3): Promise<WebSearchResponse> {
     try {
-      const { data, error } = await supabase.functions.invoke('agent-web-search', {
-        body: { query, limit },
-      });
+      const TIMEOUT = Symbol('timeout');
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const outcome = await Promise.race([
+        supabase.functions.invoke('agent-web-search', { body: { query, limit } }),
+        new Promise<typeof TIMEOUT>(resolve => { timer = setTimeout(() => resolve(TIMEOUT), 7000); }),
+      ]).finally(() => clearTimeout(timer));
+      if (outcome === TIMEOUT) {
+        console.warn('[webSearchService] search timed out after 7 s; continuing without research context');
+        return { enabled: true, provider: 'unknown', results: [], error: 'timeout' };
+      }
+      const { data, error } = outcome;
 
       if (error) {
         console.warn('[webSearchService] error:', error.message);

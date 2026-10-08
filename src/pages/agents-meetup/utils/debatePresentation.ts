@@ -44,3 +44,8 @@ export const numberClaims = (entries: RoundedMsg[]): Claim[] => {
   return found.slice(0, 6);
 };
 
+
+/** A debate is complete only when every configured round has a full set of agent answers. */
+export function isDebateComplete(agentMessageCount: number, agents: number, rounds: number) {
+  return agents > 0 && rounds > 0 && agentMessageCount >= agents * rounds;
+}

@@ -18,3 +18,15 @@ describe('debate presentation', () => {
     expect(numberClaims(entries).map(claim => claim.sentence)).toEqual(['Public costs rose 20%.']);
   });
 });
+import { isDebateComplete } from '../debatePresentation';
+describe('isDebateComplete', () => {
+  it('3 agents x 3 rounds', () => {
+    expect(isDebateComplete(7, 3, 3)).toBe(false);
+    expect(isDebateComplete(8, 3, 3)).toBe(false);
+    expect(isDebateComplete(9, 3, 3)).toBe(true);
+  });
+  it('2 agents x 1 round', () => {
+    expect(isDebateComplete(1, 2, 1)).toBe(false);
+    expect(isDebateComplete(2, 2, 1)).toBe(true);
+  });
+});
