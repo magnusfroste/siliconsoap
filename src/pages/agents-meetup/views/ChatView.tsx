@@ -2,7 +2,7 @@ import { DebateMessage } from '../components/DebateMessage';
 import { DebateProgress, AnsweringMessage, getLiveRound, useAnsweringClock } from '../components/DebateProgress';
 import { DebateCompletion } from '../components/DebateCompletion';
 import { JudgeVerdict } from '../components/JudgeVerdict';
-import { withRounds, numberClaims } from '../utils/debatePresentation';
+import { withRounds, numberClaims, isDebateComplete } from '../utils/debatePresentation';
 import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Link, useParams } from 'react-router-dom';
@@ -130,30 +130,19 @@ export const ChatView = () => {
     if (ok) toast.success('Chat is now private. The share link no longer works.');
   };
 
-  // Detect if chat is already complete when loading
+  // Detect if a loaded/historical chat is already complete (never during live generation)
   useEffect(() => {
-    if (!chat || loading || messages.length === 0) return;
-    
+    if (!chat || loading || isGenerating || messages.length === 0) return;
     const settings = chat.settings as any;
-    const numberOfAgents = settings?.numberOfAgents || 2;
-    const configuredRounds = settings?.rounds || 1;
-    const participationMode = settings?.participationMode || 'jump-in';
-    
-    // Calculate actual rounds from messages (excluding human messages for agent round counting)
-    const agentMessages = messages.filter(m => !m.isHuman);
-    const actualRounds = Math.ceil(agentMessages.length / numberOfAgents);
-    
-    // Chat is complete if we have at least the configured number of rounds
-    if (actualRounds >= configuredRounds && participationMode !== 'round-by-round') {
-      setConversationComplete(true);
-    } else if (participationMode === 'round-by-round' && actualRounds >= configuredRounds) {
+    const agentMessages = messages.filter(m => !m.isHuman && m.agent !== 'You');
+    if (isDebateComplete(agentMessages.length, settings?.numberOfAgents || 2, settings?.rounds || 1)) {
       setConversationComplete(true);
     }
-  }, [chat, loading, messages.length]);
+  }, [chat, loading, isGenerating, messages.length]);
 
   // Save guest debate once when the conversation completes; failures wait for manual retry
   const guestSave = useGuestDebateSave(
-    conversationComplete && isGuest && !!chat && messages.length > 0,
+    conversationComplete && !isGenerating && isGuest && !!chat && messages.length > 0,
     chatId,
     () => ({
       prompt: chat?.prompt, title: chat?.title, scenarioId: chat?.scenario_id, settings: chat?.settings,

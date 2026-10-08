@@ -15,6 +15,9 @@ interface SearchResult {
   snippet: string;
 }
 
+const PROVIDER_TIMEOUT_MS = 5000;
+const isTimeout = (e: unknown) => e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError");
+
 async function searchDuckDuckGo(query: string, limit: number): Promise<SearchResult[]> {
   // DuckDuckGo Instant Answer API — no key required, free, but limited.
   // We also fall back to the HTML endpoint for richer results.
@@ -22,7 +25,7 @@ async function searchDuckDuckGo(query: string, limit: number): Promise<SearchRes
   const results: SearchResult[] = [];
 
   try {
-    const res = await fetch(iaUrl, { headers: { "User-Agent": "SiliconSoap/1.0" } });
+    const res = await fetch(iaUrl, { headers: { "User-Agent": "SiliconSoap/1.0" }, signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS) });
     const data = await res.json();
 
     if (data.AbstractText && data.AbstractURL) {
@@ -46,6 +49,7 @@ async function searchDuckDuckGo(query: string, limit: number): Promise<SearchRes
       }
     }
   } catch (e) {
+    if (isTimeout(e)) throw e;
     console.error("DuckDuckGo IA error:", e);
   }
 
@@ -57,6 +61,7 @@ async function searchTavily(query: string, limit: number): Promise<SearchResult[
   if (!apiKey) throw new Error("TAVILY_API_KEY is not configured");
 
   const res = await fetch("https://api.tavily.com/search", {
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -83,6 +88,7 @@ async function searchBrave(query: string, limit: number): Promise<SearchResult[]
 
   const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${limit}`;
   const res = await fetch(url, {
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     headers: { "X-Subscription-Token": apiKey, Accept: "application/json" },
   });
 
@@ -101,6 +107,7 @@ async function searchFirecrawl(query: string, limit: number): Promise<SearchResu
   if (!apiKey) throw new Error("FIRECRAWL_API_KEY is not configured");
 
   const res = await fetch("https://api.firecrawl.dev/v2/search", {
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ query, limit }),
@@ -152,20 +159,29 @@ serve(async (req) => {
     }
 
     let results: SearchResult[];
-    switch (provider) {
-      case "tavily":
-        results = await searchTavily(query, limit);
-        break;
-      case "brave":
-        results = await searchBrave(query, limit);
-        break;
-      case "firecrawl":
-        results = await searchFirecrawl(query, limit);
-        break;
-      case "duckduckgo":
-      default:
-        results = await searchDuckDuckGo(query, limit);
-        break;
+    try {
+      switch (provider) {
+        case "tavily":
+          results = await searchTavily(query, limit);
+          break;
+        case "brave":
+          results = await searchBrave(query, limit);
+          break;
+        case "firecrawl":
+          results = await searchFirecrawl(query, limit);
+          break;
+        case "duckduckgo":
+        default:
+          results = await searchDuckDuckGo(query, limit);
+          break;
+      }
+    } catch (e) {
+      const timedOut = isTimeout(e);
+      console.warn(`agent-web-search ${provider} ${timedOut ? "timeout" : "error"}:`, e);
+      return new Response(
+        JSON.stringify({ enabled: true, provider, results: [], error: timedOut ? "timeout" : (e instanceof Error ? e.message : "error") }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(
