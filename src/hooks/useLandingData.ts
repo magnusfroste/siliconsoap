@@ -1,3 +1,4 @@
+import { stripSpeakerLabel } from '@/pages/agents-meetup/utils/speakerLabel';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -225,6 +226,7 @@ export function useLandingData(): LandingData {
         const modelInfo = new Map((modelRows ?? []).map((m) => [m.model_id, m]));
         const featuredAt = featuredChat.featured_at ? new Date(featuredChat.featured_at).getTime() : Date.now();
 
+        const labelNames = Object.values(((featuredChat.settings ?? {}) as { agentNames?: Record<string, string> }).agentNames ?? {}).filter(Boolean);
         const columns: ShowdownColumn[] = agentKeys.map((key, index) => {
           const modelId = modelMap[key];
           const info = modelInfo.get(modelId);
@@ -239,7 +241,7 @@ export function useLandingData(): LandingData {
             license: info?.license_type ?? null,
             origin: originLabel(info?.origin_region),
             isNew: createdAt > 0 && featuredAt - createdAt <= WEEK_MS && createdAt <= featuredAt,
-            quote: firstMessage?.message ? excerpt(firstMessage.message) : '',
+            quote: firstMessage?.message ? excerpt(stripSpeakerLabel(firstMessage.message, labelNames)) : '',
           };
         });
 

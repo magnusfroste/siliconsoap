@@ -6,13 +6,12 @@ import { useSharedChat } from '../hooks/useSharedChat';
 import { ReactionButtons } from '../components/ReactionButtons';
 import { RoundSeparator } from '../components/RoundSeparator';
 import { DebateMessage } from '../components/DebateMessage';
-import { resolveCast, withRounds, numberClaims, type SharedMsg, type RoundedMsg } from '../utils/debatePresentation';
+import { resolveCast, agentDisplayName, type AgentNames, withRounds, numberClaims, type SharedMsg, type RoundedMsg } from '../utils/debatePresentation';
 import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { LicenseChip, OriginChip, SpeedChip } from '@/components/model-chips';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
-import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { getEnabledModels } from '@/repositories/curatedModelsRepository';
 import type { CuratedModel } from '@/models/model';
 
@@ -57,7 +56,7 @@ export const SharedChatView = () => {
     return () => { document.title = DEFAULT_TITLE; updateLinkTag('canonical', `${BASE_URL}/`); updateMetaTag('og:type', 'website'); removeDiscussionSchema(); };
   }, [chat, messages, shareId]);
 
-  const rounded = useMemo(() => withRounds(messages as SharedMsg[]), [messages]);
+  const rounded = useMemo(() => withRounds(messages as SharedMsg[], (chat?.settings as { agentNames?: AgentNames } | undefined)?.agentNames), [messages, chat]);
   const claims = useMemo(() => numberClaims(rounded), [rounded]);
   const flaggedSentences = useMemo(() => new Set(claims.map((claim) => claim.sentence)), [claims]);
 
@@ -111,7 +110,7 @@ export const SharedChatView = () => {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 md:px-8 lg:grid-cols-12">
         <section className="order-3 min-w-0 lg:order-1 lg:col-span-8"><h2 className="mb-7 font-display text-3xl font-semibold">The debate</h2><div className="space-y-10">{groups.map(({ round, items }, groupIndex) => <div key={round} className="space-y-6">{groupIndex > 0 && <RoundSeparator roundNumber={round} totalConfiguredRounds={totalRounds} isFinalRound={round === totalRounds} />}{items.map((entry, itemIndex) => <DebateMessage key={entry.message.id || `${round}-${itemIndex}`} entry={entry} total={rounded.length} index={rounded.indexOf(entry)} chatUrl={shareUrl} flagged={flaggedSentences} />)}</div>)}</div></section>
         <aside className="order-1 space-y-5 lg:order-2 lg:col-span-4">
-          <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-2xl font-semibold">The cast</h2><div className="mt-5 space-y-5">{modelIds.map((modelId, index) => { const model = models.find((item) => item.model_id === modelId); const letter = String.fromCharCode(65 + index) as 'A' | 'B' | 'C'; const name = getAgentSoapName(`Agent ${letter}`, personas[index]); return <div key={modelId} className="flex gap-3"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0"><p className="font-medium">{name}</p><p className="truncate font-mono text-xs text-muted-foreground">{model?.display_name || modelId}</p><div className="mt-2 flex flex-wrap gap-1"><LicenseChip license={model?.license_type} /><OriginChip origin={model?.origin_region} compact /><SpeedChip speed={model?.speed_rating} /></div></div></div>; })}</div><Button asChild variant="outline" className="mt-5 w-full"><Link to={rerun}>Rerun this cast</Link></Button></section>
+          <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-2xl font-semibold">The cast</h2><div className="mt-5 space-y-5">{modelIds.map((modelId, index) => { const model = models.find((item) => item.model_id === modelId); const letter = String.fromCharCode(65 + index) as 'A' | 'B' | 'C'; const name = agentDisplayName(`Agent ${letter}`, personas[index], (settings as { agentNames?: AgentNames }).agentNames); return <div key={modelId} className="flex gap-3"><AgentAvatar agentLetter={letter} name={name} size="md" /><div className="min-w-0"><p className="font-medium">{name}</p><p className="truncate font-mono text-xs text-muted-foreground">{model?.display_name || modelId}</p><div className="mt-2 flex flex-wrap gap-1"><LicenseChip license={model?.license_type} /><OriginChip origin={model?.origin_region} compact /><SpeedChip speed={model?.speed_rating} /></div></div></div>; })}</div><Button asChild variant="outline" className="mt-5 w-full"><Link to={rerun}>Rerun this cast</Link></Button></section>
           {claims.length > 0 && <Collapsible open={claimsOpen} onOpenChange={setClaimsOpen} className="rounded-lg border bg-chip-warning-bg p-5"><CollapsibleTrigger className="flex w-full items-center justify-between gap-2 text-left font-medium text-chip-warning-fg"><span className="flex items-center gap-2">Numbers to check <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-chip-warning-fg/30 px-1.5 text-xs">{claims.length}</span></span><ChevronDown className="h-4 w-4" /></CollapsibleTrigger><CollapsibleContent className="pt-4"><p className="mb-3 text-xs text-chip-warning-fg">These claims contain figures but no visible source link. Verify before sharing.</p><ol className="space-y-3 text-sm text-chip-warning-fg">{claims.map((claim) => <li key={claim.sentence} className="border-t border-chip-warning-fg/20 pt-2"><p>“{excerpt(claim.sentence)}”</p><p className="mt-1 text-xs text-chip-warning-fg/80">{claim.name} · Round {claim.round}</p></li>)}</ol></CollapsibleContent></Collapsible>}
           {shareId && <section className="rounded-lg border bg-card p-5"><h2 className="font-display text-xl font-semibold">React to this debate</h2><div className="mt-4"><ReactionButtons shareId={shareId} /></div></section>}
         </aside>

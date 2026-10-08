@@ -1,5 +1,10 @@
 import { getAgentLetter, getAgentSoapName } from './agentNameGenerator';
 import { parseAgentResponse } from './parseAgentResponse';
+export type AgentNames = Partial<Record<'agentA' | 'agentB' | 'agentC', string>> | null | undefined;
+
+/** Display name for a debate agent: stored settings.agentNames first, otherwise the derived soap name. */
+export const agentDisplayName = (agent: string, persona: string, agentNames?: AgentNames) =>
+  agentNames?.[`agent${getAgentLetter(agent)}` as 'agentA'] || getAgentSoapName(agent, persona);
 const NUMBER_RE = /(?:\b\d+(?:[.,]\d+)?\s*%|\$\s*\d+|€\s*\d+|£\s*\d+|\b\d+(?:[.,]\d+)?\s*(?:million|billion|trillion|percent)\b)/i;
 const LINK_RE = /https?:\/\//i;
 
@@ -7,11 +12,12 @@ export const splitParagraphs = (text: string) => text.split(/\n\s*\n/);
 export const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/);
 
 export type SharedMsg = { id?: string; agent: string; persona: string; model: string; message: string; created_at?: string; isHuman?: boolean };
-export type RoundedMsg = { message: SharedMsg; round: number; isUser: boolean; name: string };
+export type RoundedMsg = { message: SharedMsg; round: number; isUser: boolean; name: string; labelNames?: string[] };
 
 /** Rounds are derived by walking messages in created_at order: a new round starts when an
  * agent letter that already spoke in the current round speaks again. User turns stay put. */
-export const withRounds = (messages: SharedMsg[]): RoundedMsg[] => {
+export const withRounds = (messages: SharedMsg[], agentNames?: AgentNames): RoundedMsg[] => {
+  const labelNames = [...new Set(messages.filter((m) => !(m.agent === 'You' || m.isHuman)).flatMap((m) => [agentDisplayName(m.agent, m.persona, agentNames), getAgentSoapName(m.agent, m.persona)]).concat(Object.values(agentNames || {}).filter(Boolean) as string[]))];
   const ordered = [...messages].sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
   let round = 1;
   let seen = new Set<string>();
@@ -20,7 +26,7 @@ export const withRounds = (messages: SharedMsg[]): RoundedMsg[] => {
     if (isUser) return { message, round, isUser, name: 'You (debate creator)' };
     const letter = getAgentLetter(message.agent);
     if (seen.has(letter)) { round += 1; seen = new Set([letter]); } else seen.add(letter);
-    return { message, round, isUser, name: getAgentSoapName(message.agent, message.persona) };
+    return { message, round, isUser, name: agentDisplayName(message.agent, message.persona, agentNames), labelNames };
   });
 };
 
