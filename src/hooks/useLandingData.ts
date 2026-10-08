@@ -199,14 +199,22 @@ export function useLandingData(): LandingData {
         const settings = (featuredChat.settings ?? {}) as {
           models?: Record<string, string>;
         };
-        const modelMap = settings.models ?? {};
-        const agentKeys = ['agentA', 'agentB', 'agentC'].filter((k) => modelMap[k]);
-
         const { data: messages } = await supabase
           .from('agent_chat_messages')
           .select('agent, message, model, created_at')
           .eq('chat_id', featuredChat.id)
           .order('created_at', { ascending: true });
+
+        // Seeded debates may lack settings.models; fall back to the first message per agent letter.
+        const modelMap: Record<string, string> = { ...(settings.models ?? {}) };
+        (['A', 'B', 'C'] as const).forEach((letter) => {
+          const key = `agent${letter}`;
+          if (!modelMap[key]) {
+            const first = (messages ?? []).find((m) => m.agent === `Agent ${letter}`);
+            if (first?.model) modelMap[key] = first.model;
+          }
+        });
+        const agentKeys = ['agentA', 'agentB', 'agentC'].filter((k) => modelMap[k]);
 
         const modelIds = agentKeys.map((k) => modelMap[k]);
         const { data: modelRows } = await supabase
