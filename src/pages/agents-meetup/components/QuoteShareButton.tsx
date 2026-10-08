@@ -11,12 +11,13 @@ import { ConversationMessage } from '../types';
 import { getAgentSoapName, getAgentLetter } from '../utils/agentNameGenerator';
 
 interface QuoteShareButtonProps {
+  displayName?: string;
   message: ConversationMessage;
   chatUrl?: string;
 }
 
-export const QuoteShareButton = ({ message, chatUrl }: QuoteShareButtonProps) => {
-  const soapName = getAgentSoapName(message.agent, message.persona);
+export const QuoteShareButton = ({ message, chatUrl, displayName }: QuoteShareButtonProps) => {
+  const soapName = displayName || getAgentSoapName(message.agent, message.persona);
   const agentLetter = getAgentLetter(message.agent);
 
   const formatQuote = () => {

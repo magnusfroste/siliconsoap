@@ -2,7 +2,7 @@ import { DebateMessage } from '../components/DebateMessage';
 import { DebateProgress, AnsweringMessage, getLiveRound, useAnsweringClock } from '../components/DebateProgress';
 import { DebateCompletion } from '../components/DebateCompletion';
 import { JudgeVerdict } from '../components/JudgeVerdict';
-import { withRounds, numberClaims, isDebateComplete, withSafeCast } from '../utils/debatePresentation';
+import { withRounds, numberClaims, isDebateComplete, withSafeCast, agentDisplayName, type AgentNames } from '../utils/debatePresentation';
 import type { ChatSettings } from '@/models/chat';
 import { getAgentSoapName } from '../utils/agentNameGenerator';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -392,7 +392,7 @@ export const ChatView = () => {
   }
 
   const settings = safeSettings as ChatSettings;
-  const rounded = withRounds(messages);
+  const rounded = withRounds(messages, (settings as { agentNames?: AgentNames }).agentNames);
   const flagged = new Set(numberClaims(rounded).map(claim => claim.sentence));
   const mode = settings.participationMode || 'jump-in';
   const answers = rounded.filter(entry => !entry.isUser).length;
@@ -688,7 +688,7 @@ export const ChatView = () => {
           </div>;
         })}
         {isGenerating && answeringAgent && <>{(!rounded.length || live.round > (rounded[rounded.length - 1]?.round || 0)) && <RoundSeparator roundNumber={live.round} totalConfiguredRounds={settings.rounds} isFinalRound={live.round === settings.rounds} />}<AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} /></>}
-        {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => getAgentSoapName(`Agent ${letter}`, settings.personas[`agent${letter}`])).join(', ')} respond to each other</>}</p>}
+        {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => agentDisplayName(`Agent ${letter}`, settings.personas[`agent${letter}`], (settings as { agentNames?: AgentNames }).agentNames)).join(', ')} respond to each other</>}</p>}
         {waitingForUserInput && !isGenerating && <RoundPausePrompt roundNumber={currentRoundInProgress - 1} onSkip={onSkip}><div className="hidden md:block">{input}</div></RoundPausePrompt>}
         {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} saveFailed={guestSaveFailed} onRetrySave={retryGuestSave} title={chat.title} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}
         {judgeBotEnabled && analysisResults && <JudgeVerdict analysis={analysisResults} />}

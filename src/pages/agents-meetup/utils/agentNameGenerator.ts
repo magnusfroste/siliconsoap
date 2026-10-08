@@ -66,6 +66,10 @@ export function setActiveAgentName(letter: string, name: string): void {
   activeAgentNames[letter.toUpperCase()] = name;
 }
 
+export function getActiveAgentNames(): string[] {
+  return Object.values(activeAgentNames);
+}
+
 export function clearActiveAgentNames(): void {
   activeAgentNames = {};
 }

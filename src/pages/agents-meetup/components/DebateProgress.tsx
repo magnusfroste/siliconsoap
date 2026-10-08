@@ -3,7 +3,7 @@ import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import type { ChatSettings, ChatMessage } from '@/models/chat';
 import type { CuratedModel } from '@/models/model';
 import { getAgentSoapName } from '../utils/agentNameGenerator';
-import { withRounds } from '../utils/debatePresentation';
+import { withRounds, agentDisplayName, type AgentNames } from '../utils/debatePresentation';
 import { personaDisplayName } from '../utils/personaName';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 
@@ -20,7 +20,7 @@ export function useAnsweringClock(agent: string | null, running: boolean) {
 }
 
 export function getLiveRound(messages: ChatMessage[], settings: ChatSettings) {
-  const rounded = withRounds(messages);
+  const rounded = withRounds(messages, (settings as { agentNames?: AgentNames }).agentNames);
   const lastRound = rounded[rounded.length - 1]?.round || 1;
   const spoken = new Set(rounded.filter(entry => entry.round === lastRound && !entry.isUser).map(entry => entry.message.agent));
   const full = spoken.size >= (settings.numberOfAgents || 2);
@@ -43,7 +43,7 @@ export function DebateProgress({ settings, messages, answeringAgent, seconds, mo
         {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents || 2).map(letter => {
           const key = `agent${letter}` as keyof ChatSettings['personas'];
           const agent = `Agent ${letter}`;
-          const name = getAgentSoapName(agent, settings.personas?.[key] || '');
+          const name = agentDisplayName(agent, settings.personas?.[key] || '', (settings as { agentNames?: AgentNames }).agentNames);
           const modelId = settings.models?.[key] || '';
           const model = models.find(item => item.model_id === modelId);
           const active = agent === answeringAgent;
@@ -61,7 +61,7 @@ export function AnsweringMessage({ agent, settings, seconds }: { agent: string; 
   const letter = agent.replace('Agent ', '') as 'A' | 'B' | 'C';
   const key = `agent${letter}` as keyof ChatSettings['personas'];
   const persona = settings.personas?.[key] || '';
-  const name = getAgentSoapName(agent, persona);
+  const name = agentDisplayName(agent, persona, (settings as { agentNames?: AgentNames }).agentNames);
   const { profiles } = useAgentProfiles();
   const personaLabel = personaDisplayName(persona, profiles);
   return <article aria-live="polite" className="flex gap-3 rounded-lg border border-dashed border-chip-warning-fg/40 bg-chip-warning-bg/40 p-4">

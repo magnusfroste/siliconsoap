@@ -4,6 +4,7 @@ import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { QuoteShareButton } from './QuoteShareButton';
+import { stripSpeakerLabel } from '../utils/speakerLabel';
 import { getAgentLetter } from '../utils/agentNameGenerator';
 import { parseAgentResponse } from '../utils/parseAgentResponse';
 import { splitParagraphs, splitSentences, type RoundedMsg } from '../utils/debatePresentation';
@@ -61,7 +62,8 @@ const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number 
 
 export function DebateMessage({ entry, index, total, chatUrl, flagged, reasoningOpen, reasoningEnabled = true, isPlaying = false, isTheaterReveal = false, audioDurationMs, userLabel }: { entry: RoundedMsg; index: number; total: number; chatUrl?: string; flagged: Set<string>; reasoningOpen?: boolean; reasoningEnabled?: boolean; isPlaying?: boolean; isTheaterReveal?: boolean; audioDurationMs?: number | null; userLabel?: string }) {
   const { message, isUser, name } = entry;
-  const parsed = parseAgentResponse(message.message);
+  const rawParsed = parseAgentResponse(message.message);
+  const parsed = isUser ? rawParsed : { ...rawParsed, publicMessage: stripSpeakerLabel(rawParsed.publicMessage, entry.labelNames) };
   const [expanded, setExpanded] = useState(false);
   const [privateOpen, setPrivateOpen] = useState(reasoningOpen ?? false);
   useEffect(() => { if (reasoningOpen !== undefined) setPrivateOpen(reasoningOpen); }, [reasoningOpen]);
@@ -91,7 +93,7 @@ export function DebateMessage({ entry, index, total, chatUrl, flagged, reasoning
     {hasFlag && <p className="mt-2 text-xs font-medium text-chip-warning-fg">Number to check: figure cited without a source link.</p>}
     {long && !isTheaterReveal && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Show full answer'}</Button>}
     {parsed.thinking && reasoningEnabled && <Collapsible open={privateOpen} onOpenChange={setPrivateOpen} className="mt-4"><CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="h-auto px-0 text-xs text-muted-foreground"><ChevronDown className="mr-1 h-3 w-3" />Private reasoning</Button></CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border whitespace-pre-wrap pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}
-    <div className="mt-4"><QuoteShareButton message={{ ...message, message: parsed.publicMessage }} chatUrl={chatUrl} /></div></div>
+    <div className="mt-4"><QuoteShareButton message={{ ...message, message: parsed.publicMessage }} chatUrl={chatUrl} displayName={name} /></div></div>
   </div></article>;
 }
 
