@@ -28,7 +28,8 @@ import { useConversationAnalysis } from '../hooks/conversation/useConversationAn
 import { Button } from '@/components/ui/button';
 import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
-import { supabase } from '@/integrations/supabase/client';
+import { useGuestDebateSave } from '../hooks/useGuestDebateSave';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -45,8 +46,6 @@ export const ChatView = () => {
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
   const [questionExpanded, setQuestionExpanded] = useState(false);
-  const [guestShareId, setGuestShareId] = useState<string | null>(null);
-  const [isSavingGuest, setIsSavingGuest] = useState(false);
   
   // Refs to prevent race conditions
   const hasStartedGeneration = useRef(false);
@@ -112,7 +111,7 @@ export const ChatView = () => {
   const handleCopyShareClick = async () => {
     if (!chatId) return;
     let shareId = guestShareId || chat?.share_id;
-    if (isGuest && !shareId) { toast.info(isSavingGuest || isGenerating ? 'The share link is available when the debate finishes saving.' : 'The share link is not available yet.'); return; }
+    if (isGuest && !shareId) { if (guestSaveFailed) { toast.error('Saving failed — try again'); return; } toast.info(isSavingGuest || isGenerating ? 'The share link is available when the debate finishes saving.' : 'The share link is not available yet.'); return; }
     if (!shareId) {
       // Re-share previously unshared chat
       shareId = (await shareChat(chatId)) ?? undefined;
@@ -152,43 +151,20 @@ export const ChatView = () => {
     }
   }, [chat, loading, messages.length]);
 
-  // Save guest debate to database when conversation completes
-  useEffect(() => {
-    if (!conversationComplete || !isGuest || !chat || messages.length === 0 || guestShareId || isSavingGuest) return;
-    
-    const saveGuestDebate = async () => {
-      setIsSavingGuest(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('save-guest-debate', {
-          body: {
-            prompt: chat.prompt,
-            title: chat.title,
-            scenarioId: chat.scenario_id,
-            settings: chat.settings,
-            messages: messages.map(m => ({
-              agent: m.agent,
-              message: m.message,
-              model: m.model,
-              persona: m.persona,
-            })),
-            sessionId: chatId,
-          }
-        });
-        
-        if (!error && data?.shareId) {
-          setGuestShareId(data.shareId);
-        } else {
-          console.warn('Failed to save guest debate:', error || data?.error);
-        }
-      } catch (err) {
-        console.warn('Error saving guest debate:', err);
-      } finally {
-        setIsSavingGuest(false);
-      }
-    };
-    
-    saveGuestDebate();
-  }, [conversationComplete, isGuest, chat, messages.length, guestShareId, isSavingGuest, chatId]);
+  // Save guest debate once when the conversation completes; failures wait for manual retry
+  const guestSave = useGuestDebateSave(
+    conversationComplete && isGuest && !!chat && messages.length > 0,
+    chatId,
+    () => ({
+      prompt: chat?.prompt, title: chat?.title, scenarioId: chat?.scenario_id, settings: chat?.settings,
+      messages: messages.map(m => ({ agent: m.agent, message: m.message, model: m.model, persona: m.persona })),
+      sessionId: chatId,
+    }),
+  );
+  const guestShareId = guestSave.shareId;
+  const isSavingGuest = guestSave.status === 'saving';
+  const guestSaveFailed = guestSave.status === 'failed';
+  const retryGuestSave = guestSave.retry;
 
   // Cleanup on unmount
   useEffect(() => {
@@ -715,14 +691,14 @@ export const ChatView = () => {
         {isGenerating && answeringAgent && <>{(!rounded.length || live.round > (rounded[rounded.length - 1]?.round || 0)) && <RoundSeparator roundNumber={live.round} totalConfiguredRounds={settings.rounds} isFinalRound={live.round === settings.rounds} />}<AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} /></>}
         {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => getAgentSoapName(`Agent ${letter}`, settings.personas[`agent${letter}`])).join(', ')} respond to each other</>}</p>}
         {waitingForUserInput && !isGenerating && <RoundPausePrompt roundNumber={currentRoundInProgress - 1} onSkip={onSkip}><div className="hidden md:block">{input}</div></RoundPausePrompt>}
-        {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}
+        {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} saveFailed={guestSaveFailed} onRetrySave={retryGuestSave} title={chat.title} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}
         {judgeBotEnabled && analysisResults && <JudgeVerdict analysis={analysisResults} />}
         {shouldShowInput && !waitingForUserInput && <section className="hidden rounded-lg border bg-card p-4 md:block"><h2 className="text-sm font-semibold">Jump in</h2>{input}</section>}
         {mode !== 'spectator' && conversationComplete && !wantsToContinue && <Button variant="ghost" className="hidden md:inline-flex" onClick={() => setWantsToContinue(true)}>Continue the debate</Button>}
       </div>
     </ScrollArea>
     {audioPlaybackEnabled && (isPlaying || isPaused || isGeneratingAudio) && <div className="flex shrink-0 items-center justify-center gap-3 border-t bg-card px-3 py-2" aria-label="Audio player"><Button variant="outline" size="icon" className="h-11 w-11" aria-label={isPaused ? 'Resume playback' : 'Pause playback'} onClick={isPaused ? play : pause}>{isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}</Button><Button variant="outline" size="icon" className="h-11 w-11" aria-label="Stop playback" onClick={stop}><Square className="h-4 w-4" /></Button><span className="text-xs">{isGeneratingAudio ? 'Preparing audio · ' : ''}Message {currentMessageIndex + 1} of {messages.length}</span></div>}
-    <div className="shrink-0 border-t bg-card p-3 md:hidden">{shouldShowInput ? <><h2 className="text-xs font-semibold">{waitingForUserInput ? `Round ${currentRoundInProgress - 1} done — your turn` : 'Jump in'}</h2>{input}</> : <div className="flex gap-2">{isGenerating ? reasoningButton : null}<Button variant="default" className="min-h-11 flex-1" onClick={handleCopyShareClick} disabled={isSavingGuest}>{conversationComplete && !isGenerating ? 'Copy share link' : 'Share'}</Button>{conversationComplete && !isGenerating && <Button asChild variant="outline" className="min-h-11"><Link to={`/new?prompt=${encodeURIComponent(chat.prompt)}`}>Rerun</Link></Button>}</div>}</div>
+    <div className="shrink-0 border-t bg-card p-3 md:hidden">{shouldShowInput ? <><h2 className="text-xs font-semibold">{waitingForUserInput ? `Round ${currentRoundInProgress - 1} done — your turn` : 'Jump in'}</h2>{input}</> : <div className="flex gap-2">{isGenerating ? reasoningButton : null}<Button variant="default" className="min-h-11 flex-1" onClick={guestSaveFailed ? retryGuestSave : handleCopyShareClick} disabled={isSavingGuest}>{guestSaveFailed ? 'Try again' : conversationComplete && !isGenerating ? 'Copy share link' : 'Share'}</Button>{conversationComplete && !isGenerating && <Button asChild variant="outline" className="min-h-11"><Link to={`/new?prompt=${encodeURIComponent(chat.prompt)}`}>Rerun</Link></Button>}</div>}</div>
     {judgeBotEnabled && <AnalysisDrawer open={showAnalysisDrawer} onOpenChange={setShowAnalysisDrawer} isAnalyzing={isAnalyzing} analysisResults={analysisResults} conversation={messages} onAnalyze={() => handleAnalyzeConversation()} isGuest={isGuest} isSaved={isAnalysisSaved} />}
   </div>;
 };
