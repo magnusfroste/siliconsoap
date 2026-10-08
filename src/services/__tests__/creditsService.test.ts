@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { creditsService } from '../creditsService';
 import { creditsRepository } from '@/repositories';
+import { DEFAULT_TOKEN_BUDGET } from '@/models/tokens';
 
 // Mock the repository
 vi.mock('@/repositories', () => ({
@@ -59,6 +60,8 @@ describe('creditsService', () => {
       expect(result).toEqual({
         creditsRemaining: 10,
         creditsUsed: 3,
+        tokenBudget: DEFAULT_TOKEN_BUDGET,
+        tokensUsed: 0,
         loading: false
       });
       expect(creditsRepository.getUserCredits).toHaveBeenCalledWith(userId);
@@ -73,6 +76,8 @@ describe('creditsService', () => {
       expect(result).toEqual({
         creditsRemaining: 3,
         creditsUsed: 2,
+        tokenBudget: 0,
+        tokensUsed: 0,
         loading: false
       });
       expect(creditsRepository.getGuestCreditsAmount).toHaveBeenCalled();
@@ -87,6 +92,8 @@ describe('creditsService', () => {
         user_id: userId,
         credits_remaining: 7,
         credits_used: 3,
+        token_budget: 50000,
+        tokens_used: 1200,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -96,6 +103,8 @@ describe('creditsService', () => {
       expect(result).toEqual({
         creditsRemaining: 7,
         creditsUsed: 3,
+        tokenBudget: 50000,
+        tokensUsed: 1200,
         loading: false
       });
     });
@@ -110,6 +119,8 @@ describe('creditsService', () => {
       expect(result).toEqual({
         creditsRemaining: 10,
         creditsUsed: 0,
+        tokenBudget: DEFAULT_TOKEN_BUDGET,
+        tokensUsed: 0,
         loading: false
       });
     });
@@ -125,6 +136,8 @@ describe('creditsService', () => {
       expect(result).toEqual({
         creditsRemaining: 3,
         creditsUsed: 2,
+        tokenBudget: 0,
+        tokensUsed: 0,
         loading: false
       });
     });
@@ -297,7 +310,10 @@ describe('creditsService', () => {
         creditsDeducted: 2,
         newCreditsRemaining: 8
       });
-      expect(creditsRepository.useTokensAndDeductCredits).toHaveBeenCalledWith(userId, 2000);
+      // Optional accounting args (chatId, modelId, token split, cost, requestedModelId) are forwarded as-is
+      expect(creditsRepository.useTokensAndDeductCredits).toHaveBeenCalledWith(
+        userId, 2000, undefined, undefined, undefined, undefined, undefined, undefined
+      );
       expect(window.dispatchEvent).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'creditsChanged' })
       );
