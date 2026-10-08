@@ -1,5 +1,10 @@
 # Roadmap
 
+## Explore and favicon
+- [ ] Build editorial Explore, featured transcript quote, URL filters and paged complete-debate archive
+- [ ] Install supplied icons, SVG, manifest and head links
+- [ ] Run tests and verify public archive, filters, light/dark and 375px layouts
+
 ## Landing and debate-link fixes (approved)
 - [x] Curated archive headlines for the three fixed debates + clamp titles to 4 lines
 - [x] Natural origin wording in roster sentences ("from the United States")
