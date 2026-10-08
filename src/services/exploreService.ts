@@ -13,7 +13,7 @@ export const splitPrompt = (prompt: string) => {
 export const debateQuestion = (debate: ExploreDebate) => /(?:\.\.\.|…)\s*$/.test(debate.title) ? splitPrompt(debate.prompt).question : debate.title || splitPrompt(debate.prompt).question;
 export const shortModelName = (name: string) => name.replace(/^[^:]+:\s*/, '');
 // Never interpolate PostgREST syntax or LIKE wildcards from a question search.
-export const sanitizeQuestionSearch = (query: string) => query.replace(/[(),.\[\]{}"'\\%_*]/g, ' ').replace(/\s+/g, ' ').trim();
+export const sanitizeQuestionSearch = (query: string) => query.replace(/[(),.[\]{}"'\\%_*]/g, ' ').replace(/\s+/g, ' ').trim();
 export const matchingModelIds = (models: CuratedModel[], filters: ExploreFilters) => models.filter(m =>
   (!filters.origin || m.origin_region === filters.origin) &&
   (!filters.license || m.license_type === (filters.license === 'open' ? 'open-weight' : 'closed')) &&
