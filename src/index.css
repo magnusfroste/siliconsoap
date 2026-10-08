@@ -139,6 +139,8 @@
   .debate-completion .completion-outline { background: transparent; color: hsl(var(--completion-fg)); border-color: hsl(var(--completion-border)); }
   .debate-completion .completion-outline:hover { background: hsl(var(--completion-tile)); color: hsl(var(--completion-fg)); }
   .completion-link { color: hsl(var(--completion-fg)); }
+  .debate-completion .completion-primary { background: hsl(var(--completion-fg)); color: hsl(var(--completion-bg)); }
+  .debate-completion .completion-primary:hover { background: hsl(var(--completion-fg) / .9); }
   .debate-progress { appearance: none; background: hsl(var(--muted)); color: hsl(var(--primary)); }
   .debate-progress::-webkit-progress-bar { background: hsl(var(--muted)); }
   .debate-progress::-webkit-progress-value { background: hsl(var(--primary)); border-radius: 999px; }
