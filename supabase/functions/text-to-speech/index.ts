@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { fetchFlag, validateTts, checkRateLimit, getClientIp } from '../_shared/requestGuards.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
