@@ -6,7 +6,7 @@ import {
 } from "../_shared/requestGuards.ts";
 
 let allowlistCache: { set: Set<string>; at: number } | null = null;
-const getAllowlist = async (): Promise<Set<string>> => {
+const getAllowlist = async (): Promise<Set<string> | null> => {
   if (allowlistCache && Date.now() - allowlistCache.at < 60_000) return allowlistCache.set;
   const url = Deno.env.get('SUPABASE_URL');
   const sk = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -19,7 +19,7 @@ const getAllowlist = async (): Promise<Set<string>> => {
     curated = (await res.json()).map((r: { model_id: string }) => r.model_id);
   } catch (e) {
     console.warn('[guard] allowlist load failed:', e);
-    if (allowlistCache) return allowlistCache.set; // keep last good list
+    return allowlistCache ? allowlistCache.set : null; // fail open if never loaded
   }
   let judge: string | null = null;
   try { judge = (await fetchFlag('default_judge_model'))?.text_value ?? null; } catch { /* ignore */ }
@@ -105,7 +105,8 @@ serve(async (req) => {
       if (!validateMessages(messages).ok) {
         return friendly('This request is too large.', 'REQUEST_TOO_LARGE');
       }
-      if (!isModelAllowed(model, await getAllowlist())) {
+      const allowlist = await getAllowlist();
+      if (allowlist && !isModelAllowed(model, allowlist)) {
         console.warn(`[guard] model not allowed: ${model}`);
         return friendly('This model is not available on SiliconSoap.', 'MODEL_NOT_ALLOWED');
       }
@@ -281,7 +282,8 @@ serve(async (req) => {
       }
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
 
-      const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, effectiveMaxTokens * 2);
+      const rawBoost = Math.max((max_tokens ?? 200) * 6, effectiveMaxTokens * 2);
+      const boostedMaxTokens = userApiKey ? rawBoost : capBoostedTokens(rawBoost);
       console.log(`Model ${model} returned empty response (reasoning_tokens=${reasoningTokens}). Retrying with max_tokens=${boostedMaxTokens}`);
 
       const retryResponse = await fetch(openRouterUrl, {
