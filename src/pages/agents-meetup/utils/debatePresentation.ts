@@ -11,7 +11,7 @@ const LINK_RE = /https?:\/\//i;
 export const splitParagraphs = (text: string) => text.split(/\n\s*\n/);
 export const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/);
 
-export type SharedMsg = { id?: string; agent: string; persona: string; model: string; message: string; created_at?: string; isHuman?: boolean };
+export type SharedMsg = { id?: string; agent: string; persona: string; model: string; message: string; created_at?: string; isHuman?: boolean; answeredByModel?: string | null; answered_by_model?: string | null };
 export type RoundedMsg = { message: SharedMsg; round: number; isUser: boolean; name: string; labelNames?: string[] };
 
 /** Rounds are derived by walking messages in created_at order: a new round starts when an

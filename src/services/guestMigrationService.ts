@@ -3,6 +3,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { GuestChat, ChatMessage } from '@/models/chat';
+import { toMessageInsert } from '@/pages/agents-meetup/utils/fallbackLabel';
 
 const GUEST_CHATS_KEY = 'guest_chats';
 
@@ -61,14 +62,8 @@ export const guestMigrationService = {
 
         // Migrate all messages for this chat
         if (guestChat.messages && guestChat.messages.length > 0) {
-          const messagesToInsert = guestChat.messages.map((msg: ChatMessage) => ({
-            chat_id: newChat.id,
-            agent: msg.agent,
-            message: msg.message,
-            model: msg.model,
-            persona: msg.persona,
-            created_at: msg.created_at || new Date().toISOString()
-          }));
+          const messagesToInsert = guestChat.messages.map((msg: ChatMessage) =>
+            toMessageInsert(newChat.id, { ...msg, created_at: msg.created_at || new Date().toISOString() }));
 
           const { error: messagesError } = await supabase
             .from('agent_chat_messages')

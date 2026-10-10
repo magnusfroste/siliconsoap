@@ -146,7 +146,7 @@ export const ChatView = () => {
     chatId,
     () => ({
       prompt: chat?.prompt, title: chat?.title, scenarioId: chat?.scenario_id, settings: chat?.settings,
-      messages: messages.map(m => ({ agent: m.agent, message: m.message, model: m.model, persona: m.persona })),
+      messages: messages.map(m => ({ agent: m.agent, message: m.message, model: m.model, persona: m.persona, answeredByModel: (m as { answeredByModel?: string; answered_by_model?: string | null }).answeredByModel || (m as { answered_by_model?: string | null }).answered_by_model || undefined })),
       sessionId: chatId,
     }),
   );
