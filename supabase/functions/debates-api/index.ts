@@ -618,7 +618,7 @@ Deno.serve(async (req) => {
 
       const { data: messages, error: msgErr } = await supabase
         .from("agent_chat_messages")
-        .select("id, agent, persona, message, model, created_at")
+        .select("id, agent, persona, message, model, answered_by_model, created_at")
         .eq("chat_id", resourceId)
         .order("created_at", { ascending: true });
       if (msgErr) return json({ error: msgErr.message }, 500);
@@ -894,7 +894,7 @@ Deno.serve(async (req) => {
         await runOrchestration();
         const { data: messages } = await supabase
           .from("agent_chat_messages")
-          .select("id, agent, persona, message, model, created_at")
+          .select("id, agent, persona, message, model, answered_by_model, created_at")
           .eq("chat_id", chat.id)
           .order("created_at", { ascending: true });
         const { data: finalChat } = await supabase

@@ -89,6 +89,7 @@ export interface AgentCallResult {
   content: string;
   fallbackUsed?: boolean;
   originalModel?: string;
+  answeredByModel?: string;
 }
 
 /**
@@ -139,7 +140,8 @@ const callWithTokenTracking = async (
   return {
     content: stripSpeakerLabel(replaceAgentMentions(result.content), getActiveAgentNames()),
     fallbackUsed: result.fallbackUsed,
-    originalModel: result.originalModel
+    originalModel: result.originalModel,
+    answeredByModel: result.fallbackUsed ? (result.model || 'openai/gpt-4o-mini') : undefined
   };
 };
 
@@ -456,7 +458,8 @@ export const handleInitialRound = async (
     model: agentAModel,
     persona: agentAPersona,
     fallbackUsed: agentAResponse.fallbackUsed,
-    originalModel: agentAResponse.originalModel
+    originalModel: agentAResponse.originalModel,
+    answeredByModel: agentAResponse.answeredByModel
   };
   
   messages.push(agentAMessage);
@@ -494,7 +497,8 @@ export const handleInitialRound = async (
     model: agentBModel,
     persona: agentBPersona,
     fallbackUsed: agentBResponse.fallbackUsed,
-    originalModel: agentBResponse.originalModel
+    originalModel: agentBResponse.originalModel,
+    answeredByModel: agentBResponse.answeredByModel
   };
   
   messages.push(agentBMessage);
@@ -536,7 +540,8 @@ export const handleInitialRound = async (
       model: agentCModel,
       persona: agentCPersona,
       fallbackUsed: agentCResponse.fallbackUsed,
-      originalModel: agentCResponse.originalModel
+      originalModel: agentCResponse.originalModel,
+      answeredByModel: agentCResponse.answeredByModel
     };
     
     messages.push(agentCMessage);
@@ -614,7 +619,8 @@ export const handleSingleRound = async (
       model: agentConfig.model,
       persona: agentConfig.persona,
       fallbackUsed: response.fallbackUsed,
-      originalModel: response.originalModel
+      originalModel: response.originalModel,
+      answeredByModel: response.answeredByModel
     };
     
     allMessages.push(message);
@@ -697,7 +703,8 @@ export const handleAdditionalRounds = async (
         model: agentConfig.model,
         persona: agentConfig.persona,
         fallbackUsed: response.fallbackUsed,
-        originalModel: response.originalModel
+        originalModel: response.originalModel,
+        answeredByModel: response.answeredByModel
       };
       
       allMessages.push(message);
@@ -757,7 +764,8 @@ export const handleUserFollowUp = async (
     model: agentAModel,
     persona: agentAPersona,
     fallbackUsed: agentAResponse.fallbackUsed,
-    originalModel: agentAResponse.originalModel
+    originalModel: agentAResponse.originalModel,
+    answeredByModel: agentAResponse.answeredByModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentAMessage);
@@ -790,7 +798,8 @@ export const handleUserFollowUp = async (
     model: agentBModel,
     persona: agentBPersona,
     fallbackUsed: agentBResponse.fallbackUsed,
-    originalModel: agentBResponse.originalModel
+    originalModel: agentBResponse.originalModel,
+    answeredByModel: agentBResponse.answeredByModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentBMessage);
@@ -823,7 +832,8 @@ export const handleUserFollowUp = async (
     model: agentCModel,
     persona: agentCPersona,
     fallbackUsed: agentCResponse.fallbackUsed,
-    originalModel: agentCResponse.originalModel
+    originalModel: agentCResponse.originalModel,
+    answeredByModel: agentCResponse.answeredByModel
   };
   
   if (onMessageReceived) await onMessageReceived(agentCMessage);

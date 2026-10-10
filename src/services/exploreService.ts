@@ -1,6 +1,7 @@
 import type { CuratedModel } from '@/models/model';
 import { resolveCast, isDebateComplete, withRounds, type AgentNames, type SharedMsg } from '@/pages/agents-meetup/utils/debatePresentation';
 import { stripSpeakerLabel } from '@/pages/agents-meetup/utils/speakerLabel';
+import { answeredByOf } from '@/pages/agents-meetup/utils/fallbackLabel';
 
 export type ExploreFilters = { tab: string; origin: string; license: string; model: string; q: string };
 export type ExploreSettings = { models?: Record<string, string>; personas?: Record<string, string>; agentNames?: AgentNames; numberOfAgents?: number; rounds?: number; analysisResults?: string };
@@ -32,9 +33,10 @@ export function completeUniqueDebates(debates: ExploreDebate[]) {
 }
 export function showdownQuote(debate: ExploreDebate) {
   const entries = withRounds(debate.transcript, debate.settings?.agentNames).filter(e => !e.isUser);
+  const quotable = entries.filter(e => !answeredByOf(e.message));
   const finalRound = Math.max(0, ...entries.map(e => e.round));
   const names = entries.map(e => e.name);
-  const candidates = entries.filter(e => e.round === finalRound).flatMap(e => {
+  const candidates = quotable.filter(e => e.round === finalRound).flatMap(e => {
     const publicText = e.message.message.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').replace(/<thinking>[\s\S]*$/i, '');
     const text = stripSpeakerLabel(publicText, names).replace(/\s+/g, ' ').trim();
     return (text.match(/[^.!?]+[.!?](?=\s|$)/g) || []).map(s => s.trim()).filter(s => s.length >= 50 && s.length <= 180).map(sentence => ({ sentence, name: e.name, model: e.message.model, direct: names.some(n => n !== e.name && (sentence.includes(n) || sentence.includes(n.split(' ')[0]))) }));

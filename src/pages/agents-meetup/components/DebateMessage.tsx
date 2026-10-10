@@ -7,6 +7,8 @@ import { QuoteShareButton } from './QuoteShareButton';
 import { stripSpeakerLabel } from '../utils/speakerLabel';
 import { getAgentLetter } from '../utils/agentNameGenerator';
 import { parseAgentResponse } from '../utils/parseAgentResponse';
+import { answeredByOf, fallbackChipLabel, FALLBACK_TOOLTIP, shortModelName } from '../utils/fallbackLabel';
+import { useCuratedModelNames } from '@/hooks/useCuratedModelNames';
 import { splitParagraphs, splitSentences, type RoundedMsg } from '../utils/debatePresentation';
 
 const useTypewriter = (text: string, enabled: boolean, audioDurationMs?: number | null) => {
@@ -65,6 +67,8 @@ export function DebateMessage({ entry, index, total, chatUrl, flagged, reasoning
   const rawParsed = parseAgentResponse(message.message);
   const parsed = isUser ? rawParsed : { ...rawParsed, publicMessage: stripSpeakerLabel(rawParsed.publicMessage, entry.labelNames) };
   const [expanded, setExpanded] = useState(false);
+  const modelNames = useCuratedModelNames();
+  const answeredBy = isUser ? null : answeredByOf(message);
   const [privateOpen, setPrivateOpen] = useState(reasoningOpen ?? false);
   useEffect(() => { if (reasoningOpen !== undefined) setPrivateOpen(reasoningOpen); }, [reasoningOpen]);
   const { displayedText, isTyping } = useTypewriter(parsed.publicMessage, isTheaterReveal, audioDurationMs);
@@ -79,6 +83,7 @@ export function DebateMessage({ entry, index, total, chatUrl, flagged, reasoning
       ? <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground" aria-hidden="true"><User className="h-5 w-5" /></div>
       : <AgentAvatar agentLetter={letter} name={name} size="md" />}
     <div className="min-w-0 flex-1"><div className="flex flex-wrap items-baseline justify-between gap-2"><div><h3 className="font-semibold">{isUser ? userLabel || name : name}</h3>{!isUser && <p className="text-xs text-muted-foreground">{message.persona ? <>{message.persona} · </> : null}<span className="break-all font-mono">{message.model}</span></p>}</div><span className="font-mono text-xs text-muted-foreground">{index + 1}/{total}</span></div>
+    {answeredBy && <p className="mt-2"><span title={FALLBACK_TOOLTIP} aria-label={`${fallbackChipLabel(answeredBy, message.model, modelNames)}. ${FALLBACK_TOOLTIP}`} className="inline-flex items-center rounded-full border border-chip-warning-fg/30 bg-chip-warning-bg px-2.5 py-0.5 text-xs font-medium text-chip-warning-fg">{fallbackChipLabel(answeredBy, message.model, modelNames)}</span></p>}
     <div className="mt-4 space-y-4 text-[17px] leading-[1.65]">{paragraphs.map((paragraph, paragraphIndex) => {
       const sentences = splitSentences(paragraph);
       return <p key={paragraphIndex} className="whitespace-pre-wrap">{sentences.map((sentence, sentenceIndex) => {
@@ -93,7 +98,7 @@ export function DebateMessage({ entry, index, total, chatUrl, flagged, reasoning
     {hasFlag && <p className="mt-2 text-xs font-medium text-chip-warning-fg">Number to check: figure cited without a source link.</p>}
     {long && !isTheaterReveal && <Button type="button" variant="link" className="h-auto p-0" onClick={() => setExpanded(!expanded)}>{expanded ? 'Show less' : 'Show full answer'}</Button>}
     {parsed.thinking && reasoningEnabled && <Collapsible open={privateOpen} onOpenChange={setPrivateOpen} className="mt-4"><CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="h-auto px-0 text-xs text-muted-foreground"><ChevronDown className="mr-1 h-3 w-3" />Private reasoning</Button></CollapsibleTrigger><CollapsibleContent className="mt-2 border-l-2 border-border whitespace-pre-wrap pl-4 text-sm text-muted-foreground">{parsed.thinking}</CollapsibleContent></Collapsible>}
-    <div className="mt-4"><QuoteShareButton message={{ ...message, message: parsed.publicMessage }} chatUrl={chatUrl} displayName={name} /></div></div>
+    <div className="mt-4"><QuoteShareButton message={{ ...message, message: parsed.publicMessage }} chatUrl={chatUrl} displayName={answeredBy ? `${shortModelName(answeredBy, modelNames)} (fallback)` : name} isFallback={!!answeredBy} /></div></div>
   </div></article>;
 }
 

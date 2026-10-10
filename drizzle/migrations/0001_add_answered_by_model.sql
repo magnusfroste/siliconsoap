@@ -1,0 +1,2 @@
+ALTER TABLE public.agent_chat_messages ADD COLUMN IF NOT EXISTS answered_by_model text;
+COMMENT ON COLUMN public.agent_chat_messages.answered_by_model IS 'Model that actually answered when a fallback replaced the cast model; null means the cast model answered.';

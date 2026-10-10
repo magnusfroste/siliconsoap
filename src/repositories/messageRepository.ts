@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessage, GuestChat } from '@/models/chat';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { toMessageInsert } from '@/pages/agents-meetup/utils/fallbackLabel';
 
 const GUEST_CHATS_KEY = 'guest_chats';
 
@@ -26,13 +27,7 @@ export const messageRepository = {
   async createMessage(chatId: string, message: ChatMessage): Promise<boolean> {
     const { error } = await supabase
       .from('agent_chat_messages')
-      .insert({
-        chat_id: chatId,
-        agent: message.agent,
-        message: message.message,
-        model: message.model,
-        persona: message.persona
-      });
+      .insert(toMessageInsert(chatId, message));
 
     if (error) {
       console.error('Error saving message:', error);
@@ -44,13 +39,7 @@ export const messageRepository = {
 
   // Create multiple messages at once
   async createMessages(chatId: string, messages: ChatMessage[]): Promise<boolean> {
-    const messagesToInsert = messages.map(msg => ({
-      chat_id: chatId,
-      agent: msg.agent,
-      message: msg.message,
-      model: msg.model,
-      persona: msg.persona
-    }));
+    const messagesToInsert = messages.map(msg => toMessageInsert(chatId, msg));
 
     const { error } = await supabase
       .from('agent_chat_messages')

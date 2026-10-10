@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeAnsweredBy } from "./answeredBy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,6 +83,7 @@ Deno.serve(async (req) => {
       message: msg.message,
       model: msg.model || "unknown",
       persona: msg.persona || "default",
+      answered_by_model: sanitizeAnsweredBy(msg.answeredByModel),
     }));
 
     const { error: msgError } = await supabase

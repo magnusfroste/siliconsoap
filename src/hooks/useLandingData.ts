@@ -202,7 +202,7 @@ export function useLandingData(): LandingData {
         };
         const { data: messages } = await supabase
           .from('agent_chat_messages')
-          .select('agent, message, model, created_at')
+          .select('agent, message, model, created_at, answered_by_model')
           .eq('chat_id', featuredChat.id)
           .order('created_at', { ascending: true });
 
@@ -231,8 +231,8 @@ export function useLandingData(): LandingData {
           const modelId = modelMap[key];
           const info = modelInfo.get(modelId);
           const firstMessage =
-            (messages ?? []).find((m) => m.model === modelId) ??
-            (messages ?? [])[index];
+            (messages ?? []).find((m) => m.model === modelId && !m.answered_by_model) ??
+            (messages ?? []).filter((m) => !m.answered_by_model)[index];
           const createdAt = info?.created_at ? new Date(info.created_at).getTime() : 0;
           return {
             agentKey: key,

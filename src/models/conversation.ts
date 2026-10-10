@@ -16,6 +16,8 @@ export interface ConversationMessage {
   isHuman?: boolean;
   fallbackUsed?: boolean;
   originalModel?: string;
+  /** Model that actually answered when a fallback replaced the cast model. */
+  answeredByModel?: string;
 }
 
 export interface AnalysisResults {

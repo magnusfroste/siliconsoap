@@ -14,9 +14,11 @@ interface QuoteShareButtonProps {
   displayName?: string;
   message: ConversationMessage;
   chatUrl?: string;
+  /** Fallback answers are credited to displayName only, never to the cast persona/letter. */
+  isFallback?: boolean;
 }
 
-export const QuoteShareButton = ({ message, chatUrl, displayName }: QuoteShareButtonProps) => {
+export const QuoteShareButton = ({ message, chatUrl, displayName, isFallback }: QuoteShareButtonProps) => {
   const soapName = displayName || getAgentSoapName(message.agent, message.persona);
   const agentLetter = getAgentLetter(message.agent);
 
@@ -24,7 +26,7 @@ export const QuoteShareButton = ({ message, chatUrl, displayName }: QuoteShareBu
     const quote = message.message.length > 280 
       ? message.message.slice(0, 277) + '...' 
       : message.message;
-    return `"${quote}"\n\n— ${soapName} (${agentLetter}) · ${message.persona}`;
+    return isFallback ? `"${quote}"\n\n— ${soapName}` : `"${quote}"\n\n— ${soapName} (${agentLetter}) · ${message.persona}`;
   };
 
   const formatTwitterQuote = () => {
