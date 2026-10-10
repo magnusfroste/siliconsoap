@@ -1,5 +1,32 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { BASE_MAX_TOKENS, REASONING_BUFFER } from "../_shared/tokenBudget.ts";
+import {
+  buildAllowlist, isModelAllowed, clampMaxTokens, capBoostedTokens,
+  validateMessages, totalMessageChars, getClientIp, checkRateLimit, fetchFlag,
+} from "../_shared/requestGuards.ts";
+
+let allowlistCache: { set: Set<string>; at: number } | null = null;
+const getAllowlist = async (): Promise<Set<string> | null> => {
+  if (allowlistCache && Date.now() - allowlistCache.at < 60_000) return allowlistCache.set;
+  const url = Deno.env.get('SUPABASE_URL');
+  const sk = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  let curated: string[] = [];
+  try {
+    const res = await fetch(`${url}/rest/v1/curated_models?is_enabled=eq.true&select=model_id`, {
+      headers: { apikey: sk!, Authorization: `Bearer ${sk}` },
+    });
+    if (!res.ok) throw new Error(`curated_models ${res.status}`);
+    curated = (await res.json()).map((r: { model_id: string }) => r.model_id);
+  } catch (e) {
+    console.warn('[guard] allowlist load failed:', e);
+    return allowlistCache ? allowlistCache.set : null; // fail open if never loaded
+  }
+  let judge: string | null = null;
+  try { judge = (await fetchFlag('default_judge_model'))?.text_value ?? null; } catch { /* ignore */ }
+  const set = buildAllowlist(curated, judge);
+  allowlistCache = { set, at: Date.now() };
+  return set;
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,31 +63,16 @@ serve(async (req) => {
   }
 
   try {
-    // Log the raw request details
-    console.log('Request method:', req.method);
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
-    
-    // Clone the request so we can read the body multiple times if needed
-    const reqClone = req.clone();
-    
-    // Try to get the body
     let body;
     try {
       body = await req.json();
-      console.log('Successfully parsed body:', JSON.stringify(body));
     } catch (jsonError) {
-      console.error('Failed to parse JSON:', jsonError);
-      // Try to read as text to see what we got
-      try {
-        const textBody = await reqClone.text();
-        console.error('Body as text:', textBody.substring(0, 500)); // First 500 chars
-      } catch (textError) {
-        console.error('Failed to read as text too:', textError);
-      }
+      console.error('Failed to parse JSON:', jsonError instanceof Error ? jsonError.message : jsonError);
       throw new Error(`Invalid JSON: ${jsonError instanceof Error ? jsonError.message : 'Unknown error'}`);
     }
     
-    const { model, messages, max_tokens, temperature, top_p } = body;
+    const { model, messages, temperature, top_p } = body;
+    let max_tokens = body.max_tokens;
     
     // Check if user provided their own API key
     const userApiKey = req.headers.get('x-user-api-key');
@@ -80,8 +92,30 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Making OpenRouter request with model: ${model}`);
-    console.log(`Using ${userApiKey ? 'user' : 'shared'} API key`);
+    const msgCount = Array.isArray(messages) ? messages.length : 0;
+    const totalChars = Array.isArray(messages) ? totalMessageChars(messages) : 0;
+    console.log(`Request: model=${model}, messages=${msgCount}, chars=${totalChars}, key=${userApiKey ? 'user' : 'shared'}`);
+
+    // Guards apply only to shared-key calls; BYOK is unchanged.
+    if (!userApiKey) {
+      const friendly = (error: string, code: string) => new Response(
+        JSON.stringify({ error, code }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+      if (!validateMessages(messages).ok) {
+        return friendly('This request is too large.', 'REQUEST_TOO_LARGE');
+      }
+      const allowlist = await getAllowlist();
+      if (allowlist && !isModelAllowed(model, allowlist)) {
+        console.warn(`[guard] model not allowed: ${model}`);
+        return friendly('This model is not available on SiliconSoap.', 'MODEL_NOT_ALLOWED');
+      }
+      const allowed = await checkRateLimit('openrouter-chat', getClientIp(req.headers), 600, 200);
+      if (!allowed) {
+        return friendly('The model is rate-limited right now. Try again in a few seconds, or pick a different model.', 'RATE_LIMIT');
+      }
+      max_tokens = clampMaxTokens(max_tokens, BASE_MAX_TOKENS.medium);
+    }
 
     // Per-model toggle: admin can disable hidden reasoning from the Admin Panel.
     // Stored in curated_models.disable_reasoning. We query via REST with the
@@ -248,7 +282,8 @@ serve(async (req) => {
       }
       const reasoningTokens = data.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
 
-      const boostedMaxTokens = Math.max((max_tokens ?? 200) * 6, effectiveMaxTokens * 2);
+      const rawBoost = Math.max((max_tokens ?? 200) * 6, effectiveMaxTokens * 2);
+      const boostedMaxTokens = userApiKey ? rawBoost : capBoostedTokens(rawBoost);
       console.log(`Model ${model} returned empty response (reasoning_tokens=${reasoningTokens}). Retrying with max_tokens=${boostedMaxTokens}`);
 
       const retryResponse = await fetch(openRouterUrl, {

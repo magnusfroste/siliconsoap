@@ -1,16 +1,13 @@
 project_id = "apfrjuomozdvdeondzaz"
 
 [functions.openrouter-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.openrouter-models]
 verify_jwt = false
 
-[functions.ai-chat]
-verify_jwt = false
-
 [functions.text-to-speech]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-model-info]
 verify_jwt = false

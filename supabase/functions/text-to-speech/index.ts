@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { fetchFlag, validateTts, checkRateLimit, getClientIp } from '../_shared/requestGuards.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,10 +12,27 @@ serve(async (req) => {
   }
 
   try {
+    const flag = await fetchFlag('enable_audio_playback').catch(() => null)
+    if (!flag?.enabled) {
+      return new Response(JSON.stringify({ error: 'Audio playback is disabled' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const { text, voiceId } = await req.json()
 
     if (!text || !voiceId) {
       throw new Error('Text and voiceId are required')
+    }
+    if (!validateTts(text, voiceId)) {
+      throw new Error('Text must be at most 5000 characters and voiceId must be valid')
+    }
+    if (!(await checkRateLimit('text-to-speech', getClientIp(req.headers), 600, 60))) {
+      return new Response(JSON.stringify({ error: 'Too many audio requests. Please try again later.', code: 'RATE_LIMIT' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     const apiKey = Deno.env.get('ELEVENLABS_API_KEY')
