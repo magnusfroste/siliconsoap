@@ -480,6 +480,24 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string | null
@@ -769,6 +787,10 @@ export type Database = {
     }
     Functions: {
       assert_credit_caller: { Args: { p_user_id: string }; Returns: undefined }
+      bump_rate_limit: {
+        Args: { p_bucket: string; p_max: number; p_window_seconds: number }
+        Returns: boolean
+      }
       get_shared_chat: {
         Args: { p_share_id: string }
         Returns: {
