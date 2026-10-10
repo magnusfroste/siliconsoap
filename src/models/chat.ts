@@ -50,6 +50,8 @@ export interface ChatMessage {
   model: string;
   persona: string;
   isHuman?: boolean;
+  answeredByModel?: string;
+  answered_by_model?: string | null;
   created_at?: string;
 }
 
