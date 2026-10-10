@@ -227,7 +227,7 @@ var get_debate_default = defineTool2({
     const { data: debate, error } = await query.maybeSingle();
     if (error) return fail(error.message);
     if (!debate) return fail("Debate not found (or not public).");
-    const { data: messages, error: msgErr } = await supabase.from("agent_chat_messages").select("agent, persona, message, model, created_at").eq("chat_id", debate.id).order("created_at", { ascending: true });
+    const { data: messages, error: msgErr } = await supabase.from("agent_chat_messages").select("agent, persona, message, model, answered_by_model, created_at").eq("chat_id", debate.id).order("created_at", { ascending: true });
     if (msgErr) return fail(msgErr.message);
     return ok({
       debate,

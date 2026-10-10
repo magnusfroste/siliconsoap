@@ -1,6 +1,7 @@
 import type { CuratedModel } from '@/models/model';
 import { resolveCast, isDebateComplete, withRounds, type AgentNames, type SharedMsg } from '@/pages/agents-meetup/utils/debatePresentation';
 import { stripSpeakerLabel } from '@/pages/agents-meetup/utils/speakerLabel';
+import { answeredByOf } from '@/pages/agents-meetup/utils/fallbackLabel';
 
 export type ExploreFilters = { tab: string; origin: string; license: string; model: string; q: string };
 export type ExploreSettings = { models?: Record<string, string>; personas?: Record<string, string>; agentNames?: AgentNames; numberOfAgents?: number; rounds?: number; analysisResults?: string };

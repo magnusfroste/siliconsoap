@@ -24,7 +24,7 @@ export default defineTool({
 
     const { data: messages, error: msgErr } = await supabase
       .from("agent_chat_messages")
-      .select("agent, persona, message, model, created_at")
+      .select("agent, persona, message, model, answered_by_model, created_at")
       .eq("chat_id", debate.id)
       .order("created_at", { ascending: true });
     if (msgErr) return fail(msgErr.message);
