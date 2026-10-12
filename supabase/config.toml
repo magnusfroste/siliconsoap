@@ -10,7 +10,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.generate-model-info]
-verify_jwt = false
+verify_jwt = true
 
 [functions.og-image]
 verify_jwt = false
@@ -22,13 +22,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.check-huggingface]
-verify_jwt = false
+verify_jwt = true
 
 [functions.seed-debates]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-model-pricing]
-verify_jwt = false
+verify_jwt = true
 
 [functions.log-battle-start]
 verify_jwt = false
@@ -46,7 +46,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-trending-topics]
-verify_jwt = false
+verify_jwt = true
 
 [functions.debates-api]
 verify_jwt = false
