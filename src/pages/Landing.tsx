@@ -111,7 +111,7 @@ export const Landing = () => {
           <Link to="/" aria-label="SiliconSoap home">
             <Logo />
           </Link>
-          <div className="hidden items-center gap-8 text-[15px] font-medium lg:flex">
+          <div className="hidden items-center gap-8 text-[15px] font-medium xl:flex">
             {navLinks.map((link) =>
               link.to.startsWith('#') ? (
                 <a key={link.label} href={link.to} style={{ color: '#17161C' }}>
@@ -124,7 +124,7 @@ export const Landing = () => {
               ),
             )}
           </div>
-          <div className="hidden items-center gap-5 lg:flex">
+          <div className="hidden items-center gap-5 xl:flex">
             <Link to="/auth" className="text-[15px] font-medium" style={{ color: '#17161C' }}>
               Sign in
             </Link>
@@ -141,7 +141,7 @@ export const Landing = () => {
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border xl:hidden"
             style={{ borderColor: '#D6D0C4', background: '#FFFFFF' }}
           >
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -149,7 +149,7 @@ export const Landing = () => {
         </div>
         {menuOpen && (
           <div
-            className="flex flex-col gap-1 border-t px-4 py-4 lg:hidden"
+            className="flex flex-col gap-1 border-t px-4 py-4 xl:hidden"
             style={{ borderColor: '#E2DED6', background: '#FFFFFF' }}
           >
             {navLinks.map((link) =>
