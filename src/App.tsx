@@ -30,6 +30,7 @@ const ExploreView = lazy(() => import("./pages/agents-meetup/views/ExploreView")
 const LeaderboardView = lazy(() => import("./pages/agents-meetup/views/LeaderboardView"));
 const PaymentSuccessView = lazy(() => import("./pages/agents-meetup/views/PaymentSuccessView").then(m => ({ default: m.PaymentSuccessView })));
 const ApiDocsView = lazy(() => import("./pages/ApiDocsView"));
+const ConnectView = lazy(() => import("./pages/connect/ConnectView"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 
@@ -100,6 +101,7 @@ const App = () => {
                 </Route>
                 <Route path="/shared/:shareId" element={<ErrorBoundary><SharedChatView /></ErrorBoundary>} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/connect" element={<ErrorBoundary><ConnectView /></ErrorBoundary>} />
                 <Route path="/api-docs" element={<ErrorBoundary><ApiDocsView /></ErrorBoundary>} />
                 <Route path="/.lovable/oauth/consent" element={<ErrorBoundary><OAuthConsent /></ErrorBoundary>} />
 

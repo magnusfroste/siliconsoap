@@ -1,5 +1,12 @@
 # Roadmap
 
+## Agent pivot A fixes and B
+- [x] Constrained fallbacks, synthesis attribution, validate-before-charge/refund, guest pricing and batch cap
+- [x] Atomic claim and account connector creation
+- [x] /connect, navigation, landing section and panel history/synthesis
+- [x] Tests, function deployment, desktop/mobile verification and revoke the single test link
+- [ ] Signed-in automatic claim/account-link and owned transcript UI verification — no requesting-user account/session available; no test accounts permitted
+
 ## Explore and favicon
 - [x] Build editorial Explore, featured transcript quote, URL filters and paged complete-debate archive
 - [x] Install supplied icons, SVG, manifest and head links

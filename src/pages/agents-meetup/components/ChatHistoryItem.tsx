@@ -28,7 +28,7 @@ export const ChatHistoryItem = ({ chat, onDelete }: ChatHistoryItemProps) => {
         to={`/chat/${chat.id}`}
         className="flex items-center gap-2 p-2 pr-8"
       >
-        <div className="min-w-0 flex-1"><span className="line-clamp-2 text-sm font-medium">{chat.title}</span><span className={`mt-1 block text-xs ${isActive && live ? 'text-primary' : 'text-muted-foreground'}`}>{isActive && live ? 'Live now' : chat.is_shared ? 'Public' : new Date(chat.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></div>
+        <div className="min-w-0 flex-1"><span className="line-clamp-2 text-sm font-medium">{chat.title}</span>{chat.is_panel && <span className="mt-1 inline-flex rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">Panel</span>}<span className={`mt-1 block text-xs ${isActive && live ? 'text-primary' : 'text-muted-foreground'}`}>{isActive && live ? 'Live now' : chat.is_shared ? 'Public' : new Date(chat.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></div>
       </Link>
       <Button
         variant="ghost"

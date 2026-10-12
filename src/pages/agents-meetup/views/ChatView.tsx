@@ -1,3 +1,4 @@
+import { PanelSynthesis } from '../components/PanelSynthesis';
 import { DebateMessage } from '../components/DebateMessage';
 import { DebateProgress, AnsweringMessage, getLiveRound, useAnsweringClock } from '../components/DebateProgress';
 import { DebateCompletion } from '../components/DebateCompletion';
@@ -135,7 +136,7 @@ export const ChatView = () => {
     if (!chat || loading || isGenerating || messages.length === 0) return;
     const settings = chat.settings as any;
     const agentMessages = messages.filter(m => !m.isHuman && m.agent !== 'You');
-    if (isDebateComplete(agentMessages.length, settings?.numberOfAgents || 2, settings?.rounds || 1)) {
+    if (settings?.mode === 'panel' || isDebateComplete(agentMessages.length, settings?.numberOfAgents || 2, settings?.rounds || 1)) {
       setConversationComplete(true);
     }
   }, [chat, loading, isGenerating, messages.length]);
@@ -677,6 +678,7 @@ export const ChatView = () => {
     {isGenerating && <DebateProgress settings={settings} messages={messages} answeringAgent={answeringAgent} seconds={answeringSeconds} models={state.availableModels} />}
     <ScrollArea className="min-h-0 flex-1" ref={scrollAreaRef}>
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-5 md:px-8 md:py-8">
+        {chat.settings?.mode === 'panel' && <PanelSynthesis synthesis={chat.settings.panelSynthesis} />}
         {rounded.map((entry, position) => {
           const index = messages.indexOf(entry.message);
           if (theaterMode && (isPlaying || isPaused) && index > currentMessageIndex) return null;

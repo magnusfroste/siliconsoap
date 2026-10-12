@@ -1,6 +1,8 @@
 // Chat domain models - single source of truth for chat-related types
 
 export interface ChatSettings {
+  mode?: 'panel';
+  panelSynthesis?: PanelSynthesisData;
   numberOfAgents: number;
   rounds: number;
   responseLength: 'short' | 'medium' | 'long';
@@ -68,3 +70,10 @@ export interface CreateChatInput {
   prompt: string;
   settings: ChatSettings;
 }
+
+export type PanelSynthesisData = {
+  bottom_line: string; confidence: string; agreements: string[];
+  disagreements: { point: string; positions: { model: string; stance: string }[] }[];
+  unsourced_numbers: { claim: string; model: string }[];
+  draft_verdict?: string; key_fixes?: string[];
+};

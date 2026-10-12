@@ -1,3 +1,4 @@
+import { AgentLandingSection } from '@/components/connect/AgentLandingSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ArrowRight, Flag } from 'lucide-react';
@@ -21,7 +22,7 @@ const NAV_LINKS = [
   { label: 'Models', to: '/models' },
   { label: 'Hall of Shame', to: '#hall-of-shame', flag: 'show_landing_hall_of_shame' },
   { label: 'Learn', to: '/learn' },
-  { label: 'API & MCP', to: '/api-docs' },
+  { label: 'Connect your agent', to: '/connect' },
 ];
 
 function Chip({
@@ -544,6 +545,7 @@ export const Landing = () => {
                             New this week
                           </Chip>
                         )}
+
                         {isOpenWeights(col.license) ? (
                           <Chip bg="#E2F1E7" color="#1B6B45">
                             Open weights
@@ -603,6 +605,8 @@ export const Landing = () => {
           </div>
         </section>
       )}
+
+      <AgentLandingSection />
 
       {/* How it works */}
       <section className="px-4 py-11 md:px-10 md:py-24" style={{ background: '#EDE9E1' }}>
