@@ -228,7 +228,7 @@ export const UsersTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-amber-500" />
+              <Coins className="h-5 w-5 text-chip-warning-fg" />
               <div>
                 <p className="text-2xl font-bold">{totalCreditsRemaining}</p>
                 <p className="text-sm text-muted-foreground">Credits Remaining</p>
@@ -240,7 +240,7 @@ export const UsersTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
+              <TrendingUp className="h-5 w-5 text-chip-open-fg" />
               <div>
                 <p className="text-2xl font-bold">{totalCreditsUsed}</p>
                 <p className="text-sm text-muted-foreground">Credits Used</p>
@@ -252,7 +252,7 @@ export const UsersTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-purple-500" />
+              <Zap className="h-5 w-5 text-chip-fast-fg" />
               <div>
                 <p className="text-2xl font-bold">{formatTokens(totalTokensUsed)}</p>
                 <p className="text-sm text-muted-foreground">Tokens Used</p>
@@ -264,11 +264,11 @@ export const UsersTab = () => {
 
       {/* Legacy Data Cleanup */}
       {unknownRecordsCount > 0 && (
-        <Card className="border-amber-500/50 bg-amber-500/5">
+        <Card className="border-chip-warning-fg/50 bg-chip-warning-bg/5">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <AlertTriangle className="h-5 w-5 text-chip-warning-fg" />
                 <div>
                   <p className="font-medium">Legacy Token Records Found</p>
                   <p className="text-sm text-muted-foreground">

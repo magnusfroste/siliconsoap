@@ -176,12 +176,12 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
       </div>
 
       {/* Balance Card */}
-      <Card className="bg-gradient-to-r from-amber-500/10 to-amber-600/5 border-amber-500/20">
+      <Card className="bg-chip-warning-bg/30 border-border">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-amber-500/20">
-                <Coins className="h-8 w-8 text-amber-500" />
+              <div className="p-3 rounded-full bg-chip-warning-bg/20">
+                <Coins className="h-8 w-8 text-chip-warning-fg" />
               </div>
               <div>
                 <p className="text-4xl font-bold">{user.credits_remaining}</p>
@@ -201,7 +201,7 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-purple-500" />
+              <Zap className="h-5 w-5 text-chip-fast-fg" />
               <div>
                 <p className="text-2xl font-bold">{formatTokens(totalTokensFromHistory)}</p>
                 <p className="text-sm text-muted-foreground">Total Tokens</p>
@@ -213,7 +213,7 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-500" />
+              <BarChart3 className="h-5 w-5 text-chip-fast-fg" />
               <div>
                 <p className="text-2xl font-bold">{tokenUsage.length}</p>
                 <p className="text-sm text-muted-foreground">API Calls</p>
@@ -225,7 +225,7 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-500" />
+              <MessageSquare className="h-5 w-5 text-chip-open-fg" />
               <div>
                 <p className="text-2xl font-bold">{user.total_debates}</p>
                 <p className="text-sm text-muted-foreground">Debates</p>
@@ -237,7 +237,7 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Coins className="h-5 w-5 text-amber-500" />
+              <Coins className="h-5 w-5 text-chip-warning-fg" />
               <div>
                 <p className="text-2xl font-bold">{formatCost(totalCostFromHistory)}</p>
                 <p className="text-sm text-muted-foreground">Est. Cost</p>
@@ -429,7 +429,7 @@ export const UserDetailView = ({ user, onBack }: UserDetailViewProps) => {
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="secondary" className="text-xs gap-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 border-amber-500/20">
+                                  <Badge variant="secondary" className="text-xs gap-1 px-1.5 py-0.5 bg-chip-warning-bg/10 text-chip-warning-fg border-chip-warning-fg/20">
                                     <ArrowRightLeft className="h-3 w-3" />
                                     fallback
                                   </Badge>

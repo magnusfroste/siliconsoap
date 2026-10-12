@@ -126,15 +126,15 @@ export const ElevenLabsTab = () => {
             </div>
             <Progress
               value={usage.characterUsagePercent}
-              className={isCritical ? '[&>div]:bg-destructive' : isHigh ? '[&>div]:bg-amber-500' : ''}
+              className={isCritical ? '[&>div]:bg-destructive' : isHigh ? '[&>div]:bg-chip-warning-bg' : ''}
             />
             <div className="flex items-center justify-between text-sm">
-              <span className={isCritical ? 'text-destructive font-medium' : isHigh ? 'text-amber-600 font-medium' : 'text-muted-foreground'}>
+              <span className={isCritical ? 'text-destructive font-medium' : isHigh ? 'text-chip-warning-fg font-medium' : 'text-muted-foreground'}>
                 {usage.characterUsagePercent}% used
               </span>
               {(isHigh || isCritical) && (
-                <Badge variant={isCritical ? 'destructive' : 'outline'} className={!isCritical ? 'border-amber-500 text-amber-600' : ''}>
-                  {isCritical ? '⚠️ Critical' : '⚠️ High'}
+                <Badge variant={isCritical ? 'destructive' : 'outline'} className={!isCritical ? 'border-chip-warning-fg text-chip-warning-fg' : ''}>
+                  {isCritical ? 'Critical' : 'High'}
                 </Badge>
               )}
             </div>
