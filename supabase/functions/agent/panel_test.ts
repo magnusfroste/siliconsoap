@@ -125,10 +125,11 @@ Deno.test('open-weight fallback never uses closed models; mixed prefers same ori
   assertEquals(fallbackCandidates('mixed', roster[0], cast, roster)[0].origin_region, 'EU');
   assertEquals(fallbackCandidates(['mistral/small','nvidia/nano'], roster[0], cast, roster)[0].origin_region, 'EU');
 });
-Deno.test('guest resolution and explicit choices exclude premium and unknown price tiers', async () => {
+Deno.test('guest resolution and explicit choices exclude the top tier and unknown price tiers', async () => {
   const { eligibleModels } = await import('../_shared/panelPure.ts');
-  assert(!resolvePanel(['mistral/large','nvidia/nano'], roster, true).ok);
-  assert(resolvePanel(['mistral/large','nvidia/nano'], roster, false).ok);
+  const top = [...roster, m('anthropic/opus', { price_tier: 'elite' })];
+  assert(!resolvePanel(['anthropic/opus','nvidia/nano'], top, true).ok);
+  assert(resolvePanel(['anthropic/opus','nvidia/nano'], top, false).ok);
   assert(!eligibleModels([m('test/unknown',{ price_tier: null })], true).length);
   const r = resolvePanel('mixed', roster, true); assert(r.ok);
   assert(r.models.every(m => m.price_tier === 'budget' || m.price_tier === 'standard'));
