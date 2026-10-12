@@ -14,3 +14,5 @@
 
 - Keep roster and scoreboard data access in repositories, derivation in pure services and query/filter state in controller hooks; views only render the results.
 - Model scoreboard statistics come from a single aggregate-only security-definer RPC; never fetch private transcripts or auth email data in the browser.
+
+- Profile overview reads owned activity in a repository, splits panels in a pure service and exposes query state through a hook; no connector key is rendered in the profile.

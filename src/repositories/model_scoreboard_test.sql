@@ -17,28 +17,22 @@ BEGIN
  IF EXISTS (SELECT 1 FROM pg_proc WHERE oid='public.model_scoreboard()'::regprocedure AND (NOT prosecdef OR provolatile <> 's')) THEN RAISE EXCEPTION 'Must be stable security definer'; END IF;
 END $test$;
 
--- Verify all five original-text metrics against the eligible real rows. No text is returned.
+-- Run the actual aggregate SELECT over synthetic rows, without private-table access or persisted fixtures.
 DO $original_metrics$
-DECLARE bad integer;
+DECLARE body text; aggregate_sql text; result record;
 BEGIN
- WITH eligible AS (
- SELECT m.*, c.is_public FROM public.agent_chat_messages m JOIN public.agent_chats c ON c.id=m.chat_id
- LEFT JOIN auth.users u ON u.id=c.user_id LEFT JOIN public.agent_guest_keys k ON k.id=c.guest_key_id
- WHERE m.model <> 'human' AND m.agent <> 'You' AND c.deleted_at IS NULL
- AND coalesce(c.title,'') NOT LIKE '[Test]%' AND (u.email IS NULL OR lower(u.email) NOT LIKE '%@example.com')
- AND k.created_ip_hash IS DISTINCT FROM 'claude-qa'
- ), expected AS (
- SELECT model,
- count(*) FILTER (WHERE answered_by_model IS NULL) AS answers,
- count(DISTINCT chat_id) FILTER (WHERE answered_by_model IS NULL) AS debates,
- count(DISTINCT chat_id) FILTER (WHERE answered_by_model IS NULL AND is_public) AS public_debates,
- coalesce(round(avg(CASE WHEN btrim(message)='' THEN 0 ELSE cardinality(regexp_split_to_array(btrim(message),'\s+')) END) FILTER (WHERE answered_by_model IS NULL)),0) AS avg_words,
- count(*) FILTER (WHERE answered_by_model IS NULL AND message ~* '(\d+(\.\d+)?\s?%|[$€£]\s?\d|\d+(\.\d+)?\s?(billion|million|trillion|bn)\y)' AND message !~* '(according to|source:|\[\d+\]|https?://|study by|report by|data from)') AS unsourced_answers,
- count(*) FILTER (WHERE created_at >= timestamptz '2026-10-10 21:00+00') AS tracked_answers,
- count(*) FILTER (WHERE created_at >= timestamptz '2026-10-10 21:00+00' AND answered_by_model IS NULL) AS self_answered
- FROM eligible GROUP BY model
- ) SELECT count(*) INTO bad FROM expected e FULL JOIN public.model_scoreboard() s ON s.model_id=e.model
- WHERE ROW(e.answers,e.debates,e.public_debates,e.avg_words,e.unsourced_answers,e.tracked_answers,e.self_answered)
- IS DISTINCT FROM ROW(s.answers,s.debates,s.public_debates,s.avg_words,s.unsourced_answers,s.tracked_answers,s.self_answered);
- IF bad > 0 THEN RAISE EXCEPTION 'Original-only metrics or all-row tracked counts differ from expected'; END IF;
+ SELECT prosrc INTO body FROM pg_proc WHERE oid='public.model_scoreboard()'::regprocedure;
+ aggregate_sql := substring(body from position('SELECT e.model_id' in body));
+ EXECUTE 'WITH eligible(model_id,chat_id,is_public,message,created_at,answered_by_model) AS (VALUES
+ (''cast/model'',''original-chat'',true,''A 50% claim'',timestamptz ''2026-10-10 21:00+00'',NULL::text),
+ (''cast/model'',''fallback-chat'',true,''Fallback has 99% and many extra words'',timestamptz ''2026-10-11 21:00+00'',''fallback/model''),
+ (''cast/model'',''old-chat'',false,''According to a study 10%'',timestamptz ''2026-10-09 21:00+00'',NULL::text)
+ ) ' || aggregate_sql INTO result;
+ IF result.answers <> 2 THEN RAISE EXCEPTION 'Fallback text must not count as an answer'; END IF;
+ IF result.debates <> 2 THEN RAISE EXCEPTION 'Fallback-only chat must not count as a debate'; END IF;
+ IF result.public_debates <> 1 THEN RAISE EXCEPTION 'Fallback-only public chat must not count'; END IF;
+ IF result.avg_words <> 4 THEN RAISE EXCEPTION 'Average must exclude fallback words'; END IF;
+ IF result.unsourced_answers <> 1 THEN RAISE EXCEPTION 'Unsourced count must exclude fallback claim'; END IF;
+ IF result.tracked_answers <> 2 THEN RAISE EXCEPTION 'Tracked turns must retain fallback and include exact cutoff'; END IF;
+ IF result.self_answered <> 1 THEN RAISE EXCEPTION 'Self-answering must require null fallback'; END IF;
 END $original_metrics$;

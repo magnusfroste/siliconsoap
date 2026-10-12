@@ -56,7 +56,7 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Account menu">
+              <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Account menu">
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -86,7 +86,7 @@ export const ChatHeader = ({ onMenuClick, title }: ChatHeaderProps) => {
           </DropdownMenu>
         ) : (
           <Link to="/auth">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="min-h-11">
               Sign In
             </Button>
           </Link>

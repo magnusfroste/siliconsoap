@@ -36,6 +36,7 @@ export const SettingsView = () => {
             </div>
             <Switch
               id="dark-mode"
+              className="min-h-11 min-w-11"
               checked={theme === 'dark'}
               onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
             />
