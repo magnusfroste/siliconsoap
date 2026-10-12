@@ -7,15 +7,9 @@ export interface ModelInfoParams {
   supports_reasoning?: boolean;
 }
 
+/** Draft factual description only; admins review it before publishing. */
 export interface ModelInfoResult {
   description: string;
-  pros: string[];
-  cons: string[];
-  use_cases: string[];
-  avoid_cases: string[];
-  category: string;
-  speed_rating: string;
-  context_window: string;
 }
 
 export const modelInfoService = {

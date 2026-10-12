@@ -158,35 +158,11 @@ export const CuratedModelsManager = () => {
         supports_reasoning: model.supports_reasoning,
       });
 
-      // Update the model with generated content
-      await updateModelContent(model.id, {
-        description: data.description,
-        pros: data.pros,
-        cons: data.cons,
-        use_cases: data.use_cases,
-        avoid_cases: data.avoid_cases,
-        category: data.category,
-        speed_rating: data.speed_rating,
-        context_window: parseInt(data.context_window) || null,
-      });
+      // Only a draft factual description is generated
+      await updateModelContent(model.id, { description: data.description });
 
-      // Update local state
       setCuratedModels(prev =>
-        prev.map(m =>
-          m.id === model.id
-            ? {
-                ...m,
-                description: data.description,
-                pros: data.pros,
-                cons: data.cons,
-                use_cases: data.use_cases,
-                avoid_cases: data.avoid_cases,
-                category: data.category,
-                speed_rating: data.speed_rating,
-                context_window: parseInt(data.context_window) || null,
-              }
-            : m
-        )
+        prev.map(m => (m.id === model.id ? { ...m, description: data.description } : m))
       );
 
       // Auto-expand the model to show generated content
@@ -223,33 +199,10 @@ export const CuratedModelsManager = () => {
           provider: model.provider,
         });
 
-        await updateModelContent(model.id, {
-          description: data.description,
-          pros: data.pros,
-          cons: data.cons,
-          use_cases: data.use_cases,
-          avoid_cases: data.avoid_cases,
-          category: data.category,
-          speed_rating: data.speed_rating,
-          context_window: parseInt(data.context_window) || null,
-        });
+        await updateModelContent(model.id, { description: data.description });
 
         setCuratedModels(prev =>
-          prev.map(m =>
-            m.id === model.id
-              ? {
-                  ...m,
-                  description: data.description,
-                  pros: data.pros,
-                  cons: data.cons,
-                  use_cases: data.use_cases,
-                  avoid_cases: data.avoid_cases,
-                  category: data.category,
-                  speed_rating: data.speed_rating,
-                  context_window: parseInt(data.context_window) || null,
-                }
-              : m
-          )
+          prev.map(m => (m.id === model.id ? { ...m, description: data.description } : m))
         );
       } catch (error: any) {
         console.error(`Error generating info for ${model.display_name}:`, error);
@@ -367,8 +320,7 @@ export const CuratedModelsManager = () => {
     return acc;
   }, {} as Record<string, OpenRouterModel[]>);
 
-  const hasEducationalContent = (model: CuratedModel) =>
-    model.description || model.pros?.length || model.cons?.length || model.use_cases?.length;
+  const hasEducationalContent = (model: CuratedModel) => !!model.description;
 
   if (loading) {
     return (
@@ -709,9 +661,6 @@ export const CuratedModelsManager = () => {
                                     <p className="text-sm mt-1">{model.description}</p>
                                   </div>
                                 )}
-
-                                  )}
-                                </div>
 
                                 <div className="flex gap-4 text-xs text-muted-foreground">
                                   {model.category && (
