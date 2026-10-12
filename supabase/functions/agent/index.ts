@@ -2,8 +2,8 @@
 // Auth: ?key=sk_guest_… / sk_silicon_… or Authorization: Bearer <key>. The key is never stored or logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getClientIp, hashIp } from '../_shared/requestGuards.ts';
-import { runPanel, validatePanelInput } from '../_shared/panelEngine.ts';
-import { ACCOUNT_KEY_RE, Caller, GUEST_KEY_RE, guestCreditResult, keyPrefix, ownsPanel, sha256Hex, shortName } from '../_shared/panelPure.ts';
+import { runPanel, validatePanelInput, preparePanel } from '../_shared/panelEngine.ts';
+import { chargedPanel, validBatch, ACCOUNT_KEY_RE, Caller, GUEST_KEY_RE, guestCreditResult, keyPrefix, ownsPanel, sha256Hex, shortName } from '../_shared/panelPure.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +57,7 @@ const text = (value: unknown, isError = false) => ({
   isError,
 });
 
-interface Ctx { supabase: any; caller: Caller; prefix: string; keyHash: string; ipHash: string; }
+interface Ctx { supabase: any; caller: Caller; prefix: string; keyHash: string; ipHash: string; connectorKeyId?: string; }
 
 async function rateLimit(supabase: any, bucket: string, max: number): Promise<boolean> {
   const { data, error } = await supabase.rpc('bump_rate_limit', { p_bucket: bucket, p_window_seconds: 3600, p_max: max });
@@ -93,9 +93,9 @@ async function callTool(ctx: Ctx, name: string, args: any) {
   const { supabase, caller } = ctx;
   if (name === 'list_panel_models') {
     const { data } = await supabase.from('curated_models')
-      .select('model_id, display_name, provider, origin_region, license_type, speed_rating')
+      .select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier')
       .eq('is_enabled', true).in('speed_rating', ['fast', 'medium']).order('sort_order');
-    return text({ models: (data ?? []).map((m: any) => ({ model: m.model_id, display_name: shortName(m.display_name), provider: m.provider, origin: m.origin_region, license: m.license_type, speed: m.speed_rating })) });
+    return text({ models: (data ?? []).map((m: any) => ({ model: m.model_id, display_name: shortName(m.display_name), provider: m.provider, origin: m.origin_region, license: m.license_type, speed: m.speed_rating, requires_account: !['budget', 'standard'].includes(m.price_tier) })) });
   }
   if (name === 'account_status') {
     const credits = await creditsLeft(ctx);
@@ -117,7 +117,9 @@ async function callTool(ctx: Ctx, name: string, args: any) {
     const apiKey = Deno.env.get('OPENROUTER_API_KEY');
     if (!apiKey) return text('The panel is temporarily unavailable.', true);
 
-    // Charge 1 credit up front (atomic).
+    const prepared = await preparePanel(supabase, parsed.input, caller.kind === 'guest');
+    if ('error' in prepared) return text(prepared.error, true);
+    // Charge only after input and roster validation.
     let remaining: number;
     if (caller.kind === 'guest') {
       const { data, error } = await supabase.rpc('use_guest_key_credit', { p_key_hash: ctx.keyHash });
@@ -131,7 +133,10 @@ async function callTool(ctx: Ctx, name: string, args: any) {
       remaining = row.new_remaining;
     }
     cleanupExpiredGuestPanels(supabase);
-    const out = await runPanel({ supabase, apiKey, input: parsed.input, userId: caller.kind === 'account' ? caller.userId : null, guestKeyId: caller.kind === 'guest' ? caller.guestKeyId : null });
+    const out = await chargedPanel(() => runPanel({ supabase, apiKey, input: parsed.input, prepared, userId: caller.kind === 'account' ? caller.userId : null, guestKeyId: ctx.connectorKeyId ?? (caller.kind === 'guest' ? caller.guestKeyId : null) }), async () => {
+      const { error } = caller.kind === 'guest' ? await supabase.rpc('refund_agent_guest_credit', { p_key_id: caller.guestKeyId }) : await supabase.rpc('refund_credit', { p_user_id: caller.userId });
+      if (error) throw new Error('Credit refund failed');
+    });
     if (!out.ok) return text(out.error, true);
     return text({ ...out.result, credits_remaining: remaining });
   }
@@ -145,9 +150,9 @@ async function authenticate(supabase: any, req: Request, url: URL): Promise<{ ct
   if (!key) return { error: `Missing key. ${hint}` };
   const keyHash = await sha256Hex(key);
   if (GUEST_KEY_RE.test(key)) {
-    const { data } = await supabase.from('agent_guest_keys').select('id, revoked_at').eq('key_hash', keyHash).maybeSingle();
+    const { data } = await supabase.from('agent_guest_keys').select('id, revoked_at, claimed_by').eq('key_hash', keyHash).maybeSingle();
     if (!data || data.revoked_at) return { error: `Invalid or revoked guest link. ${hint}` };
-    return { ctx: { caller: { kind: 'guest', guestKeyId: data.id }, prefix: keyPrefix(key), keyHash } };
+    return { ctx: { caller: data.claimed_by ? { kind: 'account', userId: data.claimed_by } : { kind: 'guest', guestKeyId: data.id }, connectorKeyId: data.id, prefix: keyPrefix(key), keyHash } };
   }
   if (ACCOUNT_KEY_RE.test(key)) {
     const { data } = await supabase.from('api_keys').select('id, user_id, revoked_at').eq('key_hash', keyHash).maybeSingle();
@@ -171,6 +176,7 @@ Deno.serve(async (req) => {
 
   let body: any;
   try { body = await req.json(); } catch { return json({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }, 400); }
+  if (!validBatch(body)) return json({ jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Batches must contain 1–5 messages.' } });
   const batch = Array.isArray(body) ? body : [body];
   const responses = (await Promise.all(batch.map((msg) => handle(ctx, msg)))).filter(Boolean);
   if (!responses.length) return new Response(null, { status: 202, headers: cors });

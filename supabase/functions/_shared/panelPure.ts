@@ -34,7 +34,8 @@ const add = (chosen: PanelModel[], m: PanelModel | undefined) => {
 
 export type Resolution = { ok: true; models: PanelModel[] } | { ok: false; error: string };
 
-export function resolvePanel(choice: PanelChoice | undefined, enabled: PanelModel[]): Resolution {
+export function resolvePanel(choice: PanelChoice | undefined, enabled: PanelModel[], guest = false): Resolution {
+  enabled = eligibleModels(enabled, guest);
   const pool = speedPool(enabled);
   const chosen: PanelModel[] = [];
   const c = choice ?? 'mixed';
@@ -85,7 +86,7 @@ export interface Synthesis {
   agreements: string[];
   disagreements: { point: string; positions: { model: string; stance: string }[] }[];
   unsourced_numbers: { claim: string; model: string }[];
-  positions: { model: string; display_name: string; origin: string | null; license: string | null; stance: string }[];
+  positions: { model: string; display_name: string; origin: string | null; license: string | null; stance: string; answered_by?: string[] }[];
   draft_verdict?: 'holds' | 'needs_changes' | 'wrong';
   key_fixes?: string[];
   synthesis_fallback?: boolean;
@@ -200,3 +201,27 @@ export function ownsPanel(caller: Caller, chat: { user_id: string | null; guest_
 /** Interprets use_guest_key_credit's return value. */
 export const guestCreditResult = (n: number | null | undefined) =>
   typeof n === 'number' && n >= 0 ? { ok: true as const, remaining: n } : { ok: false as const, remaining: 0 };
+
+export const eligibleModels = (models: PanelModel[], guest: boolean) => guest ? models.filter(m => m.price_tier === 'budget' || m.price_tier === 'standard') : models;
+export const validBatch = (body: unknown) => !Array.isArray(body) || (body.length > 0 && body.length <= 5);
+export function fallbackCandidates(choice: PanelChoice | undefined, seat: PanelModel, panel: PanelModel[], roster: PanelModel[]): PanelModel[] {
+  const available = speedPool(roster).filter(m => !panel.some(p => p.model_id === m.model_id));
+  if (choice === 'eu') return available.filter(m => m.origin_region === 'EU').sort((a,b) => Number(/mistral-medium-3\.5/i.test(b.model_id)) - Number(/mistral-medium-3\.5/i.test(a.model_id)));
+  if (choice === 'open-weights') return available.filter(m => m.license_type === 'open-weight');
+  return [...available.filter(m => m.origin_region === seat.origin_region), ...available.filter(m => m.origin_region !== seat.origin_region && m.speed_rating === 'fast')];
+}
+export async function chargedPanel<T extends { ok: boolean; result?: { answers: unknown[] } }>(run: () => Promise<T>, refund: () => Promise<void>): Promise<T> {
+  try { const out = await run(); if (!out.ok || !out.result?.answers.length) await refund(); return out; }
+  catch (e) { await refund(); throw e; }
+}
+export function attributeSynthesis(s: Synthesis, answers: Answer[], roster: PanelModel[]): Synthesis {
+  s.positions = s.positions.map(p => {
+    const turns = answers.filter(a => a.model === p.model);
+    const actual = turns.filter(a => a.answered_by_model).map(a => a.answered_by_model as string);
+    if (!actual.length) return p;
+    const last = turns[turns.length - 1];
+    const m = roster.find(m => m.model_id === last?.answered_by_model);
+    return { ...p, answered_by: [...new Set(actual)], ...(m ? { display_name: shortName(m.display_name), origin: m.origin_region, license: m.license_type } : {}), stance: last?.answered_by_model ? firstSentence(last.text) : p.stance };
+  });
+  return s;
+}

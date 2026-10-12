@@ -4,7 +4,7 @@ import { baseMaxTokens, effectiveMaxTokens } from './tokenBudget.ts';
 import { stripSpeakerLabel } from './speakerLabel.ts';
 import {
   ANGLES, Answer, FALLBACK_MODEL, PanelChoice, PanelModel, Synthesis,
-  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis,
+  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis,
 } from './panelPure.ts';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -84,20 +84,21 @@ async function callModel(apiKey: string, model: string, system: string, user: st
   return content;
 }
 
-/** Calls the model with a 20 s timeout, falling back to gpt-4o-mini. */
-async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[]) {
-  const attempt = async (model: string, disable: boolean) => {
+async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[], candidates: PanelModel[], notes: string[], deadline: number) {
+  for (const model of [m, ...candidates]) {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), CALL_TIMEOUT_MS);
-    try { return await callModel(apiKey, model, system, user, disable, 'short', ctrl.signal); }
-    finally { clearTimeout(t); }
-  };
-  try {
-    return { text: stripSpeakerLabel(await attempt(m.model_id, m.disable_reasoning), names), answered_by_model: null as string | null };
-  } catch (err) {
-    console.warn(`[panel] ${m.model_id} failed, falling back: ${err instanceof Error ? err.message : err}`);
-    return { text: stripSpeakerLabel(await attempt(FALLBACK_MODEL, true), names), answered_by_model: FALLBACK_MODEL };
+    const remaining = Math.min(CALL_TIMEOUT_MS, deadline - Date.now());
+    if (remaining <= 0) break;
+    const timer = setTimeout(() => ctrl.abort(), remaining);
+    try {
+      const text = stripSpeakerLabel(await callModel(apiKey, model.model_id, system, user, model.disable_reasoning, 'short', ctrl.signal), names);
+      if (model !== m) notes.push(`${m.model_id} was answered by ${model.model_id} as a constrained fallback.`);
+      return { text, answered_by_model: model === m ? null : model.model_id };
+    } catch { console.warn(`[panel] ${model.model_id} unavailable`); }
+    finally { clearTimeout(timer); }
   }
+  notes.push(`${m.model_id}: seat dropped for this round; no allowed fallback responded.`);
+  return null;
 }
 
 const SYSTEM_BASE = 'You are one member of a small panel of AI models from different labs, giving a second opinion to another AI assistant. Be direct and concrete. Cite sources only if you are sure they exist. If you are not sure of a number or fact, say "I\'m not sure" instead of inventing it. Reply with your own words only, without a name label.';
@@ -116,7 +117,7 @@ function round2Prompt(input: PanelInput, own: string, others: { name: string; te
 }
 
 function synthPrompt(input: PanelInput, panel: PanelModel[], answers: Answer[]) {
-  const transcript = answers.map((a) => `[${a.model} | round ${a.round}]\n${a.text}`).join('\n\n');
+  const transcript = answers.map((a) => `[${a.answered_by_model ? `answered by ${a.answered_by_model} as a fallback for ${a.model}` : a.model} | round ${a.round}]\n${a.text}`).join('\n\n');
   const review = input.draft
     ? `,\n  "draft_verdict": "holds" | "needs_changes" | "wrong",\n  "key_fixes": string[]`
     : '';
@@ -139,19 +140,19 @@ export async function runPanel(opts: {
   input: PanelInput;
   userId: string | null;
   guestKeyId: string | null;
+  prepared?: { panel: PanelModel[]; roster: PanelModel[] };
+  guest?: boolean;
 }): Promise<{ ok: true; result: PanelResult } | { ok: false; error: string }> {
   const started = Date.now();
   const { supabase, apiKey, input } = opts;
   const notes: string[] = [];
 
-  const { data: rows, error } = await supabase
-    .from('curated_models')
-    .select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier, sort_order, disable_reasoning')
-    .eq('is_enabled', true);
-  if (error) return { ok: false, error: 'Could not load the model roster.' };
-  const resolved = resolvePanel(input.panel, rows ?? []);
-  if (!resolved.ok) return resolved;
-  const panel = resolved.models;
+  const prepared = opts.prepared ?? await preparePanel(supabase, input, !!opts.guest);
+  if ('error' in prepared) return { ok: false, error: prepared.error };
+  const { panel, roster } = prepared;
+  if (Array.isArray(input.panel)) notes.push('Explicit picks use same-origin-preferred constrained fallbacks when unavailable.');
+  const candidates = (m: PanelModel) => fallbackCandidates(input.panel, m, panel, roster);
+  const deadline = started + TOTAL_BUDGET_MS - SYNTH_RESERVE_MS;
   const names = panel.map((m) => shortName(m.display_name));
   const mkAnswer = (m: PanelModel, round: number, r: { text: string; answered_by_model: string | null }): Answer => ({
     model: m.model_id, display_name: shortName(m.display_name), origin: m.origin_region, license: m.license_type,
@@ -159,13 +160,11 @@ export async function runPanel(opts: {
   });
 
   // Round 1
-  let r1: Answer[];
-  try {
-    r1 = await Promise.all(panel.map(async (m, i) =>
-      mkAnswer(m, 1, await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names))));
-  } catch (err) {
-    return { ok: false, error: `The panel could not answer right now (${err instanceof Error ? err.message : 'model error'}). Try again shortly.` };
-  }
+  const r1 = (await Promise.all(panel.map(async (m, i) => {
+    const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names, candidates(m), notes, deadline);
+    return result ? mkAnswer(m, 1, result) : null;
+  }))).filter((a): a is Answer => !!a);
+  if (!r1.length) return { ok: false, error: 'No allowed panel model could answer. Your credit has been refunded.' };
   const answers = [...r1];
 
   // Round 2
@@ -176,8 +175,11 @@ export async function runPanel(opts: {
     } else {
       const r2 = await Promise.all(panel.map(async (m, i) => {
         try {
-          const others = r1.filter((_, j) => j !== i).map((a) => ({ name: a.display_name, text: a.text }));
-          return mkAnswer(m, 2, await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, r1[i].text, others), names));
+          const own = r1.find(a => a.model === m.model_id);
+          if (!own) return null;
+          const others = r1.filter(a => a.model !== m.model_id).map(a => ({ name: a.answered_by_model ?? a.display_name, text: a.text }));
+          const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, own.text, others), names, candidates(m), notes, deadline);
+          return result ? mkAnswer(m, 2, result) : null;
         } catch { return null; }
       }));
       const ok = r2.filter((a): a is Answer => !!a);
@@ -210,6 +212,8 @@ export async function runPanel(opts: {
     notes.push('Synthesis was built from the raw answers because the judge output was unavailable or invalid.');
   }
 
+  synthesis = attributeSynthesis(synthesis, answers, roster);
+
   // Persist as a normal (private) debate
   const keys = panel.map((_, i) => `agent${LETTERS[i]}`);
   const settings = {
@@ -239,7 +243,15 @@ export async function runPanel(opts: {
       created_at: new Date(base + i).toISOString(),
     };
   }));
-  if (msgErr) console.warn('[panel] message insert failed', msgErr.message);
+  if (msgErr) { await supabase.from('agent_chats').update({ deleted_at: new Date().toISOString() }).eq('id', chat.id); return { ok: false, error: 'Could not save panel answers.' }; }
 
   return { ok: true, result: { debate_id: chat.id, synthesis, answers: ordered, took_ms: Date.now() - started, notes } };
+}
+
+export async function preparePanel(supabase: any, input: PanelInput, guest: boolean): Promise<{ panel: PanelModel[]; roster: PanelModel[] } | { error: string }> {
+  const { data, error } = await supabase.from('curated_models').select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier, sort_order, disable_reasoning').eq('is_enabled', true);
+  if (error) return { error: 'Could not load the model roster.' };
+  const roster = eligibleModels(data ?? [], guest);
+  const resolved = resolvePanel(input.panel, roster);
+  return resolved.ok ? { panel: resolved.models, roster } : { error: resolved.error + (guest ? ' Guest links allow budget and standard models only; premium models need an account.' : '') };
 }
