@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Droplets, Loader2, MessageSquare } from 'lucide-react';
+import { Droplets, Loader2, Mail, MessageSquare } from 'lucide-react';
 import { guestMigrationService } from '@/services/guestMigrationService';
 
 const Auth = () => {
@@ -15,6 +15,10 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -82,22 +86,51 @@ const Auth = () => {
   }, [navigate, location, safeNext]);
 
 
+  const startCooldown = () => setCooldown(60);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const confirmRedirect = `${window.location.origin}/auth${
+    safeNext ? `?next=${encodeURIComponent(safeNext)}` : ''
+  }`;
+
+  const handleResend = async () => {
+    if (!pendingEmail || cooldown > 0) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: pendingEmail,
+      options: { emailRedirectTo: confirmRedirect },
+    });
+    setResending(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Confirmation email sent.');
+      startCooldown();
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}${safeNext ?? '/new'}`
-      }
+      options: { emailRedirectTo: confirmRedirect },
     });
 
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success('Account created! You can now log in.');
+    } else if (!data.session) {
+      setPendingEmail(email);
+      setUnconfirmed(false);
+      startCooldown();
     }
     setLoading(false);
   };
@@ -112,7 +145,12 @@ const Auth = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      if (/email not confirmed/i.test(error.message)) {
+        setPendingEmail(email);
+        setUnconfirmed(true);
+      } else {
+        toast.error(error.message);
+      }
       setLoading(false);
     }
     // Navigation handled by onAuthStateChange after migration
@@ -156,6 +194,49 @@ const Auth = () => {
           )}
         </CardHeader>
         <CardContent className="space-y-6">
+          {pendingEmail ? (
+            <div className="space-y-4 text-center" role="status" aria-live="polite">
+              <Mail className="h-10 w-10 mx-auto text-primary" />
+              <h2 className="text-xl font-semibold">
+                {unconfirmed ? 'Please confirm your email first' : 'Check your inbox to confirm your email'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {unconfirmed
+                  ? 'Your account exists but the email address isn\u2019t confirmed yet. We sent a link to'
+                  : 'We sent a confirmation link to'}{' '}
+                <span className="font-medium text-foreground break-all">{pendingEmail}</span>.
+                Open it to finish signing up, then sign in.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={handleResend}
+                disabled={resending || cooldown > 0}
+              >
+                {resending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : cooldown > 0 ? (
+                  `Resend confirmation email (${cooldown}s)`
+                ) : (
+                  'Resend confirmation email'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setPendingEmail(null);
+                  setUnconfirmed(false);
+                  setIsSignUp(false);
+                }}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+          <>
           {/* Toggle Buttons */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg">
             <Button
@@ -215,6 +296,8 @@ const Auth = () => {
               )}
             </Button>
           </form>
+          </>
+          )}
         </CardContent>
       </Card>
     </div>
