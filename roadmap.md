@@ -35,3 +35,8 @@
 - [x] Restyle judge results/drawer and sidebar statuses
 - [x] Verify real guest generation, elapsed counter, pause/reply/skip, human turns, light/dark transcript, 375px completion, and preview diagnostics; 25 presentation tests pass
 - [ ] Verify enabled Judge Bot and audio flows end-to-end — blocked by their current disabled feature flags; no configuration changes requested
+
+## Site refresh batch 1
+- [ ] Editorial models, scoreboard, auth, about, learn and 404
+- [ ] Aggregate scoreboard RPC and rule tests
+- [ ] Navigation redirects, tests and desktop/mobile verification

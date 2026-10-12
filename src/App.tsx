@@ -27,7 +27,7 @@ const AboutView = lazy(() => import("./pages/agents-meetup/views/AboutView").the
 const SettingsView = lazy(() => import("./pages/agents-meetup/views/SettingsView").then(m => ({ default: m.SettingsView })));
 const AdminView = lazy(() => import("./pages/agents-meetup/views/AdminView").then(m => ({ default: m.AdminView })));
 const ExploreView = lazy(() => import("./pages/agents-meetup/views/ExploreView"));
-const LeaderboardView = lazy(() => import("./pages/agents-meetup/views/LeaderboardView"));
+const ScoreboardView = lazy(() => import("./pages/agents-meetup/views/ScoreboardView"));
 const PaymentSuccessView = lazy(() => import("./pages/agents-meetup/views/PaymentSuccessView").then(m => ({ default: m.PaymentSuccessView })));
 const ApiDocsView = lazy(() => import("./pages/ApiDocsView"));
 const ConnectView = lazy(() => import("./pages/connect/ConnectView"));
@@ -88,7 +88,8 @@ const App = () => {
                   <Route path="new" element={<ErrorBoundary><NewChatView /></ErrorBoundary>} />
                   <Route path="chat/:chatId" element={<ErrorBoundary><ChatView /></ErrorBoundary>} />
                   <Route path="explore" element={<ErrorBoundary><ExploreView /></ErrorBoundary>} />
-                  <Route path="leaderboard" element={<ErrorBoundary><LeaderboardView /></ErrorBoundary>} />
+                  <Route path="scoreboard" element={<ErrorBoundary><ScoreboardView /></ErrorBoundary>} />
+                  <Route path="leaderboard" element={<Navigate to="/scoreboard" replace />} />
                   <Route path="profile" element={<ErrorBoundary><ProfileView /></ErrorBoundary>} />
                   <Route path="agent-profiles" element={<ErrorBoundary><AgentProfilesView /></ErrorBoundary>} />
                   <Route path="learn" element={<ErrorBoundary><LearnView /></ErrorBoundary>} />

@@ -33,7 +33,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
     { key: 'explore', icon: Compass, label: 'Explore debates', path: '/explore', requiresAuth: false },
     { key: 'models', icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
     { key: 'learn', icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },
-    { key: 'leaderboard', icon: Trophy, label: 'Leaderboard', path: '/leaderboard', requiresAuth: false },
+    { key: 'scoreboard', icon: Trophy, label: 'Scoreboard', path: '/scoreboard', requiresAuth: false },
     { key: 'about', icon: Info, label: 'About', path: '/about', requiresAuth: false },
     { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
     { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },

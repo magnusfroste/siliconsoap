@@ -61,15 +61,16 @@ const Footer = () => {
           <div className="text-center md:text-right">
             <p className="text-sm text-muted-foreground mb-2">Explore</p>
             <div className="flex flex-col space-y-1">
-              <Link to="/labs/agents-meetup/learn" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/learn" className="text-sm text-foreground hover:text-primary transition-colors">
                 Learn about AI Models
               </Link>
-              <Link to="/labs/agents-meetup/learn?tab=about" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/about" className="text-sm text-foreground hover:text-primary transition-colors">
                 About SiliconSoap
               </Link>
-              <Link to="/labs/agents-meetup" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/new" className="text-sm text-foreground hover:text-primary transition-colors">
                 Start a Debate
               </Link>
+              <Link to="/scoreboard" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary">Scoreboard</Link>
             </div>
           </div>
         </div>
