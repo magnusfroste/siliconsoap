@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle, Info, Loader2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const PaymentSuccessView = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'none'>('loading');
   const [creditsAdded, setCreditsAdded] = useState(0);
 
   const sessionId = searchParams.get('session_id');
@@ -16,7 +16,7 @@ export const PaymentSuccessView = () => {
 
   useEffect(() => {
     if (!sessionId) {
-      setStatus('error');
+      setStatus('none');
       return;
     }
 
@@ -57,6 +57,29 @@ export const PaymentSuccessView = () => {
             <p className="text-muted-foreground">
               Please wait while we confirm your purchase.
             </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === 'none') {
+    return (
+      <div className="min-h-[70dvh] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center rounded-lg shadow-none">
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <Info className="h-16 w-16 text-muted-foreground" />
+            </div>
+            <CardTitle className="font-display text-2xl">No payment to confirm</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              This page confirms a purchase right after checkout. Nothing was started here.
+            </p>
+            <Button onClick={() => navigate('/new')} className="w-full min-h-11">
+              Start a debate
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -6,6 +6,12 @@ export { tokenService } from './tokenService';
 export type { TokenCostEstimate } from './tokenService';
 export * from './conversationService';
 export { settingsService } from './settingsService';
+export {
+  SIDEBAR_NAV_ITEMS,
+  resolveNavOrder,
+  serializeNavOrder,
+  type NavItem,
+} from './navOrderService';
 export { analyticsService } from './analyticsService';
 export type { ChatAnalytics, AnalyticsSummary, ModelUsageStats } from './analyticsService';
 export { modelInfoService } from './modelInfoService';
