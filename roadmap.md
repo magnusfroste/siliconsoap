@@ -40,3 +40,9 @@
 - [x] Editorial models, scoreboard, auth, about, learn and 404
 - [x] Aggregate scoreboard RPC and rule tests
 - [x] Navigation redirects, 92 tests and desktop/mobile verification
+
+## Site refresh batch 2
+- [ ] Correct scoreboard original-only behaviour metrics and SQL regression tests
+- [ ] Refresh profile, settings, roles, status, payment success, API docs and admin presentation
+- [ ] Confirm all six public navigation links and no legacy leaderboard links
+- [ ] Run tests and verify desktop/375px in both themes with authorized account where available
