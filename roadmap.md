@@ -47,3 +47,10 @@
 - [x] Confirm all six public navigation links and no legacy leaderboard links
 - [x] Run app and SQL tests; verify public/signed-out desktop/375px in both themes
 - [ ] Verify signed-in profile/settings/admin and paid-success state — blocked: no authorized session for requesting account; no test users created
+
+## Batch 2 cleanup
+- [x] Nav order editor: scoreboard + connect keys, keys preserved on save (pure service + tests)
+- [x] Delete dead LeaderboardView, its unused skeleton and dead query invalidation
+- [x] Status page meta and neutral no-session payment state
+- [ ] Stale `/leaderboard` entries in `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt` and the sitemap function — awaiting the user's go-ahead to edit SEO files and redeploy
+
