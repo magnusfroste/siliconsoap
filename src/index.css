@@ -134,6 +134,16 @@
 }
 
 @layer components {
+  .account-editorial button, .admin-editorial button { min-height: 44px; }
+  .account-editorial input, .admin-editorial input { min-height: 44px; }
+  .admin-editorial .shadow-sm { box-shadow: none; }
+  .admin-editorial .rounded-xl, .admin-editorial .rounded-2xl { border-radius: .5rem; }
+  .admin-editorial h2, .admin-editorial h3 { font-family: 'Fraunces Variable', 'Fraunces', serif; }
+  .admin-editorial pre, .docs-editorial code { overflow-wrap: anywhere; }
+  .admin-editorial .flex > div, .docs-editorial .flex > div { min-width: 0; }
+  .docs-editorial h2, .docs-editorial h3 { font-family: 'Fraunces Variable', 'Fraunces', serif; }
+  .docs-editorial table { table-layout: fixed; overflow-wrap: anywhere; }
+  .docs-editorial th, .docs-editorial td { padding: .5rem .25rem; }
   .learn-editorial .rounded-xl { border-radius: .5rem; }
   .learn-editorial h2, .learn-editorial h3 { font-family: 'Fraunces Variable', 'Fraunces', serif; }
   .learn-editorial a, .learn-editorial button { min-height: 44px; }
