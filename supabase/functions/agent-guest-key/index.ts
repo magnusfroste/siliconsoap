@@ -1,9 +1,12 @@
 // Creates a personal guest connector link for the "agent" MCP endpoint. The plaintext key is returned once.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { getClientIp, hashIp } from '../_shared/requestGuards.ts';
 import { generateGuestKey, keyPrefix, sha256Hex } from '../_shared/panelPure.ts';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
