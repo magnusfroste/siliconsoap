@@ -29,6 +29,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
   const location = useLocation();
 
   const navItems = [
+    { key: 'connect', icon: Bot, label: 'Connect your agent', path: '/connect', requiresAuth: false },
     { key: 'explore', icon: Compass, label: 'Explore debates', path: '/explore', requiresAuth: false },
     { key: 'models', icon: Cpu, label: 'Models', path: '/models', requiresAuth: false },
     { key: 'learn', icon: BookOpen, label: 'Learn', path: '/learn', requiresAuth: false },

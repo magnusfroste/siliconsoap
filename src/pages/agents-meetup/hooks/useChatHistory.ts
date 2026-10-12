@@ -11,6 +11,7 @@ export interface ChatHistoryItem {
   created_at: string;
   updated_at: string;
   is_shared: boolean;
+  is_panel?: boolean;
 }
 
 const mapGuestChats = (): ChatHistoryItem[] => {
@@ -33,6 +34,7 @@ const mapUserChats = async (userId: string): Promise<ChatHistoryItem[]> => {
     title: chat.title,
     created_at: chat.created_at || '',
     updated_at: chat.updated_at || '',
+    is_panel: chat.settings?.mode === 'panel',
     is_shared: chat.is_public === true && !!chat.share_id,
   }));
 };

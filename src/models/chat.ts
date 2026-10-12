@@ -1,6 +1,8 @@
 // Chat domain models - single source of truth for chat-related types
 
 export interface ChatSettings {
+  mode?: 'panel';
+  panelSynthesis?: import('@/pages/agents-meetup/components/PanelSynthesis').PanelSynthesisData;
   numberOfAgents: number;
   rounds: number;
   responseLength: 'short' | 'medium' | 'long';
