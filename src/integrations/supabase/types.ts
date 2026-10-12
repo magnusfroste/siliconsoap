@@ -844,6 +844,13 @@ export type Database = {
         Args: { p_bucket: string; p_max: number; p_window_seconds: number }
         Returns: boolean
       }
+      claim_agent_key: {
+        Args: { p_key_hash: string; p_user_id: string }
+        Returns: {
+          credits_added: number
+          panels_moved: number
+        }[]
+      }
       get_shared_chat: {
         Args: { p_share_id: string }
         Returns: {
@@ -872,6 +879,11 @@ export type Database = {
         Args: { p_share_id: string }
         Returns: undefined
       }
+      refund_agent_guest_credit: {
+        Args: { p_key_id: string }
+        Returns: undefined
+      }
+      refund_credit: { Args: { p_user_id: string }; Returns: undefined }
       use_credit: {
         Args: { p_user_id: string }
         Returns: {
