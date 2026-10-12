@@ -37,6 +37,6 @@
 - [ ] Verify enabled Judge Bot and audio flows end-to-end — blocked by their current disabled feature flags; no configuration changes requested
 
 ## Site refresh batch 1
-- [ ] Editorial models, scoreboard, auth, about, learn and 404
-- [ ] Aggregate scoreboard RPC and rule tests
-- [ ] Navigation redirects, tests and desktop/mobile verification
+- [x] Editorial models, scoreboard, auth, about, learn and 404
+- [x] Aggregate scoreboard RPC and rule tests
+- [x] Navigation redirects, 92 tests and desktop/mobile verification
