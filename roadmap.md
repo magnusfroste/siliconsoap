@@ -1,5 +1,11 @@
 # Roadmap
 
+## Agent pivot A fixes and B
+- [ ] Constrained fallbacks, synthesis attribution, validate-before-charge/refund, guest pricing and batch cap
+- [ ] Atomic claim and account connector creation
+- [ ] /connect, navigation, landing section and panel history/synthesis
+- [ ] Tests, function deployment, desktop/mobile verification and revoke any test link
+
 ## Explore and favicon
 - [x] Build editorial Explore, featured transcript quote, URL filters and paged complete-debate archive
 - [x] Install supplied icons, SVG, manifest and head links
