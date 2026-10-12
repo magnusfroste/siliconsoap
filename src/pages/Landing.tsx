@@ -545,7 +545,6 @@ export const Landing = () => {
                             New this week
                           </Chip>
                         )}
-      <AgentLandingSection />
 
                         {isOpenWeights(col.license) ? (
                           <Chip bg="#E2F1E7" color="#1B6B45">
@@ -606,6 +605,8 @@ export const Landing = () => {
           </div>
         </section>
       )}
+
+      <AgentLandingSection />
 
       {/* How it works */}
       <section className="px-4 py-11 md:px-10 md:py-24" style={{ background: '#EDE9E1' }}>
