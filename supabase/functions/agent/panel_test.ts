@@ -189,3 +189,22 @@ Deno.test('synthesis fallback positions name actual answering model', async () =
   assertEquals(result.positions[0].display_name, 'meta/maverick');
   assertEquals(result.positions[0].stance, 'A fallback position.');
 });
+Deno.test('a fallback model never answers two seats in the same round', async () => {
+  const { claimDistinct } = await import('../_shared/panelPure.ts');
+  const medium = m('mistralai/mistral-medium-3-5', { origin_region: 'EU' });
+  const taken = new Set(['mistral/small', 'mistral/large']);
+  assertEquals(claimDistinct([medium], taken)?.model_id, medium.model_id);
+  assertEquals(claimDistinct([medium], taken), undefined); // second seat: dropped
+  assertEquals(claimDistinct([medium, roster[7]], taken)?.model_id, 'meta/maverick');
+});
+Deno.test('fewer than 2 distinct round-1 models forces low confidence and a single-opinion note', async () => {
+  const { applySingleOpinion, SINGLE_OPINION_NOTE } = await import('../_shared/panelPure.ts');
+  const a = (model: string, by: string | null, round = 1) => ({ model, display_name: model, origin: 'EU', license: 'closed', round, text: 'x', answered_by_model: by });
+  const s = { bottom_line: 'b', confidence: 'high', agreements: [], disagreements: [], unsourced_numbers: [], positions: [] } as any;
+  const notes: string[] = [];
+  assertEquals(applySingleOpinion(s, [a('mistral/small', 'mistral/medium')], notes).confidence, 'low');
+  assertEquals(notes, [SINGLE_OPINION_NOTE]);
+  const n2: string[] = [];
+  assertEquals(applySingleOpinion(s, [a('mistral/small', null), a('mistral/large', 'mistral/medium')], n2).confidence, 'high');
+  assertEquals(n2, []);
+});

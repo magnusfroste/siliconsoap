@@ -4,7 +4,7 @@ import { baseMaxTokens, effectiveMaxTokens } from './tokenBudget.ts';
 import { stripSpeakerLabel } from './speakerLabel.ts';
 import {
   ANGLES, Answer, FALLBACK_MODEL, PanelChoice, PanelModel, Synthesis,
-  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis, guestFallbackRoster, fallbackNotes, isRateLimited, FallbackEvent,
+  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis, guestFallbackRoster, fallbackNotes, applySingleOpinion, claimDistinct, isRateLimited, FallbackEvent,
 } from './panelPure.ts';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -92,19 +92,27 @@ async function callModel(apiKey: string, model: string, system: string, user: st
   return content;
 }
 
-async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[], candidates: PanelModel[], events: FallbackEvent[], round: number, deadline: number) {
-  for (const model of [m, ...candidates]) {
-    if ((cooldown.get(model.model_id) ?? 0) > Date.now()) { console.warn(`[panel] ${model.model_id} cooling down after 429, skipped`); continue; }
-    const ctrl = new AbortController();
-    const remaining = Math.min(CALL_TIMEOUT_MS, deadline - Date.now());
-    if (remaining <= 0) break;
-    const timer = setTimeout(() => ctrl.abort(), remaining);
-    try {
-      const text = stripSpeakerLabel(await callModel(apiKey, model.model_id, system, user, model.disable_reasoning, 'short', ctrl.signal), names);
-      if (model !== m) events.push({ seat: m.model_id, by: model.model_id, round });
-      return { text, answered_by_model: model === m ? null : model.model_id };
-    } catch (err) { console.warn(`[panel] ${model.model_id} unavailable: ${err instanceof Error ? err.message : err}`); }
-    finally { clearTimeout(timer); }
+async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[], candidates: PanelModel[], events: FallbackEvent[], round: number, deadline: number, taken: Set<string>) {
+  // `taken` is shared by all seats of this round: seat models are pre-reserved, fallbacks reserve before calling.
+  const queue = [...candidates];
+  let model: PanelModel | undefined = m;
+  while (model) {
+    const cooling = (cooldown.get(model.model_id) ?? 0) > Date.now();
+    if (cooling) console.warn(`[panel] ${model.model_id} cooling down after 429, skipped`);
+    else {
+      const ctrl = new AbortController();
+      const remaining = Math.min(CALL_TIMEOUT_MS, deadline - Date.now());
+      if (remaining <= 0) break;
+      const timer = setTimeout(() => ctrl.abort(), remaining);
+      try {
+        const text = stripSpeakerLabel(await callModel(apiKey, model.model_id, system, user, model.disable_reasoning, 'short', ctrl.signal), names);
+        if (model !== m) events.push({ seat: m.model_id, by: model.model_id, round });
+        return { text, answered_by_model: model === m ? null : model.model_id };
+      } catch (err) { console.warn(`[panel] ${model.model_id} unavailable: ${err instanceof Error ? err.message : err}`); }
+      finally { clearTimeout(timer); }
+    }
+    model = claimDistinct(queue, taken);
+    if (model) queue.splice(queue.indexOf(model), 1);
   }
   events.push({ seat: m.model_id, by: null, round });
   return null;
@@ -171,8 +179,9 @@ export async function runPanel(opts: {
   });
 
   // Round 1
+  const taken1 = new Set(panel.map((p) => p.model_id));
   const r1 = (await Promise.all(panel.map(async (m, i) => {
-    const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names, candidates(m), events, 1, deadline);
+    const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names, candidates(m), events, 1, deadline, taken1);
     return result ? mkAnswer(m, 1, result) : null;
   }))).filter((a): a is Answer => !!a);
   if (!r1.length) return { ok: false, error: 'No allowed panel model could answer. Your credit has been refunded.' };
@@ -184,12 +193,13 @@ export async function runPanel(opts: {
     if (elapsed + ROUND2_ESTIMATE_MS + SYNTH_RESERVE_MS > TOTAL_BUDGET_MS) {
       notes.push(`Round 2 skipped: round 1 took ${Math.round(elapsed / 1000)} s and the 45 s budget would be exceeded.`);
     } else {
+      const taken2 = new Set(panel.map((p) => p.model_id));
       const r2 = await Promise.all(panel.map(async (m, i) => {
         try {
           const own = r1.find(a => a.model === m.model_id);
           if (!own) return null;
           const others = r1.filter(a => a.model !== m.model_id).map(a => ({ name: a.answered_by_model ?? a.display_name, text: a.text }));
-          const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, own.text, others), names, candidates(m), events, 2, deadline);
+          const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, own.text, others), names, candidates(m), events, 2, deadline, taken2);
           return result ? mkAnswer(m, 2, result) : null;
         } catch { return null; }
       }));
@@ -225,7 +235,7 @@ export async function runPanel(opts: {
     notes.push('Synthesis was built from the raw answers because the judge output was unavailable or invalid.');
   }
 
-  synthesis = attributeSynthesis(synthesis, answers, roster);
+  synthesis = applySingleOpinion(attributeSynthesis(synthesis, answers, roster), answers, notes);
 
   // Persist as a normal (private) debate
   const keys = panel.map((_, i) => `agent${LETTERS[i]}`);

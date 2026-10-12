@@ -270,3 +270,20 @@ export function attributeSynthesis(s: Synthesis, answers: Answer[], roster: Pane
   });
   return s;
 }
+
+/** Responders that answered a given round (fallback id when used, else the seat's model). */
+export const distinctResponders = (answers: Answer[], round = 1) =>
+  new Set(answers.filter((a) => a.round === round).map((a) => a.answered_by_model ?? a.model));
+export const SINGLE_OPINION_NOTE = 'Only one model was available for this panel, so this is a single opinion, not a panel';
+/** Forces low confidence when fewer than 2 distinct models answered round 1. */
+export function applySingleOpinion(s: Synthesis, answers: Answer[], notes: string[]): Synthesis {
+  if (distinctResponders(answers, 1).size >= 2) return s;
+  notes.push(SINGLE_OPINION_NOTE);
+  return { ...s, confidence: 'low' };
+}
+/** Atomically reserves the first candidate not yet answering a seat this round. */
+export function claimDistinct(candidates: PanelModel[], taken: Set<string>): PanelModel | undefined {
+  const m = candidates.find((c) => !taken.has(c.model_id));
+  if (m) taken.add(m.model_id);
+  return m;
+}
