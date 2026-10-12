@@ -1,6 +1,6 @@
 import { LicenseChip, OriginChip } from '@/components/model-chips';
 export function PanelExample({ compact = false }: { compact?: boolean }) {
-  return <div className="debate-completion rounded-lg p-5 md:p-7" aria-label="Example panel output">
+  return <div className="dark debate-completion rounded-lg p-5 md:p-7" aria-label="Example panel output">
     <div className="mb-4 flex justify-between gap-4 text-xs opacity-70"><span>{compact ? 'SECOND_OPINION · EXAMPLE' : 'Your assistant'}</span><span>Example output</span></div>
     {!compact && <p className="completion-tile ml-8 rounded-md p-3 text-sm leading-relaxed">Should we move our customer database from a US cloud to an EU provider this year? Get a second opinion first.</p>}
     <div className={compact ? 'space-y-4' : 'completion-tile my-4 space-y-4 rounded-md p-4'}>

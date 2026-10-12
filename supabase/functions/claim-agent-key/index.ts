@@ -9,7 +9,10 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   const token = req.headers.get('Authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!token) return json({ error: 'Please sign in to keep your panels.' }, 401);
-  const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const url = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !serviceKey) return json({ error: 'Claiming is temporarily unavailable.' }, 503);
+  const client = createClient(url, serviceKey);
   const { data, error } = await client.auth.getClaims(token);
   if (error || data?.claims?.role !== 'authenticated' || typeof data.claims.sub !== 'string') return json({ error: 'Please sign in to keep your panels.' }, 401);
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
