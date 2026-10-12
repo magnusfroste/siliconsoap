@@ -710,65 +710,6 @@ export const CuratedModelsManager = () => {
                                   </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-4">
-                                  {model.pros && model.pros.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-green-600 flex items-center gap-1">
-                                        <Check className="h-3 w-3" /> Strengths
-                                      </label>
-                                      <ul className="mt-1 space-y-1">
-                                        {model.pros.map((pro, i) => (
-                                          <li key={i} className="text-xs text-muted-foreground">
-                                            • {pro}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  {model.cons && model.cons.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-amber-600 flex items-center gap-1">
-                                        <AlertTriangle className="h-3 w-3" /> Limitations
-                                      </label>
-                                      <ul className="mt-1 space-y-1">
-                                        {model.cons.map((con, i) => (
-                                          <li key={i} className="text-xs text-muted-foreground">
-                                            • {con}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  {model.use_cases && model.use_cases.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Best For
-                                      </label>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {model.use_cases.map((uc, i) => (
-                                          <Badge key={i} variant="secondary" className="text-xs">
-                                            {uc}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {model.avoid_cases && model.avoid_cases.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Avoid For
-                                      </label>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {model.avoid_cases.map((ac, i) => (
-                                          <Badge key={i} variant="outline" className="text-xs">
-                                            {ac}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
                                   )}
                                 </div>
 
