@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
 
   const bearer = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
   let userId: string | null = null;
-  if (bearer) {
+  if (bearer && bearer !== Deno.env.get('SUPABASE_ANON_KEY')) {
     const { data, error } = await supabase.auth.getClaims(bearer);
     if (!error && data?.claims?.role === 'authenticated' && typeof data.claims.sub === 'string') userId = data.claims.sub;
     else if (!error && data?.claims?.role !== 'anon') return json({ error: 'Invalid session' }, 401);
