@@ -879,6 +879,19 @@ export type Database = {
         Args: { p_share_id: string }
         Returns: undefined
       }
+      model_scoreboard: {
+        Args: never
+        Returns: {
+          answers: number
+          avg_words: number
+          debates: number
+          model_id: string
+          public_debates: number
+          self_answered: number
+          tracked_answers: number
+          unsourced_answers: number
+        }[]
+      }
       refund_agent_guest_credit: {
         Args: { p_key_id: string }
         Returns: undefined

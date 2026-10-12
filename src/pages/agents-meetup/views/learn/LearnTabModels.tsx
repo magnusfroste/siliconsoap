@@ -55,28 +55,28 @@ export const LearnTabModels = () => {
               <div className="text-2xl font-bold text-primary">3B</div>
               <div className="text-sm font-medium">Small Models</div>
               <div className="text-xs text-muted-foreground mt-2">
-                ⚡ Very fast • Simple tasks • Runs on CPU
+                Very fast • Simple tasks • Runs on CPU
               </div>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border">
               <div className="text-2xl font-bold text-primary">7-8B</div>
               <div className="text-sm font-medium">Medium Models</div>
               <div className="text-xs text-muted-foreground mt-2">
-                🚀 Fast • General purpose • Consumer GPU
+                Fast • General purpose • Consumer GPU
               </div>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border">
               <div className="text-2xl font-bold text-primary">70B</div>
               <div className="text-sm font-medium">Large Models</div>
               <div className="text-xs text-muted-foreground mt-2">
-                🧠 Strong reasoning • Complex tasks
+                Strong reasoning • Complex tasks
               </div>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 border">
               <div className="text-2xl font-bold text-primary">405B+</div>
               <div className="text-sm font-medium">Frontier</div>
               <div className="text-xs text-muted-foreground mt-2">
-                🏆 Best quality • Expert tasks
+                Best quality • Expert tasks
               </div>
             </div>
           </div>
@@ -183,9 +183,9 @@ export const LearnTabModels = () => {
                 Trained to follow instructions and have conversations. Fast and versatile.
               </p>
               <div className="text-xs space-y-1 text-muted-foreground">
-                <div>✅ Conversations & chat</div>
-                <div>✅ Code generation</div>
-                <div>✅ Summarization</div>
+                <div>Conversations & chat</div>
+                <div>Code generation</div>
+                <div>Summarization</div>
               </div>
               <div className="mt-3 text-xs">
                 <span className="font-medium">Examples:</span> Llama 3.3, GPT-4o, Claude 3.5, Gemma 2
@@ -203,9 +203,9 @@ export const LearnTabModels = () => {
                 "Think step by step" before answering. Slower but more accurate.
               </p>
               <div className="text-xs space-y-1 text-muted-foreground">
-                <div>✅ Math & logic</div>
-                <div>✅ Complex analysis</div>
-                <div>✅ Code debugging</div>
+                <div>Math & logic</div>
+                <div>Complex analysis</div>
+                <div>Code debugging</div>
               </div>
               <div className="mt-3 text-xs">
                 <span className="font-medium">Examples:</span> OpenAI o1, DeepSeek R1, Qwen QwQ
@@ -264,7 +264,7 @@ export const LearnTabModels = () => {
       </Card>
 
       {/* CTA */}
-      <div className="p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+      <div className="p-6 rounded-xl bg-muted/30 border border-primary/20">
         <div className="text-center">
           <h3 className="font-semibold mb-2">Try different models yourself</h3>
           <p className="text-sm text-muted-foreground mb-4">

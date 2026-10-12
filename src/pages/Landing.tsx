@@ -20,6 +20,7 @@ const FONT_MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const NAV_LINKS = [
   { label: 'Explore debates', to: '/explore' },
   { label: 'Models', to: '/models' },
+  { label: 'Scoreboard', to: '/scoreboard' },
   { label: 'Hall of Shame', to: '#hall-of-shame', flag: 'show_landing_hall_of_shame' },
   { label: 'Learn', to: '/learn' },
   { label: 'Connect your agent', to: '/connect' },
@@ -863,8 +864,8 @@ export const Landing = () => {
               <Link to="/models" style={{ color: '#C9C6D2' }}>
                 Browse Models
               </Link>
-              <Link to="/leaderboard" style={{ color: '#C9C6D2' }}>
-                Leaderboard
+              <Link to="/scoreboard" style={{ color: '#C9C6D2' }}>
+                Scoreboard
               </Link>
             </div>
           </div>

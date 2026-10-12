@@ -162,7 +162,7 @@ export const LearnTabPrivacy = () => {
           </div>
 
           <div className="p-4 rounded-lg bg-muted/50 border">
-            <h4 className="font-medium mb-2">💡 When does each make sense?</h4>
+            <h4 className="font-medium mb-2">When does each make sense?</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• <strong>Low volume:</strong> Cloud API is easiest to get started</li>
               <li>• <strong>High volume:</strong> Self-hosting becomes cheaper over time</li>
@@ -174,7 +174,7 @@ export const LearnTabPrivacy = () => {
       </Card>
 
       {/* Open vs Closed Quick Comparison */}
-      <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+      <Card className="bg-card border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-primary" />
@@ -194,28 +194,28 @@ export const LearnTabPrivacy = () => {
               <tbody className="text-muted-foreground">
                 <tr className="border-b">
                   <td className="py-2 font-medium text-foreground">Transparency</td>
-                  <td className="py-2">✅ Full access to weights</td>
-                  <td className="py-2">❌ Black box</td>
+                  <td className="py-2">Full access to weights</td>
+                  <td className="py-2">Black box</td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-2 font-medium text-foreground">Privacy</td>
-                  <td className="py-2">✅ Run locally, data stays private</td>
-                  <td className="py-2">⚠️ Data sent to provider</td>
+                  <td className="py-2">Run locally, data stays private</td>
+                  <td className="py-2">Data sent to provider</td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-2 font-medium text-foreground">Customization</td>
-                  <td className="py-2">✅ Fine-tune freely</td>
-                  <td className="py-2">⚠️ Limited to API params</td>
+                  <td className="py-2">Fine-tune freely</td>
+                  <td className="py-2">Limited to API params</td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-2 font-medium text-foreground">Cost at Scale</td>
-                  <td className="py-2">✅ Fixed hardware cost</td>
-                  <td className="py-2">❌ Linear token cost</td>
+                  <td className="py-2">Fixed hardware cost</td>
+                  <td className="py-2">Linear token cost</td>
                 </tr>
                 <tr>
                   <td className="py-2 font-medium text-foreground">Setup Effort</td>
-                  <td className="py-2">⚠️ Requires infrastructure</td>
-                  <td className="py-2">✅ API key and go</td>
+                  <td className="py-2">Requires infrastructure</td>
+                  <td className="py-2">API key and go</td>
                 </tr>
               </tbody>
             </table>
@@ -310,7 +310,7 @@ export const LearnTabPrivacy = () => {
       </Card>
 
       {/* CTA */}
-      <div className="p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+      <div className="p-6 rounded-xl bg-muted/30 border border-primary/20">
         <div className="text-center">
           <h3 className="font-semibold mb-2">Ready to run AI locally?</h3>
           <p className="text-sm text-muted-foreground mb-4">

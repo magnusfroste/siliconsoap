@@ -188,7 +188,7 @@ export const LearnTabGlossary = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="p-4 rounded-lg bg-muted/30 border">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Thermometer className="h-4 w-4 text-orange-500" />
+                <Thermometer className="h-4 w-4 text-chip-warning-fg" />
                 Temperature Settings
               </h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
@@ -199,7 +199,7 @@ export const LearnTabGlossary = () => {
             </div>
             <div className="p-4 rounded-lg bg-muted/30 border">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-blue-500" />
+                <Cpu className="h-4 w-4 text-primary" />
                 Model Size Guide
               </h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
@@ -214,7 +214,7 @@ export const LearnTabGlossary = () => {
       </Card>
 
       {/* CTA */}
-      <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+      <div className="mt-8 p-6 rounded-xl bg-muted/30 border border-primary/20">
         <div className="flex justify-center">
           <Button
             variant="default"
