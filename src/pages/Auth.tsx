@@ -194,6 +194,49 @@ const Auth = () => {
           )}
         </CardHeader>
         <CardContent className="space-y-6">
+          {pendingEmail ? (
+            <div className="space-y-4 text-center" role="status" aria-live="polite">
+              <Mail className="h-10 w-10 mx-auto text-primary" />
+              <h2 className="text-xl font-semibold">
+                {unconfirmed ? 'Please confirm your email first' : 'Check your inbox to confirm your email'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {unconfirmed
+                  ? 'Your account exists but the email address isn\u2019t confirmed yet. We sent a link to'
+                  : 'We sent a confirmation link to'}{' '}
+                <span className="font-medium text-foreground break-all">{pendingEmail}</span>.
+                Open it to finish signing up, then sign in.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12"
+                onClick={handleResend}
+                disabled={resending || cooldown > 0}
+              >
+                {resending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : cooldown > 0 ? (
+                  `Resend confirmation email (${cooldown}s)`
+                ) : (
+                  'Resend confirmation email'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setPendingEmail(null);
+                  setUnconfirmed(false);
+                  setIsSignUp(false);
+                }}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+          <>
           {/* Toggle Buttons */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg">
             <Button
@@ -253,6 +296,8 @@ const Auth = () => {
               )}
             </Button>
           </form>
+          </>
+          )}
         </CardContent>
       </Card>
     </div>
