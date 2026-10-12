@@ -312,7 +312,7 @@ export const AnalyticsTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-blue-500" />
+              <Link2 className="h-5 w-5 text-chip-fast-fg" />
               <div>
                 <p className="text-2xl font-bold">{settingsStats.sharedRate}%</p>
                 <p className="text-sm text-muted-foreground">Shared Rate ({settingsStats.sharedCount})</p>
@@ -324,7 +324,7 @@ export const AnalyticsTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-purple-500" />
+              <Eye className="h-5 w-5 text-chip-fast-fg" />
               <div>
                 <p className="text-2xl font-bold">{settingsStats.spectatorRate}%</p>
                 <p className="text-sm text-muted-foreground">Spectator Mode</p>
@@ -336,7 +336,7 @@ export const AnalyticsTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-500" />
+              <MessageSquare className="h-5 w-5 text-chip-open-fg" />
               <div>
                 <p className="text-2xl font-bold">{settingsStats.jumpInCount}</p>
                 <p className="text-sm text-muted-foreground">Jump-in Debates</p>
@@ -348,10 +348,10 @@ export const AnalyticsTab = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2">
-              {settingsStats.popularTone === 'heated' && <Flame className="h-5 w-5 text-orange-500" />}
-              {settingsStats.popularTone === 'formal' && <Briefcase className="h-5 w-5 text-blue-500" />}
-              {settingsStats.popularTone === 'casual' && <Coffee className="h-5 w-5 text-amber-500" />}
-              {settingsStats.popularTone === 'collaborative' && <UsersRound className="h-5 w-5 text-green-500" />}
+              {settingsStats.popularTone === 'heated' && <Flame className="h-5 w-5 text-chip-warning-fg" />}
+              {settingsStats.popularTone === 'formal' && <Briefcase className="h-5 w-5 text-chip-fast-fg" />}
+              {settingsStats.popularTone === 'casual' && <Coffee className="h-5 w-5 text-chip-warning-fg" />}
+              {settingsStats.popularTone === 'collaborative' && <UsersRound className="h-5 w-5 text-chip-open-fg" />}
               {settingsStats.popularTone === 'N/A' && <BarChart3 className="h-5 w-5 text-muted-foreground" />}
               <div>
                 <p className="text-2xl font-bold capitalize">{settingsStats.popularTone}</p>
@@ -690,7 +690,7 @@ export const AnalyticsTab = () => {
                             href={`/s/${a.share_id}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-700"
+                            className="text-chip-fast-fg hover:text-chip-fast-fg"
                           >
                             <Link2 className="h-4 w-4" />
                           </a>
@@ -700,12 +700,12 @@ export const AnalyticsTab = () => {
                       </TableCell>
                       <TableCell>
                         {a.settings?.participationMode === 'spectator' ? (
-                          <Badge variant="outline" className="text-purple-600 border-purple-600">
+                          <Badge variant="outline" className="text-chip-fast-fg border-chip-fast-fg">
                             <Eye className="h-3 w-3 mr-1" />
                             Watch
                           </Badge>
                         ) : a.settings?.participationMode === 'jump-in' ? (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Badge variant="outline" className="text-chip-open-fg border-chip-open-fg">
                             <MessageSquare className="h-3 w-3 mr-1" />
                             Active
                           </Badge>
@@ -715,25 +715,25 @@ export const AnalyticsTab = () => {
                       </TableCell>
                       <TableCell>
                         {a.settings?.conversationTone === 'heated' && (
-                          <Badge variant="outline" className="text-orange-600 border-orange-600">
+                          <Badge variant="outline" className="text-chip-warning-fg border-chip-warning-fg">
                             <Flame className="h-3 w-3 mr-1" />
                             Heated
                           </Badge>
                         )}
                         {a.settings?.conversationTone === 'formal' && (
-                          <Badge variant="outline" className="text-blue-600 border-blue-600">
+                          <Badge variant="outline" className="text-chip-fast-fg border-chip-fast-fg">
                             <Briefcase className="h-3 w-3 mr-1" />
                             Formal
                           </Badge>
                         )}
                         {a.settings?.conversationTone === 'casual' && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-600">
+                          <Badge variant="outline" className="text-chip-warning-fg border-chip-warning-fg">
                             <Coffee className="h-3 w-3 mr-1" />
                             Casual
                           </Badge>
                         )}
                         {a.settings?.conversationTone === 'collaborative' && (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Badge variant="outline" className="text-chip-open-fg border-chip-open-fg">
                             <UsersRound className="h-3 w-3 mr-1" />
                             Collab
                           </Badge>
@@ -764,7 +764,7 @@ export const AnalyticsTab = () => {
                           const displayCount = actualCount ?? a.total_messages;
                           const hasMore = actualCount && actualCount > (a.total_messages || 0);
                           return (
-                            <span className={hasMore ? 'text-green-600 font-medium' : ''}>
+                            <span className={hasMore ? 'text-chip-open-fg font-medium' : ''}>
                               {displayCount}
                               {hasMore && <span className="text-xs text-muted-foreground ml-1">↑</span>}
                             </span>
@@ -784,8 +784,8 @@ export const AnalyticsTab = () => {
                               <Badge 
                                 variant="outline" 
                                 className={isFromAnalytics 
-                                  ? "text-amber-600 border-amber-600" 
-                                  : "text-cyan-600 border-cyan-600"
+                                  ? "text-chip-warning-fg border-chip-warning-fg" 
+                                  : "text-chip-open-fg border-chip-open-fg"
                                 }
                                 title={isFromAnalytics ? "From chat_analytics (no detailed token log)" : "From user_token_usage"}
                               >
@@ -798,11 +798,11 @@ export const AnalyticsTab = () => {
                       </TableCell>
                       <TableCell>
                         {a.completed_at ? (
-                          <Badge variant="outline" className="text-green-600 border-green-600">
+                          <Badge variant="outline" className="text-chip-open-fg border-chip-open-fg">
                             ✓
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                          <Badge variant="outline" className="text-chip-warning-fg border-chip-warning-fg">
                             ...
                           </Badge>
                         )}

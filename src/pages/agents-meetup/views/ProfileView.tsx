@@ -1,103 +1,18 @@
+import { useState } from 'react';
+import { CreditsExhaustedModal } from '../components/CreditsExhaustedModal';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { LogOut, Mail } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { PageHeader } from '@/components/editorial/PageHeader';
 import { useAuth } from '../hooks/useAuth';
+import { useCredits } from '../hooks/useCredits';
 import { useProfileStats, calculateRank } from '../hooks/useProfileStats';
-import { 
-  SiliconRankAvatar, 
-  ProfileStatsCards, 
-  ProfileDebatesList, 
-  NextRankProgress,
-  DisplayNameEditor
-} from '../components/profile';
-
-export const ProfileView = () => {
-  const { user, signOut } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useProfileStats(user?.id);
-
-  if (!user) {
-    return (
-      <div className="container max-w-4xl mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Please sign in to view your profile</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  const initials = user.email?.substring(0, 2).toUpperCase() || 'U';
-  const defaultStats = { totalDebates: 0, publicDebates: 0, totalViews: 0, totalReactions: 0, creditsUsed: 0 };
-  const currentStats = stats || defaultStats;
-  const rank = calculateRank(currentStats);
-
-  return (
-    <div className="container max-w-4xl mx-auto p-6 space-y-8">
-      {/* Hero Section with Silicon Rank */}
-      <Card className="overflow-hidden">
-        <div className="bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Avatar with rank */}
-            {statsLoading ? (
-              <div className="flex flex-col items-center gap-4">
-                <Skeleton className="h-24 w-24 rounded-full" />
-                <Skeleton className="h-6 w-32" />
-              </div>
-            ) : (
-              <SiliconRankAvatar 
-                initials={initials} 
-                rank={rank} 
-                stats={currentStats}
-              />
-            )}
-
-            {/* User info */}
-            <div className="flex-1 text-center md:text-left space-y-2">
-              <div className="flex items-center gap-2 justify-center md:justify-start">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <p className="font-medium">{user.email}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Member since {new Date(user.created_at || '').toLocaleDateString()}
-              </p>
-              <Button variant="destructive" size="sm" onClick={signOut} className="gap-2 mt-4">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Stats Cards */}
-      {statsLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
-        </div>
-      ) : (
-        <ProfileStatsCards stats={currentStats} />
-      )}
-
-      {/* Two column layout for display name and progress */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Display Name Editor */}
-        <DisplayNameEditor userId={user.id} />
-
-        {/* Next Rank Progress */}
-        {statsLoading ? (
-          <Skeleton className="h-48 rounded-lg" />
-        ) : (
-          <NextRankProgress currentRank={rank} stats={currentStats} />
-        )}
-      </div>
-
-      {/* User's Public Debates */}
-      <ProfileDebatesList userId={user.id} />
-    </div>
-  );
+import { DisplayNameEditor } from '../components/profile';
+import { useProfileOverview } from '@/hooks/useProfileOverview';
+import { usePageMeta } from '@/hooks/usePageMeta';
+export const ProfileView=()=>{
+ const [purchaseOpen,setPurchaseOpen]=useState(false); const {user,signOut}=useAuth(); const p=useProfileOverview(user?.id); const credits=useCredits(user?.id); const stats=useProfileStats(user?.id);
+ usePageMeta({title:'Your profile',description:'Your SiliconSoap debates, panels and connector link.',canonicalPath:'/profile'});
+ if(!user)return <div className="mx-auto max-w-4xl px-4 py-10"><PageHeader eyebrow="Your account" title="Profile" lead="Sign in to see your debates, panels and account details."/><Button asChild className="min-h-11"><Link to="/auth?next=/profile">Sign in</Link></Button></div>;
+ return <div className="account-editorial mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12"><PageHeader eyebrow="Your account" title={p.displayName||'Your profile'} lead={`Member since ${new Date(user.created_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`} action={<div><p className="text-sm">{credits.loading?'—':credits.creditsRemaining} credits left</p><Button variant="link" className="min-h-11 px-0" onClick={()=>setPurchaseOpen(true)}>Get more credits →</Button></div>}/>{stats.data&&<span className="inline-flex rounded-full bg-chip-closed-bg text-chip-closed-fg px-3 py-1 text-xs mb-6">{calculateRank(stats.data).title}</span>}{p.isError&&<p role="alert" className="mb-4">Your activity could not be loaded. <Button variant="outline" onClick={()=>p.refetch()}>Retry</Button></p>}<div className="grid gap-4 md:grid-cols-3">{[{label:'Your debates',items:p.debates,id:'your-debates'},{label:'Your panels',items:p.panels,id:'your-panels'}].map(s=><Card key={s.id} className="rounded-lg p-5 shadow-none"><h2 className="font-display text-xl">{s.label}</h2><p className="font-display text-3xl mt-3">{p.isLoading?'—':s.items.length}</p><Button variant="link" asChild className="min-h-11 px-0"><a href={`#${s.id}`}>View {s.label.toLowerCase().replace('your ','')} →</a></Button></Card>)}<Card className="rounded-lg p-5 shadow-none"><h2 className="font-display text-xl">Your connector link</h2><p className="text-sm text-muted-foreground mt-3">Account link: {p.hasAccountLink?'Yes':'No saved account link in this browser'}</p><Button variant="link" asChild className="min-h-11 px-0"><Link to="/connect">Connect your agent →</Link></Button></Card></div><div className="mt-6"><DisplayNameEditor userId={user.id}/></div>{[{label:'Your debates',items:p.debates,id:'your-debates'},{label:'Your panels',items:p.panels,id:'your-panels'}].map(s=><section key={s.id} id={s.id} className="mt-8 scroll-mt-6"><h2 className="font-display text-2xl mb-3">{s.label}</h2>{!s.items.length?<p className="text-sm text-muted-foreground">{p.isLoading?'Loading…':`No ${s.label.toLowerCase().replace('your ','')} yet.`}</p>:<div className="divide-y border-y">{s.items.map(c=><Link key={c.id} to={`/chat/${c.id}`} className="flex min-h-11 items-center justify-between gap-3 py-3"><span className="min-w-0 break-words text-sm">{c.title}</span><span aria-hidden="true">→</span></Link>)}</div>}</section>)}<Button variant="outline" className="mt-8 min-h-11" onClick={signOut}>Sign out</Button><CreditsExhaustedModal open={purchaseOpen} onOpenChange={setPurchaseOpen} isGuest={false}/></div>;
 };

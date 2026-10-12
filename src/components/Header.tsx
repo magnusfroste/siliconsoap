@@ -1,4 +1,5 @@
 
+import { Brand } from '@/components/editorial/Brand';
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Home, Droplets } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -46,11 +47,8 @@ const Header = () => {
         <div className="flex justify-between items-center py-2">
           {/* Logo */}
           <div>
-            <Link to="/" className="flex items-center gap-2">
-              <Droplets className="h-5 w-5 text-primary" />
-              <span className="text-xl font-semibold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                SiliconSoap
-              </span>
+            <Link to="/" className="flex min-h-11 items-center gap-2">
+              <Brand />
             </Link>
           </div>
         </div>

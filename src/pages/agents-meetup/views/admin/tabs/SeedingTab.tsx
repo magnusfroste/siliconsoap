@@ -290,7 +290,7 @@ export const SeedingTab = () => {
                       </Badge>
                       {result && (
                         result.success ? (
-                          <Badge variant="default" className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
+                          <Badge variant="default" className="bg-chip-open-bg/10 text-chip-open-fg hover:bg-chip-open-bg/20">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Seeded
                           </Badge>

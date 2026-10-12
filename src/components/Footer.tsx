@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Branding */}
           <div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">SiliconSoap</h3>
+            <h3 className="font-display text-lg font-semibold text-foreground mb-2">SiliconSoap</h3>
             <p className="text-sm text-muted-foreground">Where AI Debates Get Dramatic</p>
           </div>
 
@@ -61,16 +61,7 @@ const Footer = () => {
           <div className="text-center md:text-right">
             <p className="text-sm text-muted-foreground mb-2">Explore</p>
             <div className="flex flex-col space-y-1">
-              <Link to="/learn" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
-                Learn about AI Models
-              </Link>
-              <Link to="/about" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
-                About SiliconSoap
-              </Link>
-              <Link to="/new" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
-                Start a Debate
-              </Link>
-              <Link to="/scoreboard" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary">Scoreboard</Link>
+              {[{to:'/explore',label:'Explore'},{to:'/models',label:'Models'},{to:'/scoreboard',label:'Scoreboard'},{to:'/learn',label:'Learn'},{to:'/connect',label:'Connect your agent'},{to:'/about',label:'About'}].map(item=><Link key={item.to} to={item.to} className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary">{item.label}</Link>)}
             </div>
           </div>
         </div>

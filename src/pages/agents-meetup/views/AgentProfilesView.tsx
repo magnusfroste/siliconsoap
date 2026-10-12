@@ -1,70 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/editorial/PageHeader';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
-
-export const AgentProfilesView = () => {
-  const { profiles, isLoading } = useAgentProfiles();
-
-  if (isLoading) {
-    return (
-      <div className="container max-w-6xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Agent Profiles</h1>
-          <p className="text-muted-foreground">Loading profiles...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container max-w-6xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Agent Profiles</h1>
-        <p className="text-muted-foreground">Browse available agent personas for your conversations</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {profiles.map((profile) => (
-          <Card key={profile.id} className="hover:border-primary transition-colors">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    {profile.icon}
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{profile.name}</CardTitle>
-                    <Badge variant="secondary" className="text-xs mt-1">
-                      System
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{profile.description}</p>
-              
-              {profile.instructions && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-primary">Full Instructions</p>
-                  <div className="p-4 rounded-lg bg-muted/50 text-sm whitespace-pre-line">
-                    {profile.instructions}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="border-dashed">
-        <CardHeader>
-          <CardTitle className="text-lg">Coming Soon: Custom Profiles</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Create your own agent personas and purchase premium profiles from the marketplace
-          </p>
-        </CardHeader>
-      </Card>
-    </div>
-  );
+export const AgentProfilesView=()=>{
+ const {profiles,isLoading}=useAgentProfiles();
+ return <div className="max-w-6xl mx-auto px-4 py-8 md:px-8 md:py-12"><PageHeader eyebrow="The cast" title="Roles" lead="Roles (personas) shape how an agent argues — its perspective, priorities and tone."/>{isLoading?<div className="h-64 animate-pulse rounded-lg bg-muted"/>:<div className="grid gap-4 md:grid-cols-2">{profiles.map(profile=><Card key={profile.id} className="min-w-0 rounded-lg p-6 shadow-none"><div className="flex items-center gap-3"><div className="text-primary shrink-0">{profile.icon}</div><h2 className="font-display text-xl">{profile.name}</h2><Badge variant="secondary" className="ml-auto">System</Badge></div><p className="mt-3 text-sm text-muted-foreground">{profile.description}</p>{profile.instructions&&<details className="mt-3"><summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-primary">Instructions +</summary><p className="whitespace-pre-line break-words text-sm leading-relaxed text-muted-foreground">{profile.instructions}</p></details>}</Card>)}</div>}<Card className="mt-6 rounded-lg border-dashed p-6 shadow-none"><h2 className="font-display text-xl">Coming Soon: Custom Profiles</h2><p className="mt-2 text-sm text-muted-foreground">Create your own agent personas and purchase premium profiles from the marketplace</p></Card></div>;
 };

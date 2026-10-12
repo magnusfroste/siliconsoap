@@ -40,3 +40,10 @@
 - [x] Editorial models, scoreboard, auth, about, learn and 404
 - [x] Aggregate scoreboard RPC and rule tests
 - [x] Navigation redirects, 92 tests and desktop/mobile verification
+
+## Site refresh batch 2
+- [x] Correct scoreboard original-only behaviour metrics and SQL regression tests
+- [x] Refresh profile, settings, roles, status, payment success, API docs and admin presentation
+- [x] Confirm all six public navigation links and no legacy leaderboard links
+- [x] Run app and SQL tests; verify public/signed-out desktop/375px in both themes
+- [ ] Verify signed-in profile/settings/admin and paid-success state — blocked: no authorized session for requesting account; no test users created

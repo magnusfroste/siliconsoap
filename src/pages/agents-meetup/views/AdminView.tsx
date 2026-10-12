@@ -45,7 +45,7 @@ export const AdminView = () => {
 
   if (adminLoading || flagsLoading) {
     return (
-      <div className="container max-w-5xl mx-auto p-6 space-y-6">
+      <div className="admin-editorial max-w-5xl mx-auto px-4 py-8 md:px-8 md:py-12 space-y-6">
         <Skeleton className="h-12 w-64" />
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-96 w-full" />
@@ -58,56 +58,56 @@ export const AdminView = () => {
   }
 
   return (
-    <div className="container max-w-5xl mx-auto p-6 space-y-6">
+    <div className="admin-editorial max-w-5xl mx-auto px-4 py-8 md:px-8 md:py-12 space-y-6">
       <AdminHeader />
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-12 h-12">
-          <TabsTrigger value="users" className="gap-2 text-sm">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-6 xl:grid-cols-12 h-auto rounded-lg">
+          <TabsTrigger value="users" className="gap-2 text-sm min-h-11 min-w-11">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
           </TabsTrigger>
-          <TabsTrigger value="models" className="gap-2 text-sm">
+          <TabsTrigger value="models" className="gap-2 text-sm min-h-11 min-w-11">
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">Models</span>
           </TabsTrigger>
-          <TabsTrigger value="agents" className="gap-2 text-sm">
+          <TabsTrigger value="agents" className="gap-2 text-sm min-h-11 min-w-11">
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">Agents</span>
           </TabsTrigger>
-          <TabsTrigger value="conversation" className="gap-2 text-sm">
+          <TabsTrigger value="conversation" className="gap-2 text-sm min-h-11 min-w-11">
             <MessageSquare className="h-4 w-4" />
             <span className="hidden sm:inline">Conversation</span>
           </TabsTrigger>
-          <TabsTrigger value="features" className="gap-2 text-sm">
+          <TabsTrigger value="features" className="gap-2 text-sm min-h-11 min-w-11">
             <Settings2 className="h-4 w-4" />
             <span className="hidden sm:inline">Features</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2 text-sm">
+          <TabsTrigger value="analytics" className="gap-2 text-sm min-h-11 min-w-11">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger value="seeding" className="gap-2 text-sm">
+          <TabsTrigger value="seeding" className="gap-2 text-sm min-h-11 min-w-11">
             <Zap className="h-4 w-4" />
             <span className="hidden sm:inline">Seeding</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2 text-sm">
+          <TabsTrigger value="settings" className="gap-2 text-sm min-h-11 min-w-11">
             <PanelLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Sidebar</span>
           </TabsTrigger>
-          <TabsTrigger value="prompts" className="gap-2 text-sm">
+          <TabsTrigger value="prompts" className="gap-2 text-sm min-h-11 min-w-11">
             <MessageCircleQuestion className="h-4 w-4" />
             <span className="hidden sm:inline">Prompts</span>
           </TabsTrigger>
-          <TabsTrigger value="elevenlabs" className="gap-2 text-sm">
+          <TabsTrigger value="elevenlabs" className="gap-2 text-sm min-h-11 min-w-11">
             <Volume2 className="h-4 w-4" />
             <span className="hidden sm:inline">Audio</span>
           </TabsTrigger>
-          <TabsTrigger value="agent-activity" className="gap-2 text-sm">
+          <TabsTrigger value="agent-activity" className="gap-2 text-sm min-h-11 min-w-11">
             <ScrollText className="h-4 w-4" />
             <span className="hidden sm:inline">Agents Log</span>
           </TabsTrigger>
-          <TabsTrigger value="api-keys" className="gap-2 text-sm">
+          <TabsTrigger value="api-keys" className="gap-2 text-sm min-h-11 min-w-11">
             <Key className="h-4 w-4" />
             <span className="hidden sm:inline">API</span>
           </TabsTrigger>

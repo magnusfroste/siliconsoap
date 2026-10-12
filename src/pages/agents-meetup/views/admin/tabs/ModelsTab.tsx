@@ -63,7 +63,7 @@ export const ModelsTab = () => {
           <div className="mt-3 pt-3 border-t flex items-center gap-2 text-sm">
             {lastSync.success ? (
               <>
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-chip-open-fg" />
                 <span className="text-muted-foreground">
                   Updated {lastSync.updated} models
                   {lastSync.notFound > 0 && ` • ${lastSync.notFound} not found in OpenRouter`}
@@ -71,8 +71,8 @@ export const ModelsTab = () => {
               </>
             ) : (
               <>
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <span className="text-red-500">Sync failed</span>
+                <AlertCircle className="h-4 w-4 text-chip-slow-fg" />
+                <span className="text-chip-slow-fg">Sync failed</span>
               </>
             )}
           </div>
