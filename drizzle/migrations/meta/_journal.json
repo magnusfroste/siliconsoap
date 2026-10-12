@@ -15,6 +15,13 @@
       "when": 1791666398749,
       "tag": "0001_add_answered_by_model",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791825617390,
+      "tag": "0002_agent_guest_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -114,6 +114,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           featured_at: string | null
+          guest_key_id: string | null
           id: string
           is_public: boolean | null
           prompt: string
@@ -135,6 +136,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           featured_at?: string | null
+          guest_key_id?: string | null
           id?: string
           is_public?: boolean | null
           prompt: string
@@ -156,6 +158,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           featured_at?: string | null
+          guest_key_id?: string | null
           id?: string
           is_public?: boolean | null
           prompt?: string
@@ -172,6 +175,53 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_chats_guest_key_id_fkey"
+            columns: ["guest_key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_guest_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_guest_keys: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          created_ip_hash: string | null
+          credits_remaining: number
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          revoked_at: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          created_ip_hash?: string | null
+          credits_remaining?: number
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          created_ip_hash?: string | null
+          credits_remaining?: number
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
         }
         Relationships: []
       }
@@ -830,6 +880,7 @@ export type Database = {
           success: boolean
         }[]
       }
+      use_guest_key_credit: { Args: { p_key_hash: string }; Returns: number }
       use_tokens: {
         Args: {
           p_chat_id: string

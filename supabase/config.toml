@@ -57,3 +57,9 @@ verify_jwt = false
 
 [functions.dynamic-sitemap]
 verify_jwt = false
+
+[functions.agent]
+verify_jwt = false
+
+[functions.agent-guest-key]
+verify_jwt = true
