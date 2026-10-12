@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Droplets, Loader2, MessageSquare } from 'lucide-react';
+import { Droplets, Loader2, Mail, MessageSquare } from 'lucide-react';
 import { guestMigrationService } from '@/services/guestMigrationService';
 
 const Auth = () => {
