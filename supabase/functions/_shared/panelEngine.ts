@@ -5,13 +5,11 @@ import { stripSpeakerLabel } from './speakerLabel.ts';
 import {
   ANGLES, Answer, FALLBACK_MODEL, PanelChoice, PanelModel, Synthesis,
   extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis, guestFallbackRoster, fallbackNotes, applySingleOpinion, claimDistinct, isRateLimited, FallbackEvent,
+  PANEL_BUDGET, shouldRunRound2, round2SkipNote, synthesisAttempts, runSynthesisAttempts,
 } from './panelPure.ts';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const CALL_TIMEOUT_MS = 20_000;
-const TOTAL_BUDGET_MS = 45_000;
-const ROUND2_ESTIMATE_MS = 15_000;
-const SYNTH_RESERVE_MS = 8_000;
 const RATE_LIMIT_COOLDOWN_MS = 5 * 60_000;
 /** Per-instance cooldown: model id -> time until which it is skipped after a 429. */
 const cooldown = new Map<string, number>();
@@ -171,7 +169,7 @@ export async function runPanel(opts: {
   const events: FallbackEvent[] = [];
   const nameOf = (id: string) => { const x = roster.find((r) => r.model_id === id); return x ? shortName(x.display_name) : id; };
   const candidates = (m: PanelModel) => fallbackCandidates(input.panel, m, panel, roster);
-  const deadline = started + TOTAL_BUDGET_MS - SYNTH_RESERVE_MS;
+  const deadline = started + PANEL_BUDGET.roundDeadline;
   const names = panel.map((m) => shortName(m.display_name));
   const mkAnswer = (m: PanelModel, round: number, r: { text: string; answered_by_model: string | null }): Answer => ({
     model: m.model_id, display_name: shortName(m.display_name), origin: m.origin_region, license: m.license_type,
@@ -190,8 +188,8 @@ export async function runPanel(opts: {
   // Round 2
   if (input.rounds === 2) {
     const elapsed = Date.now() - started;
-    if (elapsed + ROUND2_ESTIMATE_MS + SYNTH_RESERVE_MS > TOTAL_BUDGET_MS) {
-      notes.push(`Round 2 skipped: round 1 took ${Math.round(elapsed / 1000)} s and the 45 s budget would be exceeded.`);
+    if (!shouldRunRound2(elapsed)) {
+      notes.push(round2SkipNote(elapsed));
     } else {
       const taken2 = new Set(panel.map((p) => p.model_id));
       const r2 = await Promise.all(panel.map(async (m, i) => {
@@ -213,23 +211,17 @@ export async function runPanel(opts: {
 
   // Synthesis
   let synthesis: Synthesis | null = null;
-  const remaining = TOTAL_BUDGET_MS - (Date.now() - started);
-  if (remaining > 3000) {
-    const judgeFlag = await supabase.from('feature_flags').select('text_value').eq('key', 'default_judge_model').maybeSingle();
-    const judge = judgeFlag.data?.text_value?.trim() || FALLBACK_MODEL;
-    for (const model of judge === FALLBACK_MODEL ? [judge] : [judge, FALLBACK_MODEL]) {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), Math.min(CALL_TIMEOUT_MS, TOTAL_BUDGET_MS - (Date.now() - started)));
-      try {
-        const raw = await callModel(apiKey, model, 'You synthesise a panel of AI model opinions into strict JSON. Output JSON only.', synthPrompt(input, panel, answers), true, 'medium', ctrl.signal);
-        synthesis = validateSynthesis(extractJson(raw), panel, !!input.draft);
-        if (synthesis) break;
-      } catch (err) {
-        console.warn(`[panel] synthesis via ${model} failed: ${err instanceof Error ? err.message : err}`);
-      } finally { clearTimeout(t); }
-      if (TOTAL_BUDGET_MS - (Date.now() - started) < 3000) break;
-    }
-  }
+  const judgeFlag = await supabase.from('feature_flags').select('text_value').eq('key', 'default_judge_model').maybeSingle();
+  const judge = judgeFlag.data?.text_value?.trim() || FALLBACK_MODEL;
+  const synth = await runSynthesisAttempts(synthesisAttempts(judge), async (model, timeoutMs) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const raw = await callModel(apiKey, model, 'You synthesise a panel of AI model opinions into strict JSON. Output JSON only.', synthPrompt(input, panel, answers), true, 'medium', ctrl.signal);
+      return validateSynthesis(extractJson(raw), panel, !!input.draft);
+    } finally { clearTimeout(t); }
+  });
+  synthesis = synth?.value ?? null;
   if (!synthesis) {
     synthesis = fallbackSynthesis(panel, answers, !!input.draft);
     notes.push('Synthesis was built from the raw answers because the judge output was unavailable or invalid.');

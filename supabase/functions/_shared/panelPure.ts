@@ -287,3 +287,27 @@ export function claimDistinct(candidates: PanelModel[], taken: Set<string>): Pan
   if (m) taken.add(m.model_id);
   return m;
 }
+
+// ---- Time budget (45 s total, 12 s reserved for synthesis) ----
+export const PANEL_BUDGET = { total: 45_000, round2SkipAfter: 22_000, roundDeadline: 33_000, synthTimeout: 10_000, synthRetryTimeout: 6_000 } as const;
+/** Round 2 only runs when round 1 finished within 22 s of the start. */
+export const shouldRunRound2 = (elapsedMs: number) => elapsedMs <= PANEL_BUDGET.round2SkipAfter;
+export const round2SkipNote = (elapsedMs: number) =>
+  `Round 2 skipped: round 1 took ${Math.round(elapsedMs / 1000)} s, so the remaining time was kept for the synthesis.`;
+/** Judge first (10 s), then one retry with gpt-4o-mini (6 s). */
+export const synthesisAttempts = (judge: string) => [
+  { model: judge, timeoutMs: PANEL_BUDGET.synthTimeout },
+  { model: FALLBACK_MODEL, timeoutMs: PANEL_BUDGET.synthRetryTimeout },
+];
+/** Tries each attempt in order; a throw or an invalid (null) result moves to the next. Null means use the raw-answers fallback. */
+export async function runSynthesisAttempts<T>(attempts: { model: string; timeoutMs: number }[], call: (model: string, timeoutMs: number) => Promise<T | null>): Promise<{ value: T; model: string } | null> {
+  for (const a of attempts) {
+    try {
+      const value = await call(a.model, a.timeoutMs);
+      if (value) return { value, model: a.model };
+    } catch (err) {
+      console.warn(`[panel] synthesis via ${a.model} failed: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+  return null;
+}
