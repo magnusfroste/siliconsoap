@@ -134,6 +134,14 @@
 }
 
 @layer components {
+  .learn-editorial .rounded-xl { border-radius: .5rem; }
+  .learn-editorial h2, .learn-editorial h3 { font-family: 'Fraunces Variable', 'Fraunces', serif; }
+  .learn-editorial a, .learn-editorial button { min-height: 44px; }
+  .learn-editorial a { display: inline-flex; align-items: center; }
+  .learn-editorial table { table-layout: fixed; overflow-wrap: anywhere; }
+  .learn-editorial th, .learn-editorial td { padding-right: .5rem; }
+  .learn-editorial .flex > div { min-width: 0; }
+  .learn-editorial .shadow-sm { box-shadow: none; }
   .debate-completion { background: hsl(var(--completion-bg)); color: hsl(var(--completion-fg)); }
   .completion-tile { background: hsl(var(--completion-tile)); }
   .debate-completion .completion-outline { background: transparent; color: hsl(var(--completion-fg)); border-color: hsl(var(--completion-border)); }
