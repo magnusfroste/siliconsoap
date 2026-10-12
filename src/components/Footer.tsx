@@ -22,7 +22,7 @@ const Footer = () => {
                 href="https://github.com/magnusfroste"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
                 aria-label="GitHub"
               >
                 <Github className="h-5 w-5" />
@@ -31,7 +31,7 @@ const Footer = () => {
                 href="https://froste.eu"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
                 aria-label="Website"
               >
                 <Globe className="h-5 w-5" />
@@ -40,7 +40,7 @@ const Footer = () => {
                 href="https://linkedin.com/in/froste"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-5 w-5" />
@@ -49,7 +49,7 @@ const Footer = () => {
                 href="https://twitter.com/magnusfroste"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter className="h-5 w-5" />
@@ -61,13 +61,13 @@ const Footer = () => {
           <div className="text-center md:text-right">
             <p className="text-sm text-muted-foreground mb-2">Explore</p>
             <div className="flex flex-col space-y-1">
-              <Link to="/learn" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/learn" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
                 Learn about AI Models
               </Link>
-              <Link to="/about" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/about" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
                 About SiliconSoap
               </Link>
-              <Link to="/new" className="text-sm text-foreground hover:text-primary transition-colors">
+              <Link to="/new" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary transition-colors">
                 Start a Debate
               </Link>
               <Link to="/scoreboard" className="text-sm min-h-11 inline-flex items-center justify-center md:justify-end text-foreground hover:text-primary">Scoreboard</Link>

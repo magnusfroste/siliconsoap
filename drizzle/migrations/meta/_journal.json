@@ -36,6 +36,13 @@
       "when": 1791830142206,
       "tag": "0004_model_scoreboard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791830493207,
+      "tag": "0005_scoreboard_cast_attribution",
+      "breakpoints": true
     }
   ]
 }
