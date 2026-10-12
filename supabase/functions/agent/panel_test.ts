@@ -109,3 +109,48 @@ Deno.test('a guest only sees their own panels', () => {
   assert(ownsPanel(a, { user_id: 'u1', guest_key_id: null }));
   assert(!ownsPanel(a, { user_id: null, guest_key_id: 'k1' }));
 });
+
+Deno.test('EU fallback prefers Medium 3.5 and never leaves Europe', async () => {
+  const { fallbackCandidates } = await import('../_shared/panelPure.ts');
+  const extra = [m('mistralai/mistral-medium-3.5', { origin_region: 'EU' }), m('mistral/other', { origin_region: 'EU' })];
+  const candidates = fallbackCandidates('eu', roster[0], roster.slice(0,3), [...roster, ...extra]);
+  assertEquals(candidates[0].model_id, 'mistralai/mistral-medium-3.5');
+  assert(candidates.every(m => m.origin_region === 'EU'));
+  assertEquals(fallbackCandidates('eu', roster[0], roster, roster), []);
+});
+Deno.test('open-weight fallback never uses closed models; mixed prefers same origin', async () => {
+  const { fallbackCandidates } = await import('../_shared/panelPure.ts');
+  const cast = [roster[0], roster[2], roster[4]];
+  assert(fallbackCandidates('open-weights', roster[0], cast, roster).every(m => m.license_type === 'open-weight'));
+  assertEquals(fallbackCandidates('mixed', roster[0], cast, roster)[0].origin_region, 'EU');
+  assertEquals(fallbackCandidates(['mistral/small','nvidia/nano'], roster[0], cast, roster)[0].origin_region, 'EU');
+});
+Deno.test('guest resolution and explicit choices exclude premium and unknown price tiers', async () => {
+  const { eligibleModels } = await import('../_shared/panelPure.ts');
+  assert(!resolvePanel(['mistral/large','nvidia/nano'], roster, true).ok);
+  assert(resolvePanel(['mistral/large','nvidia/nano'], roster, false).ok);
+  assert(!eligibleModels([m('test/unknown',{ price_tier: null })], true).length);
+  const r = resolvePanel('mixed', roster, true); assert(r.ok);
+  assert(r.models.every(m => m.price_tier === 'budget' || m.price_tier === 'standard'));
+});
+Deno.test('failed, empty and thrown panels refund exactly once; successful answers do not', async () => {
+  const { chargedPanel } = await import('../_shared/panelPure.ts');
+  let refunded = 0; const refund = async () => { refunded++; };
+  await chargedPanel(async () => ({ ok: false }), refund); assertEquals(refunded, 1);
+  await chargedPanel(async () => ({ ok: true, result: { answers: [] } }), refund); assertEquals(refunded, 2);
+  try { await chargedPanel(async () => { throw new Error('failed'); }, refund); } catch { /* expected */ }
+  assertEquals(refunded, 3);
+  await chargedPanel(async () => ({ ok: true, result: { answers: ['answer'] } }), refund); assertEquals(refunded, 3);
+});
+Deno.test('RPC batches cap at five messages and reject empty batches', async () => {
+  const { validBatch } = await import('../_shared/panelPure.ts');
+  assert(validBatch(Array(5).fill({}))); assert(!validBatch(Array(6).fill({}))); assert(!validBatch([])); assert(validBatch({}));
+});
+Deno.test('synthesis fallback positions name actual answering model', async () => {
+  const { attributeSynthesis } = await import('../_shared/panelPure.ts');
+  const answers = [{ model: 'mistral/small', display_name: 'x', origin: 'EU', license: 'open-weight', round: 1, text: 'A fallback position.', answered_by_model: 'meta/maverick' }];
+  const result = attributeSynthesis(fallbackSynthesis(panel, answers, false), answers, roster);
+  assertEquals(result.positions[0].answered_by, ['meta/maverick']);
+  assertEquals(result.positions[0].display_name, 'meta/maverick');
+  assertEquals(result.positions[0].stance, 'A fallback position.');
+});
