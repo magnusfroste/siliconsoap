@@ -63,23 +63,6 @@ export const ModelCardSkeleton = () => (
   </Card>
 );
 
-// Leaderboard row skeleton
-export const LeaderboardRowSkeleton = () => (
-  <div className="flex items-center gap-4 p-4 rounded-lg border">
-    <Skeleton className="h-6 w-6 rounded" />
-    <Skeleton className="h-12 w-12 rounded-full" />
-    <div className="flex-1 space-y-2">
-      <Skeleton className="h-4 w-32" />
-      <Skeleton className="h-3 w-24" />
-    </div>
-    <div className="flex gap-4">
-      <Skeleton className="h-4 w-12" />
-      <Skeleton className="h-4 w-12" />
-      <Skeleton className="h-4 w-12" />
-    </div>
-    <Skeleton className="h-6 w-16 rounded-full" />
-  </div>
-);
 
 // Profile stats skeleton
 export const ProfileStatsSkeleton = () => (

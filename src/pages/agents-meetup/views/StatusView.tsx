@@ -1,5 +1,6 @@
 import { PageHeader } from '@/components/editorial/PageHeader';
 import { OriginChip } from '@/components/model-chips';
+import { usePageMeta } from '@/hooks/usePageMeta';
 import { shortModelName } from '@/services/rosterService';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +51,12 @@ const StatusBadge = ({ status }: { status: ModelStatus['status'] }) => {
 };
 
 export const StatusView = () => {
+  usePageMeta({
+    title: 'Status',
+    description: 'Live health checks for the models on SiliconSoap.',
+    canonicalPath: '/status',
+  });
+
   const [models, setModels] = useState<CuratedModel[]>([]);
   const [statuses, setStatuses] = useState<Record<string, ModelStatus>>({});
   const [loading, setLoading] = useState(true);

@@ -92,7 +92,6 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
     onSuccess: (newName) => {
       queryClient.invalidateQueries({ queryKey: ['user-profile', userId] });
       queryClient.invalidateQueries({ queryKey: ['profile-stats', userId] });
-      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       toast.success('Display name updated!');
       setIsEditing(false);
     },

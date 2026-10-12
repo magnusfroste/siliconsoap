@@ -5,45 +5,21 @@ import { GripVertical, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { settingsService } from '@/services';
-
-interface NavItem {
-  key: string;
-  label: string;
-}
-
-const DEFAULT_NAV_ITEMS: NavItem[] = [
-  { key: 'explore', label: 'Explore' },
-  { key: 'leaderboard', label: 'Leaderboard' },
-  { key: 'models', label: 'Models' },
-  { key: 'learn', label: 'Learn' },
-  { key: 'about', label: 'About' },
-  { key: 'profile', label: 'Profile' },
-  { key: 'agent-profiles', label: 'Agent Profiles' },
-  { key: 'settings', label: 'Settings' },
-  { key: 'admin', label: 'Admin' },
-];
+import {
+  SIDEBAR_NAV_ITEMS,
+  resolveNavOrder,
+  serializeNavOrder,
+  type NavItem,
+} from '@/services/navOrderService';
 
 export const SettingsTab = () => {
   const { getTextValue } = useFeatureFlags();
-  const [navOrder, setNavOrder] = useState<NavItem[]>(DEFAULT_NAV_ITEMS);
+  const [navOrder, setNavOrder] = useState<NavItem[]>(SIDEBAR_NAV_ITEMS);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    const savedOrder = getTextValue('sidebar_nav_order');
-    if (savedOrder) {
-      const orderKeys = savedOrder.split(',').map(k => k.trim());
-      const orderedItems = orderKeys
-        .map(key => DEFAULT_NAV_ITEMS.find(item => item.key === key))
-        .filter(Boolean) as NavItem[];
-      
-      // Add any missing items at the end
-      const missingItems = DEFAULT_NAV_ITEMS.filter(
-        item => !orderKeys.includes(item.key)
-      );
-      
-      setNavOrder([...orderedItems, ...missingItems]);
-    }
+    setNavOrder(resolveNavOrder(getTextValue('sidebar_nav_order')));
   }, [getTextValue]);
 
   const moveItem = (index: number, direction: 'up' | 'down') => {
@@ -60,8 +36,7 @@ export const SettingsTab = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const orderString = navOrder.map(item => item.key).join(',');
-      await settingsService.saveNavOrder(orderString);
+      await settingsService.saveNavOrder(serializeNavOrder(navOrder));
       setHasChanges(false);
       toast.success('Sidebar order saved');
     } catch (error) {
