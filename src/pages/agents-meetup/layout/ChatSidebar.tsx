@@ -36,7 +36,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
     { key: 'scoreboard', icon: Trophy, label: 'Scoreboard', path: '/scoreboard', requiresAuth: false },
     { key: 'about', icon: Info, label: 'About', path: '/about', requiresAuth: false },
     { key: 'profile', icon: UserIcon, label: 'Profile', path: '/profile', requiresAuth: true },
-    { key: 'agent-profiles', icon: Bot, label: 'Agent Profiles', path: '/agent-profiles', requiresAuth: true },
+    { key: 'agent-profiles', icon: Bot, label: 'Roles', path: '/agent-profiles', requiresAuth: true },
     { key: 'settings', icon: Settings, label: 'Settings', path: '/settings', requiresAuth: true },
     { key: 'admin', icon: Shield, label: 'Admin', path: '/admin', requiresAuth: true, adminOnly: true },
   ];
@@ -267,7 +267,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-2",
+                    "w-full min-h-11 justify-start gap-2",
                     isActive && "bg-muted text-primary font-medium"
                   )}
                 >
@@ -283,7 +283,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
           <div className="p-2 pt-0">
             <Separator className="mb-2" />
             <Link to="/auth">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="outline" className="w-full min-h-11 justify-start gap-2">
                 <LogIn className="h-4 w-4" />
                 Sign In
               </Button>

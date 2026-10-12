@@ -1,3 +1,6 @@
+import { PageHeader } from '@/components/editorial/PageHeader';
+import { OriginChip } from '@/components/model-chips';
+import { shortModelName } from '@/services/rosterService';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,11 +24,11 @@ interface ModelStatus {
 const StatusIcon = ({ status }: { status: ModelStatus['status'] }) => {
   switch (status) {
     case 'operational':
-      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      return <CheckCircle2 className="h-5 w-5 text-chip-open-fg" />;
     case 'degraded':
-      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      return <AlertTriangle className="h-5 w-5 text-chip-warning-fg" />;
     case 'down':
-      return <XCircle className="h-5 w-5 text-red-500" />;
+      return <XCircle className="h-5 w-5 text-chip-slow-fg" />;
     case 'checking':
       return <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin" />;
     default:
@@ -35,9 +38,9 @@ const StatusIcon = ({ status }: { status: ModelStatus['status'] }) => {
 
 const StatusBadge = ({ status }: { status: ModelStatus['status'] }) => {
   const variants: Record<ModelStatus['status'], { label: string; className: string }> = {
-    operational: { label: 'Operational', className: 'bg-green-500/10 text-green-500 border-green-500/20' },
-    degraded: { label: 'Degraded', className: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
-    down: { label: 'Down', className: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    operational: { label: 'Operational', className: 'bg-chip-open-bg text-chip-open-fg border-transparent' },
+    degraded: { label: 'Degraded', className: 'bg-chip-warning-bg text-chip-warning-fg border-transparent' },
+    down: { label: 'Down', className: 'bg-chip-slow-bg text-chip-slow-fg border-transparent' },
     checking: { label: 'Checking...', className: 'bg-muted text-muted-foreground' },
     unknown: { label: 'Unknown', className: 'bg-muted text-muted-foreground' },
   };
@@ -195,14 +198,8 @@ export const StatusView = () => {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Model Status</h1>
-          <p className="text-muted-foreground">Health check for curated OpenRouter models</p>
-        </div>
-        <Button 
+    <div className="max-w-5xl mx-auto py-8 px-4 md:py-12 md:px-8 space-y-6">
+      <PageHeader eyebrow="Service checks" title="Status" lead="Health checks for the models on the SiliconSoap roster." action={        <Button 
           onClick={checkAllModels} 
           disabled={checkingAll}
           size="lg"
@@ -218,25 +215,24 @@ export const StatusView = () => {
               Run Check
             </>
           )}
-        </Button>
-      </div>
+        </Button>} />
 
       {/* Summary */}
-      <Card>
+      <Card className="rounded-lg shadow-none">
         <CardContent className="pt-6">
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CheckCircle2 className="h-5 w-5 text-chip-open-fg" />
               <span className="font-medium">{statusCounts.operational || 0}</span>
               <span className="text-muted-foreground">Operational</span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <AlertTriangle className="h-5 w-5 text-chip-warning-fg" />
               <span className="font-medium">{statusCounts.degraded || 0}</span>
               <span className="text-muted-foreground">Degraded</span>
             </div>
             <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-500" />
+              <XCircle className="h-5 w-5 text-chip-slow-fg" />
               <span className="font-medium">{statusCounts.down || 0}</span>
               <span className="text-muted-foreground">Down</span>
             </div>
@@ -251,9 +247,9 @@ export const StatusView = () => {
 
       {/* Models by Provider */}
       {Object.entries(modelsByProvider).map(([provider, providerModels]) => (
-        <Card key={provider}>
+        <section key={provider} className="border-b pb-4">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">{provider}</CardTitle>
+            <CardTitle className="font-display text-xl">{provider}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {providerModels.map(model => {
@@ -262,17 +258,17 @@ export const StatusView = () => {
                 <div 
                   key={model.id} 
                   className={cn(
-                    "p-4 rounded-lg border",
-                    status?.status === 'down' && "border-red-500/30 bg-red-500/5",
-                    status?.status === 'degraded' && "border-yellow-500/30 bg-yellow-500/5",
+                    "py-4 border-b last:border-b-0",
+                    status?.status === 'down' && "border-border bg-chip-slow-bg/30",
+                    status?.status === 'degraded' && "border-border bg-chip-warning-bg/30",
                   )}
                 >
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <StatusIcon status={status?.status || 'unknown'} />
                       <div className="min-w-0">
-                        <div className="font-medium truncate">{model.display_name}</div>
-                        <div className="text-xs text-muted-foreground truncate">{model.model_id}</div>
+                        <div className="flex flex-wrap items-center gap-2 font-medium">{shortModelName(model.display_name)}<OriginChip origin={model.origin_region} compact /></div>
+                        <div className="text-xs text-muted-foreground break-all">{model.model_id}</div>
                       </div>
                     </div>
                     
@@ -299,7 +295,7 @@ export const StatusView = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDisableModel(model)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="min-h-11 min-w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
                         title="Disable this model"
                       >
                         <Ban className="h-4 w-4" />
@@ -325,7 +321,7 @@ export const StatusView = () => {
               );
             })}
           </CardContent>
-        </Card>
+        </section>
       ))}
     </div>
   );

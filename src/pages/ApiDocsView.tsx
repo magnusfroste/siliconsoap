@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/editorial/PageHeader';
+import { Link } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -11,14 +13,15 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const API_BASE = `${SUPABASE_URL}/functions/v1/debates-api`;
 
 const CodeBlock = ({ code, lang = 'bash' }: { code: string; lang?: string }) => (
-  <div className="relative group">
-    <pre className="bg-muted rounded-lg p-4 overflow-x-auto text-xs font-mono border">
+  <div className="relative min-w-0 group">
+    <pre className="bg-muted rounded-lg p-4 pt-14 whitespace-pre-wrap break-all text-xs font-mono border">
       <code>{code}</code>
     </pre>
     <Button
       variant="ghost"
       size="sm"
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+      className="absolute top-1 right-1 min-h-11 min-w-11"
+      aria-label="Copy code" title="Copy code"
       onClick={() => {
         navigator.clipboard.writeText(code);
         toast.success('Copied');
@@ -40,22 +43,14 @@ const ApiDocsView = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <div className="space-y-3">
-          <Badge variant="secondary" className="gap-1">
-            <Zap className="h-3 w-3" /> Beta
-          </Badge>
-          <h1 className="text-4xl font-bold">SiliconSoap REST API</h1>
-          <p className="text-lg text-muted-foreground">
-            Spin up dramatic AI debates from any agent, script, or workflow. Built for
-            Claude Cowork, n8n, Zapier, and curious tinkerers.
-          </p>
-        </div>
+      <main className="docs-editorial flex-grow w-full min-w-0 max-w-4xl mx-auto px-4 py-8 md:py-12 space-y-8">
+        <PageHeader eyebrow="For developers" title="REST API and MCP" lead="Spin up dramatic AI debates from any agent, script, or workflow. Built for Claude Cowork, n8n, Zapier, and curious tinkerers." />
+        <Card className="rounded-lg shadow-none bg-accent"><CardContent className="pt-6"><p className="text-sm">Want your Claude or ChatGPT to ask a panel? You don't need this page — use <Link to="/connect" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Connect your agent</Link>.</p></CardContent></Card>
 
         {/* Agent-friendly discovery */}
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2">
               <Bot className="h-5 w-5" />
               Using this API with an AI agent?
             </CardTitle>
@@ -76,9 +71,9 @@ const ApiDocsView = () => {
         </Card>
 
         {/* Quick start */}
-        <Card>
+        <Card className="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2">
               <Terminal className="h-5 w-5" />
               Quick start
             </CardTitle>
@@ -119,9 +114,9 @@ curl ${API_BASE}/debates/abc-123 \\
         </Card>
 
         {/* Authentication */}
-        <Card>
+        <Card className="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2">
               <Key className="h-5 w-5" />
               Authentication
             </CardTitle>
@@ -140,9 +135,9 @@ curl ${API_BASE}/debates/abc-123 \\
         </Card>
 
         {/* Base URL */}
-        <Card>
+        <Card className="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle>Base URL</CardTitle>
+            <CardTitle className="font-display">Base URL</CardTitle>
           </CardHeader>
           <CardContent>
             <CodeBlock code={API_BASE} />
@@ -150,15 +145,15 @@ curl ${API_BASE}/debates/abc-123 \\
         </Card>
 
         {/* Endpoints */}
-        <Card>
+        <Card className="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle>Endpoints</CardTitle>
+            <CardTitle className="font-display">Endpoints</CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
 
             {/* GET /models */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="font-display flex items-center gap-2">
                 <Badge>GET</Badge>
                 <code className="font-mono text-sm">/models</code>
               </div>
@@ -174,7 +169,7 @@ curl ${API_BASE}/debates/abc-123 \\
 
             {/* POST /debates */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="font-display flex items-center gap-2">
                 <Badge>POST</Badge>
                 <code className="font-mono text-sm">/debates</code>
               </div>
@@ -246,7 +241,7 @@ curl ${API_BASE}/debates/abc-123 \\
 
             {/* GET /debates/:id/status */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="font-display flex items-center gap-2">
                 <Badge>GET</Badge>
                 <code className="font-mono text-sm">/debates/:id/status</code>
               </div>
@@ -278,7 +273,7 @@ curl ${API_BASE}/debates/abc-123 \\
 
             {/* GET /debates */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="font-display flex items-center gap-2">
                 <Badge>GET</Badge>
                 <code className="font-mono text-sm">/debates</code>
               </div>
@@ -293,7 +288,7 @@ curl ${API_BASE}/debates/abc-123 \\
 
             {/* GET /debates/:id */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="font-display flex items-center gap-2">
                 <Badge>GET</Badge>
                 <code className="font-mono text-sm">/debates/:id</code>
               </div>
@@ -343,9 +338,9 @@ curl ${API_BASE}/debates/abc-123 \\
         </Card>
 
         {/* Errors */}
-        <Card>
+        <Card className="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle>Error codes</CardTitle>
+            <CardTitle className="font-display">Error codes</CardTitle>
           </CardHeader>
           <CardContent>
             <table className="w-full text-sm">
