@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2.117.3/cors';
 import { z } from 'npm:zod@4';
 import { sha256Hex, GUEST_KEY_RE } from '../_shared/panelPure.ts';
 const bodySchema = z.object({ key: z.string().regex(GUEST_KEY_RE) }).strict();

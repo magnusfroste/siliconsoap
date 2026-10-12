@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.agent-guest-key]
 verify_jwt = true
+
+[functions.claim-agent-key]
+verify_jwt = true

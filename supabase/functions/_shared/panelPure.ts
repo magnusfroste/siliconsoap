@@ -211,10 +211,16 @@ export function fallbackCandidates(choice: PanelChoice | undefined, seat: PanelM
   return [...available.filter(m => m.origin_region === seat.origin_region), ...available.filter(m => m.origin_region !== seat.origin_region && m.speed_rating === 'fast')];
 }
 export async function chargedPanel<T extends { ok: boolean; result?: { answers: unknown[] } }>(run: () => Promise<T>, refund: () => Promise<void>): Promise<T> {
-  try { const out = await run(); if (!out.ok || !out.result?.answers.length) await refund(); return out; }
+  let out: T;
+  try { out = await run(); }
   catch (e) { await refund(); throw e; }
+  if (!out.ok || !out.result?.answers.length) await refund();
+  return out;
 }
 export function attributeSynthesis(s: Synthesis, answers: Answer[], roster: PanelModel[]): Synthesis {
+  const actualFor = (id: string) => answers.filter(a => a.model === id).slice(-1)[0]?.answered_by_model ?? id;
+  s.disagreements = s.disagreements.map(d => ({ ...d, positions: d.positions.map(p => ({ ...p, model: actualFor(p.model) })) }));
+  s.unsourced_numbers = s.unsourced_numbers.map(n => ({ ...n, model: actualFor(n.model) }));
   s.positions = s.positions.map(p => {
     const turns = answers.filter(a => a.model === p.model);
     const actual = turns.filter(a => a.answered_by_model).map(a => a.answered_by_model as string);

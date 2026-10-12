@@ -2,7 +2,7 @@
 
 export interface ChatSettings {
   mode?: 'panel';
-  panelSynthesis?: import('@/pages/agents-meetup/components/PanelSynthesis').PanelSynthesisData;
+  panelSynthesis?: PanelSynthesisData;
   numberOfAgents: number;
   rounds: number;
   responseLength: 'short' | 'medium' | 'long';
@@ -70,3 +70,10 @@ export interface CreateChatInput {
   prompt: string;
   settings: ChatSettings;
 }
+
+export type PanelSynthesisData = {
+  bottom_line: string; confidence: string; agreements: string[];
+  disagreements: { point: string; positions: { model: string; stance: string }[] }[];
+  unsourced_numbers: { claim: string; model: string }[];
+  draft_verdict?: string; key_fixes?: string[];
+};
