@@ -1,0 +1,20 @@
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { z } from 'npm:zod@4';
+import { sha256Hex, GUEST_KEY_RE } from '../_shared/panelPure.ts';
+const bodySchema = z.object({ key: z.string().regex(GUEST_KEY_RE) }).strict();
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const token = req.headers.get('Authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return json({ error: 'Please sign in to keep your panels.' }, 401);
+  const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const { data, error } = await client.auth.getClaims(token);
+  if (error || data?.claims?.role !== 'authenticated' || typeof data.claims.sub !== 'string') return json({ error: 'Please sign in to keep your panels.' }, 401);
+  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return json({ error: 'Invalid connector link.' }, 400);
+  const { data: result, error: claimError } = await client.rpc('claim_agent_key', { p_key_hash: await sha256Hex(parsed.data.key), p_user_id: data.claims.sub });
+  if (claimError) return json({ error: claimError.message }, 409);
+  return json(result?.[0] ?? { panels_moved: 0, credits_added: 0 });
+});

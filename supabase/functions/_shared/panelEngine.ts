@@ -227,8 +227,13 @@ export async function runPanel(opts: {
   };
   const title = input.question.length > 80 ? `${input.question.slice(0, 77)}...` : input.question;
   const prompt = input.draft ? `${input.question}\n\n(Draft under review)\n${input.draft}` : input.question;
+  let ownerId = opts.userId;
+  if (opts.guestKeyId) {
+    const { data: key } = await supabase.from('agent_guest_keys').select('claimed_by').eq('id', opts.guestKeyId).maybeSingle();
+    ownerId = key?.claimed_by ?? ownerId;
+  }
   const { data: chat, error: chatErr } = await supabase.from('agent_chats').insert({
-    user_id: opts.userId, guest_key_id: opts.guestKeyId, title, prompt, scenario_id: 'second-opinion',
+    user_id: ownerId, guest_key_id: opts.guestKeyId, title, prompt, scenario_id: 'second-opinion',
     settings, is_public: false, run_status: 'completed', run_completed_at: new Date().toISOString(),
   }).select('id').single();
   if (chatErr || !chat) return { ok: false, error: 'Could not save the panel.' };
