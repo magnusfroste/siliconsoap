@@ -4,7 +4,7 @@ import { baseMaxTokens, effectiveMaxTokens } from './tokenBudget.ts';
 import { stripSpeakerLabel } from './speakerLabel.ts';
 import {
   ANGLES, Answer, FALLBACK_MODEL, PanelChoice, PanelModel, Synthesis,
-  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis,
+  extractJson, fallbackSynthesis, resolvePanel, shortName, validateSynthesis, eligibleModels, fallbackCandidates, attributeSynthesis, guestFallbackRoster, fallbackNotes, isRateLimited, FallbackEvent,
 } from './panelPure.ts';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -12,6 +12,10 @@ const CALL_TIMEOUT_MS = 20_000;
 const TOTAL_BUDGET_MS = 45_000;
 const ROUND2_ESTIMATE_MS = 15_000;
 const SYNTH_RESERVE_MS = 8_000;
+const RATE_LIMIT_COOLDOWN_MS = 5 * 60_000;
+/** Per-instance cooldown: model id -> time until which it is skipped after a 429. */
+const cooldown = new Map<string, number>();
+class RateLimitError extends Error {}
 
 export interface PanelInput {
   question: string;
@@ -72,6 +76,10 @@ async function callModel(apiKey: string, model: string, system: string, user: st
     body.reasoning = { enabled: true };
     res = await post(apiKey, body, signal);
   }
+  if (isRateLimited(res.status, res.data)) {
+    cooldown.set(model, Date.now() + RATE_LIMIT_COOLDOWN_MS);
+    throw new RateLimitError(`${model} rate-limited`);
+  }
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${res.data?.error?.message ?? 'request failed'}`);
   let content = extractContent(res.data);
   if (!content || hasUnclosedThinking(content)) {
@@ -84,20 +92,21 @@ async function callModel(apiKey: string, model: string, system: string, user: st
   return content;
 }
 
-async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[], candidates: PanelModel[], notes: string[], deadline: number) {
+async function callWithFallback(apiKey: string, m: PanelModel, system: string, user: string, names: string[], candidates: PanelModel[], events: FallbackEvent[], round: number, deadline: number) {
   for (const model of [m, ...candidates]) {
+    if ((cooldown.get(model.model_id) ?? 0) > Date.now()) { console.warn(`[panel] ${model.model_id} cooling down after 429, skipped`); continue; }
     const ctrl = new AbortController();
     const remaining = Math.min(CALL_TIMEOUT_MS, deadline - Date.now());
     if (remaining <= 0) break;
     const timer = setTimeout(() => ctrl.abort(), remaining);
     try {
       const text = stripSpeakerLabel(await callModel(apiKey, model.model_id, system, user, model.disable_reasoning, 'short', ctrl.signal), names);
-      if (model !== m) notes.push(`${m.model_id} was answered by ${model.model_id} as a constrained fallback.`);
+      if (model !== m) events.push({ seat: m.model_id, by: model.model_id, round });
       return { text, answered_by_model: model === m ? null : model.model_id };
-    } catch { console.warn(`[panel] ${model.model_id} unavailable`); }
+    } catch (err) { console.warn(`[panel] ${model.model_id} unavailable: ${err instanceof Error ? err.message : err}`); }
     finally { clearTimeout(timer); }
   }
-  notes.push(`${m.model_id}: seat dropped for this round; no allowed fallback responded.`);
+  events.push({ seat: m.model_id, by: null, round });
   return null;
 }
 
@@ -151,6 +160,8 @@ export async function runPanel(opts: {
   if ('error' in prepared) return { ok: false, error: prepared.error };
   const { panel, roster } = prepared;
   if (Array.isArray(input.panel)) notes.push('Explicit picks use same-origin-preferred constrained fallbacks when unavailable.');
+  const events: FallbackEvent[] = [];
+  const nameOf = (id: string) => { const x = roster.find((r) => r.model_id === id); return x ? shortName(x.display_name) : id; };
   const candidates = (m: PanelModel) => fallbackCandidates(input.panel, m, panel, roster);
   const deadline = started + TOTAL_BUDGET_MS - SYNTH_RESERVE_MS;
   const names = panel.map((m) => shortName(m.display_name));
@@ -161,7 +172,7 @@ export async function runPanel(opts: {
 
   // Round 1
   const r1 = (await Promise.all(panel.map(async (m, i) => {
-    const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names, candidates(m), notes, deadline);
+    const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round1Prompt(input, ANGLES[i]), names, candidates(m), events, 1, deadline);
     return result ? mkAnswer(m, 1, result) : null;
   }))).filter((a): a is Answer => !!a);
   if (!r1.length) return { ok: false, error: 'No allowed panel model could answer. Your credit has been refunded.' };
@@ -178,7 +189,7 @@ export async function runPanel(opts: {
           const own = r1.find(a => a.model === m.model_id);
           if (!own) return null;
           const others = r1.filter(a => a.model !== m.model_id).map(a => ({ name: a.answered_by_model ?? a.display_name, text: a.text }));
-          const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, own.text, others), names, candidates(m), notes, deadline);
+          const result = await callWithFallback(apiKey, m, `${SYSTEM_BASE} You are the ${ANGLES[i]}.`, round2Prompt(input, own.text, others), names, candidates(m), events, 2, deadline);
           return result ? mkAnswer(m, 2, result) : null;
         } catch { return null; }
       }));
@@ -187,6 +198,8 @@ export async function runPanel(opts: {
       answers.push(...ok);
     }
   }
+
+  notes.push(...fallbackNotes(events, nameOf));
 
   // Synthesis
   let synthesis: Synthesis | null = null;
@@ -254,9 +267,11 @@ export async function runPanel(opts: {
 }
 
 export async function preparePanel(supabase: any, input: PanelInput, guest: boolean): Promise<{ panel: PanelModel[]; roster: PanelModel[] } | { error: string }> {
-  const { data, error } = await supabase.from('curated_models').select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier, sort_order, disable_reasoning').eq('is_enabled', true);
+  const { data, error } = await supabase.from('curated_models').select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier, price_output, sort_order, disable_reasoning').eq('is_enabled', true);
   if (error) return { error: 'Could not load the model roster.' };
-  const roster = eligibleModels(data ?? [], guest);
-  const resolved = resolvePanel(input.panel, roster);
-  return resolved.ok ? { panel: resolved.models, roster } : { error: resolved.error + (guest ? ' Guest links allow budget and standard models only; premium models need an account.' : '') };
+  const all = (data ?? []).map((m: any) => ({ ...m, price_output: m.price_output == null ? null : Number(m.price_output) }));
+  const resolved = resolvePanel(input.panel, all, guest);
+  // Guests: fallback roster also holds EU-fallback-only models (never resolvable as picks).
+  const roster = guest ? guestFallbackRoster(all) : all;
+  return resolved.ok ? { panel: resolved.models, roster } : { error: resolved.error };
 }

@@ -125,13 +125,48 @@ Deno.test('open-weight fallback never uses closed models; mixed prefers same ori
   assertEquals(fallbackCandidates('mixed', roster[0], cast, roster)[0].origin_region, 'EU');
   assertEquals(fallbackCandidates(['mistral/small','nvidia/nano'], roster[0], cast, roster)[0].origin_region, 'EU');
 });
-Deno.test('guest resolution and explicit choices exclude premium and unknown price tiers', async () => {
+Deno.test('guest resolution and explicit choices exclude the top tier and unknown price tiers', async () => {
   const { eligibleModels } = await import('../_shared/panelPure.ts');
-  assert(!resolvePanel(['mistral/large','nvidia/nano'], roster, true).ok);
-  assert(resolvePanel(['mistral/large','nvidia/nano'], roster, false).ok);
+  const top = [...roster, m('anthropic/opus', { price_tier: 'elite' })];
+  assert(!resolvePanel(['anthropic/opus','nvidia/nano'], top, true).ok);
+  assert(resolvePanel(['anthropic/opus','nvidia/nano'], top, false).ok);
   assert(!eligibleModels([m('test/unknown',{ price_tier: null })], true).length);
   const r = resolvePanel('mixed', roster, true); assert(r.ok);
   assert(r.models.every(m => m.price_tier === 'budget' || m.price_tier === 'standard'));
+});
+Deno.test('guests: only the top tier and >= $6/1M output are blocked; Medium 3.5 is EU-fallback only', async () => {
+  const { guestAllowed, guestFallbackRoster, fallbackCandidates } = await import('../_shared/panelPure.ts');
+  assert(guestAllowed(m('z-ai/glm-5.1', { price_tier: 'premium', price_output: 0.000003036 })));
+  assert(!guestAllowed(m('anthropic/claude-opus-5.5', { price_tier: 'elite', price_output: 0.00002 })));
+  assert(!guestAllowed(m('x-ai/grok-4.6', { price_tier: 'premium', price_output: 0.000006 })));
+  assert(!guestAllowed(m('openai/gpt-6-sol', { price_tier: 'premium', price_output: 0.00001 })));
+  const medium = m('mistralai/mistral-medium-3-5', { origin_region: 'EU', price_tier: 'premium', price_output: 0.0000075, license_type: 'closed' });
+  const all = [...roster, medium];
+  const pick = resolvePanel(['mistralai/mistral-medium-3-5', 'nvidia/nano'], all, true);
+  assert(!pick.ok); assertMatch(pick.error, /needs an account \(premium\)\. Sign up at siliconsoap\.com/);
+  const fr = guestFallbackRoster(all);
+  const eu = resolvePanel('eu', fr, true); assert(eu.ok); assert(!eu.models.some(x => x.model_id === medium.model_id));
+  assertEquals(fallbackCandidates('eu', roster[0], [roster[0]], fr)[0].model_id, medium.model_id);
+  const mixedEu = fallbackCandidates('mixed', roster[0], [roster[0], roster[2], roster[4]], fr);
+  assertEquals(mixedEu[0].model_id, medium.model_id);
+  const firstNonEu = mixedEu.findIndex(x => x.origin_region !== 'EU');
+  assert(mixedEu.slice(firstNonEu).every(x => x.origin_region !== 'EU'));
+  assert(!fallbackCandidates('mixed', roster[2], [roster[0], roster[2], roster[4]], fr).some(x => x.model_id === medium.model_id));
+});
+Deno.test('fallback notes merge rounds per seat', async () => {
+  const { fallbackNotes } = await import('../_shared/panelPure.ts');
+  const name = (id: string) => ({ 'mistralai/mistral-small-2603': 'Mistral Small 4', 'qwen/qwen3.8-flash': 'Qwen3.8 Flash' } as Record<string, string>)[id] ?? id;
+  assertEquals(fallbackNotes([
+    { seat: 'mistralai/mistral-small-2603', by: 'qwen/qwen3.8-flash', round: 1 },
+    { seat: 'mistralai/mistral-small-2603', by: 'qwen/qwen3.8-flash', round: 2 },
+  ], name), ['Mistral Small 4 was answered by Qwen3.8 Flash in rounds 1–2 (constrained fallback).']);
+});
+Deno.test('429 and provider rate-limit errors are detected for immediate failover', async () => {
+  const { isRateLimited } = await import('../_shared/panelPure.ts');
+  assert(isRateLimited(429, {}));
+  assert(isRateLimited(200, { error: { code: 429, message: 'x' } }));
+  assert(isRateLimited(502, { error: { message: 'Provider returned error', metadata: { raw: 'Rate limit exceeded' } } }));
+  assert(!isRateLimited(500, { error: { message: 'boom' } }));
 });
 Deno.test('failed, empty and thrown panels refund exactly once; successful answers do not', async () => {
   const { chargedPanel } = await import('../_shared/panelPure.ts');

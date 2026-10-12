@@ -3,7 +3,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getClientIp, hashIp } from '../_shared/requestGuards.ts';
 import { runPanel, validatePanelInput, preparePanel } from '../_shared/panelEngine.ts';
-import { chargedPanel, validBatch, ACCOUNT_KEY_RE, Caller, GUEST_KEY_RE, guestCreditResult, keyPrefix, ownsPanel, sha256Hex, shortName } from '../_shared/panelPure.ts';
+import { chargedPanel, validBatch, ACCOUNT_KEY_RE, Caller, GUEST_KEY_RE, guestCreditResult, keyPrefix, ownsPanel, sha256Hex, shortName, guestAllowed } from '../_shared/panelPure.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -93,9 +93,9 @@ async function callTool(ctx: Ctx, name: string, args: any) {
   const { supabase, caller } = ctx;
   if (name === 'list_panel_models') {
     const { data } = await supabase.from('curated_models')
-      .select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier')
+      .select('model_id, display_name, provider, origin_region, license_type, speed_rating, price_tier, price_output')
       .eq('is_enabled', true).in('speed_rating', ['fast', 'medium']).order('sort_order');
-    return text({ models: (data ?? []).map((m: any) => ({ model: m.model_id, display_name: shortName(m.display_name), provider: m.provider, origin: m.origin_region, license: m.license_type, speed: m.speed_rating, requires_account: !['budget', 'standard'].includes(m.price_tier) })) });
+    return text({ models: (data ?? []).map((m: any) => ({ model: m.model_id, display_name: shortName(m.display_name), provider: m.provider, origin: m.origin_region, license: m.license_type, speed: m.speed_rating, price_tier: m.price_tier, requires_account: !guestAllowed({ ...m, price_output: m.price_output == null ? null : Number(m.price_output) }) })) });
   }
   if (name === 'account_status') {
     const credits = await creditsLeft(ctx);
