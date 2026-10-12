@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/editorial/PageHeader';
 import { useAgentProfiles } from '@/hooks/useAgentProfiles';
 
 export const AgentProfilesView = () => {
@@ -7,25 +8,12 @@ export const AgentProfilesView = () => {
 
   if (isLoading) {
     return (
-      <div className="container max-w-6xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Agent Profiles</h1>
-          <p className="text-muted-foreground">Loading profiles...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container max-w-6xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Agent Profiles</h1>
-        <p className="text-muted-foreground">Browse available agent personas for your conversations</p>
-      </div>
+      <div className="max-w-6xl mx-auto px-4 py-8 md:px-8 md:py-12 space-y-6">
+        <PageHeader eyebrow="The cast" title="Roles" lead="Roles (personas) shape how an agent argues — its perspective, priorities and tone." />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {profiles.map((profile) => (
-          <Card key={profile.id} className="hover:border-primary transition-colors">
+          <Card key={profile.id} className="rounded-lg shadow-none hover:border-primary transition-colors min-w-0">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 flex-1">
@@ -33,12 +21,12 @@ export const AgentProfilesView = () => {
                     {profile.icon}
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{profile.name}</CardTitle>
+                    <CardTitle className="font-display text-xl">{profile.name}</CardTitle>
                     <Badge variant="secondary" className="text-xs mt-1">
                       System
                     </Badge>
                   </div>
-                </div>
+                </details>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -47,10 +35,10 @@ export const AgentProfilesView = () => {
               {profile.instructions && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-primary">Full Instructions</p>
-                  <div className="p-4 rounded-lg bg-muted/50 text-sm whitespace-pre-line">
+                  <div className="py-3 text-sm text-muted-foreground whitespace-pre-line break-words">
                     {profile.instructions}
                   </div>
-                </div>
+                </details>
               )}
             </CardContent>
           </Card>
@@ -59,7 +47,7 @@ export const AgentProfilesView = () => {
 
       <Card className="border-dashed">
         <CardHeader>
-          <CardTitle className="text-lg">Coming Soon: Custom Profiles</CardTitle>
+          <CardTitle className="font-display text-xl">Coming Soon: Custom Profiles</CardTitle>
           <p className="text-sm text-muted-foreground">
             Create your own agent personas and purchase premium profiles from the marketplace
           </p>

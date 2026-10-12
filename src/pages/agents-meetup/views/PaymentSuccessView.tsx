@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, XCircle, Sparkles } from 'lucide-react';
+import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const PaymentSuccessView = () => {
@@ -45,13 +45,13 @@ export const PaymentSuccessView = () => {
 
   if (status === 'loading') {
     return (
-      <div className="h-full flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+      <div className="min-h-[70dvh] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center rounded-lg shadow-none">
           <CardHeader>
             <div className="flex justify-center mb-4">
               <Loader2 className="h-16 w-16 text-primary animate-spin" />
             </div>
-            <CardTitle>Verifying Payment...</CardTitle>
+            <CardTitle className="font-display text-2xl">Verifying Payment...</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
@@ -65,19 +65,19 @@ export const PaymentSuccessView = () => {
 
   if (status === 'error') {
     return (
-      <div className="h-full flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+      <div className="min-h-[70dvh] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center rounded-lg shadow-none">
           <CardHeader>
             <div className="flex justify-center mb-4">
               <XCircle className="h-16 w-16 text-destructive" />
             </div>
-            <CardTitle>Payment Verification Failed</CardTitle>
+            <CardTitle className="font-display text-2xl">Payment Verification Failed</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
               We couldn't verify your payment. If you were charged, please contact support.
             </p>
-            <Button onClick={() => navigate('/new')} className="w-full">
+            <Button onClick={() => navigate('/new')} className="w-full min-h-11">
               Return to App
             </Button>
           </CardContent>
@@ -87,20 +87,20 @@ export const PaymentSuccessView = () => {
   }
 
   return (
-    <div className="h-full flex items-center justify-center p-4">
-      <Card className="w-full max-w-md text-center">
+    <div className="min-h-[70dvh] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md text-center rounded-lg shadow-none">
         <CardHeader>
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <CheckCircle className="h-16 w-16 text-green-500" />
-              <Sparkles className="h-6 w-6 text-primary absolute -top-1 -right-1 animate-pulse" />
+              <CheckCircle className="h-16 w-16 text-chip-open-fg" />
+
             </div>
           </div>
-          <CardTitle className="text-2xl">Payment Successful!</CardTitle>
+          <CardTitle className="font-display text-3xl">Credits added</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-primary/10 rounded-lg p-4">
-            <p className="text-4xl font-bold text-primary">+{creditsAdded}</p>
+            <p className="font-display text-4xl text-primary">+{creditsAdded}</p>
             <p className="text-sm text-muted-foreground">credits added to your account</p>
           </div>
           
@@ -108,9 +108,10 @@ export const PaymentSuccessView = () => {
             Thank you for your purchase! Your credits are ready to use.
           </p>
 
-          <Button onClick={() => navigate('/new')} className="w-full" size="lg">
-            Start a New Conversation
+          <Button onClick={() => navigate('/new')} className="w-full min-h-11" size="lg">
+            Start a debate
           </Button>
+          <Button variant="outline" onClick={() => navigate('/connect')} className="w-full min-h-11">Connect your agent</Button>
         </CardContent>
       </Card>
     </div>

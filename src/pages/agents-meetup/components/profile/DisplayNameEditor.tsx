@@ -136,7 +136,7 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="rounded-lg shadow-none">
         <CardContent className="p-6">
           <div className="h-8 bg-muted rounded animate-pulse" />
         </CardContent>
@@ -145,14 +145,14 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
   }
 
   return (
-    <Card>
+    <Card className="rounded-lg shadow-none">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="font-display text-xl flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           Display Name
         </CardTitle>
         <CardDescription>
-          Your public name shown on the leaderboard and shared debates
+          Your public name shown on shared debates
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -175,42 +175,42 @@ export const DisplayNameEditor = ({ userId }: DisplayNameEditorProps) => {
             
             <div className="flex items-center gap-2">
               <Button 
-                size="sm" 
+                size="sm" className="min-h-11 min-w-11" 
                 onClick={handleSave}
                 disabled={!editValue.trim() || updateMutation.isPending}
               >
                 <Check className="h-4 w-4 mr-1" />
                 Save
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancel}>
+              <Button size="sm" className="min-h-11 min-w-11" variant="outline" onClick={handleCancel}>
                 <X className="h-4 w-4 mr-1" />
                 Cancel
               </Button>
               <Button 
-                size="sm" 
+                size="sm" className="min-h-11 min-w-11" 
                 variant="ghost" 
                 onClick={handleGenerateNick}
                 title="Generate random Soap Star name"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                🎭 Random
+                Random
               </Button>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xl font-semibold">
+              <p className="text-xl font-semibold break-words">
                 {profile?.display_name || 'No name set'}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={handleStartEdit}>
+              <Button size="sm" className="min-h-11 min-w-11" variant="outline" onClick={handleStartEdit}>
                 <Pencil className="h-4 w-4 mr-1" />
                 Edit
               </Button>
               <Button 
-                size="sm" 
+                size="sm" className="min-h-11 min-w-11" 
                 variant="ghost" 
                 onClick={handleGenerateNick}
                 disabled={updateMutation.isPending}
