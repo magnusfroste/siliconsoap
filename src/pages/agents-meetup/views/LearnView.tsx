@@ -7,6 +7,7 @@ import { LearnTabSelfHosting } from './learn/LearnTabSelfHosting';
 import { LearnTabAgents } from './learn/LearnTabAgents';
 import { LearnTabGlossary } from './learn/LearnTabGlossary';
 import { LearnAgentBlocks } from '@/components/learn/LearnAgentBlocks';
+import { PageHeader } from '@/components/editorial/PageHeader';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const VALID_TABS = ['models', 'privacy', 'local', 'agents', 'glossary'];
@@ -31,43 +32,32 @@ export const LearnView = () => {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
-          <BookOpen className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">AI Crash Course</span>
-        </div>
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">
-          Understanding AI Models
-        </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          From the basics to the future of AI agents — everything you need to know in one place
-        </p>
-      </div>
+    <div className="learn-editorial max-w-5xl mx-auto py-8 px-4 md:py-12 md:px-8">
+      <PageHeader eyebrow="AI Crash Course" title="Understanding AI models." lead="From the basics to the future of AI agents — everything you need to know in one place." />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full flex flex-wrap justify-center gap-1 h-auto p-1 mb-8">
-          <TabsTrigger value="models" className="flex items-center gap-2 px-4 py-2">
+        <TabsList className="flex w-fit max-w-full flex-wrap justify-start gap-1 h-auto rounded-lg p-1 mb-8 bg-muted">
+          <TabsTrigger value="models" className="flex min-h-11 items-center gap-2 px-3 py-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Models 101</span>
             <span className="sm:hidden">Models</span>
           </TabsTrigger>
-          <TabsTrigger value="privacy" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="privacy" className="flex min-h-11 items-center gap-2 px-3 py-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Cloud vs Private</span>
             <span className="sm:hidden">Private</span>
           </TabsTrigger>
-          <TabsTrigger value="local" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="local" className="flex min-h-11 items-center gap-2 px-3 py-2">
             <Server className="h-4 w-4" />
             <span className="hidden sm:inline">Run Locally</span>
             <span className="sm:hidden">Local</span>
           </TabsTrigger>
-          <TabsTrigger value="agents" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="agents" className="flex min-h-11 items-center gap-2 px-3 py-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">AI Agents</span>
             <span className="sm:hidden">Agents</span>
           </TabsTrigger>
-          <TabsTrigger value="glossary" className="flex items-center gap-2 px-4 py-2">
+          <TabsTrigger value="glossary" className="flex min-h-11 items-center gap-2 px-3 py-2">
             <BookText className="h-4 w-4" />
             <span className="hidden sm:inline">Glossary</span>
             <span className="sm:hidden">Terms</span>

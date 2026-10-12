@@ -159,7 +159,7 @@ export const LearnTabSelfHosting = () => {
       </Card>
 
       {/* Quick Start Guide */}
-      <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+      <Card className="bg-card border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5 text-primary" />
@@ -211,7 +211,7 @@ export const LearnTabSelfHosting = () => {
             rel="noopener noreferrer"
             className="flex items-start gap-4 p-4 rounded-lg border hover:border-primary/50 transition-colors group"
           >
-            <div className="text-3xl">🤗</div>
+            
             <div>
               <div className="font-medium group-hover:text-primary transition-colors">Hugging Face</div>
               <p className="text-sm text-muted-foreground">
@@ -237,7 +237,7 @@ export const LearnTabSelfHosting = () => {
       </Card>
 
       {/* CTA */}
-      <div className="p-6 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/10 border border-primary/20">
+      <div className="p-6 rounded-xl bg-muted/30 border border-primary/20">
         <div className="text-center">
           <h3 className="font-semibold mb-2">Ready to try?</h3>
           <p className="text-sm text-muted-foreground mb-4">

@@ -11,3 +11,6 @@
 
 - Connector links use the repository/service/controller/view boundary; only authenticated server functions claim ownership, and atomic service-role RPCs transfer balances and refund panel failures to avoid duplicate credits.
 - Keep panel synthesis types in domain models and render saved synthesis through a shared display-only component for private and public transcripts.
+
+- Keep roster and scoreboard data access in repositories, derivation in pure services and query/filter state in controller hooks; views only render the results.
+- Model scoreboard statistics come from a single aggregate-only security-definer RPC; never fetch private transcripts or auth email data in the browser.

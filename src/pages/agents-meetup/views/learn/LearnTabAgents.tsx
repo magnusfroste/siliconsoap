@@ -83,7 +83,7 @@ export const LearnTabAgents = () => {
       </div>
 
       {/* Why Multi-Agent */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+      <Card className="border-2 border-primary/20 bg-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
@@ -129,19 +129,19 @@ export const LearnTabAgents = () => {
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
+                  <span className="text-primary mt-0.5"></span>
                   <span>Specialized experts for each task</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
+                  <span className="text-primary mt-0.5"></span>
                   <span>Smaller, cheaper models = lower cost</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
+                  <span className="text-primary mt-0.5"></span>
                   <span>Built-in review and error correction</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
+                  <span className="text-primary mt-0.5"></span>
                   <span>Transparent reasoning per agent</span>
                 </li>
               </ul>
@@ -223,7 +223,7 @@ export const LearnTabAgents = () => {
       </Card>
 
       {/* Real Open-Source Agents in the Wild */}
-      <Card className="border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-background">
+      <Card className="border-2 border-accent/30 bg-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Rocket className="h-5 w-5 text-primary" />
@@ -244,7 +244,7 @@ export const LearnTabAgents = () => {
             {/* OpenClaw */}
             <div className="p-5 rounded-lg border-2 border-primary/20 bg-card">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🦞</span>
+                
                 <h4 className="font-bold text-lg">OpenClaw</h4>
                 <Badge className="bg-primary/20 text-primary border-0 text-xs">Personal Assistant</Badge>
               </div>
@@ -272,7 +272,7 @@ export const LearnTabAgents = () => {
             {/* Hermes Agent */}
             <div className="p-5 rounded-lg border-2 border-secondary/30 bg-card">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🪽</span>
+                
                 <h4 className="font-bold text-lg">Hermes Agent</h4>
                 <Badge variant="secondary" className="text-xs">Grows With You</Badge>
               </div>
@@ -308,7 +308,7 @@ export const LearnTabAgents = () => {
       </Card>
 
       {/* Future Tech: Enterprise AI, MCP Skills, Self-Hosting */}
-      <Card className="border-2 border-secondary/30 bg-gradient-to-br from-secondary/5 to-background">
+      <Card className="border-2 border-secondary/30 bg-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-secondary" />
@@ -450,7 +450,7 @@ export const LearnTabAgents = () => {
       </Card>
 
       {/* FAQ: Agent Approvals in Enterprise Workflows */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+      <Card className="border-2 border-primary/20 bg-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <HelpCircle className="h-5 w-5 text-primary" />
@@ -508,7 +508,7 @@ export const LearnTabAgents = () => {
       </Card>
 
       {/* SiliconSoap CTA */}
-      <Card className="bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/20 border-primary/30">
+      <Card className="bg-card border-primary/30">
         <CardContent className="pt-6">
           <div className="text-center max-w-xl mx-auto">
             <div className="p-3 rounded-full bg-primary/20 w-fit mx-auto mb-4">

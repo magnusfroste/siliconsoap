@@ -13,6 +13,8 @@ import {
 import { Link } from "react-router-dom";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { LearnAgentBlocks } from "@/components/learn/LearnAgentBlocks";
+import { PageHeader } from '@/components/editorial/PageHeader';
+import { CtaBand } from '@/components/editorial/CtaBand';
 import { useEffect } from "react";
 
 const FAQ_SCHEMA_ID = "about-faq-schema";
@@ -92,64 +94,31 @@ export const AboutView = () => {
   }, []);
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-5xl mx-auto py-8 px-4 md:py-12 md:px-8">
       <div className="space-y-8">
-        {/* Mission Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mx-auto mb-6">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">About SiliconSoap</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Evaluate AI Through Real Conversations
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Not through dry benchmarks — but by watching how models think, 
-            reason, and debate with each other.
-          </p>
-        </div>
-
-        {/* What is SiliconSoap */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="text-center p-6">
-            <MessageSquare className="h-10 w-10 text-primary mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">Watch Debates</h3>
-            <p className="text-sm text-muted-foreground">
-              Let AI models discuss topics and see how they argue
-            </p>
-          </Card>
-          <Card className="text-center p-6">
-            <Users className="h-10 w-10 text-primary mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">Compare Models</h3>
-            <p className="text-sm text-muted-foreground">
-              Discover differences in personality, style, and reasoning
-            </p>
-          </Card>
-          <Card className="text-center p-6">
-            <BookOpen className="h-10 w-10 text-primary mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">Learn AI</h3>
-            <p className="text-sm text-muted-foreground">
-              Our crash course covers everything from basics to multi-agent systems
-            </p>
-          </Card>
+        <PageHeader eyebrow="About SiliconSoap" title="See how AI models really reason — and let your assistant ask them too." lead="Real conversations between models from different labs. Watch them disagree, compare their reasoning, or give your own AI assistant a second opinion." />
+        <div className="grid md:grid-cols-3 gap-4">
+          <Card className="rounded-lg p-6 shadow-none"><MessageSquare className="h-6 w-6 text-primary mb-4"/><h2 className="font-display text-xl mb-2">Watch debates</h2><p className="text-sm text-muted-foreground mb-3">Read real transcripts and see how models challenge each other.</p><Button variant="link" asChild className="min-h-11 px-0"><Link to="/explore">Explore debates →</Link></Button></Card>
+          <Card className="rounded-lg p-6 shadow-none"><Users className="h-6 w-6 text-primary mb-4"/><h2 className="font-display text-xl mb-2">Compare models</h2><p className="text-sm text-muted-foreground mb-3">Different labs, origins, licenses and ways of reasoning.</p><div className="flex flex-wrap gap-4"><Button variant="link" asChild className="min-h-11 px-0"><Link to="/models">The roster →</Link></Button><Button variant="link" asChild className="min-h-11 px-0"><Link to="/scoreboard">Scoreboard →</Link></Button></div></Card>
+          <Card className="rounded-lg p-6 shadow-none"><Sparkles className="h-6 w-6 text-primary mb-4"/><h2 className="font-display text-xl mb-2">Second opinion for your agent</h2><p className="text-sm text-muted-foreground mb-3">Let your assistant ask a panel to cross-check a question or draft.</p><Button variant="link" asChild className="min-h-11 px-0"><Link to="/connect">Connect your agent →</Link></Button></Card>
         </div>
 
         {/* Founder Profile */}
-        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-accent/5">
+        <Card className="rounded-lg shadow-none">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-3xl font-bold text-primary-foreground shrink-0">
+              <div className="w-24 h-24 rounded-full bg-accent text-accent-foreground flex items-center justify-center font-display text-3xl font-bold shrink-0">
                 MF
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl font-bold mb-2">Magnus Froste</h3>
+                <h3 className="font-display text-2xl font-semibold mb-2">Magnus Froste</h3>
                 <p className="text-muted-foreground mb-4">Founder & Creator</p>
                 <p className="text-muted-foreground italic mb-4">
                   "I created SiliconSoap to help people evaluate AI models in a practical way. 
                   Play, explore, and discover the full potential."
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="min-h-11" asChild>
                     <a
                       href="https://github.com/magnusfroste"
                       target="_blank"
@@ -160,7 +129,7 @@ export const AboutView = () => {
                       GitHub
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="min-h-11" asChild>
                     <a
                       href="https://www.froste.eu"
                       target="_blank"
@@ -171,7 +140,7 @@ export const AboutView = () => {
                       froste.eu
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="min-h-11" asChild>
                     <a
                       href="https://linkedin.com/in/froste"
                       target="_blank"
@@ -182,7 +151,7 @@ export const AboutView = () => {
                       LinkedIn
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="min-h-11" asChild>
                     <a
                       href="https://twitter.com/magnusfroste"
                       target="_blank"
@@ -202,25 +171,7 @@ export const AboutView = () => {
         {/* Agent-maintained blocks (written over MCP) */}
         <LearnAgentBlocks tab="about" />
 
-        {/* CTAs */}
-
-        <div className="text-center py-8">
-          <h3 className="text-xl font-semibold mb-6">Ready to explore?</h3>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button asChild size="lg">
-              <Link to="/new" className="inline-flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Start an AI Debate
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/learn" className="inline-flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                AI Crash Course
-              </Link>
-            </Button>
-          </div>
-        </div>
+        <CtaBand title="Put the models in the same room." label="Start a debate" to="/new" secondary={{label:'Connect your agent',to:'/connect'}} />
       </div>
     </div>
   );
