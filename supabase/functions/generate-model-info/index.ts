@@ -1,127 +1,72 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAdmin } from "../_shared/adminGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
+
   try {
-    const { model_id, display_name, provider, supports_reasoning } = await req.json();
+    const { model_id, display_name, provider } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (typeof model_id !== 'string' || !model_id || model_id.length > 200) return json({ error: "model_id is required" }, 400);
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    const systemPrompt = `You write short, strictly factual model descriptions for an AI model catalogue.
+Write 1-2 plain sentences covering only: the lab that made the model and its country, the parameter size if officially published, the release month, and the license.
+Omit any item you cannot state confidently — never guess, estimate or infer. No opinions, strengths, weaknesses, use cases or marketing language.
+Respond with JSON only: {"description": "..."}`;
 
-    if (!model_id) {
-      throw new Error("model_id is required");
-    }
-
-    console.log(`Generating info for model: ${model_id} (supports_reasoning=${supports_reasoning})`);
-
-    const systemPrompt = `You are an AI model expert. Generate educational content about AI models for a learning platform.
-Your responses should be accurate, helpful, and suitable for developers and AI enthusiasts.
-Always respond with valid JSON matching the exact structure requested.`;
-
-    const reasoningFact =
-      typeof supports_reasoning === 'boolean'
-        ? `\nVerified fact (from OpenRouter): this model ${supports_reasoning ? 'SUPPORTS' : 'does NOT support'} a reasoning/thinking parameter. Reflect this in pros/cons/category when relevant — do not contradict it.`
-        : '';
-
-    const userPrompt = `Generate educational information about this AI model:
-
-Model ID: ${model_id}
-Display Name: ${display_name || model_id}
-Provider: ${provider || 'Unknown'}${reasoningFact}
-
-Respond with a JSON object containing:
-{
-  "description": "A 2-3 sentence description of the model, its capabilities, and what makes it unique",
-  "pros": ["3-4 key strengths of this model"],
-  "cons": ["2-3 limitations or trade-offs"],
-  "use_cases": ["3-4 ideal use cases, e.g., 'Code generation', 'Creative writing'"],
-  "avoid_cases": ["2-3 scenarios where other models might be better"],
-  "category": "One of: 'reasoning', 'creative', 'fast', 'balanced'",
-  "speed_rating": "One of: 'fast', 'medium', 'slow'",
-  "context_window": "The context window in tokens (number only, e.g., 128000)"
-}
-
-Base your response on your knowledge of this model. If you're not sure about specific details, make reasonable inferences based on the model name and provider.`;
+    const userPrompt = `Model ID: ${model_id}\nDisplay name: ${String(display_name || model_id).slice(0, 200)}\nProvider: ${String(provider || 'Unknown').slice(0, 100)}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
+        temperature: 0.2,
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      
+      console.error("AI gateway error:", response.status, await response.text());
+      if (response.status === 429) return json({ error: "Rate limit exceeded. Please try again later." }, 429);
+      if (response.status === 402) return json({ error: "Payment required. Please add credits." }, 402);
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content: string | undefined = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("No content in AI response");
 
-    if (!content) {
-      throw new Error("No content in AI response");
-    }
-
-    // Parse the JSON from the response
-    let modelInfo;
+    let description = '';
     try {
-      // Try to extract JSON from the response (handle markdown code blocks)
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        content.match(/```\s*([\s\S]*?)\s*```/) ||
-                        [null, content];
-      modelInfo = JSON.parse(jsonMatch[1] || content);
-    } catch (parseError) {
+      const m = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      description = String(JSON.parse(m ? m[1] : content).description ?? '').trim();
+    } catch {
       console.error("Failed to parse AI response:", content);
-      throw new Error("Failed to parse model information from AI");
+      throw new Error("Failed to parse model description from AI");
     }
+    if (!description) throw new Error("AI returned an empty description");
 
-    console.log(`Successfully generated info for ${model_id}`);
-
-    return new Response(JSON.stringify(modelInfo), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-
+    return json({ description });
   } catch (error) {
     console.error("Error in generate-model-info:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Unknown error" 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
 });

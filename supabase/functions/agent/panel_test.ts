@@ -208,3 +208,40 @@ Deno.test('fewer than 2 distinct round-1 models forces low confidence and a sing
   assertEquals(applySingleOpinion(s, [a('mistral/small', null), a('mistral/large', 'mistral/medium')], n2).confidence, 'high');
   assertEquals(n2, []);
 });
+
+import { PANEL_BUDGET, shouldRunRound2, runSynthesisAttempts, synthesisAttempts } from '../_shared/panelPure.ts';
+
+Deno.test('time budget: round 2 runs when round 1 ends by 22 s, skipped after', () => {
+  assertEquals(shouldRunRound2(14_000), true);
+  assertEquals(shouldRunRound2(22_000), true);
+  assertEquals(shouldRunRound2(22_001), false);
+  assertEquals(PANEL_BUDGET.roundDeadline, 33_000);
+  assertEquals(PANEL_BUDGET.total - PANEL_BUDGET.roundDeadline, 12_000);
+});
+
+Deno.test('synthesis: judge 10 s, then one gpt-4o-mini retry with 6 s', () => {
+  assertEquals(synthesisAttempts('x/judge'), [
+    { model: 'x/judge', timeoutMs: 10_000 }, { model: 'openai/gpt-4o-mini', timeoutMs: 6_000 },
+  ]);
+});
+
+Deno.test('synthesis: invalid judge JSON retries with gpt-4o-mini', async () => {
+  const calls: string[] = [];
+  const r = await runSynthesisAttempts(synthesisAttempts('x/judge'), async (model) => { calls.push(model); return model === 'x/judge' ? null : { ok: 1 }; });
+  assertEquals(calls, ['x/judge', 'openai/gpt-4o-mini']);
+  assertEquals(r?.model, 'openai/gpt-4o-mini');
+});
+
+Deno.test('synthesis: both fail -> null (raw-answers fallback)', async () => {
+  const calls: string[] = [];
+  const r = await runSynthesisAttempts(synthesisAttempts('x/judge'), async (model) => { calls.push(model); throw new Error('timeout'); });
+  assertEquals(calls.length, 2);
+  assertEquals(r, null);
+});
+
+Deno.test('synthesis: valid judge output stops after one call', async () => {
+  let n = 0;
+  const r = await runSynthesisAttempts(synthesisAttempts('x/judge'), async () => { n++; return { ok: 1 }; });
+  assertEquals(n, 1);
+  assertEquals(r?.model, 'x/judge');
+});

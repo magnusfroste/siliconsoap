@@ -158,35 +158,11 @@ export const CuratedModelsManager = () => {
         supports_reasoning: model.supports_reasoning,
       });
 
-      // Update the model with generated content
-      await updateModelContent(model.id, {
-        description: data.description,
-        pros: data.pros,
-        cons: data.cons,
-        use_cases: data.use_cases,
-        avoid_cases: data.avoid_cases,
-        category: data.category,
-        speed_rating: data.speed_rating,
-        context_window: parseInt(data.context_window) || null,
-      });
+      // Only a draft factual description is generated
+      await updateModelContent(model.id, { description: data.description });
 
-      // Update local state
       setCuratedModels(prev =>
-        prev.map(m =>
-          m.id === model.id
-            ? {
-                ...m,
-                description: data.description,
-                pros: data.pros,
-                cons: data.cons,
-                use_cases: data.use_cases,
-                avoid_cases: data.avoid_cases,
-                category: data.category,
-                speed_rating: data.speed_rating,
-                context_window: parseInt(data.context_window) || null,
-              }
-            : m
-        )
+        prev.map(m => (m.id === model.id ? { ...m, description: data.description } : m))
       );
 
       // Auto-expand the model to show generated content
@@ -223,33 +199,10 @@ export const CuratedModelsManager = () => {
           provider: model.provider,
         });
 
-        await updateModelContent(model.id, {
-          description: data.description,
-          pros: data.pros,
-          cons: data.cons,
-          use_cases: data.use_cases,
-          avoid_cases: data.avoid_cases,
-          category: data.category,
-          speed_rating: data.speed_rating,
-          context_window: parseInt(data.context_window) || null,
-        });
+        await updateModelContent(model.id, { description: data.description });
 
         setCuratedModels(prev =>
-          prev.map(m =>
-            m.id === model.id
-              ? {
-                  ...m,
-                  description: data.description,
-                  pros: data.pros,
-                  cons: data.cons,
-                  use_cases: data.use_cases,
-                  avoid_cases: data.avoid_cases,
-                  category: data.category,
-                  speed_rating: data.speed_rating,
-                  context_window: parseInt(data.context_window) || null,
-                }
-              : m
-          )
+          prev.map(m => (m.id === model.id ? { ...m, description: data.description } : m))
         );
       } catch (error: any) {
         console.error(`Error generating info for ${model.display_name}:`, error);
@@ -367,8 +320,7 @@ export const CuratedModelsManager = () => {
     return acc;
   }, {} as Record<string, OpenRouterModel[]>);
 
-  const hasEducationalContent = (model: CuratedModel) =>
-    model.description || model.pros?.length || model.cons?.length || model.use_cases?.length;
+  const hasEducationalContent = (model: CuratedModel) => !!model.description;
 
   if (loading) {
     return (
@@ -709,68 +661,6 @@ export const CuratedModelsManager = () => {
                                     <p className="text-sm mt-1">{model.description}</p>
                                   </div>
                                 )}
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  {model.pros && model.pros.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-green-600 flex items-center gap-1">
-                                        <Check className="h-3 w-3" /> Strengths
-                                      </label>
-                                      <ul className="mt-1 space-y-1">
-                                        {model.pros.map((pro, i) => (
-                                          <li key={i} className="text-xs text-muted-foreground">
-                                            • {pro}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                  {model.cons && model.cons.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-amber-600 flex items-center gap-1">
-                                        <AlertTriangle className="h-3 w-3" /> Limitations
-                                      </label>
-                                      <ul className="mt-1 space-y-1">
-                                        {model.cons.map((con, i) => (
-                                          <li key={i} className="text-xs text-muted-foreground">
-                                            • {con}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  {model.use_cases && model.use_cases.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Best For
-                                      </label>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {model.use_cases.map((uc, i) => (
-                                          <Badge key={i} variant="secondary" className="text-xs">
-                                            {uc}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {model.avoid_cases && model.avoid_cases.length > 0 && (
-                                    <div>
-                                      <label className="text-xs font-medium text-muted-foreground">
-                                        Avoid For
-                                      </label>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {model.avoid_cases.map((ac, i) => (
-                                          <Badge key={i} variant="outline" className="text-xs">
-                                            {ac}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
 
                                 <div className="flex gap-4 text-xs text-muted-foreground">
                                   {model.category && (
