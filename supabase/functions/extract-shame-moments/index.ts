@@ -1,6 +1,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit, fetchFlag, getClientIp } from '../_shared/requestGuards.ts';
+
+const MAX_ANALYSIS_CHARS = 120_000;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,8 +16,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const json = (body: unknown, status: number) =>
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  const flag = await fetchFlag('enable_judge_bot');
+  if (!flag?.enabled) return json({ error: 'Judge is disabled' }, 403);
+
+  const allowed = await checkRateLimit('shame', getClientIp(req.headers), 600, 20);
+  if (!allowed) return json({ error: 'Too many requests. Please try again later.' }, 429);
+
   try {
     const { analysis, chatId, shareId } = await req.json();
+
+    if (typeof analysis === 'string' && analysis.length > MAX_ANALYSIS_CHARS) {
+      return json({ error: 'Analysis too long' }, 413);
+    }
     
     if (!analysis || typeof analysis !== 'string') {
       console.log('No analysis provided');

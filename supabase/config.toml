@@ -16,10 +16,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.extract-shame-moments]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-model-status]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-huggingface]
 verify_jwt = true

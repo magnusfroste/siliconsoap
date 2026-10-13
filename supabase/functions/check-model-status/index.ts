@@ -1,5 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -181,14 +183,32 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Admin users or the service-role key (for a future scheduled check) only.
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
+
   try {
     if (!OPENROUTER_API_KEY) {
       throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
-    const { model_id } = await req.json();
-    
-    if (!model_id) {
+    const body = await req.json().catch(() => ({}));
+    const { model_id, all } = body ?? {};
+
+    // Scheduled mode: { "all": true } checks every enabled curated model.
+    if (all === true && !model_id) {
+      const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const { data: rows, error } = await admin.from('curated_models').select('model_id').eq('is_enabled', true);
+      if (error) throw error;
+      const results: CheckResult[] = [];
+      for (const r of rows ?? []) {
+        results.push(await checkModel(r.model_id));
+        await new Promise((res) => setTimeout(res, 500));
+      }
+      return new Response(JSON.stringify({ results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (typeof model_id !== 'string' || !model_id || model_id.length > 200) {
       return new Response(
         JSON.stringify({ error: 'model_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
