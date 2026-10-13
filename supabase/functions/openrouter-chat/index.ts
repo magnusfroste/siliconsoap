@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { BASE_MAX_TOKENS, REASONING_BUFFER } from "../_shared/tokenBudget.ts";
 import {
   buildAllowlist, isModelAllowed, clampMaxTokens, capBoostedTokens,
-  validateMessages, totalMessageChars, getClientIp, checkRateLimit, fetchFlag,
+  validateMessages, totalMessageChars, getClientIp, checkRateLimit, fetchFlag, isAnonCaller, bearerFrom, getGuestDailyLimit,
 } from "../_shared/requestGuards.ts";
 
 let allowlistCache: { set: Set<string>; at: number } | null = null;
@@ -113,6 +113,13 @@ serve(async (req) => {
       const allowed = await checkRateLimit('openrouter-chat', getClientIp(req.headers), 600, 200);
       if (!allowed) {
         return friendly('The model is rate-limited right now. Try again in a few seconds, or pick a different model.', 'RATE_LIMIT');
+      }
+      // Daily ceiling: anonymous shared-key callers only (signed-in users are never capped here). Fail-open.
+      if (isAnonCaller(bearerFrom(req.headers), Deno.env.get('SUPABASE_ANON_KEY') ?? '')) {
+        const dailyOk = await checkRateLimit('guest-day', getClientIp(req.headers), 86400, await getGuestDailyLimit());
+        if (!dailyOk) {
+          return friendly("You've reached today's limit for free debates from this network. Sign in to keep going.", 'DAILY_LIMIT');
+        }
       }
       max_tokens = clampMaxTokens(max_tokens, BASE_MAX_TOKENS.medium);
     }

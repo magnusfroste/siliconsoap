@@ -48,3 +48,15 @@ Deno.test('ip hashing is sha-256 hex and never the raw ip', async () => {
   assertEquals(getClientIp(new Headers({ 'x-forwarded-for': '9.9.9.9, 1.1.1.1' })), '9.9.9.9');
   assertEquals(getClientIp(new Headers({ 'cf-connecting-ip': '5.5.5.5', 'x-real-ip': '6.6.6.6' })), '5.5.5.5');
 });
+
+import { isAnonCaller, resolveGuestDailyLimit } from '../_shared/requestGuards.ts';
+Deno.test('anon caller: missing bearer or anon key; user JWT is not anon', () => {
+  assert(isAnonCaller('', 'anon'));
+  assert(isAnonCaller('anon', 'anon'));
+  assert(!isAnonCaller('user.jwt.token', 'anon'));
+});
+Deno.test('guest daily limit: flag value, else 400', () => {
+  assertEquals(resolveGuestDailyLimit({ enabled: true, numeric_value: 250 }), 250);
+  assertEquals(resolveGuestDailyLimit({ enabled: false, numeric_value: 250 }), 400);
+  assertEquals(resolveGuestDailyLimit(null), 400);
+});
