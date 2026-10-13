@@ -23,7 +23,7 @@ interface ChatSidebarProps {
 
 export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user }: ChatSidebarProps) => {
   const { chats, loading, deleteChat } = useChatHistory(user?.id);
-  const { creditsRemaining, isGuest, loading: creditsLoading } = useCredits(user?.id);
+  const { creditsRemaining, creditsUsed, isGuest, loading: creditsLoading } = useCredits(user?.id);
   const { isAdmin } = useIsAdmin();
   const { getTextValue } = useFeatureFlags();
   const location = useLocation();
@@ -240,7 +240,7 @@ export const ChatSidebar = ({ onClose, collapsed = false, onToggleCollapse, user
                   {creditsRemaining}
                 </Badge>
               </div>
-              <Progress value={Math.min(100, Math.max(0, (creditsRemaining / 3) * 100))} className="h-1.5" />
+              <Progress value={(() => { const total = creditsRemaining + creditsUsed; return Math.min(100, Math.max(0, total > 0 ? (creditsRemaining / total) * 100 : 0)); })()} className="h-1.5" />
               {isGuest && creditsRemaining > 0 && (
                 <p className="text-xs text-muted-foreground">
                   Sign up for more

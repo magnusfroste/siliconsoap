@@ -88,14 +88,38 @@ export const checkRateLimit = async (bucketPrefix: string, ip: string, windowSec
 };
 
 /** Reads one feature flag row via service role. */
-export const fetchFlag = async (key: string): Promise<{ enabled: boolean; text_value: string | null } | null> => {
+export const fetchFlag = async (key: string): Promise<{ enabled: boolean; text_value: string | null; numeric_value: number | null } | null> => {
   const url = Deno.env.get('SUPABASE_URL');
   const sk = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !sk) return null;
-  const res = await fetch(`${url}/rest/v1/feature_flags?key=eq.${encodeURIComponent(key)}&select=enabled,text_value&limit=1`, {
+  const res = await fetch(`${url}/rest/v1/feature_flags?key=eq.${encodeURIComponent(key)}&select=enabled,text_value,numeric_value&limit=1`, {
     headers: { apikey: sk, Authorization: `Bearer ${sk}` },
   });
   if (!res.ok) return null;
   const rows = await res.json();
   return rows?.[0] ?? null;
+};
+
+/** Anonymous caller: no bearer token, or the bearer is the public anon key. */
+export const isAnonCaller = (bearer: string, anonKey: string): boolean =>
+  !bearer || (!!anonKey && bearer === anonKey);
+
+export const bearerFrom = (headers: Headers): string => {
+  const h = headers.get('authorization') || '';
+  return h.startsWith('Bearer ') ? h.slice(7).trim() : '';
+};
+
+export const DEFAULT_GUEST_DAILY_LIMIT = 400;
+export const resolveGuestDailyLimit = (flag: { enabled: boolean; numeric_value?: number | null } | null): number =>
+  flag && flag.enabled && typeof flag.numeric_value === 'number' && flag.numeric_value > 0
+    ? flag.numeric_value : DEFAULT_GUEST_DAILY_LIMIT;
+
+let guestLimitCache: { value: number; at: number } | null = null;
+/** Cached ~60 s per function instance. */
+export const getGuestDailyLimit = async (): Promise<number> => {
+  if (guestLimitCache && Date.now() - guestLimitCache.at < 60_000) return guestLimitCache.value;
+  let value = DEFAULT_GUEST_DAILY_LIMIT;
+  try { value = resolveGuestDailyLimit(await fetchFlag('guest_daily_call_limit')); } catch { /* fallback */ }
+  guestLimitCache = { value, at: Date.now() };
+  return value;
 };

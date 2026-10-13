@@ -50,6 +50,13 @@
       "when": 1791830855606,
       "tag": "0006_scoreboard_original_only_metrics",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791895549891,
+      "tag": "0007_guest_daily_call_limit_flag",
+      "breakpoints": true
     }
   ]
 }
