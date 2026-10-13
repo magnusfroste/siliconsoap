@@ -1,6 +1,7 @@
 import { PageHeader } from '@/components/editorial/PageHeader';
 import { OriginChip } from '@/components/model-chips';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { shortModelName } from '@/services/rosterService';
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +58,7 @@ export const StatusView = () => {
     canonicalPath: '/status',
   });
 
+  const { isAdmin } = useIsAdmin();
   const [models, setModels] = useState<CuratedModel[]>([]);
   const [statuses, setStatuses] = useState<Record<string, ModelStatus>>({});
   const [loading, setLoading] = useState(true);
@@ -206,7 +208,7 @@ export const StatusView = () => {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 md:py-12 md:px-8 space-y-6">
-      <PageHeader eyebrow="Service checks" title="Status" lead="Health checks for the models on the SiliconSoap roster." action={        <Button 
+      <PageHeader eyebrow="Service checks" title="Status" lead="Health checks for the models on the SiliconSoap roster." action={isAdmin ? (<Button 
           onClick={checkAllModels} 
           disabled={checkingAll}
           size="lg"
@@ -222,8 +224,16 @@ export const StatusView = () => {
               Run Check
             </>
           )}
-        </Button>} />
+        </Button>) : undefined} />
 
+      {(() => {
+        const hasResults = Object.values(statuses).some(s => s.status !== 'unknown');
+        return !hasResults && !isAdmin;
+      })() ? (
+        <Card className="rounded-lg shadow-none">
+          <CardContent className="pt-6 text-muted-foreground">No recent checks.</CardContent>
+        </Card>
+      ) : (<>
       {/* Summary */}
       <Card className="rounded-lg shadow-none">
         <CardContent className="pt-6">
@@ -286,6 +296,7 @@ export const StatusView = () => {
                         </span>
                       )}
                       <StatusBadge status={status?.status || 'unknown'} />
+                      {isAdmin && (<>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -307,6 +318,7 @@ export const StatusView = () => {
                       >
                         <Ban className="h-4 w-4" />
                       </Button>
+                      </>)}
                     </div>
                   </div>
                   
@@ -330,6 +342,7 @@ export const StatusView = () => {
           </CardContent>
         </section>
       ))}
+      </>)}
     </div>
   );
 };
