@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Guest save deduplication
-- [ ] Persist guest share results per chat key and deduplicate server saves within 7 days
-- [ ] Run app/edge tests, deploy save-guest-debate, verify twice and hide the single test row (no publishing)
+- [x] Persist guest share results per chat key and deduplicate server saves within 7 days
+- [x] Run app/edge tests, deploy save-guest-debate, verify twice and hide the single test row (no publishing)
 
 ## Agent pivot A fixes and B
 - [x] Constrained fallbacks, synthesis attribution, validate-before-charge/refund, guest pricing and batch cap
