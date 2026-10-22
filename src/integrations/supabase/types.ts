@@ -840,6 +840,10 @@ export type Database = {
     }
     Functions: {
       assert_credit_caller: { Args: { p_user_id: string }; Returns: undefined }
+      assert_nonnegative_tokens: {
+        Args: { p_completion: number; p_prompt: number }
+        Returns: undefined
+      }
       bump_rate_limit: {
         Args: { p_bucket: string; p_max: number; p_window_seconds: number }
         Returns: boolean

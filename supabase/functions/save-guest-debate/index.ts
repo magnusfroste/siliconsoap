@@ -1,11 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeAnsweredBy } from "./answeredBy.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { guestLookupSince, validClientKey } from "./idempotency.ts";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 function generateShareId(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -22,7 +18,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { prompt, scenarioId, settings, messages, sessionId, title } = await req.json();
+    const { prompt, scenarioId, settings, messages, sessionId, title, clientKey } = await req.json();
+
+    if (!validClientKey(clientKey)) {
+      return new Response(JSON.stringify({ error: "clientKey must be a string of 1–64 characters" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!prompt || !scenarioId || !messages || messages.length === 0) {
       return new Response(
@@ -51,6 +53,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    const since = guestLookupSince(clientKey, Date.now());
+    if (since) {
+      const { data: existing, error: lookupError } = await supabase
+        .from("agent_chats")
+        .select("id, share_id")
+        .is("user_id", null)
+        .eq("settings->>client_key", clientKey)
+        .gte("created_at", since)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) {
+        return new Response(JSON.stringify({ chatId: existing.id, shareId: existing.share_id }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const shareId = generateShareId();
 
     // Insert the chat
@@ -61,7 +82,7 @@ Deno.serve(async (req) => {
         title: title || prompt.slice(0, 80),
         prompt,
         scenario_id: scenarioId,
-        settings: settings || {},
+        settings: clientKey ? { ...(settings || {}), client_key: clientKey } : settings || {},
         is_public: true,
         share_id: shareId,
       })
