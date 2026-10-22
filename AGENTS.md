@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Guest saves persist their share ID per client chat key locally and reuse server guest rows with that key within seven days; reloads must not create another public transcript.
+
 - Keep Explore queries in its repository, archive derivation in a pure service and URL/request state in its controller hook; this preserves the view's UI-only boundary and enables rule-level tests.
 - Embed transcript agent metadata alongside aggregate counts in each Explore page query; this excludes human turns from completion and resolves legacy casts without per-debate queries.
 
