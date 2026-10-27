@@ -29,3 +29,14 @@ describe('noCreditsMessage', () => {
     expect(noCreditsMessage(false)).toBe('No credits remaining. Please purchase more credits to continue.');
   });
 });
+
+import { creditsRepository } from '@/repositories/creditsRepository';
+describe('creditsRepository.refundGuestCredit', () => {
+  it('decrements guest credits used with a floor of 0', () => {
+    localStorage.clear();
+    creditsRepository.setGuestCreditsUsed(2);
+    expect(creditsRepository.refundGuestCredit()).toBe(1);
+    creditsRepository.setGuestCreditsUsed(0);
+    expect(creditsRepository.refundGuestCredit()).toBe(0);
+  });
+});

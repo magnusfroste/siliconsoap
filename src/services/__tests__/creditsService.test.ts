@@ -11,6 +11,9 @@ vi.mock('@/repositories', () => ({
     getGuestCreditsAmount: vi.fn(),
     getGuestCreditsUsed: vi.fn(),
     useGuestCredit: vi.fn(),
+    refundGuestCredit: vi.fn(),
+    hasGuestRefund: vi.fn(),
+    markGuestRefund: vi.fn(),
     createUserCredits: vi.fn(),
     useCredit: vi.fn(),
     useTokensAndDeductCredits: vi.fn(),
@@ -342,5 +345,16 @@ describe('creditsService', () => {
       expect(result).toBe(1000);
       expect(creditsRepository.getTokensPerCredit).toHaveBeenCalled();
     });
+  });
+});
+
+describe('creditsService.refundGuestCredit', () => {
+  it('refunds once per chat and notifies', () => {
+    const spy = vi.spyOn(window, 'dispatchEvent');
+    vi.mocked(creditsRepository.hasGuestRefund).mockReturnValueOnce(false).mockReturnValueOnce(true);
+    expect(creditsService.refundGuestCredit('c1')).toBe(true);
+    expect(creditsService.refundGuestCredit('c1')).toBe(false);
+    expect(creditsRepository.refundGuestCredit).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ type: 'creditsChanged' }));
   });
 });
