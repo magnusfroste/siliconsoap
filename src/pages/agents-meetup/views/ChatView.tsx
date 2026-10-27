@@ -31,6 +31,8 @@ import { useConversationPlayback } from '../hooks/useConversationPlayback';
 import { analyticsService } from '@/services';
 import { useGuestDebateSave } from '../hooks/useGuestDebateSave';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { describeGenerationError, noCreditsMessage, type GenerationErrorView } from '@/services/generationErrorService';
+import { GenerationErrorCard } from '../components/GenerationErrorCard';
 
 export const ChatView = () => {
   const { chatId } = useParams();
@@ -47,6 +49,8 @@ export const ChatView = () => {
   const [conversationComplete, setConversationComplete] = useState(false);
   const [wantsToContinue, setWantsToContinue] = useState(false);
   const [questionExpanded, setQuestionExpanded] = useState(false);
+  const [generationError, setGenerationError] = useState<GenerationErrorView | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   
   // Refs to prevent race conditions
   const hasStartedGeneration = useRef(false);
@@ -178,13 +182,14 @@ export const ChatView = () => {
   // Reset generation flag when chatId changes
   useEffect(() => {
     hasStartedGeneration.current = false;
+    setGenerationError(null);
   }, [chatId]);
 
   // Start generation when chat is loaded and has no messages
   useEffect(() => {
     // Guard against multiple generations and race conditions
     // Wait for credits to load before checking hasCredits()
-    if (!chat || !chatId || loading || creditsLoading || messages.length > 0 || isGenerating || hasStartedGeneration.current) return;
+    if (!chat || !chatId || loading || creditsLoading || messages.length > 0 || isGenerating || hasStartedGeneration.current || generationError) return;
     
     // Mark that we've started generation to prevent duplicate calls
     hasStartedGeneration.current = true;
@@ -196,11 +201,12 @@ export const ChatView = () => {
       generationStartTime.current = Date.now();
       abortControllerRef.current = new AbortController();
       const settings = chat.settings as any;
+      let agentMessagesSaved = 0;
 
       try {
         // Check credits before starting
         if (!hasCredits()) {
-          toast.error('No credits remaining. Please purchase more credits to continue.');
+          toast.error(noCreditsMessage(isGuest));
           if (isMounted.current) setIsGenerating(false);
           return;
         }
@@ -221,6 +227,7 @@ export const ChatView = () => {
           if (!chatId || !isMounted.current) return;
           setCurrentAgent(message.agent);
           await saveMessage(chatId, message);
+          agentMessagesSaved += 1;
         };
 
         // Token usage callback - deducts credits based on token usage
@@ -347,8 +354,9 @@ export const ChatView = () => {
       } catch (error) {
         if (!isMounted.current) return;
         console.error('Error generating conversation:', error);
-        toast.error('Failed to generate conversation');
+        setGenerationError(describeGenerationError(error));
         setCurrentAgent(null);
+        if (isGuest && agentMessagesSaved === 0 && chatId) creditsService.refundGuestCredit(chatId);
       } finally {
         if (isMounted.current) {
           setIsGenerating(false);
@@ -359,7 +367,13 @@ export const ChatView = () => {
     startGeneration();
     // Note: isGenerating intentionally excluded to prevent infinite loop (hasStartedGeneration ref handles this)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat, chatId, loading, creditsLoading, messages.length, state.apiKey, saveMessage, hasCredits, refreshCredits, user?.id, creditsRemaining]);
+  }, [chat, chatId, loading, creditsLoading, messages.length, state.apiKey, saveMessage, hasCredits, refreshCredits, user?.id, creditsRemaining, retryNonce]);
+
+  const retryGeneration = () => {
+    hasStartedGeneration.current = false;
+    setGenerationError(null);
+    setRetryNonce(n => n + 1);
+  };
 
   const safeSettings = chat ? withSafeCast(chat.settings, messages) as ChatSettings : null;
   const displayLive = safeSettings ? getLiveRound(messages, safeSettings) : null;
@@ -493,7 +507,7 @@ export const ChatView = () => {
                   }
                 } catch (error) {
                   console.error('Error continuing rounds:', error);
-                  toast.error('Failed to continue conversation');
+                  toast.error(describeGenerationError(error).message);
                   setCurrentAgent(null);
                 } finally {
                   setIsGenerating(false);
@@ -504,7 +518,7 @@ export const ChatView = () => {
               
               // Check credits before user follow-up
               if (!hasCredits()) {
-                toast.error('No credits remaining. Please purchase more credits to continue.');
+                toast.error(noCreditsMessage(isGuest));
                 return;
               }
               
@@ -655,7 +669,7 @@ export const ChatView = () => {
                 }
               } catch (error) {
                 console.error('Error handling user message:', error);
-                toast.error('Failed to process your message');
+                toast.error(describeGenerationError(error).message);
                 setCurrentAgent(null);
               } finally {
                 setIsGenerating(false);
@@ -690,6 +704,7 @@ export const ChatView = () => {
         })}
         {isGenerating && answeringAgent && <>{(!rounded.length || live.round > (rounded[rounded.length - 1]?.round || 0)) && <RoundSeparator roundNumber={live.round} totalConfiguredRounds={settings.rounds} isFinalRound={live.round === settings.rounds} />}<AnsweringMessage agent={answeringAgent} settings={settings} seconds={answeringSeconds} /></>}
         {isGenerating && <p className="rounded-md border bg-card px-4 py-3 text-xs text-muted-foreground">{live.round >= settings.rounds ? 'Final round' : <>Up next: Round {live.round + 1} · {(['A', 'B', 'C'] as const).slice(0, settings.numberOfAgents).map(letter => agentDisplayName(`Agent ${letter}`, settings.personas[`agent${letter}`], (settings as { agentNames?: AgentNames }).agentNames)).join(', ')} respond to each other</>}</p>}
+        {generationError && !isGenerating && <GenerationErrorCard error={generationError} onRetry={messages.length === 0 ? retryGeneration : undefined} />}
         {waitingForUserInput && !isGenerating && <RoundPausePrompt roundNumber={currentRoundInProgress - 1} onSkip={onSkip}><div className="hidden md:block">{input}</div></RoundPausePrompt>}
         {conversationComplete && !isGenerating && <DebateCompletion answers={answers} rounds={actualRounds} shareId={shareId} saving={isSavingGuest} saveFailed={guestSaveFailed} onRetrySave={retryGuestSave} title={chat.title} prompt={chat.prompt} onCopy={handleCopyShareClick} judgeEnabled={judgeBotEnabled} isGuest={isGuest} onJudge={() => setShowAnalysisDrawer(true)} audioEnabled={audioPlaybackEnabled} onPlay={play} onTheater={playTheater} />}
         {judgeBotEnabled && analysisResults && <JudgeVerdict analysis={analysisResults} />}
