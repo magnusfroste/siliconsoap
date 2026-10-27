@@ -10,6 +10,16 @@ export interface CompletionResult {
   originalModel?: string;
 }
 
+/** Error from a friendly server response; keeps the server code (e.g. DAILY_LIMIT). */
+export class GenerationApiError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = 'GenerationApiError';
+    this.code = code;
+  }
+}
+
 // Edge function response type that includes error handling
 interface EdgeFunctionResponse {
   error?: string;
@@ -92,10 +102,10 @@ export const callOpenRouterWithUsage = async (
 
       // Handle rate limit
       if (response.code === "RATE_LIMIT") {
-        throw new Error("Rate limit exceeded. Please try again later.");
+        throw new GenerationApiError("Rate limit exceeded. Please try again later.", "RATE_LIMIT");
       }
 
-      throw new Error(response.error);
+      throw new GenerationApiError(response.error, response.code || "UNKNOWN");
     }
 
     if (!response.choices || !response.choices[0] || !response.choices[0].message) {

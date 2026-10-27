@@ -89,6 +89,20 @@ export const creditsRepository = {
     return newUsed;
   },
 
+  refundGuestCredit(): number {
+    const newUsed = Math.max(0, this.getGuestCreditsUsed() - 1);
+    this.setGuestCreditsUsed(newUsed);
+    return newUsed;
+  },
+
+  hasGuestRefund(chatId: string): boolean {
+    try { return localStorage.getItem(`guest_credit_refunded_${chatId}`) === '1'; } catch { return false; }
+  },
+
+  markGuestRefund(chatId: string): void {
+    try { localStorage.setItem(`guest_credit_refunded_${chatId}`, '1'); } catch { /* storage unavailable */ }
+  },
+
   // Get configurable credit amounts from feature flags
   async getGuestCreditsAmount(): Promise<number> {
     const { data } = await supabase

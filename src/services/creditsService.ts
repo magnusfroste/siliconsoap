@@ -106,6 +106,15 @@ export const creditsService = {
     }
   },
 
+  /** Give a guest credit back for a debate that produced nothing. Once per chat; returns true if refunded. */
+  refundGuestCredit(chatId: string): boolean {
+    if (creditsRepository.hasGuestRefund(chatId)) return false;
+    creditsRepository.markGuestRefund(chatId);
+    creditsRepository.refundGuestCredit();
+    window.dispatchEvent(new CustomEvent('creditsChanged'));
+    return true;
+  },
+
   // Check if credits are exhausted
   isCreditsExhausted(creditsRemaining: number): boolean {
     return creditsRemaining <= 0;
