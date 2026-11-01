@@ -58,3 +58,7 @@
 - [x] Status page meta and neutral no-session payment state
 - [ ] Stale `/leaderboard` entries in `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt` and the sitemap function — awaiting the user's go-ahead to edit SEO files and redeploy
 
+
+## Shared debate social previews
+- [x] og-image returns a 1200x630 PNG; missing/private ids redirect to the static image
+- [x] prerender adds image size/type tags and a model-vs-model description
