@@ -1,6 +1,7 @@
 // v1.3.0 - Complete rewrite 2026-01-20
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildShareDescription, modelLabels } from "../_shared/sharePreview.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -132,14 +133,24 @@ serve(async (req: Request) => {
     const agents = [...new Set(messages.map(m => m.agent))];
     const models = [...new Set(messages.map(m => m.model))];
 
+    // Display names for the preview description
+    const names: Record<string, string> = {};
+    if (models.length) {
+      const { data: curated } = await supabase.from('curated_models').select('model_id, display_name').in('model_id', models);
+      for (const c of curated || []) if (c.display_name) names[c.model_id] = c.display_name;
+    }
+    const isPanel = (chat.settings as Record<string, unknown> | null)?.mode === 'panel';
+    const hasSynthesis = !!(chat.settings as Record<string, unknown> | null)?.synthesis;
+
     // Generate meta tags
     const title = escapeHtml(chat.title || 'AI Debate');
-    const description = escapeHtml(
-      chat.prompt.length > 155 
-        ? chat.prompt.substring(0, 155) + '...' 
-        : chat.prompt
-    );
-    const ogImageUrl = `${supabaseUrl}/functions/v1/og-image?shareId=${shareId}`;
+    const description = escapeHtml(buildShareDescription({
+      prompt: chat.prompt || '',
+      models: modelLabels(models, names),
+      isPanel,
+      hasContent: messages.length > 0 || hasSynthesis,
+    }));
+    const ogImageUrl = `${supabaseUrl}/functions/v1/og-image?shareId=${encodeURIComponent(shareId)}`;
     const canonicalUrl = `${BASE_URL}/shared/${shareId}`;
 
     // Generate full HTML with structured data for crawlers
@@ -163,6 +174,11 @@ serve(async (req: Request) => {
   <meta property="og:title" content="${title} | SiliconSoap">
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${ogImageUrl}">
+  <meta property="og:image:secure_url" content="${ogImageUrl}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:alt" content="${title}">
   <meta property="og:site_name" content="SiliconSoap">
   
   <!-- Twitter -->
