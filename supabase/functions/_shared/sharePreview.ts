@@ -13,7 +13,8 @@ export function modelLabels(modelIds: string[], displayNames: Record<string, str
   const out: string[] = [];
   for (const id of modelIds) {
     if (!id) continue;
-    const label = displayNames[id] || shortModelId(id);
+    // Strip OpenRouter-style "Provider: " prefixes ("Z.ai: GLM 4.7 Flash" -> "GLM 4.7 Flash").
+    const label = (displayNames[id] || shortModelId(id)).replace(/^[^:]{1,30}:\s+/, '');
     if (!out.includes(label)) out.push(label);
   }
   return out;

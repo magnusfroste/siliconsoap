@@ -22,7 +22,7 @@ Deno.test("panels are labelled as panels", () => {
 });
 
 Deno.test("model labels use display names and dedupe", () => {
-  assertEquals(modelLabels(["z-ai/glm-4.7-flash", "x/y:free", "z-ai/glm-4.7-flash"], { "z-ai/glm-4.7-flash": "GLM 4.7 Flash" }), ["GLM 4.7 Flash", "y"]);
+  assertEquals(modelLabels(["z-ai/glm-4.7-flash", "x/y:free", "z-ai/glm-4.7-flash"], { "z-ai/glm-4.7-flash": "Z.ai: GLM 4.7 Flash" }), ["GLM 4.7 Flash", "y"]);
 });
 
 Deno.test("truncate adds an ellipsis", () => {
