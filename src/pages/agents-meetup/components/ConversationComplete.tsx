@@ -1,3 +1,4 @@
+import { publicShareUrl } from '@/services/shareUrlService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MessageCircle, Sparkles, UserPlus, Share2, Loader2 } from 'lucide-react';
@@ -49,7 +50,7 @@ export const ConversationComplete = ({
                 variant="outline" 
                 size="sm" 
                 onClick={async () => {
-                  const shareUrl = `${window.location.origin}/shared/${shareId}`;
+                  const shareUrl = publicShareUrl(shareId);
                   await navigator.clipboard.writeText(shareUrl);
                   const { toast } = await import('sonner');
                   toast.success('Link copied!');

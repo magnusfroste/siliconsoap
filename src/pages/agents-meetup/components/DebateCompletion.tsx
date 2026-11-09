@@ -1,3 +1,4 @@
+import { publicShareUrl } from '@/services/shareUrlService';
 import { Link } from 'react-router-dom';
 import { Copy, RotateCcw, Headphones, Linkedin, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ export function DebateCompletion({ answers, rounds, shareId, saving, saveFailed 
   answers: number; rounds: number; shareId?: string | null; saving: boolean; saveFailed?: boolean; onRetrySave?: () => void; title?: string; prompt: string; onCopy: () => void;
   judgeEnabled: boolean; isGuest: boolean; onJudge: () => void; audioEnabled: boolean; onPlay: () => void; onTheater: () => void;
 }) {
-  const shareUrl = shareId ? `https://siliconsoap.com/shared/${shareId}` : '';
+  const shareUrl = shareId ? publicShareUrl(shareId) : '';
   const base = (title || prompt).replace(/\s+/g, ' ').trim();
   const shareText = `AI models debate: ${base.length > 120 ? `${base.slice(0, 117).trimEnd()}…` : base}`;
   const social = (url: string) => window.open(url, '_blank', 'noopener,noreferrer,width=600,height=600');

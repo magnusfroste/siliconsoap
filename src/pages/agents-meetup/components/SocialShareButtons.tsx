@@ -1,3 +1,4 @@
+import { publicShareUrl, shareIdFromUrl } from '@/services/shareUrlService';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { trackShare } from '@/utils/analytics';
@@ -11,20 +12,9 @@ interface SocialShareButtonsProps {
 }
 
 export const SocialShareButtons = ({ url, title, description }: SocialShareButtonsProps) => {
-  // Ensure we use the production URL for sharing
-  const getShareUrl = () => {
-    // If already a production URL, use it
-    if (url.includes('siliconsoap.com') || url.includes('agent-labs.lovable.app')) {
-      return url;
-    }
-    // Convert preview/localhost URLs to production
-    const shareId = url.split('/shared/')[1];
-    if (shareId) {
-      return `https://siliconsoap.com/shared/${shareId}`;
-    }
-    return url;
-  };
-  
+  const parsedShareId = shareIdFromUrl(url);
+  const getShareUrl = () => (parsedShareId ? publicShareUrl(parsedShareId) : url);
+
   const shareUrl = getShareUrl();
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
@@ -36,7 +26,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
-    trackShare({ shareId: url.split('/shared/')[1] || '', platform });
+    trackShare({ shareId: parsedShareId, platform });
     const shareWindow = window.open(shareLinks[platform], '_blank', 'width=600,height=600,noopener,noreferrer');
     
     if (shareWindow) {
@@ -57,7 +47,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'copy_link' });
+      trackShare({ shareId: parsedShareId, platform: 'copy_link' });
       toast.success('Link copied to clipboard!');
     } catch {
       toast.error('Failed to copy link');
@@ -67,7 +57,7 @@ export const SocialShareButtons = ({ url, title, description }: SocialShareButto
   const handleNativeShare = async () => {
     try {
       await navigator.share({ title, text: description, url: shareUrl });
-      trackShare({ shareId: url.split('/shared/')[1] || '', platform: 'copy_link' });
+      trackShare({ shareId: parsedShareId, platform: 'copy_link' });
     } catch (err) {
       // User cancelled or share failed silently — no toast needed
       if ((err as Error)?.name !== 'AbortError') {
