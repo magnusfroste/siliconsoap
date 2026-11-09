@@ -1,3 +1,4 @@
+import { publicShareUrl } from '@/services/shareUrlService';
 import { PanelSynthesis } from '../components/PanelSynthesis';
 import { DebateMessage } from '../components/DebateMessage';
 import { DebateProgress, AnsweringMessage, getLiveRound, useAnsweringClock } from '../components/DebateProgress';
@@ -122,7 +123,7 @@ export const ChatView = () => {
       shareId = (await shareChat(chatId)) ?? undefined;
     }
     if (shareId) {
-      const shareUrl = `${window.location.origin}/shared/${shareId}`;
+      const shareUrl = publicShareUrl(shareId);
       try { await navigator.clipboard.writeText(shareUrl); toast.success('Link copied'); }
       catch { toast.error('Could not copy the link'); }
     }
@@ -415,7 +416,7 @@ export const ChatView = () => {
   const candidate = ['Agent A', 'Agent B', 'Agent C'].slice(0, settings.numberOfAgents).find(agent => !live.spoken.has(agent));
   const answeringAgent = isGenerating ? (currentAgent && !live.spoken.has(currentAgent) ? currentAgent : candidate || null) : null;
   const shareId = guestShareId || chat.share_id;
-  const shareUrl = shareId ? `https://siliconsoap.com/shared/${shareId}` : undefined;
+  const shareUrl = shareId ? publicShareUrl(shareId) : undefined;
   const shouldShowInput = mode === 'spectator' ? false : mode === 'round-by-round' ? waitingForUserInput || wantsToContinue : conversationComplete || wantsToContinue || !isGenerating;
   const bias = settings.agreementBias ?? 50;
   const chips = [mode === 'spectator' ? 'Spectator' : mode === 'round-by-round' ? 'Round by round' : 'Jump in', `${settings.conversationTone || 'collaborative'} tone`, ...(bias !== 50 ? [`${bias < 30 ? "Devil's advocate" : bias > 70 ? 'Agreeable' : 'Balanced'} · bias ${bias}`] : []), `${settings.rounds} round${settings.rounds === 1 ? '' : 's'}`];

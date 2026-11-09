@@ -1,3 +1,4 @@
+import { publicShareUrl } from '@/services/shareUrlService';
 import { PanelSynthesis } from '../components/PanelSynthesis';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -84,7 +85,7 @@ export const SharedChatView = () => {
   const personas = [cast.personas.agentA, cast.personas.agentB, cast.personas.agentC];
   const rerun = `/new?prompt=${encodeURIComponent(chat.prompt)}`;
   const shareUrl = window.location.href;
-  const productionUrl = shareId ? `${BASE_URL}/shared/${shareId}` : shareUrl;
+  const productionUrl = shareId ? publicShareUrl(shareId) : shareUrl;
   const totalRounds = rounded.length ? Math.max(rounds, rounded[rounded.length - 1].round) : rounds;
   const groups = rounded.reduce<{ round: number; items: RoundedMsg[] }[]>((acc, entry) => {
     const last = acc[acc.length - 1];
