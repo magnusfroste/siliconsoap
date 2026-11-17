@@ -73,7 +73,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@lovable.dev/vite-plugin-dev-server-bridge": "^1.0.2",
-    "@lovable.dev/vite-plugin-hmr-gate": "^1.8.0",
+    "@lovable.dev/vite-plugin-hmr-gate": "^1.8.3",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
