@@ -735,7 +735,7 @@
       {
         "name": "seed_featured_debate",
         "title": "Seed a featured debate",
-        "description": "Admin only. Generate a complete public showcase debate on SiliconSoap (visible on /explore) with the given topic, agents and a realistic view count. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account and is meant for editorial/featured content, not personal debates.",
+        "description": "Admin only. Generate a complete public editorial debate on SiliconSoap (visible on /explore) with the given topic and agents. No views or reactions are seeded by default. Set featured=false and series='daily' for Today's debate without replacing the weekly showdown. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account, not as a personal debate.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -793,20 +793,29 @@
               "description": "ISO date to backdate the debate to. Defaults to now.",
               "type": "string"
             },
+            "featured": {
+              "description": "Feature as the weekly showdown. Default true; use false for daily debates.",
+              "type": "boolean"
+            },
+            "series": {
+              "description": "Optional editorial series, e.g. 'daily'. Maximum 32 characters.",
+              "type": "string",
+              "maxLength": 32
+            },
             "view_count_min": {
-              "description": "Default 40.",
+              "description": "Minimum seeded views. Default 0 (no fabricated engagement).",
               "type": "integer",
               "minimum": -9007199254740991,
               "maximum": 9007199254740991
             },
             "view_count_max": {
-              "description": "Default 400.",
+              "description": "Maximum seeded views. Default 0 (no fabricated engagement).",
               "type": "integer",
               "minimum": -9007199254740991,
               "maximum": 9007199254740991
             },
             "reaction_count": {
-              "description": "Number of seeded emoji reactions. Default 6.",
+              "description": "Number of seeded reactions. Default 0 (no fabricated engagement).",
               "type": "integer",
               "minimum": -9007199254740991,
               "maximum": 9007199254740991

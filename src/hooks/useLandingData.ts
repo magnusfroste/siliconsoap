@@ -1,6 +1,8 @@
 import { stripSpeakerLabel } from '@/pages/agents-meetup/utils/speakerLabel';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchDailyDebates } from '@/repositories/dailyDebateRepository';
+import { selectDailyDebate, type DailyDebate } from '@/services/dailyDebateService';
 
 export interface LandingModel {
   model_id: string;
@@ -143,6 +145,7 @@ export interface LandingData {
   originCounts: RosterCount[];
   newestAddedAt: string | null;
   showdown: Showdown | null;
+  dailyDebate: DailyDebate | null;
   archive: ArchiveDebate[];
 }
 
@@ -155,6 +158,7 @@ export function useLandingData(): LandingData {
     originCounts: [],
     newestAddedAt: null,
     showdown: null,
+    dailyDebate: null,
     archive: [],
   });
 
@@ -162,7 +166,8 @@ export function useLandingData(): LandingData {
     let active = true;
 
     const load = async () => {
-      const [{ data: models }, { data: featured }, { data: archiveRows }] = await Promise.all([
+      const now = Date.now();
+      const [{ data: models }, { data: featured }, { data: archiveRows }, dailyRows] = await Promise.all([
         supabase
           .from('curated_models')
           .select(
@@ -182,6 +187,7 @@ export function useLandingData(): LandingData {
           .from('agent_chats')
           .select('share_id, prompt, title, settings')
           .in('share_id', ARCHIVE_SHARE_IDS),
+        fetchDailyDebates(now).catch(() => []),
       ]);
 
       if (!active) return;
@@ -279,6 +285,7 @@ export function useLandingData(): LandingData {
           .sort((a, b) => b.count - a.count),
         newestAddedAt: enabled[0]?.created_at ?? null,
         showdown,
+        dailyDebate: selectDailyDebate(dailyRows, enabled, now),
         archive,
       });
     };

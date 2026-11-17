@@ -77,6 +77,7 @@ export const Landing = () => {
     originCounts,
     newestAddedAt,
     showdown,
+    dailyDebate,
     archive,
   } = useLandingData();
 
@@ -348,6 +349,19 @@ export const Landing = () => {
           </div>
         </Link>
       </section>
+
+      {dailyDebate && (
+        <section aria-label="Today's debate" className="mx-auto max-w-[1280px] px-4 pb-8 md:px-10 md:pb-12">
+          <Link to={`/shared/${dailyDebate.shareId}`} className="flex min-h-11 flex-col gap-3 rounded-lg border border-border bg-card p-5 text-card-foreground transition-colors hover:border-primary md:flex-row md:items-center md:justify-between md:gap-8 md:p-6">
+            <div className="min-w-0 space-y-2">
+              <span className="text-xs font-semibold uppercase text-primary">Today's debate</span>
+              <h2 className="break-words font-display text-2xl font-semibold leading-tight md:text-3xl">{dailyDebate.title}</h2>
+              <p className="break-words text-sm text-muted-foreground">{dailyDebate.modelNames.join(' · ')}</p>
+            </div>
+            <span className="flex min-h-11 shrink-0 items-center gap-2 text-sm font-semibold text-primary">Read the debate <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+          </Link>
+        </section>
+      )}
 
       {/* New models */}
       <section

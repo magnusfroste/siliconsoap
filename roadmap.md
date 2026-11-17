@@ -1,5 +1,10 @@
 # Roadmap
 
+## Daily editorial debates
+- [x] Add optional featured/series inputs with zero seeded engagement; regenerate the bundled MCP tool and extract its manifest
+- [x] Persist optional series metadata and show a recent daily landing card without changing showdown/archive
+- [x] 126 tests pass; preview build/typecheck OK; desktop/mobile card and link verified with fixture data; Explore accepts daily public debates; nothing published
+
 ## Guest save deduplication
 - [x] Persist guest share results per chat key and deduplicate server saves within 7 days
 - [x] Run app/edge tests, deploy save-guest-debate, verify twice and hide the single test row (no publishing)

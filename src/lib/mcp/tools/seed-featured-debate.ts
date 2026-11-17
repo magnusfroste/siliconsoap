@@ -13,7 +13,7 @@ export default defineTool({
   name: "seed_featured_debate",
   title: "Seed a featured debate",
   description:
-    "Admin only. Generate a complete public showcase debate on SiliconSoap (visible on /explore) with the given topic, agents and a realistic view count. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account and is meant for editorial/featured content, not personal debates.",
+    "Admin only. Generate a complete public editorial debate on SiliconSoap (visible on /explore) with the given topic and agents. No views or reactions are seeded by default. Set featured=false and series='daily' for Today's debate without replacing the weekly showdown. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account, not as a personal debate.",
   inputSchema: {
     topic: z.string().describe("Short headline for the debate."),
     prompt: z.string().optional().describe("Full question the agents debate. Defaults to `topic`."),
@@ -28,9 +28,11 @@ export default defineTool({
       .optional()
       .describe("Defaults to 'general-problem'."),
     target_date: z.string().optional().describe("ISO date to backdate the debate to. Defaults to now."),
-    view_count_min: z.number().int().optional().describe("Default 40."),
-    view_count_max: z.number().int().optional().describe("Default 400."),
-    reaction_count: z.number().int().optional().describe("Number of seeded emoji reactions. Default 6."),
+    featured: z.boolean().optional().describe("Feature as the weekly showdown. Default true; use false for daily debates."),
+    series: z.string().max(32).optional().describe("Optional editorial series, e.g. 'daily'. Maximum 32 characters."),
+    view_count_min: z.number().int().optional().describe("Minimum seeded views. Default 0 (no fabricated engagement)."),
+    view_count_max: z.number().int().optional().describe("Maximum seeded views. Default 0 (no fabricated engagement)."),
+    reaction_count: z.number().int().optional().describe("Number of seeded reactions. Default 0 (no fabricated engagement)."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   handler: async (input, ctx) => {
@@ -69,11 +71,12 @@ export default defineTool({
             prompt: (input.prompt ?? input.topic).trim(),
             targetDate: input.target_date ?? new Date().toISOString(),
             agents,
-            viewCountMin: input.view_count_min ?? 40,
-            viewCountMax: input.view_count_max ?? 400,
-            reactionCount: input.reaction_count ?? 6,
+            viewCountMin: input.view_count_min ?? 0,
+            viewCountMax: input.view_count_max ?? 0,
+            reactionCount: input.reaction_count ?? 0,
             scenarioId: input.scenario_id ?? "general-problem",
-            featured: true,
+            featured: input.featured ?? true,
+            series: input.series,
           },
         });
         if (status >= 400) {

@@ -717,7 +717,7 @@ var PERSONA_INSTRUCTIONS = {
 var seed_featured_debate_default = defineTool17({
   name: "seed_featured_debate",
   title: "Seed a featured debate",
-  description: "Admin only. Generate a complete public showcase debate on SiliconSoap (visible on /explore) with the given topic, agents and a realistic view count. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account and is meant for editorial/featured content, not personal debates.",
+  description: "Admin only. Generate a complete public editorial debate on SiliconSoap (visible on /explore) with the given topic and agents. No views or reactions are seeded by default. Set featured=false and series='daily' for Today's debate without replacing the weekly showdown. Use `list_models` to pick model ids. Unlike `create_debate` this runs as the platform's demo account, not as a personal debate.",
   inputSchema: {
     topic: z15.string().describe("Short headline for the debate."),
     prompt: z15.string().optional().describe("Full question the agents debate. Defaults to `topic`."),
@@ -726,9 +726,11 @@ var seed_featured_debate_default = defineTool17({
     personas: z15.array(z15.enum(["analytical", "creative", "strategic", "empathetic"])).optional().describe("One persona per agent. Defaults cycle through the four personas."),
     scenario_id: z15.enum(["general-problem", "ethical-dilemma", "future-prediction"]).optional().describe("Defaults to 'general-problem'."),
     target_date: z15.string().optional().describe("ISO date to backdate the debate to. Defaults to now."),
-    view_count_min: z15.number().int().optional().describe("Default 40."),
-    view_count_max: z15.number().int().optional().describe("Default 400."),
-    reaction_count: z15.number().int().optional().describe("Number of seeded emoji reactions. Default 6.")
+    featured: z15.boolean().optional().describe("Feature as the weekly showdown. Default true; use false for daily debates."),
+    series: z15.string().max(32).optional().describe("Optional editorial series, e.g. 'daily'. Maximum 32 characters."),
+    view_count_min: z15.number().int().optional().describe("Minimum seeded views. Default 0 (no fabricated engagement)."),
+    view_count_max: z15.number().int().optional().describe("Maximum seeded views. Default 0 (no fabricated engagement)."),
+    reaction_count: z15.number().int().optional().describe("Number of seeded reactions. Default 0 (no fabricated engagement).")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   handler: async (input, ctx) => {
@@ -765,11 +767,12 @@ var seed_featured_debate_default = defineTool17({
             prompt: (input.prompt ?? input.topic).trim(),
             targetDate: input.target_date ?? (/* @__PURE__ */ new Date()).toISOString(),
             agents,
-            viewCountMin: input.view_count_min ?? 40,
-            viewCountMax: input.view_count_max ?? 400,
-            reactionCount: input.reaction_count ?? 6,
+            viewCountMin: input.view_count_min ?? 0,
+            viewCountMax: input.view_count_max ?? 0,
+            reactionCount: input.reaction_count ?? 0,
             scenarioId: input.scenario_id ?? "general-problem",
-            featured: true
+            featured: input.featured ?? true,
+            series: input.series
           }
         });
         if (status >= 400) {

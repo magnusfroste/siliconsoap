@@ -29,6 +29,7 @@ interface SeedRequest {
   reactionCount: number;
   scenarioId: string;
   featured?: boolean;
+  series?: string;
   conversationTone?: string;
   agreementBias?: number;
   temperature?: number;
@@ -209,6 +210,12 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: SeedRequest = await req.json();
+    if (body.series !== undefined && (typeof body.series !== 'string' || body.series.length > 32)) {
+      return new Response(JSON.stringify({ error: 'series must be a string of at most 32 characters' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const {
       topic,
       prompt,
@@ -351,6 +358,7 @@ This is the second round. Respond to the other agents' points, defend your posit
         prompt: prompt,
         scenario_id: scenarioId,
         settings: {
+          ...(body.series !== undefined ? { series: body.series } : {}),
           numberOfAgents: agents.length,
           rounds: 2,
           responseLength: SEED_RESPONSE_LENGTH,

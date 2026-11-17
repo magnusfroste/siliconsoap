@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Keep daily landing queries in a repository, the 48-hour public-series selection in a pure service, and loading in useLandingData; daily cards must not alter weekly showdown selection.
+
 - Guest saves persist their share ID per client chat key locally and reuse server guest rows with that key within seven days; reloads must not create another public transcript.
 
 - Keep Explore queries in its repository, archive derivation in a pure service and URL/request state in its controller hook; this preserves the view's UI-only boundary and enables rule-level tests.
