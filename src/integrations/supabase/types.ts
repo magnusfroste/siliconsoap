@@ -118,6 +118,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           prompt: string
+          real_view_count: number
           run_completed_at: string | null
           run_current_round: number | null
           run_error: string | null
@@ -140,6 +141,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           prompt: string
+          real_view_count?: number
           run_completed_at?: string | null
           run_current_round?: number | null
           run_error?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           prompt?: string
+          real_view_count?: number
           run_completed_at?: string | null
           run_current_round?: number | null
           run_error?: string | null
@@ -533,6 +536,35 @@ export type Database = {
         }
         Relationships: []
       }
+      debate_views: {
+        Row: {
+          chat_id: string
+          created_at: string | null
+          viewed_on: string
+          visitor_key: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string | null
+          viewed_on?: string
+          visitor_key: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string | null
+          viewed_on?: string
+          visitor_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debate_views_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edge_rate_limits: {
         Row: {
           bucket: string
@@ -895,6 +927,10 @@ export type Database = {
           tracked_answers: number
           unsourced_answers: number
         }[]
+      }
+      record_debate_view: {
+        Args: { p_share_id: string; p_visitor_key: string }
+        Returns: undefined
       }
       refund_agent_guest_credit: {
         Args: { p_key_id: string }

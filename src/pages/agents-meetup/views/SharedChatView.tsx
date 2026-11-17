@@ -1,6 +1,6 @@
 import { publicShareUrl } from '@/services/shareUrlService';
 import { PanelSynthesis } from '../components/PanelSynthesis';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Copy, Droplets, Lock, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,7 +13,6 @@ import { AgentAvatar } from '@/components/labs/agent-card/AgentAvatar';
 import { LicenseChip, OriginChip, SpeedChip } from '@/components/model-chips';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { supabase } from '@/integrations/supabase/client';
 import { fallbackTurnsNote } from '../utils/fallbackLabel';
 import { getEnabledModels } from '@/repositories/curatedModelsRepository';
 import type { CuratedModel } from '@/models/model';
@@ -36,16 +35,10 @@ export const SharedChatView = () => {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   const { chat, messages, loading, error } = useSharedChat(shareId);
-  const tracked = useRef(false);
   const [models, setModels] = useState<CuratedModel[]>([]);
   const [claimsOpen, setClaimsOpen] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
 
   useEffect(() => { getEnabledModels().then(setModels).catch(() => setModels([])); }, []);
-  useEffect(() => {
-    if (!shareId || tracked.current) return;
-    tracked.current = true;
-    void supabase.rpc('increment_chat_view_count', { p_share_id: shareId });
-  }, [shareId]);
 
   useEffect(() => {
     if (!chat) return;

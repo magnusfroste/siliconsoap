@@ -1,5 +1,11 @@
 # Roadmap
 
+## Real debate views
+- [x] Add hashed daily view recording and protected real counter
+- [x] Track successful production shared-page loads without changing displayed counts
+- [x] Add admin-only MCP real-view fields and regenerate bundle/manifest
+- [x] 150 app tests and transactional database regressions pass; production-host browser tracking verified with intercepted RPC, bots/localhost excluded; nothing published
+
 ## Daily editorial debates
 - [x] Add optional featured/series inputs with zero seeded engagement; regenerate the bundled MCP tool and extract its manifest
 - [x] Persist optional series metadata and show a recent daily landing card without changing showdown/archive

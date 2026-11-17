@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Record shared-debate real views through the shared-chat controller, best-effort service and RPC repository; hash and deduplicate visitors in the database and keep seeded/displayed counts separate. MCP real-view fields require server-validated admin identity while existing public tool outputs remain available.
+
 - Keep daily landing queries in a repository, the 48-hour public-series selection in a pure service, and loading in useLandingData; daily cards must not alter weekly showdown selection.
 
 - Guest saves persist their share ID per client chat key locally and reuse server guest rows with that key within seven days; reloads must not create another public transcript.

@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, ok, supabaseAnon } from "../supabase";
+import { fail, ok, supabaseAnon, supabaseForUser, isAdmin } from "../supabase";
 
 export default defineTool({
   name: "list_debates",
@@ -16,13 +16,16 @@ export default defineTool({
     limit: z.number().int().optional().describe("1-50, default 20."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ search, order, limit }) => {
-    const supabase = supabaseAnon();
+  handler: async ({ search, order, limit }, ctx) => {
+    const admin = ctx.isAuthenticated() && await isAdmin(ctx);
+    const supabase = admin ? supabaseForUser(ctx) : supabaseAnon();
     const take = Math.min(Math.max(limit ?? 20, 1), 50);
     let query = supabase
       .from("agent_chats")
       .select(
-        "id, title, prompt, scenario_id, settings, share_id, view_count, created_at, run_status",
+        admin
+          ? "id, title, prompt, scenario_id, settings, share_id, view_count, real_view_count, created_at, run_status"
+          : "id, title, prompt, scenario_id, settings, share_id, view_count, created_at, run_status",
       )
       .eq("is_public", true)
       .is("deleted_at", null);

@@ -57,6 +57,20 @@
       "when": 1791895549891,
       "tag": "0007_guest_daily_call_limit_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794955097394,
+      "tag": "0008_record_real_debate_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794955329892,
+      "tag": "0009_restrict_debate_view_ledger_access",
+      "breakpoints": true
     }
   ]
 }

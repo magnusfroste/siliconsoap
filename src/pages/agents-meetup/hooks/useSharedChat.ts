@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { recordSharedDebateView } from '@/services/debateViewsService';
 import { chatService } from '@/services';
 import { Chat, ChatMessage, ChatSettings } from '@/models/chat';
 
@@ -14,6 +15,7 @@ interface ChatData {
 }
 
 export const useSharedChat = (shareId: string | undefined) => {
+  const recordedShares = useRef(new Set<string>());
   const [chat, setChat] = useState<ChatData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +69,10 @@ export const useSharedChat = (shareId: string | undefined) => {
       });
 
       setMessages(messagesData);
+      if (!recordedShares.current.has(shareId)) {
+        recordedShares.current.add(shareId);
+        void recordSharedDebateView(shareId);
+      }
     } catch (err) {
       console.error('Error loading shared chat:', err);
       setError('not_found');

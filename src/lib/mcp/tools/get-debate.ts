@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { fail, ok, supabaseAnon, supabaseForUser } from "../supabase";
+import { fail, ok, supabaseAnon, supabaseForUser, isAdmin } from "../supabase";
 
 export default defineTool({
   name: "get_debate",
@@ -17,10 +17,13 @@ export default defineTool({
     const supabase = ctx.isAuthenticated() ? supabaseForUser(ctx) : supabaseAnon();
 
     let query = supabase.from("agent_chats").select("*").is("deleted_at", null);
-    query = id ? query.eq("id", id) : query.eq("share_id", share_id!);
+    if (id) query = query.eq("id", id);
+    else if (share_id) query = query.eq("share_id", share_id);
     const { data: debate, error } = await query.maybeSingle();
     if (error) return fail(error.message);
     if (!debate) return fail("Debate not found (or not public).");
+    const admin = ctx.isAuthenticated() && await isAdmin(ctx);
+    const { real_view_count, ...existingDebate } = debate;
 
     const { data: messages, error: msgErr } = await supabase
       .from("agent_chat_messages")
@@ -30,7 +33,7 @@ export default defineTool({
     if (msgErr) return fail(msgErr.message);
 
     return ok({
-      debate,
+      debate: admin ? { ...existingDebate, real_view_count } : existingDebate,
       messages: messages ?? [],
       status: debate.run_status ?? "completed",
       share_url: debate.share_id
