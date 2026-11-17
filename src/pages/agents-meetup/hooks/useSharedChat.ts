@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { recordSharedDebateView } from '@/services/debateViewsService';
+import { recordDisplayedDebateView, recordSharedDebateView } from '@/services/debateViewsService';
 import { chatService } from '@/services';
 import { Chat, ChatMessage, ChatSettings } from '@/models/chat';
 
@@ -16,10 +16,17 @@ interface ChatData {
 
 export const useSharedChat = (shareId: string | undefined) => {
   const recordedShares = useRef(new Set<string>());
+  const displayedShares = useRef(new Set<string>());
   const [chat, setChat] = useState<ChatData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<'not_found' | 'deleted' | 'not_public' | null>(null);
+
+  useEffect(() => {
+    if (!shareId || displayedShares.current.has(shareId)) return;
+    displayedShares.current.add(shareId);
+    void recordDisplayedDebateView(shareId);
+  }, [shareId]);
 
   useEffect(() => {
     if (!shareId) {

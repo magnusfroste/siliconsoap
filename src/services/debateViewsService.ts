@@ -1,4 +1,12 @@
-import { recordDebateView } from '@/repositories/debateViewsRepository';
+import { incrementDisplayedDebateView, recordDebateView } from '@/repositories/debateViewsRepository';
+
+export async function recordDisplayedDebateView(shareId: string): Promise<void> {
+  try {
+    await incrementDisplayedDebateView(shareId);
+  } catch {
+    // Preserve the independent, fire-and-forget displayed-view increment.
+  }
+}
 
 export function shouldRecordDebateView(environment: { hostname: string; userAgent: string; webdriver: boolean }): boolean {
   return environment.hostname === 'siliconsoap.com'
