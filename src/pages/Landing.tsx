@@ -528,7 +528,7 @@ export const Landing = () => {
                 className="m-0 text-[30px] font-semibold leading-[1.1] tracking-[-0.02em] md:text-[48px] md:leading-[1.05]"
                 style={{ fontFamily: FONT_HEAD }}
               >
-                {showdown.prompt}
+                {showdown.title || showdown.prompt}
               </h2>
             </div>
             <div

@@ -28,6 +28,7 @@ export interface ShowdownColumn {
 
 export interface Showdown {
   shareId: string;
+  title: string;
   prompt: string;
   columns: ShowdownColumn[];
 }
@@ -253,6 +254,7 @@ export function useLandingData(): LandingData {
 
         showdown = {
           shareId: featuredChat.share_id,
+          title: featuredChat.title || '',
           prompt: featuredChat.prompt || featuredChat.title || '',
           columns,
         };
