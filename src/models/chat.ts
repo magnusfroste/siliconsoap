@@ -40,6 +40,7 @@ export interface Chat {
   is_public?: boolean;
   deleted_at?: string | null;
   view_count?: number;
+  real_view_count?: number;
   created_at?: string;
   updated_at?: string;
 }

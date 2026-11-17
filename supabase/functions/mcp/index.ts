@@ -229,11 +229,11 @@ var get_debate_default = defineTool2({
     if (error) return fail(error.message);
     if (!debate) return fail("Debate not found (or not public).");
     const admin = ctx.isAuthenticated() && await isAdmin(ctx);
-    const { real_view_count, ...existingDebate } = debate;
+    const { view_count, ...existingDebate } = debate;
     const { data: messages, error: msgErr } = await supabase.from("agent_chat_messages").select("agent, persona, message, model, answered_by_model, created_at").eq("chat_id", debate.id).order("created_at", { ascending: true });
     if (msgErr) return fail(msgErr.message);
     return ok({
-      debate: admin ? { ...existingDebate, real_view_count } : existingDebate,
+      debate: admin ? { ...existingDebate, legacy_view_count: view_count } : existingDebate,
       messages: messages ?? [],
       status: debate.run_status ?? "completed",
       share_url: debate.share_id ? `https://siliconsoap.com/shared/${debate.share_id}` : null
@@ -378,13 +378,13 @@ var list_debates_default = defineTool7({
     const supabase = admin ? supabaseForUser(ctx) : supabaseAnon();
     const take = Math.min(Math.max(limit ?? 20, 1), 50);
     let query = supabase.from("agent_chats").select(
-      admin ? "id, title, prompt, scenario_id, settings, share_id, view_count, real_view_count, created_at, run_status" : "id, title, prompt, scenario_id, settings, share_id, view_count, created_at, run_status"
+      admin ? "id, title, prompt, scenario_id, settings, share_id, legacy_view_count:view_count, real_view_count, created_at, run_status" : "id, title, prompt, scenario_id, settings, share_id, real_view_count, created_at, run_status"
     ).eq("is_public", true).is("deleted_at", null);
     if (search?.trim()) {
       const term = search.trim().replace(/[%,]/g, " ");
       query = query.or(`title.ilike.%${term}%,prompt.ilike.%${term}%`);
     }
-    query = order === "most_viewed" ? query.order("view_count", { ascending: false }) : query.order("created_at", { ascending: false });
+    query = order === "most_viewed" ? query.order("real_view_count", { ascending: false }).order("created_at", { ascending: false }) : query.order("created_at", { ascending: false });
     const { data, error } = await query.limit(take);
     if (error) return fail(error.message);
     return ok({ count: data?.length ?? 0, debates: data ?? [] });
@@ -491,7 +491,7 @@ var list_my_debates_default = defineTool12({
   handler: async ({ limit }, ctx) => {
     const userId = requireAuth(ctx);
     const { data, error } = await supabaseForUser(ctx).from("agent_chats").select(
-      "id, title, prompt, scenario_id, share_id, is_public, view_count, run_status, created_at"
+      "id, title, prompt, scenario_id, share_id, is_public, real_view_count, run_status, created_at"
     ).eq("user_id", userId).is("deleted_at", null).order("created_at", { ascending: false }).limit(Math.min(Math.max(limit ?? 20, 1), 50));
     if (error) return fail(error.message);
     return ok({ count: data?.length ?? 0, debates: data ?? [] });
@@ -844,22 +844,27 @@ import { defineTool as defineTool19 } from "npm:@lovable.dev/mcp-js@0.28.0";
 var site_stats_default = defineTool19({
   name: "site_stats",
   title: "Site statistics",
-  description: "Live SiliconSoap platform stats: public debate count, seeded views, model counts and most viewed debates. Admins also receive total real views and the top five by real views.",
+  description: "Live SiliconSoap platform stats: public debate count, real daily-unique views, model counts and most viewed debates. Admins also receive total real views and the top five by real views.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_args, ctx) => {
     const admin = ctx.isAuthenticated() && await isAdmin(ctx);
     const supabase = admin ? supabaseForUser(ctx) : supabaseAnon();
-    const [{ count: debateCount, error: countErr }, viewsRes, modelsRes, topRes] = await Promise.all([
+    const [{ count: debateCount, error: countErr }, modelsRes, topRes] = await Promise.all([
       supabase.from("agent_chats").select("id", { count: "exact", head: true }).eq("is_public", true).is("deleted_at", null),
-      supabase.from("agent_chats").select("view_count, settings").eq("is_public", true).is("deleted_at", null),
       supabase.from("curated_models").select("model_id, is_enabled, supports_reasoning"),
-      supabase.from("agent_chats").select("title, share_id, view_count").eq("is_public", true).is("deleted_at", null).order("view_count", { ascending: false }).limit(5)
+      supabase.from("agent_chats").select("title, share_id, real_view_count").eq("is_public", true).is("deleted_at", null).order("real_view_count", { ascending: false }).order("created_at", { ascending: false }).limit(5)
     ]);
     if (countErr) return fail(countErr.message);
-    if (viewsRes.error) return fail(viewsRes.error.message);
-    const rows = viewsRes.data ?? [];
-    const totalViews = rows.reduce((sum, r) => sum + (r.view_count ?? 0), 0);
+    if (topRes.error) return fail(topRes.error.message);
+    const rows = [];
+    for (let offset = 0; ; offset += 1e3) {
+      const { data, error } = await supabase.from("agent_chats").select("real_view_count, settings").eq("is_public", true).is("deleted_at", null).order("id").range(offset, offset + 999);
+      if (error) return fail(error.message);
+      rows.push(...data ?? []);
+      if ((data ?? []).length < 1e3) break;
+    }
+    const totalViews = rows.reduce((sum, row) => sum + (row.real_view_count ?? 0), 0);
     const totalAgents = rows.reduce((sum, r) => {
       const settings = r.settings ?? {};
       const n = Number(settings.agentCount ?? 2);
@@ -868,18 +873,9 @@ var site_stats_default = defineTool19({
     const models = modelsRes.data ?? [];
     let realViewStats = {};
     if (admin) {
-      let totalRealViews = 0;
-      for (let offset = 0; ; offset += 1e3) {
-        const { data: data2, error: error2 } = await supabase.from("agent_chats").select("real_view_count").eq("is_public", true).is("deleted_at", null).order("id").range(offset, offset + 999);
-        if (error2) return fail(error2.message);
-        totalRealViews += (data2 ?? []).reduce((sum, row) => sum + (row.real_view_count ?? 0), 0);
-        if ((data2 ?? []).length < 1e3) break;
-      }
-      const { data, error } = await supabase.from("agent_chats").select("title, share_id, real_view_count").eq("is_public", true).is("deleted_at", null).order("real_view_count", { ascending: false }).order("id").limit(5);
-      if (error) return fail(error.message);
       realViewStats = {
-        total_real_views: totalRealViews,
-        top_debates_by_real_views: (data ?? []).map((debate) => ({
+        total_real_views: totalViews,
+        top_debates_by_real_views: (topRes.data ?? []).map((debate) => ({
           title: debate.title,
           real_view_count: debate.real_view_count,
           url: debate.share_id ? `https://siliconsoap.com/shared/${debate.share_id}` : null
@@ -896,7 +892,7 @@ var site_stats_default = defineTool19({
       models_with_reasoning: models.filter((m) => m.supports_reasoning).length,
       top_debates: (topRes.data ?? []).map((d) => ({
         title: d.title,
-        views: d.view_count,
+        views: d.real_view_count,
         url: d.share_id ? `https://siliconsoap.com/shared/${d.share_id}` : null
       }))
     });

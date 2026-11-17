@@ -13,7 +13,7 @@ export default defineTool({
     const { data, error } = await supabaseForUser(ctx)
       .from("agent_chats")
       .select(
-        "id, title, prompt, scenario_id, share_id, is_public, view_count, run_status, created_at",
+        "id, title, prompt, scenario_id, share_id, is_public, real_view_count, run_status, created_at",
       )
       .eq("user_id", userId)
       .is("deleted_at", null)

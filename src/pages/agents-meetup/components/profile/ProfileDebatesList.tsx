@@ -1,67 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useProfileDebates } from '@/hooks/useDebateStats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Heart, Clock, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 
-interface PublicDebate {
-  id: string;
-  title: string;
-  prompt: string;
-  share_id: string;
-  view_count: number;
-  created_at: string;
-  reaction_count: number;
-}
-
 interface ProfileDebatesListProps {
   userId: string;
 }
 
 export const ProfileDebatesList = ({ userId }: ProfileDebatesListProps) => {
-  const { data: debates, isLoading } = useQuery({
-    queryKey: ['user-public-debates', userId],
-    queryFn: async (): Promise<PublicDebate[]> => {
-      // Get public chats
-      const { data: chats, error } = await supabase
-        .from('agent_chats')
-        .select('id, title, prompt, share_id, view_count, created_at')
-        .eq('user_id', userId)
-        .eq('is_public', true)
-        .not('share_id', 'is', null)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (error || !chats) return [];
-
-      // Get reaction counts
-      const shareIds = chats.map(c => c.share_id).filter(Boolean) as string[];
-      
-      if (shareIds.length === 0) {
-        return chats.map(c => ({ ...c, reaction_count: 0 }));
-      }
-
-      const { data: reactions } = await supabase
-        .from('chat_reactions')
-        .select('share_id')
-        .in('share_id', shareIds);
-
-      // Count reactions per share_id
-      const reactionCounts: Record<string, number> = {};
-      reactions?.forEach(r => {
-        reactionCounts[r.share_id] = (reactionCounts[r.share_id] || 0) + 1;
-      });
-
-      return chats.map(c => ({
-        ...c,
-        share_id: c.share_id!,
-        reaction_count: reactionCounts[c.share_id!] || 0
-      }));
-    },
-    enabled: !!userId,
-  });
+  const { data: debates, isLoading } = useProfileDebates(userId);
 
   if (isLoading) {
     return (
@@ -129,7 +78,7 @@ export const ProfileDebatesList = ({ userId }: ProfileDebatesListProps) => {
               <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Eye className="h-3 w-3" />
-                  {debate.view_count} views
+                  {debate.real_view_count > 0 ? `${debate.real_view_count} views` : 'New'}
                 </div>
                 <div className="flex items-center gap-1">
                   <Heart className="h-3 w-3" />

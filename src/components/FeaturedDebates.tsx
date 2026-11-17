@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useFeaturedDebates } from '@/hooks/useDebateStats';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Eye, MessageSquare, Users, TrendingUp, ArrowRight } from 'lucide-react';
@@ -8,70 +7,9 @@ import { Button } from '@/components/ui/button';
 import { FeaturedDebatesGridSkeleton } from '@/components/skeletons';
 import { Link } from 'react-router-dom';
 
-interface FeaturedDebate {
-  id: string;
-  title: string;
-  prompt: string;
-  share_id: string;
-  view_count: number;
-  created_at: string;
-  message_count: number;
-  agent_count: number;
-}
-
 export const FeaturedDebates = () => {
   const navigate = useNavigate();
-  const [debates, setDebates] = useState<FeaturedDebate[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTrendingDebates = async () => {
-      try {
-        const { data: chats, error } = await supabase
-          .from('agent_chats')
-          .select('id, title, prompt, share_id, view_count, created_at')
-          .eq('is_public', true)
-          .not('share_id', 'is', null)
-          .is('deleted_at', null)
-          .order('view_count', { ascending: false })
-          .limit(3);
-
-        if (error) throw error;
-
-        if (chats && chats.length > 0) {
-          const debatesWithCounts = await Promise.all(
-            chats.map(async (chat) => {
-              const { count: messageCount } = await supabase
-                .from('agent_chat_messages')
-                .select('*', { count: 'exact', head: true })
-                .eq('chat_id', chat.id);
-
-              const { data: agents } = await supabase
-                .from('agent_chat_messages')
-                .select('agent')
-                .eq('chat_id', chat.id);
-
-              const uniqueAgents = new Set(agents?.map(a => a.agent) || []);
-
-              return {
-                ...chat,
-                message_count: messageCount || 0,
-                agent_count: uniqueAgents.size,
-              };
-            })
-          );
-
-          setDebates(debatesWithCounts.filter(d => d.message_count > 0));
-        }
-      } catch (error) {
-        console.error('Error fetching featured debates:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrendingDebates();
-  }, []);
+  const { debates, loading } = useFeaturedDebates();
 
   if (loading) {
     return (
@@ -133,7 +71,7 @@ export const FeaturedDebates = () => {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
-                  <span>{debate.view_count}</span>
+                  <span>{debate.real_view_count > 0 ? debate.real_view_count : 'New'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MessageSquare className="h-4 w-4" />

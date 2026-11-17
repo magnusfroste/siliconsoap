@@ -1,6 +1,7 @@
 # Architecture rules
 
-- Record shared-debate real views through the shared-chat controller, best-effort service and RPC repository; hash and deduplicate visitors in the database and keep seeded/displayed counts separate. MCP real-view fields require server-validated admin identity while existing public tool outputs remain available.
+- Record shared-debate real views through the shared-chat controller, best-effort service and RPC repository; preserve the independent legacy increment. Read real counts for public statistics, and require server-validated admin identity for MCP legacy counts to keep historical engagement separate.
+- Keep debate statistics queries in debateStatsRepository, aggregation and rank derivation in pure services, and loading in controller hooks so statistic views stay UI-only.
 
 - Keep daily landing queries in a repository, the 48-hour public-series selection in a pure service, and loading in useLandingData; daily cards must not alter weekly showdown selection.
 

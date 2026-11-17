@@ -20,7 +20,7 @@
       {
         "name": "site_stats",
         "title": "Site statistics",
-        "description": "Live SiliconSoap platform stats: public debate count, seeded views, model counts and most viewed debates. Admins also receive total real views and the top five by real views.",
+        "description": "Live SiliconSoap platform stats: public debate count, real daily-unique views, model counts and most viewed debates. Admins also receive total real views and the top five by real views.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

@@ -16,7 +16,7 @@ interface ChatData {
   prompt: string;
   scenario_id: string;
   settings: Record<string, unknown>;
-  view_count?: number;
+  real_view_count?: number;
 }
 
 interface MessageData {
@@ -113,6 +113,10 @@ serve(async (req: Request) => {
     }
 
     const chat: ChatData = chatResult[0];
+    const { data: counts, error: countError } = await supabase.from('agent_chats')
+      .select('real_view_count').eq('id', chat.id).eq('is_public', true).is('deleted_at', null).maybeSingle();
+    if (countError) throw countError;
+    chat.real_view_count = counts?.real_view_count ?? 0;
     console.log(`[${timestamp}] Found chat: ${chat.id}, title: ${chat.title}`);
 
     // Fetch all messages
@@ -212,7 +216,7 @@ serve(async (req: Request) => {
     "interactionStatistic": {
       "@type": "InteractionCounter",
       "interactionType": "https://schema.org/ViewAction",
-      "userInteractionCount": ${chat.view_count || 0}
+      "userInteractionCount": ${chat.real_view_count || 0}
     },
     "about": [
       ${agents.map(a => `{"@type": "Thing", "name": "${escapeHtml(a)}"}`).join(',\n      ')}
@@ -251,7 +255,7 @@ serve(async (req: Request) => {
       <p itemprop="description">${description}</p>
       <p class="meta">An AI debate featuring ${agents.length} agents: ${agents.join(', ')}</p>
       <p class="meta">Models used: ${models.join(', ')}</p>
-      <p class="meta">${messages.length} messages • ${chat.view_count || 0} views</p>
+      <p class="meta">${messages.length} messages • ${chat.real_view_count ? `${chat.real_view_count} views` : 'New'}</p>
     </header>
     
     <section class="debate-content" itemprop="articleBody">

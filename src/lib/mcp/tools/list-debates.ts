@@ -24,8 +24,8 @@ export default defineTool({
       .from("agent_chats")
       .select(
         admin
-          ? "id, title, prompt, scenario_id, settings, share_id, view_count, real_view_count, created_at, run_status"
-          : "id, title, prompt, scenario_id, settings, share_id, view_count, created_at, run_status",
+          ? "id, title, prompt, scenario_id, settings, share_id, legacy_view_count:view_count, real_view_count, created_at, run_status"
+          : "id, title, prompt, scenario_id, settings, share_id, real_view_count, created_at, run_status",
       )
       .eq("is_public", true)
       .is("deleted_at", null);
@@ -35,7 +35,7 @@ export default defineTool({
     }
     query =
       order === "most_viewed"
-        ? query.order("view_count", { ascending: false })
+        ? query.order("real_view_count", { ascending: false }).order("created_at", { ascending: false })
         : query.order("created_at", { ascending: false });
     const { data, error } = await query.limit(take);
     if (error) return fail(error.message);

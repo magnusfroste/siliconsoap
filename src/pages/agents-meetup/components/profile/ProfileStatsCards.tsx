@@ -54,7 +54,7 @@ export const ProfileStatsCards = ({ stats }: ProfileStatsCardsProps) => {
               <item.icon className={`h-5 w-5 ${item.color}`} />
             </div>
             <div>
-              <p className="text-2xl font-bold">{item.value}</p>
+              <p className="text-2xl font-bold">{item.label === 'Total Views' && item.value === 0 ? 'New' : item.value}</p>
               <p className="text-xs text-muted-foreground">{item.label}</p>
             </div>
           </CardContent>

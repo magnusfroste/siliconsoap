@@ -67,7 +67,7 @@ export const NextRankProgress = ({ currentRank, stats }: NextRankProgressProps) 
                   "font-medium",
                   req.met ? "text-green-500" : "text-foreground"
                 )}>
-                  {req.current} / {req.required}
+                  {req.label === 'Total Views' && req.current === 0 ? 'New' : `${req.current} / ${req.required}`}
                   {req.met && " ✓"}
                 </span>
               </div>

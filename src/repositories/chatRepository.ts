@@ -88,8 +88,14 @@ export const chatRepository = {
       return null;
     }
 
+    if (!data) return null;
+    const { data: counts, error: countError } = await supabase.from('agent_chats')
+      .select('real_view_count').eq('id', data.id).eq('is_public', true).is('deleted_at', null).maybeSingle();
+    if (countError) throw countError;
+
     return data ? {
       ...data,
+      real_view_count: counts?.real_view_count ?? 0,
       user_id: null, // Explicitly null for shared chats (privacy)
       settings: data.settings as unknown as ChatSettings
     } : null;

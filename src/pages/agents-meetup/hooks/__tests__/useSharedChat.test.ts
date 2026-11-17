@@ -16,12 +16,13 @@ describe('shared debate view counters', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     rpc.mockResolvedValue({ error: null });
-    getSharedChat.mockResolvedValue({ chat: { id: 'chat1', is_public: true, deleted_at: null, settings: {}, view_count: 42 }, messages: [] });
+    getSharedChat.mockResolvedValue({ chat: { id: 'chat1', is_public: true, deleted_at: null, settings: {}, view_count: 42, real_view_count: 7 }, messages: [] });
   });
 
   it('increments displayed views once per shareId per mount alongside real views', async () => {
     const first = renderHook(({ shareId }) => useSharedChat(shareId), { initialProps: { shareId: 'share1' } });
     await waitFor(() => expect(first.result.current.loading).toBe(false));
+    expect(first.result.current.chat?.real_view_count).toBe(7);
     expect(rpc).toHaveBeenCalledWith('increment_chat_view_count', { p_share_id: 'share1' });
     expect(recordSharedDebateView).toHaveBeenCalledWith('share1');
     first.rerender({ shareId: 'share1' });

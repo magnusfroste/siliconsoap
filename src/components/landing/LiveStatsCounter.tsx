@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useLiveDebateStats } from '@/hooks/useDebateStats';
 import { MessageSquare, Eye, Users } from 'lucide-react';
 
 interface Stats {
@@ -9,13 +9,8 @@ interface Stats {
 }
 
 export function LiveStatsCounter() {
-  const [stats, setStats] = useState<Stats>({ totalDebates: 0, totalViews: 0, totalAgents: 0 });
+  const { stats, loading } = useLiveDebateStats();
   const [displayStats, setDisplayStats] = useState<Stats>({ totalDebates: 0, totalViews: 0, totalAgents: 0 });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
 
   // Animate counting up
   useEffect(() => {
@@ -46,36 +41,6 @@ export function LiveStatsCounter() {
     return () => clearInterval(interval);
   }, [stats, loading]);
 
-  const fetchStats = async () => {
-    try {
-      // Get total debates and views
-      const { data: chats, error: chatsError } = await supabase
-        .from('agent_chats')
-        .select('id, view_count, settings')
-        .is('deleted_at', null);
-
-      if (chatsError) throw chatsError;
-
-      const totalDebates = chats?.length || 0;
-      const totalViews = chats?.reduce((sum, chat) => sum + (chat.view_count || 0), 0) || 0;
-      
-      // Estimate total agents (agents per debate * debates)
-      let totalAgents = 0;
-      chats?.forEach(chat => {
-        const settings = chat.settings as { agentCount?: number } | null;
-        totalAgents += settings?.agentCount || 2;
-      });
-
-      setStats({ totalDebates, totalViews, totalAgents });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      // Set some placeholder values
-      setStats({ totalDebates: 100, totalViews: 500, totalAgents: 250 });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const statItems = [
     { label: 'Debates Created', value: displayStats.totalDebates, icon: MessageSquare },
     { label: 'Total Views', value: displayStats.totalViews, icon: Eye },
@@ -100,7 +65,7 @@ export function LiveStatsCounter() {
                 </div>
               </div>
               <div className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-                {loading ? '—' : item.value.toLocaleString()}+
+                {loading ? '—' : item.label === 'Total Views' && item.value === 0 ? 'New' : item.value.toLocaleString()}
               </div>
               <div className="text-xs md:text-sm text-muted-foreground mt-1 group-hover:text-foreground/80 transition-colors duration-300">
                 {item.label}

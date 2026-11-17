@@ -23,7 +23,7 @@ export default defineTool({
     if (error) return fail(error.message);
     if (!debate) return fail("Debate not found (or not public).");
     const admin = ctx.isAuthenticated() && await isAdmin(ctx);
-    const { real_view_count, ...existingDebate } = debate;
+    const { view_count, ...existingDebate } = debate;
 
     const { data: messages, error: msgErr } = await supabase
       .from("agent_chat_messages")
@@ -33,7 +33,7 @@ export default defineTool({
     if (msgErr) return fail(msgErr.message);
 
     return ok({
-      debate: admin ? { ...existingDebate, real_view_count } : existingDebate,
+      debate: admin ? { ...existingDebate, legacy_view_count: view_count } : existingDebate,
       messages: messages ?? [],
       status: debate.run_status ?? "completed",
       share_url: debate.share_id

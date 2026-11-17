@@ -1,5 +1,10 @@
 # Roadmap
 
+## Real-view display switch
+- [x] Switch site statistics, ranks, view sorting and structured data to real counts; retain legacy writes. Explore already has no view displays or view sorting.
+- [x] Synchronize MCP public statistics and admin legacy output; regenerate manifest
+- [x] Run regression tests and verify shared-page desktop/mobile rendering and real schema count; commit without publishing. Signed-in profile UI and deployed edge responses not verified; no deployment requested.
+
 ## Real debate views
 - [x] Add hashed daily view recording and protected real counter
 - [x] Track successful production shared-page loads without changing displayed counts
