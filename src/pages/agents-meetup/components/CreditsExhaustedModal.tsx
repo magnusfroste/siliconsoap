@@ -19,6 +19,8 @@ interface CreditsExhaustedModalProps {
   onOpenChange: (open: boolean) => void;
   isGuest: boolean;
   guestCreditsUsed?: number;
+  /** Why the modal opened. 'exhausted' (default) is the out-of-credits prompt; 'purchase' is a voluntary top-up. */
+  reason?: 'exhausted' | 'purchase';
 }
 
 export const CreditsExhaustedModal = ({
@@ -26,6 +28,7 @@ export const CreditsExhaustedModal = ({
   onOpenChange,
   isGuest,
   guestCreditsUsed,
+  reason = 'exhausted',
 }: CreditsExhaustedModalProps) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [guestCreditsAmount, setGuestCreditsAmount] = useState(3);
@@ -124,7 +127,8 @@ export const CreditsExhaustedModal = ({
     );
   }
 
-  // Logged-in user out of credits - prompt to purchase
+  // Logged-in user: out-of-credits prompt, or a voluntary top-up from the profile.
+  const isPurchase = reason === 'purchase';
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -135,10 +139,12 @@ export const CreditsExhaustedModal = ({
             </div>
           </div>
           <DialogTitle className="text-center text-2xl">
-            Out of Credits
+            {isPurchase ? 'Buy credits' : 'Out of Credits'}
           </DialogTitle>
           <DialogDescription className="text-center pt-2">
-            You've used all your token budget. Purchase more credits to continue creating amazing AI conversations.
+            {isPurchase
+              ? 'Top up your balance to keep running debates and second-opinion panels.'
+              : "You've used all your token budget. Purchase more credits to continue creating amazing AI conversations."}
           </DialogDescription>
         </DialogHeader>
 

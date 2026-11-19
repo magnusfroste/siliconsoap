@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fast-shuffle slots and purchase modal copy
+- [x] Randomize which chosen model lands in which agent slot on fast shuffle (deterministic initial pick unchanged)
+- [x] Modal reason prop: profile "Buy credits" wording vs unchanged out-of-credits wording
+- [x] 176 tests pass, typecheck OK, preview build OK; shuffle verified in the browser; nothing published
+
 ## Real-view display switch
 - [x] Switch site statistics, ranks, view sorting and structured data to real counts; retain legacy writes. Explore already has no view displays or view sorting.
 - [x] Synchronize MCP public statistics and admin legacy output; regenerate manifest

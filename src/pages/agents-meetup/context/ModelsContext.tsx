@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CuratedModel, getEnabledModels } from "@/repositories/curatedModelsRepository";
+import { shuffleSlots } from "@/pages/agents-meetup/utils/slotShuffle";
 
 // Fallback pool used only before curated models load (or if DB returns empty).
 // Mixed snapshot from curated_models: open-weight + closed, multiple providers, varied tiers.
@@ -52,7 +53,11 @@ const pickFastShuffle = (models: CuratedModel[]) => {
   const shuffled = [...source].sort(() => Math.random() - 0.5);
   const distinct = shuffled.filter((model, index, list) => list.findIndex((item) => item.origin_region === model.origin_region) === index);
   const chosen = [...distinct, ...shuffled.filter((model) => !distinct.includes(model))].slice(0, 3);
-  return pickSmartDefaults(chosen);
+  // Same three-model selection as the deterministic default pick, but the chosen
+  // models are dealt into the slots randomly so slot A is not always the EU model.
+  if (chosen.length < 3) return pickSmartDefaults(chosen);
+  const [agentA, agentB, agentC] = shuffleSlots(chosen.map((model) => model.model_id) as [string, string, string]);
+  return { agentA, agentB, agentC };
 };
 
 // Pick 3 unique random models from a given pool (falls back to FALLBACK_POOL if too few)
