@@ -7,6 +7,21 @@ import { toMessageInsert } from '@/pages/agents-meetup/utils/fallbackLabel';
 
 const GUEST_CHATS_KEY = 'guest_chats';
 
+/**
+ * Strictly increasing created_at values in display order. Existing timestamps
+ * are kept only when every message has one; otherwise base time + 1 ms per index.
+ */
+export function migrationMessageTimestamps(
+  messages: Array<{ created_at?: string | null }>,
+  now: number = Date.now()
+): string[] {
+  if (messages.length > 0 && messages.every((m) => !!m.created_at)) {
+    return messages.map((m) => m.created_at as string);
+  }
+  const base = now - messages.length;
+  return messages.map((_, index) => new Date(base + index).toISOString());
+}
+
 export const guestMigrationService = {
   /**
    * Get all guest chats from localStorage
@@ -62,8 +77,9 @@ export const guestMigrationService = {
 
         // Migrate all messages for this chat
         if (guestChat.messages && guestChat.messages.length > 0) {
-          const messagesToInsert = guestChat.messages.map((msg: ChatMessage) =>
-            toMessageInsert(newChat.id, { ...msg, created_at: msg.created_at || new Date().toISOString() }));
+          const createdAts = migrationMessageTimestamps(guestChat.messages);
+          const messagesToInsert = guestChat.messages.map((msg: ChatMessage, index: number) =>
+            toMessageInsert(newChat.id, { ...msg, created_at: createdAts[index] }));
 
           const { error: messagesError } = await supabase
             .from('agent_chat_messages')
