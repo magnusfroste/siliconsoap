@@ -63,43 +63,23 @@ serve(async (req) => {
     }
     logStep("Credits to add", { credits: creditsToAdd });
 
-    // Check if already processed (idempotency)
-    const { data: existingCredits } = await supabaseClient
-      .from("user_credits")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+    // Idempotent grant: one credit_purchases row per Stripe session, atomically with the balance update
+    const { data: grantRows, error: grantError } = await supabaseClient.rpc("grant_purchased_credits", {
+      p_session_id: session.id,
+      p_user_id: user.id,
+      p_credits: creditsToAdd,
+      p_amount_total: session.amount_total ?? null,
+      p_currency: session.currency ?? null,
+    });
+    if (grantError) throw grantError;
+    const grant = Array.isArray(grantRows) ? grantRows[0] : grantRows;
+    const granted = grant?.granted === true;
+    logStep(granted ? "Credits granted" : "Session already processed", { newBalance: grant?.new_balance });
 
-    // Add credits to user
-    if (existingCredits) {
-      const { error: updateError } = await supabaseClient
-        .from("user_credits")
-        .update({
-          credits_remaining: existingCredits.credits_remaining + creditsToAdd,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
-      logStep("Credits updated", { 
-        newTotal: existingCredits.credits_remaining + creditsToAdd 
-      });
-    } else {
-      const { error: insertError } = await supabaseClient
-        .from("user_credits")
-        .insert({
-          user_id: user.id,
-          credits_remaining: creditsToAdd,
-          credits_used: 0,
-        });
-
-      if (insertError) throw insertError;
-      logStep("Credits record created", { credits: creditsToAdd });
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true, 
-      credits_added: creditsToAdd 
+    return new Response(JSON.stringify({
+      success: true,
+      credits_added: granted ? creditsToAdd : 0,
+      already_processed: !granted,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

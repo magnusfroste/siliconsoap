@@ -71,6 +71,13 @@
       "when": 1794955329892,
       "tag": "0009_restrict_debate_view_ledger_access",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795104748534,
+      "tag": "0010_credit_purchases_idempotent",
+      "breakpoints": true
     }
   ]
 }

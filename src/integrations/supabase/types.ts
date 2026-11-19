@@ -449,6 +449,33 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_purchases: {
+        Row: {
+          amount_total: number | null
+          created_at: string
+          credits: number
+          currency: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_total?: number | null
+          created_at?: string
+          credits: number
+          currency?: string | null
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          amount_total?: number | null
+          created_at?: string
+          credits?: number
+          currency?: string | null
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       curated_models: {
         Row: {
           avoid_cases: string[] | null
@@ -904,6 +931,19 @@ export type Database = {
         }[]
       }
       get_user_email: { Args: { p_user_id: string }; Returns: string }
+      grant_purchased_credits: {
+        Args: {
+          p_amount_total: number
+          p_credits: number
+          p_currency: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: {
+          granted: boolean
+          new_balance: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
