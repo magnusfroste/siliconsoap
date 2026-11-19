@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeAnsweredBy } from "./answeredBy.ts";
 import { guestLookupSince, validClientKey } from "./idempotency.ts";
+import { orderedMessageTimestamps } from "./messageOrder.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 function generateShareId(): string {
@@ -98,13 +99,15 @@ Deno.serve(async (req) => {
     }
 
     // Insert messages
-    const messagesToInsert = messages.map((msg: any) => ({
+    const createdAts = orderedMessageTimestamps(messages.length, Date.now());
+    const messagesToInsert = messages.map((msg: any, index: number) => ({
       chat_id: chat.id,
       agent: msg.agent,
       message: msg.message,
       model: msg.model || "unknown",
       persona: msg.persona || "default",
       answered_by_model: sanitizeAnsweredBy(msg.answeredByModel),
+      created_at: createdAts[index],
     }));
 
     const { error: msgError } = await supabase
